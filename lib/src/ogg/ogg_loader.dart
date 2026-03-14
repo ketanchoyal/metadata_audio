@@ -4,6 +4,7 @@ import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
 import 'package:audio_metadata/src/common/metadata_collector.dart';
 import 'package:audio_metadata/src/model/types.dart';
 import 'package:audio_metadata/src/ogg/ogg_parser.dart';
+import 'package:audio_metadata/src/ogg/vorbis/vorbis_tag_map.dart';
 import 'package:audio_metadata/src/parser_factory.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
 
@@ -23,7 +24,9 @@ class OggLoader extends ParserLoader {
 
   @override
   Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
-    final metadata = MetadataCollector(CombinedTagMapper());
+    final mapper = CombinedTagMapper()
+      ..registerMapper('vorbis', VorbisTagMapper());
+    final metadata = MetadataCollector(mapper);
     metadata.setFormat(container: 'ogg');
 
     final parser = OggParser(

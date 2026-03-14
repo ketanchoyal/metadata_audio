@@ -68,6 +68,190 @@ void main() {
       expect(metadata.format.hasVideo, isFalse);
     });
 
+    test('parses Vorbis comments and maps common tags', () async {
+      final streamSerial = 3;
+      final firstPage = _buildOggPage(
+        headerTypeFlags: 0x02,
+        granulePosition: 0,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 0,
+        payload: _buildVorbisIdentificationPayload(
+          channels: 2,
+          sampleRate: 48000,
+        ),
+      );
+      final commentPage = _buildOggPage(
+        headerTypeFlags: 0x00,
+        granulePosition: 0,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 1,
+        payload: _buildVorbisCommentPayload(
+          vendor: 'ogg-unit-test',
+          comments: const <String>[
+            'TITLE=Vorbis Test Title',
+            'ARTIST=Vorbis Artist',
+            'TRACKNUMBER=4',
+            'ENCODER=Vorbis Encoder',
+          ],
+        ),
+      );
+      final lastPage = _buildOggPage(
+        headerTypeFlags: 0x04,
+        granulePosition: 0,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 2,
+        payload: <int>[0],
+      );
+
+      final bytes = <int>[...firstPage, ...commentPage, ...lastPage];
+      final loader = OggLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(),
+      );
+
+      expect(metadata.common.title, 'Vorbis Test Title');
+      expect(metadata.common.artist, 'Vorbis Artist');
+      expect(metadata.common.track.no, 4);
+      expect(metadata.format.tool, 'Vorbis Encoder');
+      expect(metadata.native['vorbis'], isNotNull);
+    });
+
+    test('parses Opus identification header and OpusTags comments', () async {
+      final streamSerial = 5;
+      final firstPage = _buildOggPage(
+        headerTypeFlags: 0x02,
+        granulePosition: 0,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 0,
+        payload: _buildOpusHeadPayload(
+          channels: 2,
+          preSkip: 312,
+          sampleRate: 48000,
+        ),
+      );
+      final tagsPage = _buildOggPage(
+        headerTypeFlags: 0x00,
+        granulePosition: 0,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 1,
+        payload: _buildOpusTagsPayload(
+          vendor: 'opus-unit-test',
+          comments: const <String>['TITLE=Opus Title', 'ARTIST=Opus Artist'],
+        ),
+      );
+      final lastPage = _buildOggPage(
+        headerTypeFlags: 0x04,
+        granulePosition: 96000,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 2,
+        payload: <int>[0],
+      );
+
+      final bytes = <int>[...firstPage, ...tagsPage, ...lastPage];
+      final loader = OggLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(duration: true),
+      );
+
+      expect(metadata.format.codec, 'Opus');
+      expect(metadata.format.sampleRate, 48000);
+      expect(metadata.format.numberOfChannels, 2);
+      expect(metadata.common.title, 'Opus Title');
+      expect(metadata.common.artist, 'Opus Artist');
+      expect(metadata.format.numberOfSamples, 96000 - 312);
+      expect(
+        metadata.format.duration,
+        closeTo((96000 - 312) / 48000.0, 0.0001),
+      );
+    });
+
+    test('parses Speex header', () async {
+      final bytes = _buildOggPage(
+        headerTypeFlags: 0x06,
+        granulePosition: 0,
+        streamSerialNumber: 6,
+        pageSequenceNo: 0,
+        payload: _buildSpeexHeaderPayload(
+          version: 'speex-1.2rc',
+          channels: 1,
+          sampleRate: 16000,
+          bitrate: 32000,
+        ),
+      );
+
+      final loader = OggLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(),
+      );
+
+      expect(metadata.format.codec, startsWith('Speex'));
+      expect(metadata.format.sampleRate, 16000);
+      expect(metadata.format.numberOfChannels, 1);
+      expect(metadata.format.hasAudio, isTrue);
+    });
+
+    test('parses Theora identification header as video stream', () async {
+      final bytes = _buildOggPage(
+        headerTypeFlags: 0x06,
+        granulePosition: 0,
+        streamSerialNumber: 7,
+        pageSequenceNo: 0,
+        payload: _buildTheoraIdentificationPayload(bitrate: 900000),
+      );
+
+      final loader = OggLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(),
+      );
+
+      expect(metadata.format.codec, 'Theora');
+      expect(metadata.format.hasVideo, isTrue);
+      expect(metadata.format.bitrate, 900000);
+    });
+
+    test('parses Ogg-FLAC first page stream info', () async {
+      final bytes = _buildOggPage(
+        headerTypeFlags: 0x06,
+        granulePosition: 0,
+        streamSerialNumber: 8,
+        pageSequenceNo: 0,
+        payload: _buildOggFlacFirstPayload(totalSamples: 88200),
+      );
+
+      final loader = OggLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(),
+      );
+
+      expect(metadata.format.codec, 'FLAC');
+      expect(metadata.format.lossless, isTrue);
+      expect(metadata.format.sampleRate, 44100);
+      expect(metadata.format.numberOfChannels, 2);
+      expect(metadata.format.bitsPerSample, 16);
+      expect(metadata.format.numberOfSamples, 88200);
+      expect(metadata.format.duration, closeTo(2.0, 0.0001));
+    });
+
     test('derives duration from granule position on last page', () async {
       final streamSerial = 9;
       final firstPage = _buildOggPage(
@@ -166,7 +350,158 @@ List<int> _buildVorbisIdentificationPayload({
     ..._uint32Le(0),
     channels,
     ..._uint32Le(sampleRate),
+    ..._uint32Le(0),
+    ..._uint32Le(192000),
+    ..._uint32Le(0),
+    0,
+    1,
   ];
+}
+
+List<int> _buildVorbisCommentPayload({
+  required String vendor,
+  required List<String> comments,
+}) {
+  final data = <int>[0x03, ...ascii.encode('vorbis')];
+  final vendorBytes = utf8.encode(vendor);
+  data.addAll(_uint32Le(vendorBytes.length));
+  data.addAll(vendorBytes);
+  data.addAll(_uint32Le(comments.length));
+
+  for (final comment in comments) {
+    final encoded = utf8.encode(comment);
+    data.addAll(_uint32Le(encoded.length));
+    data.addAll(encoded);
+  }
+
+  data.add(1);
+  return data;
+}
+
+List<int> _buildOpusHeadPayload({
+  required int channels,
+  required int preSkip,
+  required int sampleRate,
+}) {
+  return <int>[
+    ...ascii.encode('OpusHead'),
+    1,
+    channels,
+    preSkip & 0xFF,
+    (preSkip >> 8) & 0xFF,
+    ..._uint32Le(sampleRate),
+    0,
+    0,
+    0,
+  ];
+}
+
+List<int> _buildOpusTagsPayload({
+  required String vendor,
+  required List<String> comments,
+}) {
+  final data = <int>[...ascii.encode('OpusTags')];
+  final vendorBytes = utf8.encode(vendor);
+  data.addAll(_uint32Le(vendorBytes.length));
+  data.addAll(vendorBytes);
+  data.addAll(_uint32Le(comments.length));
+
+  for (final comment in comments) {
+    final encoded = utf8.encode(comment);
+    data.addAll(_uint32Le(encoded.length));
+    data.addAll(encoded);
+  }
+
+  return data;
+}
+
+List<int> _buildSpeexHeaderPayload({
+  required String version,
+  required int channels,
+  required int sampleRate,
+  required int bitrate,
+}) {
+  final data = List<int>.filled(80, 0);
+  final signature = ascii.encode('Speex   ');
+  for (var i = 0; i < signature.length; i++) {
+    data[i] = signature[i];
+  }
+
+  final versionBytes = ascii.encode(version);
+  for (var i = 0; i < versionBytes.length && i < 20; i++) {
+    data[8 + i] = versionBytes[i];
+  }
+
+  _writeInt32Le(data, 36, sampleRate);
+  _writeInt32Le(data, 48, channels);
+  _writeInt32Le(data, 52, bitrate);
+  return data;
+}
+
+List<int> _buildTheoraIdentificationPayload({required int bitrate}) {
+  final data = List<int>.filled(42, 0);
+  data[0] = 0x80;
+  final signature = ascii.encode('theora');
+  for (var i = 0; i < signature.length; i++) {
+    data[1 + i] = signature[i];
+  }
+  data[37] = (bitrate >> 16) & 0xFF;
+  data[38] = (bitrate >> 8) & 0xFF;
+  data[39] = bitrate & 0xFF;
+  return data;
+}
+
+List<int> _buildOggFlacFirstPayload({required int totalSamples}) {
+  final streamInfo = _buildFlacStreamInfoBlock(totalSamples: totalSamples);
+  return <int>[
+    0x7F,
+    ...ascii.encode('FLAC'),
+    0x01,
+    0x00,
+    0x00,
+    0x00,
+    ...ascii.encode('fLaC'),
+    0x80,
+    0x00,
+    0x00,
+    streamInfo.length,
+    ...streamInfo,
+  ];
+}
+
+List<int> _buildFlacStreamInfoBlock({required int totalSamples}) {
+  const sampleRate = 44100;
+  const channels = 2;
+  const bitsPerSample = 16;
+
+  final streamInfo = List<int>.filled(34, 0);
+  streamInfo[0] = 0x10;
+  streamInfo[1] = 0x00;
+  streamInfo[2] = 0x10;
+  streamInfo[3] = 0x00;
+
+  final sampleRateShifted = sampleRate << 4;
+  streamInfo[10] = (sampleRateShifted >> 16) & 0xFF;
+  streamInfo[11] = (sampleRateShifted >> 8) & 0xFF;
+  streamInfo[12] =
+      (sampleRateShifted & 0xF0) |
+      (((channels - 1) & 0x07) << 1) |
+      (((bitsPerSample - 1) >> 4) & 0x01);
+  streamInfo[13] =
+      (((bitsPerSample - 1) & 0x0F) << 4) | ((totalSamples >> 32) & 0x0F);
+  streamInfo[14] = (totalSamples >> 24) & 0xFF;
+  streamInfo[15] = (totalSamples >> 16) & 0xFF;
+  streamInfo[16] = (totalSamples >> 8) & 0xFF;
+  streamInfo[17] = totalSamples & 0xFF;
+
+  return streamInfo;
+}
+
+void _writeInt32Le(List<int> target, int offset, int value) {
+  target[offset] = value & 0xFF;
+  target[offset + 1] = (value >> 8) & 0xFF;
+  target[offset + 2] = (value >> 16) & 0xFF;
+  target[offset + 3] = (value >> 24) & 0xFF;
 }
 
 List<int> _uint32Le(int value) {
