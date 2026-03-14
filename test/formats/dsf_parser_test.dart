@@ -50,7 +50,7 @@ void main() {
         'CANTUS (Tove Ramlo-Ystad) & Frode Fjellheim',
       );
       expect(metadata.common.track.no, 4);
-      expect(metadata.common.track.of, isNull);
+      expect(metadata.common.track.of, 12);
 
       final id3Tags = metadata.native['ID3v2.3'];
       expect(id3Tags, isNotNull);

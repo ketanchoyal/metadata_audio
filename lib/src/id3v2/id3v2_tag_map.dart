@@ -9,6 +9,8 @@ final _id3v2TagMap = {
   'TIT2': 'title',
   'TP1': 'artist',
   'TPE1': 'artist',
+  'TP2': 'albumartist',
+  'TPE2': 'albumartist',
   'TAL': 'album',
   'TALB': 'album',
   'TYE': 'year',
@@ -54,8 +56,33 @@ class Id3v2TagMapper extends GenericTagMapper {
     final result = <String, dynamic>{};
 
     for (final entry in nativeTags.entries) {
+      final tagId = entry.key.toUpperCase();
       final mappedTag = mapTag(entry.key, entry.value);
       if (mappedTag == null) {
+        continue;
+      }
+
+      // Handle TPOS (disk position) specially to extract totaldiscs
+      if (tagId == 'TPOS' || tagId == 'TPA') {
+        final parsed = _parsePositionWithTotal(entry.value);
+        if (parsed.$1 != null) {
+          result['disk'] = parsed.$1;
+        }
+        if (parsed.$2 != null) {
+          result['totaldiscs'] = parsed.$2;
+        }
+        continue;
+      }
+
+      // Handle TRCK (track position) specially to extract totaltracks
+      if (tagId == 'TRCK' || tagId == 'TRK') {
+        final parsed = _parsePositionWithTotal(entry.value);
+        if (parsed.$1 != null) {
+          result['track'] = parsed.$1;
+        }
+        if (parsed.$2 != null) {
+          result['totaltracks'] = parsed.$2;
+        }
         continue;
       }
 
@@ -68,11 +95,24 @@ class Id3v2TagMapper extends GenericTagMapper {
     return result;
   }
 
+  /// Parses a position string like "1" or "1/2" into (position, total).
+  (int?, int?) _parsePositionWithTotal(dynamic value) {
+    final text = _singleString(value);
+    if (text == null) {
+      return (null, null);
+    }
+    final parts = text.split('/');
+    final position = _parseLeadingInt(parts.first);
+    final total = parts.length > 1 ? _parseLeadingInt(parts[1]) : null;
+    return (position, total);
+  }
+
   dynamic _normalizeValue(String mappedTag, dynamic value) {
     switch (mappedTag) {
       case 'title':
       case 'artist':
       case 'album':
+      case 'albumartist':
         return _singleString(value);
       case 'year':
         return _parseLeadingInt(_singleString(value));

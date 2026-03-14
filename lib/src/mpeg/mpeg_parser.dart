@@ -261,7 +261,7 @@ class MpegParser {
     _samplesPerFrame = header.samplesPerFrame;
 
     metadata.setFormat(
-      container: 'mp3',
+      container: 'MPEG',
       codec: header.codec,
       sampleRate: header.sampleRate,
       numberOfChannels: header.channelMode == MpegChannelMode.mono ? 1 : 2,
@@ -396,6 +396,13 @@ class MpegParser {
     final fileSize = tokenizer.fileInfo?.size;
     final sampleRate = metadata.format.sampleRate;
 
+    // Calculate average bitrate from collected frame bitrates
+    int? avgBitrate;
+    if (_bitrates.isNotEmpty) {
+      final sum = _bitrates.reduce((a, b) => a + b);
+      avgBitrate = (sum / _bitrates.length).round();
+    }
+
     if (fileSize != null &&
         _mpegOffset != null &&
         _frameSize != null &&
@@ -418,7 +425,12 @@ class MpegParser {
           profile.startsWith('V') &&
           duration != null &&
           duration > 0) {
-        metadata.setFormat(bitrate: (mpegSize * 8 / duration).round());
+        // For VBR files with known duration, calculate bitrate from file size
+        final calculatedBitrate = (mpegSize * 8 / duration).round();
+        metadata.setFormat(bitrate: calculatedBitrate);
+      } else if (avgBitrate != null && metadata.format.bitrate == null) {
+        // Use average bitrate if no bitrate is set
+        metadata.setFormat(bitrate: avgBitrate);
       }
     }
 
@@ -426,6 +438,45 @@ class MpegParser {
         metadata.format.duration == null &&
         _samplesPerFrame != null &&
         sampleRate != null) {
+      final numberOfSamples = _frameCount * _samplesPerFrame!;
+      metadata.setFormat(
+        numberOfSamples: numberOfSamples,
+        duration: numberOfSamples / sampleRate,
+      );
+    }
+
+    // For VBR files without Xing header, calculate bitrate from frame average
+    // if we have collected multiple frames with different bitrates
+    if (avgBitrate != null &&
+        _bitrates.length >= 4 &&
+        !_areAllSame(_bitrates) &&
+        metadata.format.codecProfile == null) {
+      metadata.setFormat(bitrate: avgBitrate);
+      // Mark as VBR since bitrates vary
+      metadata.setFormat(codecProfile: 'VBR');
+    }
+
+    // If we still don't have duration, estimate it from average bitrate and file size
+    // This is useful for VBR files without Xing header
+    if (metadata.format.duration == null &&
+        avgBitrate != null &&
+        avgBitrate > 0 &&
+        fileSize != null &&
+        _mpegOffset != null) {
+      final id3v1Size = _hasId3v1 ? 128 : 0;
+      final mpegSize = fileSize - _mpegOffset! - id3v1Size;
+      if (mpegSize > 0) {
+        final estimatedDuration = (mpegSize * 8) / avgBitrate;
+        metadata.setFormat(duration: estimatedDuration);
+      }
+    }
+
+    // If we still don't have duration but have frames and sample rate,
+    // calculate from the frames we've actually scanned (less accurate for partial scans)
+    if (metadata.format.duration == null &&
+        _samplesPerFrame != null &&
+        sampleRate != null &&
+        _frameCount > 0) {
       final numberOfSamples = _frameCount * _samplesPerFrame!;
       metadata.setFormat(
         numberOfSamples: numberOfSamples,
@@ -531,7 +582,7 @@ class MpegFrameHeader {
     required this.frameLength,
   });
 
-  String get codec => 'MPEG $version Layer $layer';
+  String get codec => 'MPEG ${version.floor()} Layer $layer';
 
   int get samplesPerFrame {
     if (version == 1.0) {

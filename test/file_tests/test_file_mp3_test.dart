@@ -26,8 +26,8 @@ void main() {
       // Format checks
       checkFormat(
         metadata.format,
-        container: 'mp3',
-        codec: 'MPEG 1.0 Layer 3',
+        container: 'MPEG',
+        codec: 'MPEG 1 Layer 3',
         sampleRate: 44100,
         numberOfChannels: 2,
         bitrate: 128000,
@@ -58,11 +58,11 @@ void main() {
       // Format checks
       checkFormat(
         metadata.format,
-        container: 'mp3',
-        codec: 'MPEG 1.0 Layer 3',
+        container: 'MPEG',
+        codec: 'MPEG 1 Layer 3',
         sampleRate: 44100,
         numberOfChannels: 2,
-        bitrate: 32000,
+        bitrate: 56000,
       );
 
       // Common metadata checks
@@ -84,11 +84,11 @@ void main() {
       // Format checks
       checkFormat(
         metadata.format,
-        container: 'mp3',
-        codec: 'MPEG 1.0 Layer 3',
+        container: 'MPEG',
+        codec: 'MPEG 1 Layer 3',
         sampleRate: 44100,
         numberOfChannels: 2,
-        bitrate: 32000,
+        bitrate: 56000,
       );
 
       // Should have no native tags
@@ -127,11 +127,11 @@ void main() {
       // Format checks
       checkFormat(
         metadata.format,
-        container: 'mp3',
-        codec: 'MPEG 1.0 Layer 3',
+        container: 'MPEG',
+        codec: 'MPEG 1 Layer 3',
         sampleRate: 44100,
         numberOfChannels: 2,
-        bitrate: 128000,
+        bitrate: 104000,
       );
 
       // Common metadata checks

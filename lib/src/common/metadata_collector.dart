@@ -168,6 +168,14 @@ class MetadataCollector {
 
   int _getPriority(String formatId) => _formatPriority[formatId] ?? 0;
 
+  /// Converts an int or String to String, returns null if neither.
+  static String? _intToString(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is int) return value.toString();
+    return null;
+  }
+
   /// Adds a warning message.
   ///
   /// Parameters:
@@ -294,8 +302,8 @@ class MetadataCollector {
     description: _commonTags['description'] as List<String>?,
     longDescription: _commonTags['longDescription'] as String?,
     discsubtitle: _commonTags['discsubtitle'] as List<String>?,
-    totaltracks: _commonTags['totaltracks'] as String?,
-    totaldiscs: _commonTags['totaldiscs'] as String?,
+    totaltracks: _intToString(_commonTags['totaltracks']),
+    totaldiscs: _intToString(_commonTags['totaldiscs']),
     movementTotal: _commonTags['movementTotal'] as int?,
     compilation: _commonTags['compilation'] as bool?,
     rating: _commonTags['rating'] as List<Rating>?,

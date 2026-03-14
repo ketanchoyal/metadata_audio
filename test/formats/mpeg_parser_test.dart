@@ -23,7 +23,7 @@ void main() {
         const ParseOptions(),
       );
 
-      expect(metadata.format.container, 'mp3');
+      expect(metadata.format.container, 'MPEG');
       expect(metadata.format.sampleRate, 44100);
       expect(metadata.format.codec, contains('Layer 3'));
       expect(metadata.format.tool, startsWith('LAME'));

@@ -51,7 +51,7 @@ void main() {
       );
       expect(metadata.common.album, 'SPES');
       expect(metadata.common.track.no, 4);
-      expect(metadata.common.track.of, isNull);
+      expect(metadata.common.track.of, 12);
 
       final comtTags = metadata.native['DSDIFF'];
       expect(comtTags, isNotNull);

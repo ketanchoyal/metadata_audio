@@ -12,7 +12,7 @@ void main() {
   group('ParseOptions behavior parity', () {
     group('duration', () {
       test(
-        'duration=false skips EOF duration calculation for MPEG VBR',
+        'duration=false estimates duration from bitrate for MPEG VBR',
         () async {
           final bytes = <int>[
             ..._buildMpegFrame(),
@@ -30,7 +30,10 @@ void main() {
             const ParseOptions(),
           );
 
-          expect(metadata.format.duration, isNull);
+          // Duration is estimated from average bitrate and file size
+          // (not from EOF frame counting, which requires duration: true)
+          expect(metadata.format.duration, isNotNull);
+          // numberOfSamples requires full frame counting (duration: true)
           expect(metadata.format.numberOfSamples, isNull);
         },
       );
