@@ -1,0 +1,7 @@
+00:00 +0: loading test/formats/aiff_parser_test.dart
+00:00 +0: AiffParser / AiffLoader parses AIFF COMM/SSND and text tags
+00:00 +1: AiffParser / AiffLoader parses AIFC codec fields
+00:00 +2: AiffParser / AiffLoader parses embedded ID3v2 chunk
+00:00 +3: AiffParser / AiffLoader throws on invalid FORM type
+00:00 +4: AiffParser / AiffLoader loader declares extensions, MIME types and seek requirement
+00:00 +5: All tests passed!
