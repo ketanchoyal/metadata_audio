@@ -27,6 +27,9 @@ export 'package:audio_metadata/src/wavpack/wavpack_parser.dart';
 export 'package:audio_metadata/src/dsf/dsf_chunk.dart';
 export 'package:audio_metadata/src/dsf/dsf_loader.dart';
 export 'package:audio_metadata/src/dsf/dsf_parser.dart';
+export 'package:audio_metadata/src/dsdiff/dsdiff_loader.dart';
+export 'package:audio_metadata/src/dsdiff/dsdiff_parser.dart';
+export 'package:audio_metadata/src/dsdiff/dsdiff_token.dart';
 
 // Global parser factory instance (initialized by application code)
 late ParserFactory _parserFactory;
