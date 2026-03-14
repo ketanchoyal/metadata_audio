@@ -51,6 +51,9 @@ class FrameParser {
         }
         return _parseAttachedPicture(bytes, frameId);
 
+      case 'UFID':
+        return _parseUfidFrame(bytes);
+
       default:
         return null;
     }
@@ -149,6 +152,19 @@ class FrameParser {
       description: descriptionValue.text,
       data: imageData,
     );
+  }
+
+  Map<String, dynamic> _parseUfidFrame(List<int> bytes) {
+    // Find null terminator for owner identifier
+    int nullIndex = bytes.indexWhere((b) => b == 0);
+    if (nullIndex <= 0) {
+      return {'owner': '', 'identifier': <int>[]};
+    }
+
+    final owner = latin1.decode(bytes.sublist(0, nullIndex));
+    final identifier = bytes.sublist(nullIndex + 1);
+
+    return {'owner': owner, 'identifier': identifier};
   }
 
   List<String> _splitValue(String frameId, String text) {

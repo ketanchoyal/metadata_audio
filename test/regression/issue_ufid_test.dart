@@ -12,40 +12,35 @@ void main() {
       initializeParserFactory(ParserFactory(registry));
     });
 
-    test(
-      'extracts UFID owner and identifier payload',
-      () async {
-        final ufidPayload = <int>[
-          ...ascii.encode('http://musicbrainz.org'),
-          0x00,
-          0x12,
-          0x34,
-          0x56,
-          0x78,
-        ];
+    test('extracts UFID owner and identifier payload', () async {
+      final ufidPayload = <int>[
+        ...ascii.encode('http://musicbrainz.org'),
+        0x00,
+        0x12,
+        0x34,
+        0x56,
+        0x78,
+      ];
 
-        final bytes = Uint8List.fromList(
-          _buildId3Tag(_buildRawFrame('UFID', ufidPayload)),
-        );
+      final bytes = Uint8List.fromList(
+        _buildId3Tag(_buildRawFrame('UFID', ufidPayload)),
+      );
 
-        final metadata = await parseBytes(
-          bytes,
-          fileInfo: const FileInfo(path: 'ufid.mp3', mimeType: 'audio/mpeg'),
-        );
+      final metadata = await parseBytes(
+        bytes,
+        fileInfo: const FileInfo(path: 'ufid.mp3', mimeType: 'audio/mpeg'),
+      );
 
-        expect(metadata.native['ID3v2.3'], isNotNull);
-        expect(
-          metadata.native['ID3v2.3']!.where((tag) => tag.id == 'UFID'),
-          isNotEmpty,
-        );
+      expect(metadata.native['ID3v2.3'], isNotNull);
+      final ufidTags = metadata.native['ID3v2.3']!.where(
+        (tag) => tag.id == 'UFID',
+      );
+      expect(ufidTags, isNotEmpty);
 
-        // TODO(T095): Assert decoded UFID owner/id once UFID decoding is
-        // implemented.
-      },
-      skip:
-          'TODO(T095): UFID frame decoding parity is not implemented '
-          'in FrameParser.',
-    );
+      final ufidValue = ufidTags.first.value as Map<String, dynamic>;
+      expect(ufidValue['owner'], equals('http://musicbrainz.org'));
+      expect(ufidValue['identifier'], equals([0x12, 0x34, 0x56, 0x78]));
+    });
   });
 }
 
