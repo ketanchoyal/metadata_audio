@@ -1,6 +1,72 @@
 import 'package:audio_metadata/src/core.dart';
+import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
+import 'package:audio_metadata/src/common/metadata_collector.dart';
+import 'package:audio_metadata/src/id3v2/id3v2_tag_map.dart';
 import 'package:audio_metadata/src/model/types.dart';
+import 'package:audio_metadata/src/mp4/mp4_tag_mapper.dart';
+import 'package:audio_metadata/src/parser_factory.dart';
+import 'package:audio_metadata/src/parse_error.dart';
+import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:audio_metadata/src/apev2/apev2_tag_map.dart';
+import 'package:audio_metadata/src/asf/asf_tag_map.dart';
 import 'package:test/test.dart';
+
+class _StaticParserLoader implements ParserLoader {
+  @override
+  final List<String> extension;
+
+  @override
+  final List<String> mimeType;
+
+  @override
+  bool get hasRandomAccessRequirements => false;
+
+  _StaticParserLoader({required this.extension, required this.mimeType});
+
+  @override
+  bool supports(Tokenizer tokenizer) =>
+      !hasRandomAccessRequirements || tokenizer.canSeek;
+
+  @override
+  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) {
+    throw UnimplementedError('Not needed in parser selection tests');
+  }
+}
+
+class _NoopTokenizer implements Tokenizer {
+  @override
+  FileInfo? get fileInfo => null;
+
+  @override
+  bool get canSeek => false;
+
+  @override
+  int get position => 0;
+
+  @override
+  int peekUint8() => throw UnimplementedError();
+
+  @override
+  List<int> peekBytes(int length) => throw UnimplementedError();
+
+  @override
+  int readUint8() => throw UnimplementedError();
+
+  @override
+  int readUint16() => throw UnimplementedError();
+
+  @override
+  int readUint32() => throw UnimplementedError();
+
+  @override
+  List<int> readBytes(int length) => throw UnimplementedError();
+
+  @override
+  void seek(int position) => throw UnimplementedError();
+
+  @override
+  void skip(int length) => throw UnimplementedError();
+}
 
 void main() {
   group('orderTags', () {
@@ -207,6 +273,178 @@ void main() {
       final result = selectCover(pictures);
 
       expect(result?.data, equals([4, 5, 6]));
+    });
+  });
+
+  group('common metadata mapping parity', () {
+    late MetadataCollector collector;
+
+    setUp(() {
+      final mapper = CombinedTagMapper();
+      mapper.registerMapper('id3v2', Id3v2TagMapper());
+      mapper.registerMapper('apev2', Apev2TagMapper());
+      mapper.registerMapper('asf', AsfTagMapper());
+      mapper.registerMapper('mp4', Mp4TagMapper());
+      collector = MetadataCollector(mapper);
+    });
+
+    test('maps ID3v2 title/artist/album/year/genre/track into common tags', () {
+      collector.addNativeTag('id3v2', 'TIT2', 'Space Oddity');
+      collector.addNativeTag('id3v2', 'TPE1', 'David Bowie');
+      collector.addNativeTag('id3v2', 'TALB', 'Space Oddity');
+      collector.addNativeTag('id3v2', 'TYER', '1969');
+      collector.addNativeTag('id3v2', 'TCON', ['Rock', 'Art Rock']);
+      collector.addNativeTag('id3v2', 'TRCK', '1/10');
+
+      final metadata = collector.toAudioMetadata();
+      expect(metadata.common.title, equals('Space Oddity'));
+      expect(metadata.common.artist, equals('David Bowie'));
+      expect(metadata.common.album, equals('Space Oddity'));
+      expect(metadata.common.year, equals(1969));
+      expect(metadata.common.genre, equals(['Rock', 'Art Rock']));
+      expect(metadata.common.track.no, equals(1));
+    });
+
+    test('maps APEv2 core common fields with normalized value types', () {
+      collector.addNativeTag('apev2', 'Title', 'Sinner\'s Prayer');
+      collector.addNativeTag('apev2', 'Artist', 'Beth Hart');
+      collector.addNativeTag('apev2', 'Album', 'Don\'t Explain');
+      collector.addNativeTag('apev2', 'Year', '2011');
+      collector.addNativeTag('apev2', 'Genre', ['Blues Rock']);
+
+      final metadata = collector.toAudioMetadata();
+      expect(metadata.common.title, equals('Sinner\'s Prayer'));
+      expect(metadata.common.artist, equals('Beth Hart'));
+      expect(metadata.common.album, equals('Don\'t Explain'));
+      expect(metadata.common.year, equals(2011));
+      expect(metadata.common.genre, equals(['Blues Rock']));
+    });
+  });
+
+  group('comment mapping parity', () {
+    late MetadataCollector collector;
+
+    setUp(() {
+      final mapper = CombinedTagMapper();
+      mapper.registerMapper('id3v2', Id3v2TagMapper());
+      mapper.registerMapper('apev2', Apev2TagMapper());
+      mapper.registerMapper('asf', AsfTagMapper());
+      mapper.registerMapper('mp4', Mp4TagMapper());
+      collector = MetadataCollector(mapper);
+    });
+
+    test(
+      'maps ID3v2 COMM into common.comment preserving descriptor/language',
+      () {
+        collector.addNativeTag(
+          'id3v2',
+          'COMM',
+          const Comment(descriptor: '', language: 'eng', text: 'Test 123'),
+        );
+
+        final comment = collector.toAudioMetadata().common.comment;
+        expect(comment, hasLength(1));
+        expect(comment?.first.descriptor, equals(''));
+        expect(comment?.first.language, equals('eng'));
+        expect(comment?.first.text, equals('Test 123'));
+      },
+    );
+
+    test('maps ASF Description into common.comment text list', () {
+      collector.addNativeTag('asf', 'Description', 'Test 123');
+
+      final comment = collector.toAudioMetadata().common.comment;
+      expect(comment, hasLength(1));
+      expect(comment?.first.text, equals('Test 123'));
+      expect(comment?.first.language, isNull);
+      expect(comment?.first.descriptor, isNull);
+    });
+
+    test('maps MP4 iTunes NOTES into common.comment text list', () {
+      collector.addNativeTag(
+        'mp4',
+        '----:com.apple.itunes:notes',
+        'Medieval CUE Splitter',
+      );
+
+      final comment = collector.toAudioMetadata().common.comment;
+      expect(comment, hasLength(1));
+      expect(comment?.first.text, equals('Medieval CUE Splitter'));
+    });
+  });
+
+  group('MIME handling parity', () {
+    late ParserRegistry registry;
+    late ParserFactory factory;
+
+    late _StaticParserLoader mp3Loader;
+    late _StaticParserLoader flacLoader;
+    late _StaticParserLoader oggLoader;
+
+    setUp(() {
+      registry = ParserRegistry();
+      factory = ParserFactory(registry);
+
+      mp3Loader = _StaticParserLoader(
+        extension: ['mp3'],
+        mimeType: ['audio/mpeg'],
+      );
+      flacLoader = _StaticParserLoader(
+        extension: ['flac'],
+        mimeType: ['audio/flac'],
+      );
+      oggLoader = _StaticParserLoader(
+        extension: ['ogg'],
+        mimeType: ['audio/ogg', 'application/ogg'],
+      );
+
+      registry.register(mp3Loader);
+      registry.register(flacLoader);
+      registry.register(oggLoader);
+    });
+
+    test('selectParser prioritizes MIME type over extension', () {
+      final loader = factory.selectParser(
+        const FileInfo(path: '/music/example.mp3', mimeType: 'audio/flac'),
+        _NoopTokenizer(),
+      );
+      expect(loader, same(flacLoader));
+    });
+
+    test('supports secondary MIME aliases for the same loader', () {
+      final loader = factory.selectParser(
+        const FileInfo(path: '/music/example.bin', mimeType: 'application/ogg'),
+        _NoopTokenizer(),
+      );
+      expect(loader, same(oggLoader));
+    });
+
+    test('falls back to extension mapping when MIME type is absent', () {
+      final loader = factory.selectParser(
+        const FileInfo(path: '/music/example.mp3'),
+        _NoopTokenizer(),
+      );
+      expect(loader, same(mp3Loader));
+    });
+
+    test('throws when MIME type and extension do not resolve a parser', () {
+      expect(
+        () => factory.selectParser(
+          const FileInfo(
+            path: '/music/example.unknown',
+            mimeType: 'audio/none',
+          ),
+          _NoopTokenizer(),
+        ),
+        throwsA(isA<CouldNotDetermineFileTypeError>()),
+      );
+    });
+
+    test('registry exposes a stable sorted MIME list', () {
+      expect(
+        registry.getRegisteredMimeTypes(),
+        equals(['application/ogg', 'audio/flac', 'audio/mpeg', 'audio/ogg']),
+      );
     });
   });
 }
