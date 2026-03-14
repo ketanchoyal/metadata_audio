@@ -1,0 +1,53 @@
+library;
+
+import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
+import 'package:audio_metadata/src/common/metadata_collector.dart';
+import 'package:audio_metadata/src/id3v1/id3v1_tag_map.dart';
+import 'package:audio_metadata/src/id3v2/id3v2_tag_map.dart';
+import 'package:audio_metadata/src/model/types.dart';
+import 'package:audio_metadata/src/mpeg/mpeg_parser.dart';
+import 'package:audio_metadata/src/parser_factory.dart';
+import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+
+class MpegLoader extends ParserLoader {
+  @override
+  List<String> get extension => const <String>[
+    'mp2',
+    'mp3',
+    'm2a',
+    'aac',
+    'aacp',
+  ];
+
+  @override
+  List<String> get mimeType => const <String>[
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/aacs',
+    'audio/aacp',
+  ];
+
+  @override
+  bool get hasRandomAccessRequirements => false;
+
+  @override
+  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
+    final mapper = CombinedTagMapper()
+      ..registerMapper('ID3v1', Id3v1TagMapper())
+      ..registerMapper('ID3v2.2', Id3v2TagMapper())
+      ..registerMapper('ID3v2.3', Id3v2TagMapper())
+      ..registerMapper('ID3v2.4', Id3v2TagMapper());
+
+    final metadata = MetadataCollector(mapper);
+    metadata.setFormat(container: 'mp3');
+
+    final parser = MpegParser(
+      metadata: metadata,
+      tokenizer: tokenizer,
+      options: options,
+    );
+    await parser.parse();
+
+    return metadata.toAudioMetadata();
+  }
+}
