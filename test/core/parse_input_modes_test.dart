@@ -97,7 +97,6 @@ void main() {
 
         // Non-seekable tokenizer should fail when parser requires random access
         final nonSeekableTokenizer = _NonSeekableTokenizer(testBytes);
-        final fileInfo = FileInfo(mimeType: 'audio/restrictive');
 
         // Manually test the parser selection and support check
         final selectedParser = registry.getLoaderForMimeType(

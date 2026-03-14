@@ -79,6 +79,53 @@ void main() {
       expect(loader.extension, contains('mp3'));
       expect(loader.mimeType, contains('audio/mpeg'));
     });
+
+    test('parses ADTS AAC frames', () async {
+      final frames = <int>[
+        ..._buildAdtsFrame(),
+        ..._buildAdtsFrame(),
+        ..._buildAdtsFrame(),
+      ];
+
+      final loader = MpegLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(frames),
+          fileInfo: FileInfo(size: frames.length),
+        ),
+        const ParseOptions(),
+      );
+
+      expect(metadata.format.container, 'ADTS/MPEG-4');
+      expect(metadata.format.codec, 'AAC');
+      expect(metadata.format.codecProfile, 'AAC LC');
+      expect(metadata.format.sampleRate, 44100);
+      expect(metadata.format.numberOfChannels, 2);
+      expect(metadata.format.bitrate, closeTo(34453, 10));
+    });
+
+    test('calculates ADTS duration at EOF when enabled', () async {
+      final frames = <int>[
+        ..._buildAdtsFrame(),
+        ..._buildAdtsFrame(),
+        ..._buildAdtsFrame(),
+        ..._buildAdtsFrame(),
+        ..._buildAdtsFrame(),
+      ];
+
+      final loader = MpegLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(frames),
+          fileInfo: FileInfo(size: frames.length),
+        ),
+        const ParseOptions(duration: true),
+      );
+
+      expect(metadata.format.container, 'ADTS/MPEG-4');
+      expect(metadata.format.numberOfSamples, 5 * 1024);
+      expect(metadata.format.duration, closeTo(5 * 1024 / 44100, 0.01));
+    });
   });
 }
 
@@ -171,4 +218,37 @@ int _bitrateFromIndex(int index) {
     14: 320,
   };
   return table[index] ?? 128;
+}
+
+List<int> _buildAdtsFrame({
+  int versionIndex = 2,
+  int profileIndex = 1,
+  int sampleRateIndex = 4,
+  int channelConfigIndex = 2,
+  int frameLength = 100,
+  bool protectionAbsent = true,
+}) {
+  final byte0 = 0xFF;
+  final byte1 =
+      0xE0 |
+      ((versionIndex & 0x03) << 3) |
+      ((0x00 & 0x03) << 1) |
+      (protectionAbsent ? 1 : 0);
+  final byte2 =
+      ((profileIndex & 0x03) << 6) |
+      ((sampleRateIndex & 0x0F) << 2) |
+      ((channelConfigIndex >> 2) & 0x01);
+  final byte3 =
+      ((channelConfigIndex & 0x03) << 6) | ((frameLength >> 11) & 0x03);
+  final byte4 = (frameLength >> 3) & 0xFF;
+  final byte5 = ((frameLength & 0x07) << 5) | 0x1F;
+  final byte6 = 0xFC;
+
+  final header = <int>[byte0, byte1, byte2, byte3, byte4, byte5, byte6];
+  final crc = protectionAbsent ? <int>[] : <int>[0x00, 0x00];
+  final headerLength = protectionAbsent ? 7 : 9;
+  final payloadLength = frameLength - headerLength;
+  final payload = List<int>.filled(payloadLength > 0 ? payloadLength : 0, 0);
+
+  return <int>[...header, ...crc, ...payload];
 }

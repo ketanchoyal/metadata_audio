@@ -6,6 +6,7 @@ import 'package:audio_metadata/src/common/metadata_collector.dart';
 import 'package:audio_metadata/src/id3v1/id3v1_parser.dart';
 import 'package:audio_metadata/src/id3v2/id3v2_parser.dart';
 import 'package:audio_metadata/src/model/types.dart';
+import 'package:audio_metadata/src/mpeg/adts_frame_header.dart';
 import 'package:audio_metadata/src/mpeg/replay_gain_data_format.dart';
 import 'package:audio_metadata/src/parse_error.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
@@ -30,6 +31,7 @@ class MpegParser {
   bool _calculateEofDuration = false;
   final List<int> _bitrates = <int>[];
   bool _hasId3v1 = false;
+  int _adtsTotalDataLength = 0;
 
   MpegParser({
     required this.metadata,
@@ -47,71 +49,17 @@ class MpegParser {
     );
     await id3v2.parse();
 
-    while (await _syncToFrame()) {
-      final frameStart = tokenizer.position;
-      final headerBytes = _safeReadBytes(4);
-      if (headerBytes == null) {
+    while (true) {
+      final syncResult = await _syncToFrame();
+      if (syncResult == null) {
         break;
       }
 
-      final header = MpegFrameHeader.parse(headerBytes);
-      if (header == null) {
-        continue;
-      }
-
-      _mpegOffset ??= frameStart;
-      _frameCount++;
-      _frameSize = header.frameLength;
-      _samplesPerFrame = header.samplesPerFrame;
-
-      metadata.setFormat(
-        container: 'mp3',
-        codec: header.codec,
-        sampleRate: header.sampleRate,
-        numberOfChannels: header.channelMode == MpegChannelMode.mono ? 1 : 2,
-        bitrate: header.bitrate,
-      );
-
-      _bitrates.add(header.bitrate);
-
-      final payloadLength = header.frameLength - 4;
-      if (payloadLength < 0) {
-        metadata.addWarning('Invalid MPEG frame length: ${header.frameLength}');
-        continue;
-      }
-
-      if (_frameCount == 1) {
-        final frameData = _safeReadBytes(payloadLength);
-        if (frameData == null) {
-          break;
-        }
-        _parseFirstFrameInfo(header, frameData);
-
-        if (!options.duration && metadata.format.duration != null) {
-          break;
-        }
-      } else {
-        if (!_safeSkip(payloadLength)) {
-          break;
-        }
-      }
-
-      if (_frameCount == 4) {
-        final isCbr = _areAllSame(_bitrates);
-        if (isCbr) {
-          metadata.setFormat(codecProfile: 'CBR');
-          if (tokenizer.fileInfo?.size != null) {
-            break;
-          }
-        } else if (metadata.format.duration != null) {
-          break;
-        }
-
-        if (!options.duration) {
-          break;
-        }
-
-        _calculateEofDuration = true;
+      final shouldQuit = syncResult.kind == _FrameSyncKind.adts
+          ? _parseAdtsFrame()
+          : _parseMpegAudioFrame();
+      if (shouldQuit) {
+        break;
       }
     }
 
@@ -291,19 +239,155 @@ class MpegParser {
         data[offset + 3];
   }
 
-  Future<bool> _syncToFrame() async {
-    while (true) {
-      final sync = _safePeekBytes(2);
-      if (sync == null || sync.length < 2) {
-        return false;
-      }
+  bool _parseMpegAudioFrame() {
+    final frameStart = tokenizer.position;
+    final headerBytes = _safePeekBytes(4);
+    if (headerBytes == null || headerBytes.length < 4) {
+      return true;
+    }
 
-      if (sync[0] == 0xFF && (sync[1] & 0xE0) == 0xE0) {
+    final header = MpegFrameHeader.parse(headerBytes);
+    if (header == null) {
+      _safeSkip(1);
+      return false;
+    }
+    if (_safeReadBytes(4) == null) {
+      return true;
+    }
+
+    _mpegOffset ??= frameStart;
+    _frameCount++;
+    _frameSize = header.frameLength;
+    _samplesPerFrame = header.samplesPerFrame;
+
+    metadata.setFormat(
+      container: 'mp3',
+      codec: header.codec,
+      sampleRate: header.sampleRate,
+      numberOfChannels: header.channelMode == MpegChannelMode.mono ? 1 : 2,
+      bitrate: header.bitrate,
+    );
+
+    _bitrates.add(header.bitrate);
+
+    final payloadLength = header.frameLength - 4;
+    if (payloadLength < 0) {
+      metadata.addWarning('Invalid MPEG frame length: ${header.frameLength}');
+      return false;
+    }
+
+    if (_frameCount == 1) {
+      final frameData = _safeReadBytes(payloadLength);
+      if (frameData == null) {
+        return true;
+      }
+      _parseFirstFrameInfo(header, frameData);
+
+      if (!options.duration && metadata.format.duration != null) {
+        return true;
+      }
+    } else {
+      if (!_safeSkip(payloadLength)) {
+        return true;
+      }
+    }
+
+    if (_frameCount == 4) {
+      final isCbr = _areAllSame(_bitrates);
+      if (isCbr) {
+        metadata.setFormat(codecProfile: 'CBR');
+        if (tokenizer.fileInfo?.size != null) {
+          return true;
+        }
+      } else if (metadata.format.duration != null) {
         return true;
       }
 
+      if (!options.duration) {
+        return true;
+      }
+
+      _calculateEofDuration = true;
+    }
+
+    return false;
+  }
+
+  bool _parseAdtsFrame() {
+    final frameStart = tokenizer.position;
+    final firstSevenBytes = _safePeekBytes(7);
+    if (firstSevenBytes == null || firstSevenBytes.length < 7) {
+      return true;
+    }
+
+    final header = AdtsFrameHeader.parse(firstSevenBytes);
+    if (header == null) {
+      _safeSkip(1);
+      return false;
+    }
+
+    if (_safeReadBytes(header.headerLength) == null) {
+      return true;
+    }
+
+    _mpegOffset ??= frameStart;
+    _frameCount++;
+    _frameSize = header.frameLength;
+    _samplesPerFrame = header.samplesPerFrame;
+    _adtsTotalDataLength += header.frameLength;
+
+    metadata.setFormat(
+      container: header.container,
+      codec: header.codec,
+      codecProfile: header.codecProfile,
+      sampleRate: header.sampleRate,
+      numberOfChannels: header.numberOfChannels,
+    );
+
+    if (header.sampleRate != null) {
+      final framesPerSecond = header.sampleRate! / header.samplesPerFrame;
+      final bytesPerFrame = _adtsTotalDataLength / _frameCount;
+      final bitrate = (8 * bytesPerFrame * framesPerSecond).round();
+      metadata.setFormat(bitrate: bitrate);
+    }
+
+    final payloadLength = header.frameLength - header.headerLength;
+    if (payloadLength < 0) {
+      metadata.addWarning('Invalid ADTS frame length: ${header.frameLength}');
       if (!_safeSkip(1)) {
-        return false;
+        return true;
+      }
+    } else if (payloadLength > 0 && !_safeSkip(payloadLength)) {
+      return true;
+    }
+
+    if (_frameCount == 3) {
+      if (options.duration) {
+        _calculateEofDuration = true;
+      } else {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  Future<_FrameSyncResult?> _syncToFrame() async {
+    while (true) {
+      final sync = _safePeekBytes(2);
+      if (sync == null || sync.length < 2) {
+        return null;
+      }
+
+      if (sync[0] == 0xFF && (sync[1] & 0xE0) == 0xE0) {
+        final kind = MpegFrameHeader.isAdtsHeader(sync)
+            ? _FrameSyncKind.adts
+            : _FrameSyncKind.mpeg;
+        return _FrameSyncResult(kind: kind);
+      }
+
+      if (!_safeSkip(1)) {
+        return null;
       }
     }
   }
@@ -493,6 +577,10 @@ class MpegFrameHeader {
       return null;
     }
 
+    if (isAdtsHeader(bytes)) {
+      return null;
+    }
+
     final versionIndex = (bytes[1] >> 3) & 0x03;
     final layerIndex = (bytes[1] >> 1) & 0x03;
     final version = _versionTable[versionIndex];
@@ -547,4 +635,25 @@ class MpegFrameHeader {
       frameLength: frameLength,
     );
   }
+
+  static bool isAdtsHeader(List<int> bytes) {
+    if (bytes.length < 2) {
+      return false;
+    }
+    if (bytes[0] != 0xFF || (bytes[1] & 0xE0) != 0xE0) {
+      return false;
+    }
+
+    final versionIndex = (bytes[1] >> 3) & 0x03;
+    final layerIndex = (bytes[1] >> 1) & 0x03;
+    return versionIndex > 1 && layerIndex == 0;
+  }
+}
+
+enum _FrameSyncKind { mpeg, adts }
+
+class _FrameSyncResult {
+  final _FrameSyncKind kind;
+
+  const _FrameSyncResult({required this.kind});
 }

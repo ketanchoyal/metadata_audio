@@ -109,7 +109,7 @@ void main() {
       final metadata = collector.toAudioMetadata();
       final warning = metadata.quality.warnings[0];
 
-      expect(warning is ParserWarning, isTrue);
+      expect(warning, isA<ParserWarning>());
       expect(warning.message, equals(warningMsg));
     });
 

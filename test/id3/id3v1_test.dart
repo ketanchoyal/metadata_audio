@@ -339,6 +339,7 @@ void main() {
 
       test('should handle all-null fields', () {
         final block = List<int>.filled(30, 0);
+        expect(block, hasLength(30));
         // All nulls - should return null
       });
 
