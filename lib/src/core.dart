@@ -14,6 +14,19 @@ export 'package:audio_metadata/src/matroska/matroska_loader.dart';
 export 'package:audio_metadata/src/matroska/matroska_parser.dart';
 export 'package:audio_metadata/src/matroska/matroska_tag_mapper.dart';
 export 'package:audio_metadata/src/matroska/types.dart';
+export 'package:audio_metadata/src/musepack/musepack_content_error.dart';
+export 'package:audio_metadata/src/musepack/musepack_loader.dart';
+export 'package:audio_metadata/src/musepack/musepack_parser.dart';
+export 'package:audio_metadata/src/musepack/sv7/bit_reader.dart';
+export 'package:audio_metadata/src/musepack/sv7/mpc_sv7_parser.dart';
+export 'package:audio_metadata/src/musepack/sv7/stream_version7.dart';
+export 'package:audio_metadata/src/musepack/sv8/mpc_sv8_parser.dart';
+export 'package:audio_metadata/src/musepack/sv8/stream_version8.dart';
+export 'package:audio_metadata/src/wavpack/wavpack_loader.dart';
+export 'package:audio_metadata/src/wavpack/wavpack_parser.dart';
+export 'package:audio_metadata/src/dsf/dsf_chunk.dart';
+export 'package:audio_metadata/src/dsf/dsf_loader.dart';
+export 'package:audio_metadata/src/dsf/dsf_parser.dart';
 
 // Global parser factory instance (initialized by application code)
 late ParserFactory _parserFactory;
