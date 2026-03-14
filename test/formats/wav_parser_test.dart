@@ -122,6 +122,39 @@ void main() {
       );
     });
 
+    test('parses cue points and adtl labels into format.chapters', () async {
+      final bytes = _buildWaveFile(
+        formatTag: 0x0001,
+        channels: 2,
+        sampleRate: 1000,
+        bitsPerSample: 16,
+        dataSize: 8000,
+        infoTags: const <String, String>{},
+        cuePoints: const <Map<String, Object>>[
+          <String, Object>{'id': 1, 'sampleOffset': 0},
+          <String, Object>{'id': 2, 'sampleOffset': 2500},
+        ],
+        adtlLabels: const <int, String>{1: 'Intro', 2: 'Hook'},
+      );
+
+      final metadata = await WaveLoader().parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(includeChapters: true, duration: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(2));
+      expect(metadata.format.chapters![0].title, 'Intro');
+      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].end, 2500);
+      expect(metadata.format.chapters![1].title, 'Hook');
+      expect(metadata.format.chapters![1].start, 2500);
+      expect(metadata.format.chapters![1].end, isNull);
+    });
+
     test('throws on unsupported RIFF type', () async {
       final bytes = _buildRiff('NOTW', const <List<int>>[]);
       final loader = WaveLoader();
@@ -159,6 +192,8 @@ List<int> _buildWaveFile({
   int? blockAlign,
   int? factSampleLength,
   List<int>? id3Chunk,
+  List<Map<String, Object>>? cuePoints,
+  Map<int, String>? adtlLabels,
 }) {
   final resolvedBlockAlign =
       blockAlign ?? ((channels * bitsPerSample + 7) ~/ 8);
@@ -189,6 +224,23 @@ List<int> _buildWaveFile({
 
   if (id3Chunk != null) {
     chunks.add(_chunk('ID3 ', id3Chunk));
+  }
+
+  if (cuePoints != null && cuePoints.isNotEmpty) {
+    chunks.add(_chunk('cue ', _buildCueChunk(cuePoints)));
+  }
+
+  if (adtlLabels != null && adtlLabels.isNotEmpty) {
+    final adtlPayload = <int>[...ascii.encode('adtl')];
+    for (final entry in adtlLabels.entries) {
+      adtlPayload.addAll(
+        _chunk('labl', <int>[
+          ..._u32le(entry.key),
+          ...ascii.encode('${entry.value}\x00'),
+        ]),
+      );
+    }
+    chunks.add(_chunk('LIST', adtlPayload));
   }
 
   chunks.add(_chunk('data', List<int>.filled(dataSize, 0)));
@@ -227,6 +279,23 @@ List<int> _buildId3v23Tag({required String title}) {
     ..._synchsafe(frame.length),
     ...frame,
   ];
+}
+
+List<int> _buildCueChunk(List<Map<String, Object>> points) {
+  final payload = <int>[..._u32le(points.length)];
+  for (final point in points) {
+    final id = point['id']! as int;
+    final sampleOffset = point['sampleOffset']! as int;
+    payload.addAll(<int>[
+      ..._u32le(id),
+      ..._u32le(0),
+      ...ascii.encode('data'),
+      ..._u32le(0),
+      ..._u32le(0),
+      ..._u32le(sampleOffset),
+    ]);
+  }
+  return payload;
 }
 
 List<int> _u16le(int value) {

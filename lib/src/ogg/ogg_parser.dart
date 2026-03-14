@@ -30,6 +30,7 @@ class OggParser {
   final ParseOptions options;
 
   final Map<int, _OggStreamState> _streams = <int, _OggStreamState>{};
+  final Map<int, String> _vorbisChapterFields = <int, String>{};
 
   Future<void> parse() async {
     var reachedEndOfStream = false;
@@ -278,7 +279,26 @@ class OggParser {
       return;
     }
 
+    _collectVorbisChapterField(key, value);
+
     metadata.addNativeTag('vorbis', key, value);
+  }
+
+  void _collectVorbisChapterField(String key, String value) {
+    if (!options.includeChapters) {
+      return;
+    }
+    final match = RegExp(r'^CHAPTER(\d{3})(NAME)?$').firstMatch(key);
+    if (match == null) {
+      return;
+    }
+    final chapterNo = int.parse(match.group(1)!);
+    final suffix = match.group(2);
+    _vorbisChapterFields[_chapterFieldKey(
+          chapterNo,
+          suffix == null ? 'time' : 'name',
+        )] =
+        value;
   }
 
   String? _identifyCodec(List<int> pageData) {
@@ -370,6 +390,78 @@ class OggParser {
         metadata.format.bitrate == null) {
       metadata.setFormat(bitrate: (8 * fileSize / duration).round());
     }
+
+    _applyVorbisChapters();
+  }
+
+  void _applyVorbisChapters() {
+    if (!options.includeChapters || _vorbisChapterFields.isEmpty) {
+      return;
+    }
+
+    final chapterNumbers = <int>{};
+    for (final key in _vorbisChapterFields.keys) {
+      chapterNumbers.add(key ~/ 10);
+    }
+    final ordered = chapterNumbers.toList()..sort();
+    final chapters = <Chapter>[];
+    for (final chapterNo in ordered) {
+      final startMs = _parseVorbisChapterTimestamp(
+        _vorbisChapterFields[_chapterFieldKey(chapterNo, 'time')],
+      );
+      if (startMs == null) {
+        continue;
+      }
+      chapters.add(
+        Chapter(
+          id: 'chapter-${chapterNo.toString().padLeft(3, '0')}',
+          title:
+              _vorbisChapterFields[_chapterFieldKey(chapterNo, 'name')] ??
+              'Chapter ${chapterNo.toString().padLeft(3, '0')}',
+          start: startMs,
+          timeScale: 1000,
+        ),
+      );
+    }
+
+    for (var i = 0; i < chapters.length; i++) {
+      final end = i + 1 < chapters.length ? chapters[i + 1].start : null;
+      chapters[i] = Chapter(
+        id: chapters[i].id,
+        title: chapters[i].title,
+        start: chapters[i].start,
+        end: end,
+        timeScale: chapters[i].timeScale,
+      );
+    }
+
+    if (chapters.isNotEmpty) {
+      metadata.setFormat(chapters: chapters);
+    }
+  }
+
+  int _chapterFieldKey(int chapterNo, String field) =>
+      chapterNo * 10 + (field == 'name' ? 1 : 0);
+
+  int? _parseVorbisChapterTimestamp(String? value) {
+    if (value == null) {
+      return null;
+    }
+    final match = RegExp(
+      r'^(\d+):(\d{2}):(\d{2})(?:\.(\d{1,3}))?$',
+    ).firstMatch(value.trim());
+    if (match == null) {
+      metadata.addWarning('Invalid Vorbis chapter timestamp: $value');
+      return null;
+    }
+    final hours = int.parse(match.group(1)!);
+    final minutes = int.parse(match.group(2)!);
+    final seconds = int.parse(match.group(3)!);
+    final millisRaw = match.group(4);
+    final millis = millisRaw == null
+        ? 0
+        : int.parse(millisRaw.padRight(3, '0'));
+    return (((hours * 60 + minutes) * 60) + seconds) * 1000 + millis;
   }
 }
 

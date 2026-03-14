@@ -120,6 +120,60 @@ void main() {
       expect(metadata.native['vorbis'], isNotNull);
     });
 
+    test('parses Vorbis chapter tags into format.chapters', () async {
+      final streamSerial = 31;
+      final firstPage = _buildOggPage(
+        headerTypeFlags: 0x02,
+        granulePosition: 0,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 0,
+        payload: _buildVorbisIdentificationPayload(
+          channels: 2,
+          sampleRate: 44100,
+        ),
+      );
+      final commentPage = _buildOggPage(
+        headerTypeFlags: 0x00,
+        granulePosition: 0,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 1,
+        payload: _buildVorbisCommentPayload(
+          vendor: 'ogg-chapter-test',
+          comments: const <String>[
+            'CHAPTER001=00:00:00.000',
+            'CHAPTER001NAME=Intro',
+            'CHAPTER002=00:01:30.500',
+            'CHAPTER002NAME=Verse',
+          ],
+        ),
+      );
+      final lastPage = _buildOggPage(
+        headerTypeFlags: 0x04,
+        granulePosition: 44100 * 120,
+        streamSerialNumber: streamSerial,
+        pageSequenceNo: 2,
+        payload: <int>[0],
+      );
+
+      final metadata = await OggLoader().parse(
+        BytesTokenizer(
+          Uint8List.fromList(<int>[...firstPage, ...commentPage, ...lastPage]),
+          fileInfo: FileInfo(
+            size: firstPage.length + commentPage.length + lastPage.length,
+          ),
+        ),
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(2));
+      expect(metadata.format.chapters![0].title, 'Intro');
+      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].end, 90500);
+      expect(metadata.format.chapters![1].title, 'Verse');
+      expect(metadata.format.chapters![1].start, 90500);
+    });
+
     test('parses Opus identification header and OpusTags comments', () async {
       final streamSerial = 5;
       final firstPage = _buildOggPage(

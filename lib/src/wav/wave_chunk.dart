@@ -85,3 +85,55 @@ class FactChunk {
     return FactChunk(sampleLength: RiffChunk.readUint32Le(bytes, 0));
   }
 }
+
+class CuePoint {
+  const CuePoint({
+    required this.id,
+    required this.position,
+    required this.chunkId,
+    required this.chunkStart,
+    required this.blockStart,
+    required this.sampleOffset,
+  });
+
+  final int id;
+  final int position;
+  final String chunkId;
+  final int chunkStart;
+  final int blockStart;
+  final int sampleOffset;
+}
+
+class CueChunk {
+  const CueChunk({required this.points});
+
+  final List<CuePoint> points;
+
+  static CueChunk fromBytes(List<int> bytes) {
+    if (bytes.length < 4) {
+      throw WaveContentError('Invalid cue chunk size');
+    }
+
+    final count = RiffChunk.readUint32Le(bytes, 0);
+    final points = <CuePoint>[];
+    var offset = 4;
+    for (var i = 0; i < count; i++) {
+      if (offset + 24 > bytes.length) {
+        throw WaveContentError('Invalid cue point table length');
+      }
+      points.add(
+        CuePoint(
+          id: RiffChunk.readUint32Le(bytes, offset),
+          position: RiffChunk.readUint32Le(bytes, offset + 4),
+          chunkId: String.fromCharCodes(bytes.sublist(offset + 8, offset + 12)),
+          chunkStart: RiffChunk.readUint32Le(bytes, offset + 12),
+          blockStart: RiffChunk.readUint32Le(bytes, offset + 16),
+          sampleOffset: RiffChunk.readUint32Le(bytes, offset + 20),
+        ),
+      );
+      offset += 24;
+    }
+
+    return CueChunk(points: points);
+  }
+}

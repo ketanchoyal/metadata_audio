@@ -24,6 +24,8 @@ class WaveParser {
 
   FactChunk? _fact;
   int _blockAlign = 0;
+  CueChunk? _cueChunk;
+  final Map<int, String> _cueLabels = <int, String>{};
 
   Future<void> parse() async {
     final riffHeader = RiffChunk.parseHeader(
@@ -48,6 +50,8 @@ class WaveParser {
     } on TokenizerException {
       metadata.addWarning('Unexpected end of RIFF/WAVE data');
     }
+
+    _applyCueChapters();
   }
 
   Future<void> _parseRiffChunk(int chunkSize) async {
@@ -98,6 +102,9 @@ class WaveParser {
       case 'LIST':
         await _parseListTag(chunkSize);
         return;
+      case 'cue ':
+        _cueChunk = CueChunk.fromBytes(tokenizer.readBytes(chunkSize));
+        return;
       case 'fact':
         metadata.setFormat(lossless: false);
         _fact = FactChunk.fromBytes(tokenizer.readBytes(chunkSize));
@@ -142,8 +149,50 @@ class WaveParser {
       return;
     }
 
+    if (listType == 'adtl') {
+      await _parseAssociatedDataList(payloadSize);
+      return;
+    }
+
     metadata.addWarning('Ignore chunk: RIFF/WAVE/LIST/$listType');
     tokenizer.skip(payloadSize);
+  }
+
+  Future<void> _parseAssociatedDataList(int chunkSize) async {
+    var remaining = chunkSize;
+
+    while (remaining >= RiffChunk.headerLength) {
+      final header = RiffChunk.parseHeader(
+        tokenizer.readBytes(RiffChunk.headerLength),
+      );
+      final paddedLength = header.chunkSize.isOdd
+          ? header.chunkSize + 1
+          : header.chunkSize;
+      if (paddedLength > remaining - RiffChunk.headerLength) {
+        throw WaveContentError('Illegal remaining size: $remaining');
+      }
+
+      final payload = tokenizer.readBytes(header.chunkSize);
+      if (header.chunkId == 'labl' && payload.length >= 4) {
+        final cueId = RiffChunk.readUint32Le(payload, 0);
+        final label = _stripNulls(
+          ascii.decode(payload.sublist(4), allowInvalid: true),
+        );
+        if (label.isNotEmpty) {
+          _cueLabels[cueId] = label;
+        }
+      }
+
+      if (paddedLength > header.chunkSize) {
+        tokenizer.skip(paddedLength - header.chunkSize);
+      }
+
+      remaining -= RiffChunk.headerLength + paddedLength;
+    }
+
+    if (remaining != 0) {
+      throw WaveContentError('Illegal remaining size: $remaining');
+    }
   }
 
   Future<void> _parseRiffInfoTags(int chunkSize) async {
@@ -242,5 +291,43 @@ class WaveParser {
 
   static String _stripNulls(String value) {
     return value.replaceAll(RegExp(r'\x00+$'), '');
+  }
+
+  void _applyCueChapters() {
+    if (!options.includeChapters) {
+      return;
+    }
+    final cueChunk = _cueChunk;
+    final sampleRate = metadata.format.sampleRate;
+    if (cueChunk == null ||
+        cueChunk.points.isEmpty ||
+        sampleRate == null ||
+        sampleRate <= 0) {
+      return;
+    }
+
+    final points = [...cueChunk.points]
+      ..sort((a, b) => a.sampleOffset.compareTo(b.sampleOffset));
+    final chapters = <Chapter>[];
+    for (var i = 0; i < points.length; i++) {
+      final point = points[i];
+      final endOffset = i + 1 < points.length
+          ? points[i + 1].sampleOffset
+          : null;
+      chapters.add(
+        Chapter(
+          id: 'cue-${point.id}',
+          title: _cueLabels[point.id] ?? 'Cue ${i + 1}',
+          sampleOffset: point.sampleOffset,
+          start: ((point.sampleOffset * 1000) / sampleRate).round(),
+          end: endOffset == null
+              ? null
+              : ((endOffset * 1000) / sampleRate).round(),
+          timeScale: 1000,
+        ),
+      );
+    }
+
+    metadata.setFormat(chapters: chapters);
   }
 }
