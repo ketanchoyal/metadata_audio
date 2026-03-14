@@ -11,50 +11,44 @@ void main() {
       initializeParserFactory(ParserFactory(registry));
     });
 
-    test(
-      'maps extended ID3v2 fields to 20+ common tags',
-      () async {
-        final frames = <int>[
-          ..._buildTextFrame('TIT2', 'Mapping Regression'),
-          ..._buildTextFrame('TPE1', 'Regression Artist'),
-          ..._buildTextFrame('TALB', 'Regression Album'),
-          ..._buildTextFrame('TPE2', 'Album Artist'),
-          ..._buildTextFrame('TSOT', 'Title Sort'),
-          ..._buildTextFrame('TSOA', 'Album Sort'),
-          ..._buildTextFrame('TSOP', 'Artist Sort'),
-          ..._buildTextFrame('TSO2', 'Album Artist Sort'),
-          ..._buildTextFrame('TMOO', 'Calm'),
-          ..._buildTextFrame('TCOM', 'Composer Name'),
-          ..._buildTextFrame('TEXT', 'Lyricist Name'),
-          ..._buildTextFrame('TENC', 'Encoder Name'),
-          ..._buildTextFrame('TPUB', 'Publisher Name'),
-          ..._buildTextFrame('TIT1', 'Grouping Value'),
-          ..._buildTextFrame('MVNM', 'Movement Name'),
-          ..._buildTextFrame('MVIN', '2/4'),
-          ..._buildTextFrame('PCST', '1'),
-          ..._buildTextFrame('PCS', 'Podcast ID Value'),
-          ..._buildTextFrame('TLAN', 'eng'),
-          ..._buildTextFrame('TCOP', 'Copyright Notice'),
-          ..._buildTextFrame('TCON', 'Podcast'),
-        ];
+    test('maps extended ID3v2 fields to 20+ common tags', () async {
+      final frames = <int>[
+        ..._buildTextFrame('TIT2', 'Mapping Regression'),
+        ..._buildTextFrame('TPE1', 'Regression Artist'),
+        ..._buildTextFrame('TALB', 'Regression Album'),
+        ..._buildTextFrame('TPE2', 'Album Artist'),
+        ..._buildTextFrame('TSOT', 'Title Sort'),
+        ..._buildTextFrame('TSOA', 'Album Sort'),
+        ..._buildTextFrame('TSOP', 'Artist Sort'),
+        ..._buildTextFrame('TSO2', 'Album Artist Sort'),
+        ..._buildTextFrame('TMOO', 'Calm'),
+        ..._buildTextFrame('TCOM', 'Composer Name'),
+        ..._buildTextFrame('TEXT', 'Lyricist Name'),
+        ..._buildTextFrame('TENC', 'Encoder Name'),
+        ..._buildTextFrame('TPUB', 'Publisher Name'),
+        ..._buildTextFrame('TIT1', 'Grouping Value'),
+        ..._buildTextFrame('MVNM', 'Movement Name'),
+        ..._buildTextFrame('MVIN', '2/4'),
+        ..._buildTextFrame('PCST', '1'),
+        ..._buildTextFrame('PCS', 'Podcast ID Value'),
+        ..._buildTextFrame('TLAN', 'eng'),
+        ..._buildTextFrame('TCOP', 'Copyright Notice'),
+        ..._buildTextFrame('TCON', 'Podcast'),
+      ];
 
-        final bytes = Uint8List.fromList(_buildId3Tag(frames));
+      final bytes = Uint8List.fromList(_buildId3Tag(frames));
 
-        final metadata = await parseBytes(
-          bytes,
-          fileInfo: const FileInfo(path: 'pr544.mp3', mimeType: 'audio/mpeg'),
-        );
+      final metadata = await parseBytes(
+        bytes,
+        fileInfo: const FileInfo(path: 'pr544.mp3', mimeType: 'audio/mpeg'),
+      );
 
-        expect(metadata.common.title, equals('Mapping Regression'));
-        expect(metadata.common.artist, equals('Regression Artist'));
-        expect(metadata.common.album, equals('Regression Album'));
+      expect(metadata.common.title, equals('Mapping Regression'));
+      expect(metadata.common.artist, equals('Regression Artist'));
+      expect(metadata.common.album, equals('Regression Album'));
 
-        // TODO(T095): Expand ID3v2 tag mapping parity with upstream PR-544.
-      },
-      skip:
-          'TODO(T095): Full 20+ common-field mapping parity is not '
-          'implemented yet in Id3v2TagMapper.',
-    );
+      // TODO(T095): Expand ID3v2 tag mapping parity with upstream PR-544.
+    });
   });
 }
 

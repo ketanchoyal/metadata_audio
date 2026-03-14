@@ -22,6 +22,21 @@ final _id3v2TagMap = {
   'TCON': 'genre',
   'COM': 'comment',
   'COMM': 'comment',
+  'TSOT': 'titlesort',
+  'TSOA': 'albumsort',
+  'TSOP': 'artistsort',
+  'TSO2': 'albumartistsort',
+  'TCOM': 'composer',
+  'TEXT': 'lyricist',
+  'TENC': 'encoder',
+  'TPUB': 'publisher',
+  'TIT1': 'grouping',
+  'TMOO': 'mood',
+  'MVIN': 'movementindex',
+  'PCST': 'podcast',
+  'PCS': 'podcastid',
+  'TLAN': 'language',
+  'TCOP': 'copyright',
 };
 
 class Id3v2TagMapper extends GenericTagMapper {
@@ -75,6 +90,31 @@ class Id3v2TagMapper extends GenericTagMapper {
           return [value];
         }
         return null;
+      // Extended ID3v2 mappings - string singletons
+      case 'titlesort':
+      case 'albumsort':
+      case 'artistsort':
+      case 'albumartistsort':
+      case 'grouping':
+      case 'mood':
+      case 'language':
+      case 'copyright':
+        return _singleString(value);
+      // Extended ID3v2 mappings - string lists (creator roles)
+      case 'composer':
+      case 'lyricist':
+      case 'encoder':
+      case 'publisher':
+        return _stringList(value);
+      // Extended ID3v2 mappings (string list values)
+      case 'podcastid':
+        return _stringList(value);
+      // Extended ID3v2 mappings (numeric/boolean values)
+      case 'movementindex':
+        return _parseLeadingInt(_singleString(value));
+      case 'podcast':
+        final intVal = _parseLeadingInt(_singleString(value));
+        return intVal != null ? intVal != 0 : null;
       default:
         return null;
     }
