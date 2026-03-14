@@ -1,0 +1,17 @@
+{
+  "name": "audio-metadata-comparison",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Comparison tests between TypeScript music-metadata and Dart audio_metadata",
+  "scripts": {
+    "compare": "tsx compare.ts",
+    "test:ts": "tsx test-typescript.ts"
+  },
+  "dependencies": {
+    "music-metadata": "^10.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "@types/node": "^20.0.0"
+  }
+}
