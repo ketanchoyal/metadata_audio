@@ -33,22 +33,41 @@ dart pub get
 
 ## Usage
 
-*(Usage examples and API documentation coming soon)*
+```dart
+import 'package:audio_metadata/audio_metadata.dart';
 
-For now, see the [test directory](test/) for comprehensive usage examples across all supported formats.
+// Parse a file
+final metadata = await parseFile('/path/to/audio.mp3');
+
+// Access common metadata
+print('Title: ${metadata.common.title}');
+print('Artist: ${metadata.common.artist}');
+print('Album: ${metadata.common.album}');
+print('Duration: ${metadata.format.duration}');
+
+// Parse bytes
+final bytes = await File('/path/to/audio.flac').readAsBytes();
+final meta = await parseBytes(bytes, fileInfo: FileInfo(mimeType: 'audio/flac'));
+```
+
+For more examples, see the [test directory](test/) for comprehensive usage examples across all supported formats.
 
 ## Supported Formats
 
-*(Detailed format support coming soon)*
-
 | Format | Status | Notes |
 |--------|--------|-------|
-| MP3    | In Development | ID3v1, ID3v2, INFO frames |
-| FLAC   | In Development | Vorbis comments |
-| Ogg    | In Development | Vorbis comments |
-| MP4    | Planned | iTunes tags |
-| WAV    | Planned | LIST-INFO |
-| More...| Planned | See upstream [music-metadata](https://github.com/Borewit/music-metadata) |
+| MP3    | ✅ Complete | ID3v1, ID3v2.2/2.3/2.4, MPEG audio, Lyrics3 |
+| FLAC   | ✅ Complete | Vorbis comments, picture metadata |
+| OGG    | ✅ Complete | Vorbis, Opus, Speex, FLAC-in-Ogg |
+| MP4/M4A| ✅ Complete | iTunes atoms, chapters |
+| WAV    | ✅ Complete | RIFF, LIST-INFO, BWF |
+| AIFF   | ✅ Complete | AIFF-C, ID3, chunks |
+| APE    | ✅ Complete | APEv2 tags |
+| ASF/WMA| ✅ Complete | Windows Media metadata |
+| Matroska| ✅ Complete | MKV, WebM tags |
+| Musepack| ✅ Complete | SV7, SV8 |
+| WavPack| ✅ Complete | APEv2 tags |
+| DSD    | ✅ Complete | DSF, DSDIFF |
 
 ## Development
 

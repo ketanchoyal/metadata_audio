@@ -1,0 +1,163 @@
+{
+  "description": "Test fixtures manifest for audio_metadata library. The project uses synthetic data generation for test fixtures rather than storing binary audio files.",
+  "fixtures": [],
+  "synthetic_fixtures": [
+    {
+      "format": "FLAC",
+      "generator_location": "test/concurrency/concurrent_parsing_test.dart",
+      "description": "FLAC file with StreamInfo, Vorbis comments, and picture metadata blocks",
+      "characteristics": [
+        "StreamInfo block with 44.1kHz sample rate, 2 channels, 16-bit",
+        "Vorbis comments with title metadata",
+        "Picture block with JPEG image data",
+        "Configurable total samples and comments"
+      ],
+      "builder_functions": [
+        "_buildFlacFile",
+        "_buildStreamInfoBlock",
+        "_buildMetadataBlock",
+        "_buildVorbisCommentPayload",
+        "_buildPictureBlock"
+      ],
+      "supported_variations": [
+        "Custom stream info (sample rate, channels, bit depth)",
+        "Multiple vorbis comments",
+        "Picture data with custom mime types",
+        "Optional metadata blocks"
+      ]
+    },
+    {
+      "format": "ID3v1",
+      "generator_location": "test/id3/id3v1_test.dart",
+      "description": "ID3v1 tags and frames",
+      "characteristics": [
+        "ID3v1 tag format with fixed 128-byte structure"
+      ],
+      "supported_variations": [
+        "ID3v1 basic tags",
+        "ID3v1 extended tags"
+      ]
+    },
+    {
+      "format": "ID3v2.2",
+      "generator_location": "test/id3/id3v22_test.dart",
+      "description": "ID3v2.2 tags and frame headers",
+      "characteristics": [
+        "ID3v2.2 frame format with 3-character frame identifiers",
+        "Synchsafe integer encoding"
+      ],
+      "supported_variations": [
+        "Various ID3v2.2 frame types"
+      ]
+    },
+    {
+      "format": "ID3v2.3",
+      "generator_location": "test/id3/id3v23_test.dart",
+      "description": "ID3v2.3 tags and frame headers",
+      "characteristics": [
+        "ID3v2.3 frame format with 4-character frame identifiers",
+        "Synchsafe integer encoding",
+        "Extended header support"
+      ],
+      "supported_variations": [
+        "Various ID3v2.3 frame types",
+        "Text frames",
+        "URL frames"
+      ]
+    },
+    {
+      "format": "ID3v2.4",
+      "generator_location": "test/id3/id3v24_test.dart",
+      "description": "ID3v2.4 tags and frames",
+      "characteristics": [
+        "ID3v2.4 frame format with 4-character frame identifiers",
+        "Synchsafe integer encoding",
+        "Extended header support",
+        "Frame grouping"
+      ],
+      "supported_variations": [
+        "Various ID3v2.4 frame types",
+        "Text frames with text encoding",
+        "URL frames",
+        "Picture frames",
+        "Comment frames"
+      ]
+    },
+    {
+      "format": "MPEG",
+      "generator_location": "test/formats/mpeg_parser_test.dart",
+      "description": "MPEG audio frames and headers",
+      "characteristics": [
+        "MPEG frame headers with various configurations",
+        "MP3 audio data with ID3 tags"
+      ],
+      "supported_variations": [
+        "Different MPEG versions and layers",
+        "Various bitrate and sample rate combinations"
+      ]
+    },
+    {
+      "format": "WAV",
+      "generator_location": "test/formats/wav_parser_test.dart",
+      "description": "WAV file format with RIFF headers and LIST-INFO chunks",
+      "characteristics": [
+        "RIFF container format",
+        "PCM audio data",
+        "LIST-INFO metadata chunks"
+      ],
+      "supported_variations": [
+        "Different PCM formats",
+        "With and without metadata"
+      ]
+    },
+    {
+      "format": "DSF",
+      "generator_location": "test/formats/dsf_parser_test.dart",
+      "description": "DSF (DSD Stream File) format",
+      "characteristics": [
+        "DSF file format with DSD audio",
+        "Metadata markers"
+      ],
+      "supported_variations": [
+        "Various sample rates"
+      ]
+    },
+    {
+      "format": "ASF",
+      "generator_location": "test/formats/asf_parser_test.dart",
+      "description": "ASF (Advanced Systems Format) container",
+      "characteristics": [
+        "ASF/WMA/WMV file format",
+        "Metadata objects"
+      ],
+      "supported_variations": [
+        "Various ASF configurations"
+      ]
+    },
+    {
+      "format": "Tokenizer",
+      "generator_location": "test/id3/id3_test_utils.dart",
+      "class_name": "MockTokenizer",
+      "description": "Mock tokenizer for testing binary data parsing without actual files",
+      "characteristics": [
+        "In-memory binary data stream",
+        "Byte-level reading operations",
+        "Peek operations without advancing position",
+        "Optional seek support"
+      ],
+      "supported_variations": [
+        "Seekable and non-seekable streams",
+        "Configurable file info"
+      ]
+    }
+  ],
+  "testing_approach": "All tests use synthetic data generation rather than storing binary fixture files. This approach:",
+  "benefits": [
+    "Avoids copyright/licensing issues with real audio files",
+    "Reduces repository size",
+    "Enables precise test case construction",
+    "Allows testing of edge cases and malformed data",
+    "Improves test reproducibility"
+  ],
+  "adding_new_fixtures": "When adding new test fixtures, follow the synthetic generation pattern: 1) Create builder functions that construct byte-accurate audio format representations, 2) Document the builder functions and supported variations, 3) Update this MANIFEST.json with generator_location and characteristics, 4) Avoid storing binary files in test/fixtures/ directories"
+}
