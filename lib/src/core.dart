@@ -207,3 +207,106 @@ Future<void> scanPostHeaders(Tokenizer tokenizer, ParseOptions options) async {
   // Actual format-specific header detection (ID3v1, etc.) is delegated to format parsers
   // This ensures separation of concerns and allows each parser to define its own post-headers
 }
+
+/// Group tags by ID in a map.
+///
+/// Organizes a list of tags into a Map where keys are tag IDs and values
+/// are lists of tag values for that ID. This is useful for accessing all
+/// values of a particular tag type.
+///
+/// **Parameters:**
+/// - `tags`: List of tags to organize
+///
+/// **Returns:** Map<String, List<dynamic>> where keys are tag IDs
+///
+/// **Example:**
+/// ```dart
+/// final tags = [
+///   Tag(id: 'TIT2', value: 'Song Title'),
+///   Tag(id: 'TPE1', value: 'Artist Name'),
+///   Tag(id: 'TIT2', value: 'Alt Title'),
+/// ];
+/// final grouped = orderTags(tags);
+/// // grouped['TIT2'] = ['Song Title', 'Alt Title']
+/// // grouped['TPE1'] = ['Artist Name']
+/// ```
+Map<String, List<dynamic>> orderTags(List<Tag> tags) {
+  final result = <String, List<dynamic>>{};
+  for (final tag in tags) {
+    result.putIfAbsent(tag.id, () => []).add(tag.value);
+  }
+  return result;
+}
+
+/// Convert normalized rating (0-1) to star rating (1-5).
+///
+/// Maps a normalized rating value from 0.0 to 1.0 onto a 1-5 star scale.
+/// Handles null values by returning null.
+///
+/// **Parameters:**
+/// - `normalizedRating`: Rating value in range [0.0, 1.0], or null
+///
+/// **Returns:** Star rating in range [1, 5] as int, or null if input is null
+///
+/// **Mapping:**
+/// - null → null
+/// - 0.0 → 1 star
+/// - 0.25 → 1-2 stars (rounded)
+/// - 0.5 → 2-3 stars (rounded)
+/// - 0.75 → 3-4 stars (rounded)
+/// - 1.0 → 5 stars
+///
+/// **Example:**
+/// ```dart
+/// ratingToStars(0.0);   // returns 1
+/// ratingToStars(0.5);   // returns 3
+/// ratingToStars(1.0);   // returns 5
+/// ratingToStars(null);  // returns null
+/// ```
+int? ratingToStars(double? normalizedRating) {
+  if (normalizedRating == null) {
+    return null;
+  }
+  // Map [0, 1] to [1, 5]
+  return (normalizedRating * 4 + 1).round().clamp(1, 5);
+}
+
+/// Select the best cover art from a list of pictures.
+///
+/// Selects the most appropriate cover image from a list of pictures.
+/// Prioritizes pictures with type='Cover', falls back to the first picture,
+/// or returns null if the list is empty.
+///
+/// **Parameters:**
+/// - `pictures`: List of Picture objects, or null
+///
+/// **Returns:** Best Picture object, or null if list is empty/null
+///
+/// **Selection logic:**
+/// 1. Return first picture with type='Cover' if available
+/// 2. Fall back to first picture in list
+/// 3. Return null if list is empty or null
+///
+/// **Example:**
+/// ```dart
+/// final pictures = [
+///   Picture(format: 'image/jpeg', data: [...], type: 'Back'),
+///   Picture(format: 'image/jpeg', data: [...], type: 'Cover'),
+///   Picture(format: 'image/png', data: [...], type: null),
+/// ];
+/// final cover = selectCover(pictures);
+/// // Returns the picture with type='Cover'
+/// ```
+Picture? selectCover(List<Picture>? pictures) {
+  if (pictures == null || pictures.isEmpty) {
+    return null;
+  }
+
+  // Try to find a picture with type='Cover'
+  try {
+    return pictures.firstWhere((p) => p.type == 'Cover');
+  } catch (_) {
+    // No picture with type='Cover' found, return first picture
+    return pictures.isNotEmpty ? pictures.first : null;
+  }
+}
