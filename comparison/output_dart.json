@@ -332,7 +332,387 @@
       "sampleRate": 22050,
       "numberOfChannels": 2,
       "bitrate": 32552.32279622475,
-      "lossless": false
+      "lossless": false,
+      "chapters": [
+        {
+          "title": "Track 1",
+          "start": 1022,
+          "end": 52106,
+          "sampleOffset": 22528,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 2",
+          "start": 52106,
+          "end": 1943371,
+          "sampleOffset": 1148928,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 3",
+          "start": 1943371,
+          "end": 3595192,
+          "sampleOffset": 42851328,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 4",
+          "start": 3595192,
+          "end": 5316719,
+          "sampleOffset": 79273984,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 5",
+          "start": 5316719,
+          "end": 7204130,
+          "sampleOffset": 117233664,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 6",
+          "start": 7204130,
+          "end": 9012361,
+          "sampleOffset": 158851072,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 7",
+          "start": 9012361,
+          "end": 10756226,
+          "sampleOffset": 198722560,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 8",
+          "start": 10756226,
+          "end": 12626361,
+          "sampleOffset": 237174784,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 9",
+          "start": 12626361,
+          "end": 14562441,
+          "sampleOffset": 278411264,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 10",
+          "start": 14562441,
+          "end": 16477205,
+          "sampleOffset": 321101824,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 11",
+          "start": 16477205,
+          "end": 18517496,
+          "sampleOffset": 363322368,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 12",
+          "start": 18517496,
+          "end": 20383405,
+          "sampleOffset": 408310784,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 13",
+          "start": 20383405,
+          "end": 22248153,
+          "sampleOffset": 449454080,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 14",
+          "start": 22248153,
+          "end": 23916553,
+          "sampleOffset": 490571776,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 15",
+          "start": 23916553,
+          "end": 25853748,
+          "sampleOffset": 527360000,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 16",
+          "start": 25853748,
+          "end": 27745895,
+          "sampleOffset": 570075136,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 17",
+          "start": 27745895,
+          "end": 28419274,
+          "sampleOffset": 611796992,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 18",
+          "start": 28419274,
+          "end": 30394038,
+          "sampleOffset": 626644992,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 19",
+          "start": 30394038,
+          "end": 31517327,
+          "sampleOffset": 670188544,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 20",
+          "start": 31517327,
+          "end": 33531054,
+          "sampleOffset": 694957056,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 21",
+          "start": 33531054,
+          "end": 34746154,
+          "sampleOffset": 739359744,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 22",
+          "start": 34746154,
+          "end": 36747622,
+          "sampleOffset": 766152704,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 23",
+          "start": 36747622,
+          "end": 38243172,
+          "sampleOffset": 810285056,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 24",
+          "start": 38243172,
+          "end": 38962434,
+          "sampleOffset": 843261952,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 25",
+          "start": 38962434,
+          "end": 40294191,
+          "sampleOffset": 859121664,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 26",
+          "start": 40294191,
+          "end": 41671320,
+          "sampleOffset": 888486912,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 27",
+          "start": 41671320,
+          "end": 42742039,
+          "sampleOffset": 918852608,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 28",
+          "start": 42742039,
+          "end": 44691168,
+          "sampleOffset": 942461952,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 29",
+          "start": 44691168,
+          "end": 46256704,
+          "sampleOffset": 985440256,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 30",
+          "start": 46256704,
+          "end": 48136777,
+          "sampleOffset": 1019960320,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 31",
+          "start": 48136777,
+          "end": 50203214,
+          "sampleOffset": 1061415936,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 32",
+          "start": 50203214,
+          "end": 51476225,
+          "sampleOffset": 1106980864,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 33",
+          "start": 51476225,
+          "end": 53468822,
+          "sampleOffset": 1135050752,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 34",
+          "start": 53468822,
+          "end": 54522358,
+          "sampleOffset": 1178987520,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 35",
+          "start": 54522358,
+          "end": 55669052,
+          "sampleOffset": 1202217984,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 36",
+          "start": 55669052,
+          "end": 57090020,
+          "sampleOffset": 1227502592,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 37",
+          "start": 57090020,
+          "end": 58364053,
+          "sampleOffset": 1258834944,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 38",
+          "start": 58364053,
+          "end": 60257686,
+          "sampleOffset": 1286927360,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 39",
+          "start": 60257686,
+          "end": 61650233,
+          "sampleOffset": 1328681984,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 40",
+          "start": 61650233,
+          "end": 62950597,
+          "sampleOffset": 1359387648,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 41",
+          "start": 62950597,
+          "end": 64681320,
+          "sampleOffset": 1388060672,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 42",
+          "start": 64681320,
+          "end": 66433730,
+          "sampleOffset": 1426223104,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 43",
+          "start": 66433730,
+          "end": 68319747,
+          "sampleOffset": 1464863744,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 44",
+          "start": 68319747,
+          "end": 70056414,
+          "sampleOffset": 1506450432,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 45",
+          "start": 70056414,
+          "end": 71541052,
+          "sampleOffset": 1544743936,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 46",
+          "start": 71541052,
+          "end": 73187207,
+          "sampleOffset": 1577480192,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 47",
+          "start": 73187207,
+          "end": 74471457,
+          "sampleOffset": 1613777920,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 48",
+          "start": 74471457,
+          "end": 76343078,
+          "sampleOffset": 1642095616,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 49",
+          "start": 76343078,
+          "end": 77738272,
+          "sampleOffset": 1683364864,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 50",
+          "start": 77738272,
+          "end": 78746668,
+          "sampleOffset": 1714128896,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 51",
+          "start": 78746668,
+          "end": 79879152,
+          "sampleOffset": 1736364032,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 52",
+          "start": 79879152,
+          "end": 80849281,
+          "sampleOffset": 1761335296,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 53",
+          "start": 80849281,
+          "end": 81358077,
+          "sampleOffset": 1782726656,
+          "timeScale": 1000
+        },
+        {
+          "title": "Track 54",
+          "start": 81358077,
+          "end": 81433542,
+          "sampleOffset": 1793945600,
+          "timeScale": 1000
+        }
+      ]
     },
     "common": {
       "title": "02 - The Dark Forest",

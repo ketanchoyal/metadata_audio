@@ -64,7 +64,22 @@ Future<Map<String, dynamic>> parseAndExtract(
   }
 
   try {
-    final metadata = await parseFile(filePath);
+    final metadata = await parseFile(
+      filePath,
+      options: const ParseOptions(includeChapters: true),
+    );
+    final chapters = metadata.format.chapters
+        ?.map(
+          (chapter) => <String, dynamic>{
+            'id': chapter.id,
+            'title': chapter.title,
+            'start': chapter.start,
+            'end': chapter.end,
+            'sampleOffset': chapter.sampleOffset,
+            'timeScale': chapter.timeScale,
+          }..removeWhere((_, value) => value == null),
+        )
+        .toList();
     final format = <String, dynamic>{
       'container': metadata.format.container,
       'codec': metadata.format.codec,
@@ -73,6 +88,7 @@ Future<Map<String, dynamic>> parseAndExtract(
       'numberOfChannels': metadata.format.numberOfChannels,
       'bitrate': metadata.format.bitrate,
       'lossless': metadata.format.lossless,
+      'chapters': chapters,
     }..removeWhere((_, value) => value == null);
 
     final common =

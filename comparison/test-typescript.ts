@@ -17,6 +17,14 @@ interface TestResult {
     numberOfChannels: number | undefined;
     bitrate: number | undefined;
     lossless?: boolean | undefined;
+    chapters?: Array<{
+      id?: string;
+      title: string;
+      start: number;
+      end?: number;
+      sampleOffset?: number;
+      timeScale?: number;
+    }>;
   };
   common: {
     title: string | undefined;
@@ -47,6 +55,16 @@ async function parseFile(relativePath: string): Promise<TestResult> {
 
   try {
     const metadata = await mm.parseFile(filePath);
+    const chapters = metadata.format.chapters?.map((chapter) => ({
+      ...(chapter.id != null ? { id: chapter.id } : {}),
+      title: chapter.title,
+      start: chapter.start,
+      ...(chapter.end != null ? { end: chapter.end } : {}),
+      ...(chapter.sampleOffset != null
+        ? { sampleOffset: chapter.sampleOffset }
+        : {}),
+      ...(chapter.timeScale != null ? { timeScale: chapter.timeScale } : {}),
+    }));
 
     return {
       file: relativePath,
@@ -58,6 +76,7 @@ async function parseFile(relativePath: string): Promise<TestResult> {
         numberOfChannels: metadata.format.numberOfChannels,
         bitrate: metadata.format.bitrate,
         lossless: metadata.format.lossless,
+        chapters,
       },
       common: {
         title: metadata.common.title,
