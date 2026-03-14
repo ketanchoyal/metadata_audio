@@ -9,6 +9,12 @@ import 'package:audio_metadata/src/parser_factory.dart';
 import 'package:audio_metadata/src/tokenizer/io_tokenizers.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
 
+export 'package:audio_metadata/src/matroska/matroska_dtd.dart';
+export 'package:audio_metadata/src/matroska/matroska_loader.dart';
+export 'package:audio_metadata/src/matroska/matroska_parser.dart';
+export 'package:audio_metadata/src/matroska/matroska_tag_mapper.dart';
+export 'package:audio_metadata/src/matroska/types.dart';
+
 // Global parser factory instance (initialized by application code)
 late ParserFactory _parserFactory;
 
