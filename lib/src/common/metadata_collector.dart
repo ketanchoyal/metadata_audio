@@ -2,7 +2,7 @@
 /// and warnings.
 ///
 /// Collects metadata from various sources and resolves tag priorities.
-/// Later tags override earlier ones (simple override priority model).
+/// Higher-priority formats override lower-priority formats.
 ///
 /// Based on upstream:
 /// https://github.com/Borewit/music-metadata/blob/master/lib/common/MetadataCollector.ts
@@ -29,6 +29,13 @@ import 'package:audio_metadata/src/model/types.dart';
 /// print(metadata.common.title); // 'Song Title'
 /// ```
 class MetadataCollector {
+  static const Map<String, int> _formatPriority = {
+    'ID3v1': 1,
+    'ID3v2.2': 2,
+    'ID3v2.3': 3,
+    'ID3v2.4': 4,
+  };
+
   final CombinedTagMapper _tagMapper;
 
   /// Audio format information
@@ -39,8 +46,11 @@ class MetadataCollector {
   final Map<String, Map<String, dynamic>> _nativeTagsByFormat = {};
 
   /// Aggregated common tags (with priority applied)
-  /// Later additions override earlier ones
+  /// Values from higher-priority formats override lower-priority formats
   final Map<String, dynamic> _commonTags = {};
+
+  /// Tracks the source format used for each common tag key
+  final Map<String, String> _commonTagSource = {};
 
   /// Collected warnings
   final List<String> _warnings = [];
@@ -138,14 +148,25 @@ class MetadataCollector {
     if (_tagMapper.hasMapper(formatId)) {
       try {
         final genericTags = _tagMapper.mapTags(formatId, {tagId: value});
-        // Add/override common tags (simple priority: later overrides earlier)
-        _commonTags.addAll(genericTags);
+        for (final entry in genericTags.entries) {
+          final tagKey = entry.key;
+          final newValue = entry.value;
+          final currentSource = _commonTagSource[tagKey];
+
+          if (currentSource == null ||
+              _getPriority(formatId) >= _getPriority(currentSource)) {
+            _commonTags[tagKey] = newValue;
+            _commonTagSource[tagKey] = formatId;
+          }
+        }
       } on UnknownFormatException catch (e) {
         // If mapping fails, just store the native tag
         addWarning('Failed to map $formatId:$tagId to common tag: $e');
       }
     }
   }
+
+  int _getPriority(String formatId) => _formatPriority[formatId] ?? 0;
 
   /// Adds a warning message.
   ///

@@ -43,9 +43,6 @@ void main() {
         // TODO(T095): Verify richer merge semantics once tag-priority
         // parity is complete.
       },
-      skip:
-          'TODO(T095): Current metadata collector uses last-write-wins; '
-          'expected upstream merge priority is still pending.',
     );
   });
 }
