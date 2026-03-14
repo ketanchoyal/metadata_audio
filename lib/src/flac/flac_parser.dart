@@ -64,17 +64,23 @@ class FlacParser {
     switch (blockHeader.type) {
       case FlacBlockType.streamInfo:
         await _readStreamInfo(blockHeader.length);
+        return;
       case FlacBlockType.vorbisComment:
         await _readVorbisComment(blockHeader.length);
+        return;
       case FlacBlockType.picture:
         await _readPicture(blockHeader.length);
+        return;
+      case FlacBlockType.cueSheet:
+        await _readCueSheet(blockHeader.length);
+        return;
       case FlacBlockType.padding:
       case FlacBlockType.application:
       case FlacBlockType.seekTable:
-      case FlacBlockType.cueSheet:
       case FlacBlockType.unknown:
         metadata.addWarning('Unknown or unsupported FLAC block type');
         tokenizer.skip(blockHeader.length);
+        return;
     }
   }
 
@@ -121,6 +127,62 @@ class FlacParser {
 
     final picture = FlacToken.parsePicture(tokenizer.readBytes(dataLength));
     metadata.addNativeTag('vorbis', 'METADATA_BLOCK_PICTURE', picture);
+  }
+
+  Future<void> _readCueSheet(int dataLength) async {
+    final cueSheet = FlacToken.parseCueSheet(tokenizer.readBytes(dataLength));
+    metadata.addNativeTag('flac', 'CUESHEET', cueSheet);
+
+    if (!options.includeChapters) {
+      return;
+    }
+
+    final sampleRate = metadata.format.sampleRate;
+    if (sampleRate == null || sampleRate <= 0) {
+      metadata.addWarning('Cannot derive FLAC cuesheet chapter timings');
+      return;
+    }
+
+    final tracks = cueSheet.tracks.where((track) => !track.isLeadOut).toList();
+    if (tracks.isEmpty) {
+      return;
+    }
+
+    final leadOut = cueSheet.tracks.cast<FlacCueSheetTrack?>().firstWhere(
+      (track) => track?.isLeadOut ?? false,
+      orElse: () => null,
+    );
+
+    final chapters = <Chapter>[];
+    for (var i = 0; i < tracks.length; i++) {
+      final track = tracks[i];
+      final startOffset = _chapterStartOffset(track);
+      final nextStart = i + 1 < tracks.length
+          ? _chapterStartOffset(tracks[i + 1])
+          : leadOut?.offset;
+      chapters.add(
+        Chapter(
+          id: 'track-${track.number}',
+          title: 'Track ${track.number.toString().padLeft(2, '0')}',
+          sampleOffset: startOffset,
+          start: ((startOffset * 1000) / sampleRate).round(),
+          end: nextStart == null
+              ? null
+              : ((nextStart * 1000) / sampleRate).round(),
+          timeScale: 1000,
+        ),
+      );
+    }
+
+    metadata.setFormat(chapters: chapters);
+  }
+
+  int _chapterStartOffset(FlacCueSheetTrack track) {
+    final index01 = track.indices.cast<FlacCueSheetIndex?>().firstWhere(
+      (index) => index?.number == 1,
+      orElse: () => null,
+    );
+    return track.offset + (index01?.offset ?? 0);
   }
 
   void _parseVorbisComment(Uint8List data) {

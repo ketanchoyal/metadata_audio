@@ -3,6 +3,7 @@ library;
 import 'dart:convert';
 
 import 'package:audio_metadata/src/model/types.dart';
+import 'package:audio_metadata/src/parse_error.dart';
 
 enum FlacBlockType {
   streamInfo(0),
@@ -84,6 +85,34 @@ class FlacPicture {
   final int colourDepth;
   final int indexedColor;
   final List<int> data;
+}
+
+class FlacCueSheetIndex {
+  const FlacCueSheetIndex({required this.offset, required this.number});
+
+  final int offset;
+  final int number;
+}
+
+class FlacCueSheetTrack {
+  const FlacCueSheetTrack({
+    required this.offset,
+    required this.number,
+    required this.indices,
+  });
+
+  final int offset;
+  final int number;
+  final List<FlacCueSheetIndex> indices;
+
+  bool get isLeadOut => number == 0xAA || number == 0xFF;
+}
+
+class FlacCueSheet {
+  const FlacCueSheet({required this.leadInSamples, required this.tracks});
+
+  final int leadInSamples;
+  final List<FlacCueSheetTrack> tracks;
 }
 
 class FlacToken {
@@ -209,6 +238,53 @@ class FlacToken {
     );
   }
 
+  static FlacCueSheet parseCueSheet(List<int> bytes, [int offset = 0]) {
+    _expectLength(bytes, offset, 396, 'FLAC cuesheet header');
+
+    var cursor = offset + 128;
+    final leadInSamples = readUint64Be(bytes, cursor);
+    cursor += 8;
+    cursor += 1; // flags byte
+    cursor += 258; // reserved bytes
+
+    _expectLength(bytes, cursor, 1, 'FLAC cuesheet track count');
+    final trackCount = bytes[cursor++];
+    final tracks = <FlacCueSheetTrack>[];
+
+    for (var i = 0; i < trackCount; i++) {
+      _expectLength(bytes, cursor, 36, 'FLAC cuesheet track header');
+      final trackOffset = readUint64Be(bytes, cursor);
+      cursor += 8;
+      final trackNumber = bytes[cursor++];
+      cursor += 12; // ISRC
+      cursor += 1; // flags
+      cursor += 13; // reserved
+      final indexCount = bytes[cursor++];
+
+      final indices = <FlacCueSheetIndex>[];
+      for (var j = 0; j < indexCount; j++) {
+        _expectLength(bytes, cursor, 12, 'FLAC cuesheet index');
+        indices.add(
+          FlacCueSheetIndex(
+            offset: readUint64Be(bytes, cursor),
+            number: bytes[cursor + 8],
+          ),
+        );
+        cursor += 12;
+      }
+
+      tracks.add(
+        FlacCueSheetTrack(
+          offset: trackOffset,
+          number: trackNumber,
+          indices: indices,
+        ),
+      );
+    }
+
+    return FlacCueSheet(leadInSamples: leadInSamples, tracks: tracks);
+  }
+
   static int uint16Be(List<int> bytes, int offset) {
     _expectLength(bytes, offset, 2, 'uint16');
     return (bytes[offset] << 8) | bytes[offset + 1];
@@ -217,6 +293,26 @@ class FlacToken {
   static int uint24Be(List<int> bytes, int offset) {
     _expectLength(bytes, offset, 3, 'uint24');
     return (bytes[offset] << 16) | (bytes[offset + 1] << 8) | bytes[offset + 2];
+  }
+
+  static int readUint64Be(List<int> bytes, int offset) {
+    _expectLength(bytes, offset, 8, 'uint64');
+    final value =
+        (BigInt.from(bytes[offset]) << 56) |
+        (BigInt.from(bytes[offset + 1]) << 48) |
+        (BigInt.from(bytes[offset + 2]) << 40) |
+        (BigInt.from(bytes[offset + 3]) << 32) |
+        (BigInt.from(bytes[offset + 4]) << 24) |
+        (BigInt.from(bytes[offset + 5]) << 16) |
+        (BigInt.from(bytes[offset + 6]) << 8) |
+        BigInt.from(bytes[offset + 7]);
+    if (value > BigInt.from(0x7FFFFFFF)) {
+      throw UnexpectedFileContentError(
+        'FLAC',
+        '64-bit integer overflow for parser runtime',
+      );
+    }
+    return value.toInt();
   }
 
   static int uint32Be(List<int> bytes, int offset) {

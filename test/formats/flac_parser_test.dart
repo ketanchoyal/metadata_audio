@@ -136,6 +136,64 @@ void main() {
       },
     );
 
+    test('parses CUESHEET into format.chapters when enabled', () async {
+      final bytes = _buildFlacFile(
+        streamInfo: _buildStreamInfoBlock(totalSamples: 132300),
+        comments: const <String>[],
+        cueSheet: _buildCueSheetBlock(
+          trackOffsets: const <int>[0, 44100, 132300],
+          trackNumbers: const <int>[1, 2, 0xAA],
+        ),
+      );
+
+      final loader = FlacLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(2));
+      expect(metadata.format.chapters![0].title, 'Track 01');
+      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].end, 1000);
+      expect(metadata.format.chapters![0].sampleOffset, 0);
+      expect(metadata.format.chapters![1].title, 'Track 02');
+      expect(metadata.format.chapters![1].start, 1000);
+      expect(metadata.format.chapters![1].end, 3000);
+      final flacTags = metadata.native['flac'];
+      expect(flacTags, isNotNull);
+      expect(flacTags!.where((tag) => tag.id == 'CUESHEET'), isNotEmpty);
+    });
+
+    test('skips CUESHEET chapters when includeChapters is false', () async {
+      final bytes = _buildFlacFile(
+        streamInfo: _buildStreamInfoBlock(totalSamples: 132300),
+        comments: const <String>[],
+        cueSheet: _buildCueSheetBlock(
+          trackOffsets: const <int>[0, 44100, 132300],
+          trackNumbers: const <int>[1, 2, 0xAA],
+        ),
+      );
+
+      final loader = FlacLoader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(),
+      );
+
+      expect(metadata.format.chapters, isNull);
+      final flacTags = metadata.native['flac'];
+      expect(flacTags, isNotNull);
+      expect(flacTags!.where((tag) => tag.id == 'CUESHEET'), isNotEmpty);
+    });
+
     test('throws on invalid FLAC preamble', () async {
       final loader = FlacLoader();
       final bytes = Uint8List.fromList(<int>[0x00, 0x00, 0x00, 0x00]);
@@ -165,9 +223,20 @@ List<int> _buildFlacFile({
   required List<int> streamInfo,
   required List<String> comments,
   List<int>? picture,
+  List<int>? cueSheet,
 }) {
   final blocks = <List<int>>[];
   blocks.add(_buildMetadataBlock(type: 0, isLast: false, payload: streamInfo));
+
+  if (cueSheet != null) {
+    blocks.add(
+      _buildMetadataBlock(
+        type: 5,
+        isLast: comments.isEmpty && picture == null,
+        payload: cueSheet,
+      ),
+    );
+  }
 
   if (comments.isNotEmpty) {
     blocks.add(
@@ -183,7 +252,7 @@ List<int> _buildFlacFile({
     blocks.add(_buildMetadataBlock(type: 6, isLast: true, payload: picture));
   }
 
-  if (comments.isEmpty && picture == null) {
+  if (comments.isEmpty && picture == null && cueSheet == null) {
     blocks[0] = _buildMetadataBlock(type: 0, isLast: true, payload: streamInfo);
   }
 
@@ -271,6 +340,30 @@ List<int> _buildPictureBlock({required List<int> data}) {
   return payload;
 }
 
+List<int> _buildCueSheetBlock({
+  required List<int> trackOffsets,
+  required List<int> trackNumbers,
+}) {
+  final payload = <int>[
+    ...List<int>.filled(128, 0),
+    ..._uInt64Be(0),
+    0,
+    ...List<int>.filled(258, 0),
+    trackOffsets.length,
+  ];
+
+  for (var i = 0; i < trackOffsets.length; i++) {
+    payload.addAll(_uInt64Be(trackOffsets[i]));
+    payload.add(trackNumbers[i]);
+    payload.addAll(List<int>.filled(12, 0));
+    payload.add(0);
+    payload.addAll(List<int>.filled(13, 0));
+    payload.add(0);
+  }
+
+  return payload;
+}
+
 List<int> _uInt32Le(int value) {
   return <int>[
     value & 0xFF,
@@ -282,6 +375,19 @@ List<int> _uInt32Le(int value) {
 
 List<int> _uInt32Be(int value) {
   return <int>[
+    (value >> 24) & 0xFF,
+    (value >> 16) & 0xFF,
+    (value >> 8) & 0xFF,
+    value & 0xFF,
+  ];
+}
+
+List<int> _uInt64Be(int value) {
+  return <int>[
+    (value >> 56) & 0xFF,
+    (value >> 48) & 0xFF,
+    (value >> 40) & 0xFF,
+    (value >> 32) & 0xFF,
     (value >> 24) & 0xFF,
     (value >> 16) & 0xFF,
     (value >> 8) & 0xFF,
