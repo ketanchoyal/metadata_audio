@@ -16,24 +16,33 @@ interface TestResult {
     sampleRate: number | undefined;
     numberOfChannels: number | undefined;
     bitrate: number | undefined;
+    lossless?: boolean | undefined;
   };
   common: {
     title: string | undefined;
     artist: string | undefined;
     album: string | undefined;
+    albumartist?: string | undefined;
     year: number | undefined;
     track: { no: number | null; of: number | null } | undefined;
+    disk?: { no: number | null; of: number | null } | undefined;
     genre: string[] | undefined;
   };
   native: string[];
+  error?: string;
 }
 
-async function parseFile(relativePath: string): Promise<TestResult | null> {
+async function parseFile(relativePath: string): Promise<TestResult> {
   const filePath = path.join(samplesDir, relativePath);
   
   if (!fs.existsSync(filePath)) {
-    console.log(`SKIP: ${relativePath} (not found)`);
-    return null;
+    return { 
+      file: relativePath, 
+      format: {}, 
+      common: {}, 
+      native: [],
+      error: 'File not found' 
+    } as TestResult;
   }
   
   try {
@@ -48,29 +57,32 @@ async function parseFile(relativePath: string): Promise<TestResult | null> {
         sampleRate: metadata.format.sampleRate,
         numberOfChannels: metadata.format.numberOfChannels,
         bitrate: metadata.format.bitrate,
+        lossless: metadata.format.lossless,
       },
       common: {
         title: metadata.common.title,
         artist: metadata.common.artist,
         album: metadata.common.album,
+        albumartist: metadata.common.albumartist,
         year: metadata.common.year,
         track: metadata.common.track,
+        disk: metadata.common.disk,
         genre: metadata.common.genre,
       },
       native: Object.keys(metadata.native),
     };
   } catch (error) {
-    console.error(`ERROR parsing ${relativePath}:`, error);
-    return null;
+    return {
+      file: relativePath,
+      format: {},
+      common: {},
+      native: [],
+      error: error instanceof Error ? error.message : String(error),
+    } as TestResult;
   }
 }
 
 async function main() {
-  console.log('='.repeat(60));
-  console.log('TypeScript music-metadata Comparison Test');
-  console.log('='.repeat(60));
-  console.log();
-
   const testFiles = [
     // MP3
     'mp3/id3v2.3.mp3',
@@ -98,26 +110,10 @@ async function main() {
 
   for (const file of testFiles) {
     const result = await parseFile(file);
-    if (result) {
-      results.push(result);
-      console.log(`✓ ${file}`);
-      console.log(`  Format: ${result.format.container} / ${result.format.codec}`);
-      if (result.common.title) {
-        console.log(`  Title: ${result.common.title}`);
-      }
-      if (result.common.artist) {
-        console.log(`  Artist: ${result.common.artist}`);
-      }
-      console.log();
-    }
+    results.push(result);
   }
 
-  console.log('='.repeat(60));
-  console.log(`Parsed ${results.length}/${testFiles.length} files successfully`);
-  console.log('='.repeat(60));
-  
-  // Output full JSON for comparison
-  console.log('\nFull JSON Output:\n');
+  // Output only JSON, no console logs
   console.log(JSON.stringify(results, null, 2));
 }
 
