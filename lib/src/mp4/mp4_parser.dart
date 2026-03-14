@@ -100,9 +100,46 @@ class Mp4Parser {
         }
         _parseStsd(tokenizer.readBytes(payloadLength));
         return;
+      case 'stts':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
+        _parseStts(tokenizer.readBytes(payloadLength));
+        return;
+      case 'stsc':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
+        _parseStsc(tokenizer.readBytes(payloadLength));
+        return;
+      case 'stsz':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
+        _parseStsz(tokenizer.readBytes(payloadLength));
+        return;
+      case 'stco':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
+        _parseStco(tokenizer.readBytes(payloadLength));
+        return;
+      case 'chap':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
+        _parseChap(tokenizer.readBytes(payloadLength));
+        return;
       case 'mdat':
         _audioLengthInBytes = payloadLength;
-        tokenizer.skip(payloadLength);
+        if (!_tryParseChaptersFromMdat(payloadLength)) {
+          tokenizer.skip(payloadLength);
+        }
         return;
       default:
         if (atom.parent?.header.name == 'ilst') {
@@ -197,6 +234,52 @@ class Mp4Parser {
 
     final descriptions = AtomToken.parseStsd(payload);
     track.sampleDescriptions.addAll(descriptions);
+  }
+
+  void _parseStts(List<int> payload) {
+    final track = _currentTrack;
+    if (track == null) {
+      return;
+    }
+    track.timeToSampleTable.addAll(AtomToken.parseStts(payload));
+  }
+
+  void _parseStsc(List<int> payload) {
+    final track = _currentTrack;
+    if (track == null) {
+      return;
+    }
+    track.sampleToChunkTable.addAll(AtomToken.parseStsc(payload));
+  }
+
+  void _parseStsz(List<int> payload) {
+    final track = _currentTrack;
+    if (track == null) {
+      return;
+    }
+    final stsz = AtomToken.parseStsz(payload);
+    track.sampleSize = stsz.$1;
+    track.sampleSizeTable.addAll(stsz.$2);
+  }
+
+  void _parseStco(List<int> payload) {
+    final track = _currentTrack;
+    if (track == null) {
+      return;
+    }
+    track.chunkOffsetTable.addAll(AtomToken.parseStco(payload));
+  }
+
+  void _parseChap(List<int> payload) {
+    final track = _currentTrack;
+    if (track == null) {
+      return;
+    }
+    var offset = 0;
+    while (offset + 4 <= payload.length) {
+      track.chapterTrackIds.add(AtomToken.readUint32Be(payload, offset));
+      offset += 4;
+    }
   }
 
   Future<void> _parseMetadataItem(Mp4Atom itemAtom, int payloadLength) async {
@@ -415,6 +498,182 @@ class Mp4Parser {
     metadata.setFormat(hasAudio: _hasAudioTrack, hasVideo: _hasVideoTrack);
   }
 
+  bool _tryParseChaptersFromMdat(int payloadLength) {
+    if (!options.includeChapters) {
+      return false;
+    }
+
+    final tracksWithChapters = _tracks.values
+        .where((track) => track.chapterTrackIds.isNotEmpty)
+        .toList();
+    if (tracksWithChapters.length != 1) {
+      return false;
+    }
+
+    final chapterOwnerTrack = tracksWithChapters.single;
+    final chapterTracks = _tracks.values
+        .where(
+          (track) => chapterOwnerTrack.chapterTrackIds.contains(track.trackId),
+        )
+        .toList();
+    if (chapterTracks.length != 1) {
+      return false;
+    }
+
+    final chapterTrack = chapterTracks.single;
+    final chapters = _parseChapterTrack(
+      chapterTrack,
+      chapterOwnerTrack,
+      payloadLength,
+    );
+    if (chapters == null || chapters.isEmpty) {
+      return false;
+    }
+
+    metadata.setFormat(chapters: chapters);
+    return true;
+  }
+
+  List<Chapter>? _parseChapterTrack(
+    _TrackDescription chapterTrack,
+    _TrackDescription referencedTrack,
+    int payloadLength,
+  ) {
+    if (chapterTrack.chunkOffsetTable.isEmpty) {
+      return null;
+    }
+    if (chapterTrack.sampleSize == null) {
+      return null;
+    }
+    if (chapterTrack.sampleSize == 0 &&
+        chapterTrack.chunkOffsetTable.length !=
+            chapterTrack.sampleSizeTable.length) {
+      metadata.addWarning('Invalid MP4 chapter track sample sizing');
+      return null;
+    }
+    if (referencedTrack.timeScale == null || referencedTrack.timeScale! <= 0) {
+      return null;
+    }
+
+    var remaining = payloadLength;
+    final chapters = <Chapter>[];
+    for (
+      var i = 0;
+      i < chapterTrack.chunkOffsetTable.length && remaining > 0;
+      i++
+    ) {
+      final chunkOffset = chapterTrack.chunkOffsetTable[i];
+      final skipLength = chunkOffset - tokenizer.position;
+      final sampleSize = chapterTrack.sampleSize! > 0
+          ? chapterTrack.sampleSize!
+          : chapterTrack.sampleSizeTable[i];
+      if (skipLength < 0 || sampleSize < 0) {
+        metadata.addWarning('Invalid MP4 chapter offset/size');
+        return null;
+      }
+      remaining -= skipLength + sampleSize;
+      if (remaining < 0) {
+        metadata.addWarning('MP4 chapter chunk exceeds mdat payload');
+        return null;
+      }
+
+      tokenizer.skip(skipLength);
+      final title = AtomToken.parseChapterText(tokenizer.readBytes(sampleSize));
+      final chapterOffset = _findSampleOffset(
+        referencedTrack,
+        tokenizer.position,
+      );
+      final startMs = ((chapterOffset * 1000) / referencedTrack.timeScale!)
+          .round();
+      chapters.add(
+        Chapter(
+          title: title,
+          start: startMs,
+          sampleOffset: chapterOffset,
+          timeScale: 1000,
+        ),
+      );
+    }
+
+    for (var i = 0; i < chapters.length; i++) {
+      final current = chapters[i];
+      final end = i + 1 < chapters.length
+          ? chapters[i + 1].start
+          : (referencedTrack.durationUnits != null
+                ? ((referencedTrack.durationUnits! * 1000) /
+                          referencedTrack.timeScale!)
+                      .round()
+                : null);
+      chapters[i] = Chapter(
+        id: current.id,
+        title: current.title,
+        url: current.url,
+        sampleOffset: current.sampleOffset,
+        start: current.start,
+        end: end,
+        timeScale: current.timeScale,
+        image: current.image,
+      );
+    }
+
+    tokenizer.skip(remaining);
+    return chapters;
+  }
+
+  int _findSampleOffset(_TrackDescription track, int chapterOffset) {
+    var chunkIndex = 0;
+    while (chunkIndex < track.chunkOffsetTable.length &&
+        track.chunkOffsetTable[chunkIndex] < chapterOffset) {
+      chunkIndex++;
+    }
+    return _getChunkDuration(chunkIndex + 1, track);
+  }
+
+  int _getChunkDuration(int chunkId, _TrackDescription track) {
+    if (track.timeToSampleTable.isEmpty || track.sampleToChunkTable.isEmpty) {
+      return 0;
+    }
+    var timeToSampleIndex = 0;
+    var remainingCount = track.timeToSampleTable[timeToSampleIndex].count;
+    var sampleDuration = track.timeToSampleTable[timeToSampleIndex].duration;
+    var currentChunkId = 1;
+    var samplesPerChunk = _getSamplesPerChunk(currentChunkId, track);
+    var totalDuration = 0;
+
+    while (currentChunkId < chunkId) {
+      final numberOfSamples = remainingCount < samplesPerChunk
+          ? remainingCount
+          : samplesPerChunk;
+      totalDuration += numberOfSamples * sampleDuration;
+      remainingCount -= numberOfSamples;
+      samplesPerChunk -= numberOfSamples;
+
+      if (samplesPerChunk == 0) {
+        currentChunkId++;
+        samplesPerChunk = _getSamplesPerChunk(currentChunkId, track);
+      } else {
+        timeToSampleIndex++;
+        if (timeToSampleIndex >= track.timeToSampleTable.length) {
+          break;
+        }
+        remainingCount = track.timeToSampleTable[timeToSampleIndex].count;
+        sampleDuration = track.timeToSampleTable[timeToSampleIndex].duration;
+      }
+    }
+
+    return totalDuration;
+  }
+
+  int _getSamplesPerChunk(int chunkId, _TrackDescription track) {
+    final table = track.sampleToChunkTable;
+    for (var i = 0; i < table.length - 1; i++) {
+      if (chunkId >= table[i].firstChunk && chunkId < table[i + 1].firstChunk) {
+        return table[i].samplesPerChunk;
+      }
+    }
+    return table.last.samplesPerChunk;
+  }
+
   String _formatCodec(String dataFormat) {
     switch (dataFormat) {
       case 'mp4a':
@@ -446,7 +705,13 @@ class _TrackDescription {
   String? handlerType;
   int? timeScale;
   int? durationUnits;
+  int? sampleSize;
   final List<SampleDescription> sampleDescriptions = <SampleDescription>[];
+  final List<SttsEntry> timeToSampleTable = <SttsEntry>[];
+  final List<StscEntry> sampleToChunkTable = <StscEntry>[];
+  final List<int> sampleSizeTable = <int>[];
+  final List<int> chunkOffsetTable = <int>[];
+  final List<int> chapterTrackIds = <int>[];
 
   bool get isAudio => handlerType == 'soun' || handlerType == 'audi';
   bool get isVideo => handlerType == 'vide';

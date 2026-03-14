@@ -71,6 +71,43 @@ void main() {
       expect(tags.any((tag) => tag.id == 'covr'), isFalse);
     });
 
+    test('parses MP4 chapter track into format.chapters', () async {
+      final bytes = _buildSyntheticMp4WithChapters();
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(2));
+      expect(metadata.format.chapters![0].title, 'Intro');
+      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].end, 1000);
+      expect(metadata.format.chapters![1].title, 'Outro');
+      expect(metadata.format.chapters![1].start, 1000);
+      expect(metadata.format.chapters![1].end, 2000);
+    });
+
+    test('ignores MP4 chapter track when includeChapters is false', () async {
+      final bytes = _buildSyntheticMp4WithChapters();
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(),
+      );
+
+      expect(metadata.format.chapters, isNull);
+    });
+
     test('loader declares extension, MIME types and seek requirement', () {
       final loader = Mp4Loader();
 
@@ -128,6 +165,113 @@ List<int> _buildSyntheticMp4() {
   return <int>[...ftyp, ...moov];
 }
 
+List<int> _buildSyntheticMp4WithChapters() {
+  final ftyp = _atom('ftyp', <int>[
+    ...latin1.encode('M4A '),
+    ...latin1.encode('isom'),
+    ...latin1.encode('mp42'),
+  ]);
+
+  final mvhd = _atom('mvhd', _mvhdPayload(timeScale: 1000, duration: 2000));
+
+  final audioTkhd = _atom('tkhd', _tkhdPayload(trackId: 1));
+  final audioMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final audioHdlr = _atom('hdlr', _hdlrPayload('soun'));
+  final chapRef = _atom('tref', _atom('chap', _u32(2)));
+  final audioStsd = _atom('stsd', _stsdPayloadMp4a());
+  final audioStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[2, 1000],
+    ]),
+  );
+  final audioStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final audioStco = _atom('stco', _stcoPayload(<int>[0, 0]));
+  final audioStbl = _atom('stbl', <int>[
+    ...audioStsd,
+    ...audioStts,
+    ...audioStsc,
+    ...audioStco,
+  ]);
+  final audioMinf = _atom('minf', audioStbl);
+  final audioMdia = _atom('mdia', <int>[
+    ...audioMdhd,
+    ...audioHdlr,
+    ...audioMinf,
+  ]);
+  final audioTrak = _atom('trak', <int>[
+    ...audioTkhd,
+    ...audioMdia,
+    ...chapRef,
+  ]);
+
+  final chapterTkhd = _atom('tkhd', _tkhdPayload(trackId: 2));
+  final chapterMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final chapterHdlr = _atom('hdlr', _hdlrPayload('text'));
+  final chapter1 = _chapterTextSample('Intro');
+  final chapter2 = _chapterTextSample('Outro');
+  final chapterStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final chapterStsz = _atom(
+    'stsz',
+    _stszPayload(0, <int>[chapter1.length, chapter2.length]),
+  );
+  final chapterStco = _atom('stco', _stcoPayload(<int>[0, 0]));
+  final chapterStbl = _atom('stbl', <int>[
+    ...chapterStsc,
+    ...chapterStsz,
+    ...chapterStco,
+  ]);
+  final chapterMinf = _atom('minf', chapterStbl);
+  final chapterMdia = _atom('mdia', <int>[
+    ...chapterMdhd,
+    ...chapterHdlr,
+    ...chapterMinf,
+  ]);
+  final chapterTrak = _atom('trak', <int>[...chapterTkhd, ...chapterMdia]);
+
+  final moov = _atom('moov', <int>[...mvhd, ...audioTrak, ...chapterTrak]);
+
+  final mdatPayload = <int>[
+    ...chapter1,
+    ...List<int>.filled(20, 0x11),
+    ...chapter2,
+    ...List<int>.filled(20, 0x22),
+  ];
+  final mdat = _atom('mdat', mdatPayload);
+
+  final file = <int>[...ftyp, ...moov, ...mdat];
+  final mdatDataOffset = ftyp.length + moov.length + 8;
+  final chapter1Offset = mdatDataOffset;
+  final audio1Offset = mdatDataOffset + chapter1.length;
+  final chapter2Offset = mdatDataOffset + chapter1.length + 20;
+  final audio2Offset = chapter2Offset + chapter2.length;
+
+  final audioStcoOffset = _findSequence(file, audioStco, occurrence: 1);
+  final chapterStcoOffset = _findSequence(file, chapterStco, occurrence: 2);
+  _patchU32(file, audioStcoOffset + 16, audio1Offset);
+  _patchU32(file, audioStcoOffset + 20, audio2Offset);
+  _patchU32(file, chapterStcoOffset + 16, chapter1Offset);
+  _patchU32(file, chapterStcoOffset + 20, chapter2Offset);
+
+  return file;
+}
+
 List<int> _metadataItem(String key, List<int> children) => _atom(key, children);
 
 List<int> _dataAtom(int type, List<int> value) {
@@ -149,9 +293,90 @@ List<int> _nameLikeAtom(String id, String value) {
   return _atom(id, <int>[0, 0, 0, 0, ...utf8.encode(value)]);
 }
 
+List<int> _chapterTextSample(String value) {
+  final encoded = utf8.encode(value);
+  return <int>[(encoded.length >> 8) & 0xFF, encoded.length & 0xFF, ...encoded];
+}
+
+List<int> _sttsPayload(List<List<int>> entries) {
+  return <int>[
+    0,
+    0,
+    0,
+    0,
+    ..._u32(entries.length),
+    for (final entry in entries) ...<int>[..._u32(entry[0]), ..._u32(entry[1])],
+  ];
+}
+
+List<int> _stscPayload(List<List<int>> entries) {
+  return <int>[
+    0,
+    0,
+    0,
+    0,
+    ..._u32(entries.length),
+    for (final entry in entries) ...<int>[
+      ..._u32(entry[0]),
+      ..._u32(entry[1]),
+      ..._u32(1),
+    ],
+  ];
+}
+
+List<int> _stszPayload(int sampleSize, List<int> entries) {
+  return <int>[
+    0,
+    0,
+    0,
+    0,
+    ..._u32(sampleSize),
+    ..._u32(entries.length),
+    for (final entry in entries) ..._u32(entry),
+  ];
+}
+
+List<int> _stcoPayload(List<int> offsets) {
+  return <int>[
+    0,
+    0,
+    0,
+    0,
+    ..._u32(offsets.length),
+    for (final offset in offsets) ..._u32(offset),
+  ];
+}
+
 List<int> _atom(String name, List<int> payload) {
   final length = 8 + payload.length;
   return <int>[..._u32(length), ...latin1.encode(name), ...payload];
+}
+
+int _findSequence(List<int> source, List<int> pattern, {int occurrence = 1}) {
+  var seen = 0;
+  for (var i = 0; i <= source.length - pattern.length; i++) {
+    var matches = true;
+    for (var j = 0; j < pattern.length; j++) {
+      if (source[i + j] != pattern[j]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      seen++;
+      if (seen == occurrence) {
+        return i;
+      }
+    }
+  }
+  throw StateError('Pattern occurrence not found');
+}
+
+void _patchU32(List<int> target, int offset, int value) {
+  target[offset] = (value >> 24) & 0xFF;
+  target[offset + 1] = (value >> 16) & 0xFF;
+  target[offset + 2] = (value >> 8) & 0xFF;
+  target[offset + 3] = value & 0xFF;
 }
 
 List<int> _mvhdPayload({required int timeScale, required int duration}) {

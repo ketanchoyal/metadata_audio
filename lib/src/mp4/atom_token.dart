@@ -55,6 +55,20 @@ class SampleDescription {
   final int? sampleRate;
 }
 
+class SttsEntry {
+  const SttsEntry({required this.count, required this.duration});
+
+  final int count;
+  final int duration;
+}
+
+class StscEntry {
+  const StscEntry({required this.firstChunk, required this.samplesPerChunk});
+
+  final int firstChunk;
+  final int samplesPerChunk;
+}
+
 class DataAtomType {
   const DataAtomType({required this.set, required this.type});
 
@@ -237,6 +251,96 @@ class AtomToken {
     }
 
     return descriptions;
+  }
+
+  static List<SttsEntry> parseStts(List<int> bytes) {
+    if (bytes.length < 8) {
+      throw Mp4ContentError('stts atom payload too short');
+    }
+
+    final entryCount = readUint32Be(bytes, 4);
+    final entries = <SttsEntry>[];
+    var offset = 8;
+    for (var i = 0; i < entryCount; i++) {
+      _ensureRange(bytes, offset, 8);
+      entries.add(
+        SttsEntry(
+          count: readUint32Be(bytes, offset),
+          duration: readUint32Be(bytes, offset + 4),
+        ),
+      );
+      offset += 8;
+    }
+    return entries;
+  }
+
+  static List<StscEntry> parseStsc(List<int> bytes) {
+    if (bytes.length < 8) {
+      throw Mp4ContentError('stsc atom payload too short');
+    }
+
+    final entryCount = readUint32Be(bytes, 4);
+    final entries = <StscEntry>[];
+    var offset = 8;
+    for (var i = 0; i < entryCount; i++) {
+      _ensureRange(bytes, offset, 12);
+      entries.add(
+        StscEntry(
+          firstChunk: readUint32Be(bytes, offset),
+          samplesPerChunk: readUint32Be(bytes, offset + 4),
+        ),
+      );
+      offset += 12;
+    }
+    return entries;
+  }
+
+  static (int, List<int>) parseStsz(List<int> bytes) {
+    if (bytes.length < 12) {
+      throw Mp4ContentError('stsz atom payload too short');
+    }
+
+    final sampleSize = readUint32Be(bytes, 4);
+    final entryCount = readUint32Be(bytes, 8);
+    final entries = <int>[];
+    var offset = 12;
+    for (var i = 0; i < entryCount; i++) {
+      _ensureRange(bytes, offset, 4);
+      entries.add(readUint32Be(bytes, offset));
+      offset += 4;
+    }
+    return (sampleSize, entries);
+  }
+
+  static List<int> parseStco(List<int> bytes) {
+    if (bytes.length < 8) {
+      throw Mp4ContentError('stco atom payload too short');
+    }
+
+    final entryCount = readUint32Be(bytes, 4);
+    final entries = <int>[];
+    var offset = 8;
+    for (var i = 0; i < entryCount; i++) {
+      _ensureRange(bytes, offset, 4);
+      entries.add(readUint32Be(bytes, offset));
+      offset += 4;
+    }
+    return entries;
+  }
+
+  static String parseChapterText(List<int> bytes) {
+    if (bytes.length < 2) {
+      return '';
+    }
+    final titleLength = readUint16Be(bytes, 0);
+    final availableLength = bytes.length - 2;
+    final actualLength = titleLength > availableLength
+        ? availableLength
+        : titleLength;
+    return utf8.decode(
+      bytes.sublist(2, 2 + actualLength),
+      allowMalformed: true,
+    );
   }
 
   static DataAtom parseDataAtom(List<int> bytes) {
