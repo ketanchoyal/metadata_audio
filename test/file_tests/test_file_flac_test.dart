@@ -14,7 +14,7 @@ void main() {
       initializeParserFactory(ParserFactory(registry));
     });
 
-    test('parses sample.flac', () async {
+    test('parses sample.flac (Yasmin Levy)', () async {
       final file = File(p.join(samplePath, 'flac', 'sample.flac'));
       if (!file.existsSync()) {
         markTestSkipped('Sample file not found: ${file.path}');
@@ -32,6 +32,15 @@ void main() {
 
       // Should have Vorbis comments
       expect(metadata.native.containsKey('vorbis'), isTrue);
+
+      // Check metadata
+      checkCommon(
+        metadata.common,
+        title: 'Mi Korasón',
+        artist: 'Yasmin Levy',
+        album: 'Sentir',
+        albumartist: 'Yasmin Levy',
+      );
     });
 
     test('parses flac-multiple-album-artists-tags.flac', () async {
@@ -45,10 +54,16 @@ void main() {
 
       final metadata = await parseFile(file.path);
 
-      expect(metadata.format.container, equals('flac'));
+      checkFormat(metadata.format, container: 'flac', codec: 'FLAC');
 
-      // Should have multiple album artists
-      expect(metadata.common.albumartist, isNotNull);
+      // Check metadata
+      checkCommon(
+        metadata.common,
+        title: 'Test Track',
+        artist: 'Artist Two',
+        album: 'Test Album',
+        albumartist: 'Album Artist Two',
+      );
     });
 
     test('parses testcase.flac (rating)', () async {
@@ -60,8 +75,20 @@ void main() {
 
       final metadata = await parseFile(file.path);
 
-      expect(metadata.format.container, equals('flac'));
-      expect(metadata.format.codec, equals('FLAC'));
+      checkFormat(
+        metadata.format,
+        container: 'flac',
+        codec: 'FLAC',
+        lossless: true,
+      );
+
+      // Check metadata
+      checkCommon(
+        metadata.common,
+        title: 'Testcase',
+        artist: 'Testcase',
+        album: 'Testcase',
+      );
     });
   });
 }
