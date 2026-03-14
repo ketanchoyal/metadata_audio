@@ -6,6 +6,7 @@ import 'package:audio_metadata/src/common/metadata_collector.dart';
 import 'package:audio_metadata/src/id3v1/id3v1_parser.dart';
 import 'package:audio_metadata/src/id3v2/id3v2_parser.dart';
 import 'package:audio_metadata/src/model/types.dart';
+import 'package:audio_metadata/src/mpeg/replay_gain_data_format.dart';
 import 'package:audio_metadata/src/parse_error.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
 import 'package:audio_metadata/src/mpeg/xing_tag.dart';
@@ -153,13 +154,13 @@ class MpegParser {
     if (tag == 'Info') {
       metadata.setFormat(codecProfile: 'CBR');
       final info = parseXingHeader(frameData, offset);
-      _applyXingInfo(header, info);
+      _applyXingInfo(header, info, frameData, offset);
       return;
     }
 
     if (tag == 'Xing') {
       final info = parseXingHeader(frameData, offset);
-      _applyXingInfo(header, info);
+      _applyXingInfo(header, info, frameData, offset);
       return;
     }
 
@@ -178,7 +179,12 @@ class MpegParser {
     }
   }
 
-  void _applyXingInfo(MpegFrameHeader header, XingInfoTag info) {
+  void _applyXingInfo(
+    MpegFrameHeader header,
+    XingInfoTag info,
+    List<int> frameData,
+    int xingOffset,
+  ) {
     if (info.vbrScale != null) {
       final codecProfile = 'V${((100 - info.vbrScale!) / 10).floor()}';
       metadata.setFormat(codecProfile: codecProfile);
@@ -192,12 +198,97 @@ class MpegParser {
       metadata.setFormat(duration: info.lameMusicLengthMs! / 1000.0);
     }
 
+    _applyLameReplayGain(frameData, xingOffset);
+
     if (info.numFrames != null) {
       final duration = header.calcDuration(info.numFrames!);
       if (duration != null) {
         metadata.setFormat(duration: duration);
       }
     }
+  }
+
+  void _applyLameReplayGain(List<int> frameData, int xingOffset) {
+    final extOffset = _findLameExtendedHeaderOffset(frameData, xingOffset);
+    if (extOffset == null || extOffset + 27 > frameData.length) {
+      return;
+    }
+
+    final peakRaw = _readUint32Be(frameData, extOffset + 2);
+    if (peakRaw > 0) {
+      metadata.setFormat(trackPeakLevel: peakRaw / 8388608.0);
+    }
+
+    final trackReplayGain = ReplayGainDataFormat.parse(
+      frameData,
+      offset: extOffset + 6,
+    );
+    final albumReplayGain = ReplayGainDataFormat.parse(
+      frameData,
+      offset: extOffset + 8,
+    );
+
+    _applyReplayGain(trackReplayGain);
+    _applyReplayGain(albumReplayGain);
+  }
+
+  void _applyReplayGain(ReplayGainData? replayGain) {
+    if (replayGain == null) {
+      return;
+    }
+
+    if (replayGain.type == ReplayGainNameCode.radio) {
+      metadata.setFormat(trackGain: replayGain.adjustment);
+      return;
+    }
+
+    if (replayGain.type == ReplayGainNameCode.audiophile) {
+      metadata.setFormat(albumGain: replayGain.adjustment);
+    }
+  }
+
+  int? _findLameExtendedHeaderOffset(List<int> frameData, int xingOffset) {
+    if (xingOffset + 4 > frameData.length) {
+      return null;
+    }
+
+    var cursor = xingOffset;
+    final flags = _readUint32Be(frameData, cursor);
+    cursor += 4;
+
+    if ((flags & 0x80000000) != 0) {
+      cursor += 4;
+    }
+    if ((flags & 0x40000000) != 0) {
+      cursor += 4;
+    }
+    if ((flags & 0x20000000) != 0) {
+      cursor += 100;
+    }
+    if ((flags & 0x10000000) != 0) {
+      cursor += 4;
+    }
+
+    if (cursor + 9 > frameData.length) {
+      return null;
+    }
+
+    final lameTag = ascii.decode(
+      frameData.sublist(cursor, cursor + 4),
+      allowInvalid: true,
+    );
+    if (lameTag != 'LAME') {
+      return null;
+    }
+
+    return cursor + 9;
+  }
+
+  int _readUint32Be(List<int> data, int offset) {
+    return (data[offset] << 24) |
+        (data[offset + 1] << 16) |
+        (data[offset + 2] << 8) |
+        data[offset + 3];
   }
 
   Future<bool> _syncToFrame() async {
