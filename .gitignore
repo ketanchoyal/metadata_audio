@@ -17,9 +17,6 @@ node_modules/
 comparison/node_modules/
 
 # Comparison output files
-comparison/output_dart.json
-comparison/output_ts.json
-comparison/diff.txt
 
 # Debug tools
 tool/debug_*.dart

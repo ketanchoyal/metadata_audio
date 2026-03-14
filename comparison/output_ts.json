@@ -1,0 +1,402 @@
+[
+  {
+    "file": "mp3/id3v2.3.mp3",
+    "format": {
+      "container": "MPEG",
+      "codec": "MPEG 1 Layer 3",
+      "duration": 0.7836734693877551,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 128000,
+      "lossless": false
+    },
+    "common": {
+      "title": "Home",
+      "artist": "Explosions In The Sky",
+      "album": "Friday Night Lights [Original Movie Soundtrack]",
+      "albumartist": "Soundtrack",
+      "year": 2004,
+      "track": {
+        "no": 5,
+        "of": null
+      },
+      "disk": {
+        "no": 1,
+        "of": 1
+      },
+      "genre": [
+        "Soundtrack"
+      ]
+    },
+    "native": [
+      "ID3v2.3",
+      "ID3v1"
+    ]
+  },
+  {
+    "file": "mp3/id3v1.mp3",
+    "format": {
+      "container": "MPEG",
+      "codec": "MPEG 1 Layer 3",
+      "duration": 33.38448979591837,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 5203.134780907668,
+      "lossless": false
+    },
+    "common": {
+      "title": "Luomo - Tessio (Spektre Remix)",
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": [
+      "ID3v1"
+    ]
+  },
+  {
+    "file": "mp3/no-tags.mp3",
+    "format": {
+      "container": "MPEG",
+      "codec": "MPEG 1 Layer 3",
+      "duration": 2.1681632653061222,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 155962.4246987952,
+      "lossless": false
+    },
+    "common": {
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": []
+  },
+  {
+    "file": "mp3/issue-347.mp3",
+    "format": {
+      "container": "MPEG",
+      "codec": "MPEG 2.5 Layer 3",
+      "duration": 40.176,
+      "sampleRate": 8000,
+      "numberOfChannels": 1,
+      "bitrate": 8000,
+      "lossless": false
+    },
+    "common": {
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": []
+  },
+  {
+    "file": "mp3/adts-0-frame.mp3",
+    "format": {
+      "container": "MPEG",
+      "codec": "MPEG 1 Layer 3",
+      "duration": 217.86122448979592,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 126.3189448441247,
+      "lossless": false
+    },
+    "common": {
+      "title": "Jan Pillemann Otze",
+      "artist": "Mickie Krause",
+      "album": "Ballermann Hits 2008",
+      "albumartist": "Various",
+      "year": 2008,
+      "track": {
+        "no": 102,
+        "of": null
+      },
+      "disk": {
+        "no": 1,
+        "of": null
+      },
+      "genre": [
+        "Party"
+      ]
+    },
+    "native": [
+      "ID3v2.3",
+      "ID3v1"
+    ]
+  },
+  {
+    "file": "flac/sample.flac",
+    "format": {
+      "container": "FLAC",
+      "codec": "FLAC",
+      "duration": 1,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 511808,
+      "lossless": true
+    },
+    "common": {
+      "title": "Mi Korasón",
+      "artist": "Yasmin Levy",
+      "album": "Sentir",
+      "albumartist": "Yasmin Levy",
+      "year": 2009,
+      "track": {
+        "no": 1,
+        "of": 12
+      },
+      "disk": {
+        "no": 1,
+        "of": 1
+      },
+      "genre": [
+        "Flamenco",
+        "Folk, World, & Country"
+      ]
+    },
+    "native": [
+      "vorbis"
+    ]
+  },
+  {
+    "file": "flac/flac-multiple-album-artists-tags.flac",
+    "format": {
+      "container": "FLAC",
+      "codec": "FLAC",
+      "duration": 1,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 1136,
+      "lossless": true
+    },
+    "common": {
+      "title": "Test Track",
+      "artist": "Artist One",
+      "album": "Test Album",
+      "albumartist": "Album Artist Two",
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": [
+      "vorbis"
+    ]
+  },
+  {
+    "file": "flac/testcase.flac",
+    "format": {
+      "container": "FLAC",
+      "codec": "FLAC",
+      "duration": 1,
+      "sampleRate": 44100,
+      "numberOfChannels": 1,
+      "bitrate": 211656,
+      "lossless": true
+    },
+    "common": {
+      "title": "Testcase",
+      "artist": "Testcase",
+      "album": "Testcase",
+      "year": 2023,
+      "track": {
+        "no": 1,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      },
+      "genre": [
+        "Testcase"
+      ]
+    },
+    "native": [
+      "vorbis"
+    ]
+  },
+  {
+    "file": "ogg/vorbis.ogg",
+    "format": {
+      "container": "Ogg",
+      "codec": "Vorbis I",
+      "duration": 2,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 64000
+    },
+    "common": {
+      "title": "In Bloom",
+      "artist": "Nirvana",
+      "album": "Nevermind",
+      "albumartist": "Nirvana",
+      "year": 1991,
+      "track": {
+        "no": 2,
+        "of": 12
+      },
+      "disk": {
+        "no": 1,
+        "of": 1
+      },
+      "genre": [
+        "Grunge",
+        "Alternative"
+      ]
+    },
+    "native": [
+      "vorbis"
+    ]
+  },
+  {
+    "file": "ogg/opus.ogg",
+    "format": {
+      "container": "Ogg",
+      "codec": "Opus",
+      "duration": 2.9065833333333333,
+      "sampleRate": 48000,
+      "numberOfChannels": 2,
+      "bitrate": 68223.0568536942
+    },
+    "common": {
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": [
+      "vorbis"
+    ]
+  },
+  {
+    "file": "mp4/sample.m4a",
+    "format": {
+      "container": "M4A/isom/iso2",
+      "codec": "MPEG-4/AAC",
+      "duration": 1.023219954648526,
+      "sampleRate": 44100,
+      "numberOfChannels": 1,
+      "bitrate": 72891.46352273734,
+      "lossless": false
+    },
+    "common": {
+      "title": "Testcase",
+      "artist": "Testcase",
+      "album": "Testcase",
+      "year": 2023,
+      "track": {
+        "no": 1,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      },
+      "genre": [
+        "Testcase"
+      ]
+    },
+    "native": [
+      "iTunes"
+    ]
+  },
+  {
+    "file": "wav/issue-819.wav",
+    "format": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "duration": 0.154875,
+      "sampleRate": 16000,
+      "numberOfChannels": 1,
+      "bitrate": 256000,
+      "lossless": true
+    },
+    "common": {
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": []
+  },
+  {
+    "file": "wav/odd-list-type.wav",
+    "format": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "duration": 0.00007558578987150416,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 2116800,
+      "lossless": true
+    },
+    "common": {
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": []
+  },
+  {
+    "file": "aiff/sample.aiff",
+    "format": {
+      "container": "AIFF",
+      "codec": "PCM",
+      "duration": 2.1229931972789116,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 1411230.1461163803,
+      "lossless": true
+    },
+    "common": {
+      "title": "Sinner's Prayer",
+      "artist": "Beth Hart & Joe Bonamassa",
+      "album": "Don't Explain",
+      "albumartist": "Beth Hart & Joe Bonamassa",
+      "year": 2011,
+      "track": {
+        "no": 1,
+        "of": 10
+      },
+      "disk": {
+        "no": 1,
+        "of": 1
+      }
+    },
+    "native": [
+      "ID3v2.4"
+    ]
+  }
+]
