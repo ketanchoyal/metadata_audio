@@ -25,7 +25,7 @@ void main() {
 
       checkFormat(
         metadata.format,
-        container: 'flac',
+        container: 'FLAC',
         codec: 'FLAC',
         lossless: true,
       );
@@ -54,13 +54,13 @@ void main() {
 
       final metadata = await parseFile(file.path);
 
-      checkFormat(metadata.format, container: 'flac', codec: 'FLAC');
+      checkFormat(metadata.format, container: 'FLAC', codec: 'FLAC');
 
       // Check metadata
       checkCommon(
         metadata.common,
         title: 'Test Track',
-        artist: 'Artist Two',
+        artist: 'Artist One',
         album: 'Test Album',
         albumartist: 'Album Artist Two',
       );
@@ -77,7 +77,7 @@ void main() {
 
       checkFormat(
         metadata.format,
-        container: 'flac',
+        container: 'FLAC',
         codec: 'FLAC',
         lossless: true,
       );

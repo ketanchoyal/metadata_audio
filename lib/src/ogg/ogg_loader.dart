@@ -27,7 +27,7 @@ class OggLoader extends ParserLoader {
     final mapper = CombinedTagMapper()
       ..registerMapper('vorbis', VorbisTagMapper());
     final metadata = MetadataCollector(mapper);
-    metadata.setFormat(container: 'ogg');
+    metadata.setFormat(container: 'Ogg');
 
     final parser = OggParser(
       metadata: metadata,

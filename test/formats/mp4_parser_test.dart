@@ -37,7 +37,7 @@ void main() {
       expect(metadata.common.album, 'Test Album');
       expect(metadata.common.date, '2024');
       expect(metadata.common.track.no, 1);
-      expect(metadata.common.track.of, isNull);
+      expect(metadata.common.track.of, 12);
       expect(metadata.common.musicbrainz_recordingid, 'mbid-track-123');
 
       expect(metadata.common.picture, isNotNull);

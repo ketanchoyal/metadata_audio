@@ -62,8 +62,9 @@ void main() {
         codec: 'MPEG 1 Layer 3',
         sampleRate: 44100,
         numberOfChannels: 2,
-        bitrate: 56000,
       );
+      expect(metadata.format.duration, closeTo(33.38448979591837, 0.000001));
+      expect(metadata.format.bitrate, closeTo(5203.134780907668, 0.000001));
 
       // Common metadata checks
       checkCommon(metadata.common, title: 'Luomo - Tessio (Spektre Remix)');
@@ -88,8 +89,9 @@ void main() {
         codec: 'MPEG 1 Layer 3',
         sampleRate: 44100,
         numberOfChannels: 2,
-        bitrate: 56000,
       );
+      expect(metadata.format.duration, closeTo(2.1681632653061222, 0.000001));
+      expect(metadata.format.bitrate, closeTo(155962.4246987952, 0.000001));
 
       // Should have no native tags
       expect(metadata.native.isEmpty, isTrue);
@@ -107,11 +109,15 @@ void main() {
         return;
       }
 
-      // issue-347.mp3 is known to have parsing issues
-      // The test passes if parsing raises FormatException as expected
-      expect(
-        () async => await parseFile(file.path),
-        throwsA(isA<FormatException>()),
+      final metadata = await parseFile(file.path);
+
+      checkFormat(
+        metadata.format,
+        container: 'MPEG',
+        codec: 'MPEG 2.5 Layer 3',
+        sampleRate: 8000,
+        numberOfChannels: 1,
+        bitrate: 8000,
       );
     });
 
@@ -131,8 +137,9 @@ void main() {
         codec: 'MPEG 1 Layer 3',
         sampleRate: 44100,
         numberOfChannels: 2,
-        bitrate: 104000,
       );
+      expect(metadata.format.duration, closeTo(217.86122448979592, 0.000001));
+      expect(metadata.format.bitrate, closeTo(126.3189448441247, 0.000001));
 
       // Common metadata checks
       checkCommon(

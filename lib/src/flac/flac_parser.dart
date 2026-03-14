@@ -87,7 +87,7 @@ class FlacParser {
       tokenizer.readBytes(dataLength),
     );
     metadata.setFormat(
-      container: 'flac',
+      container: 'FLAC',
       codec: 'FLAC',
       hasAudio: true,
       hasVideo: false,

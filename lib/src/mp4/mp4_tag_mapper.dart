@@ -109,6 +109,12 @@ class Mp4TagMapper extends GenericTagMapper {
         final pair = _parseNumberPair(entry.value);
         if (pair != null) {
           result[mappedTag] = pair.$1;
+          if (mappedTag == 'track' && pair.$2 != null) {
+            result['totaltracks'] = pair.$2;
+          }
+          if (mappedTag == 'disk' && pair.$2 != null) {
+            result['totaldiscs'] = pair.$2;
+          }
         }
         continue;
       }
@@ -254,7 +260,7 @@ class Mp4TagMapper extends GenericTagMapper {
     }
 
     final second = int.tryParse(parts[1].trim());
-    return (first, second);
+    return (first, second == 0 ? null : second);
   }
 
   static int? _toInt(dynamic value) {

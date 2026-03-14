@@ -24,6 +24,7 @@ final testFiles = [
   'ogg/vorbis.ogg',
   'ogg/opus.ogg',
   'mp4/sample.m4a',
+  'mp4/The Dark Forest.m4a',
   'wav/issue-819.wav',
   'wav/odd-list-type.wav',
   'aiff/sample.aiff',
@@ -64,28 +65,40 @@ Future<Map<String, dynamic>> parseAndExtract(
 
   try {
     final metadata = await parseFile(filePath);
+    final format = <String, dynamic>{
+      'container': metadata.format.container,
+      'codec': metadata.format.codec,
+      'duration': metadata.format.duration,
+      'sampleRate': metadata.format.sampleRate,
+      'numberOfChannels': metadata.format.numberOfChannels,
+      'bitrate': metadata.format.bitrate,
+      'lossless': metadata.format.lossless,
+    }..removeWhere((_, value) => value == null);
+
+    final common =
+        <String, dynamic>{
+          'title': metadata.common.title,
+          'artist': metadata.common.artist,
+          'album': metadata.common.album,
+          'albumartist': metadata.common.albumartist,
+          'year': metadata.common.year,
+          'track': {
+            'no': metadata.common.track.no,
+            'of': metadata.common.track.of,
+          },
+          'disk': {
+            'no': metadata.common.disk.no,
+            'of': metadata.common.disk.of,
+          },
+          'genre': metadata.common.genre,
+        }..removeWhere(
+          (key, value) => key != 'track' && key != 'disk' && value == null,
+        );
 
     return {
       'file': relativePath,
-      'format': {
-        'container': metadata.format.container,
-        'codec': metadata.format.codec,
-        'duration': metadata.format.duration,
-        'sampleRate': metadata.format.sampleRate,
-        'numberOfChannels': metadata.format.numberOfChannels,
-        'bitrate': metadata.format.bitrate,
-        'lossless': metadata.format.lossless,
-      },
-      'common': {
-        'title': metadata.common.title,
-        'artist': metadata.common.artist,
-        'album': metadata.common.album,
-        'albumartist': metadata.common.albumartist,
-        'year': metadata.common.year,
-        'track': {'no': metadata.common.track.no, 'of': metadata.common.track.of},
-        'disk': {'no': metadata.common.disk.no, 'of': metadata.common.disk.of},
-        'genre': metadata.common.genre,
-      },
+      'format': format,
+      'common': common,
       'native': metadata.native.keys.toList(),
     };
   } catch (e) {

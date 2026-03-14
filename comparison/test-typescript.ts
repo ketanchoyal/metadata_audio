@@ -1,11 +1,11 @@
-import * as mm from 'music-metadata';
-import * as path from 'path';
-import * as fs from 'fs';
-import { fileURLToPath } from 'url';
+import * as mm from "music-metadata";
+import * as path from "path";
+import * as fs from "fs";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const samplesDir = path.join(__dirname, '..', 'test', 'samples');
+const samplesDir = path.join(__dirname, "..", "test", "samples");
 
 interface TestResult {
   file: string;
@@ -34,20 +34,20 @@ interface TestResult {
 
 async function parseFile(relativePath: string): Promise<TestResult> {
   const filePath = path.join(samplesDir, relativePath);
-  
+
   if (!fs.existsSync(filePath)) {
-    return { 
-      file: relativePath, 
-      format: {}, 
-      common: {}, 
+    return {
+      file: relativePath,
+      format: {},
+      common: {},
       native: [],
-      error: 'File not found' 
+      error: "File not found",
     } as TestResult;
   }
-  
+
   try {
     const metadata = await mm.parseFile(filePath);
-    
+
     return {
       file: relativePath,
       format: {
@@ -85,25 +85,26 @@ async function parseFile(relativePath: string): Promise<TestResult> {
 async function main() {
   const testFiles = [
     // MP3
-    'mp3/id3v2.3.mp3',
-    'mp3/id3v1.mp3',
-    'mp3/no-tags.mp3',
-    'mp3/issue-347.mp3',
-    'mp3/adts-0-frame.mp3',
+    "mp3/id3v2.3.mp3",
+    "mp3/id3v1.mp3",
+    "mp3/no-tags.mp3",
+    "mp3/issue-347.mp3",
+    "mp3/adts-0-frame.mp3",
     // FLAC
-    'flac/sample.flac',
-    'flac/flac-multiple-album-artists-tags.flac',
-    'flac/testcase.flac',
+    "flac/sample.flac",
+    "flac/flac-multiple-album-artists-tags.flac",
+    "flac/testcase.flac",
     // OGG
-    'ogg/vorbis.ogg',
-    'ogg/opus.ogg',
+    "ogg/vorbis.ogg",
+    "ogg/opus.ogg",
     // MP4
-    'mp4/sample.m4a',
+    "mp4/sample.m4a",
+    "mp4/The Dark Forest.m4a",
     // WAV
-    'wav/issue-819.wav',
-    'wav/odd-list-type.wav',
+    "wav/issue-819.wav",
+    "wav/odd-list-type.wav",
     // AIFF
-    'aiff/sample.aiff',
+    "aiff/sample.aiff",
   ];
 
   const results: TestResult[] = [];

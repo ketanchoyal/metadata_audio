@@ -9,6 +9,7 @@
 library;
 
 import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
+import 'package:audio_metadata/src/common/generic_tag_types.dart';
 import 'package:audio_metadata/src/model/types.dart';
 
 /// Collects audio metadata from multiple sources and formats.
@@ -78,7 +79,7 @@ class MetadataCollector {
   void setFormat({
     String? container,
     double? duration,
-    int? bitrate,
+    num? bitrate,
     int? sampleRate,
     int? bitsPerSample,
     String? codec,
@@ -140,24 +141,22 @@ class MetadataCollector {
   /// collector.addNativeTag('id3v2', 'TPE1', 'The Artist');
   /// ```
   void addNativeTag(String formatId, String tagId, dynamic value) {
-    // Store native tag
-    _nativeTagsByFormat.putIfAbsent(formatId, () => {});
-    _nativeTagsByFormat[formatId]![tagId] = value;
+    final formatTags = _nativeTagsByFormat.putIfAbsent(formatId, () => {});
+    final existingNativeValue = formatTags[tagId];
+    if (existingNativeValue == null) {
+      formatTags[tagId] = value;
+    } else if (existingNativeValue is List) {
+      formatTags[tagId] = <dynamic>[...existingNativeValue, value];
+    } else {
+      formatTags[tagId] = <dynamic>[existingNativeValue, value];
+    }
 
     // Try to convert and merge into common tags if mapper exists
     if (_tagMapper.hasMapper(formatId)) {
       try {
         final genericTags = _tagMapper.mapTags(formatId, {tagId: value});
         for (final entry in genericTags.entries) {
-          final tagKey = entry.key;
-          final newValue = entry.value;
-          final currentSource = _commonTagSource[tagKey];
-
-          if (currentSource == null ||
-              _getPriority(formatId) >= _getPriority(currentSource)) {
-            _commonTags[tagKey] = newValue;
-            _commonTagSource[tagKey] = formatId;
-          }
+          _mergeCommonTag(formatId, entry.key, entry.value);
         }
       } on UnknownFormatException catch (e) {
         // If mapping fails, just store the native tag
@@ -168,12 +167,107 @@ class MetadataCollector {
 
   int _getPriority(String formatId) => _formatPriority[formatId] ?? 0;
 
+  void _mergeCommonTag(String formatId, String tagKey, dynamic value) {
+    if (value == null) {
+      return;
+    }
+
+    if (tagKey == 'date') {
+      final derivedYear = _deriveYear(value);
+      if (derivedYear != null) {
+        _mergeCommonTag(formatId, 'year', derivedYear);
+      }
+    }
+
+    final semantics = GenericTagTypes.getSemantics(tagKey);
+    final currentSource = _commonTagSource[tagKey];
+    final currentPriority = currentSource == null
+        ? -1
+        : _getPriority(currentSource);
+    final newPriority = _getPriority(formatId);
+
+    if (semantics.isSingleton) {
+      if (tagKey == 'artist' &&
+          currentSource != null &&
+          currentSource == formatId &&
+          _commonTags[tagKey] != null) {
+        return;
+      }
+
+      if (currentSource == null || newPriority >= currentPriority) {
+        _commonTags[tagKey] = value;
+        _commonTagSource[tagKey] = formatId;
+      }
+      return;
+    }
+
+    if (currentSource != null && newPriority < currentPriority) {
+      return;
+    }
+
+    final merged = <dynamic>[];
+    if (currentSource != null && newPriority == currentPriority) {
+      merged.addAll(_asList(_commonTags[tagKey]));
+    }
+    merged.addAll(_asList(value));
+
+    final normalized = semantics.isUnique
+        ? _dedupeValues(merged)
+        : List<dynamic>.from(merged);
+
+    _commonTags[tagKey] = normalized;
+    _commonTagSource[tagKey] = formatId;
+  }
+
+  static List<dynamic> _asList(dynamic value) {
+    if (value == null) {
+      return const <dynamic>[];
+    }
+    if (value is List) {
+      return List<dynamic>.from(value);
+    }
+    return <dynamic>[value];
+  }
+
+  static List<dynamic> _dedupeValues(List<dynamic> values) {
+    final deduped = <dynamic>[];
+    final seen = <String>{};
+    for (final value in values) {
+      final key = value.toString();
+      if (seen.add(key)) {
+        deduped.add(value);
+      }
+    }
+    return deduped;
+  }
+
+  static int? _deriveYear(dynamic value) {
+    if (value is! String) {
+      return null;
+    }
+    if (value.length < 4) {
+      return null;
+    }
+    return int.tryParse(value.substring(0, 4));
+  }
+
   /// Converts an int or String to String, returns null if neither.
   static String? _intToString(dynamic value) {
     if (value == null) return null;
     if (value is String) return value;
     if (value is int) return value.toString();
     return null;
+  }
+
+  static List<T>? _typedList<T>(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is List) {
+      final typed = value.whereType<T>().toList();
+      return typed.isEmpty ? null : typed;
+    }
+    return value is T ? <T>[value] : null;
   }
 
   /// Adds a warning message.
@@ -266,7 +360,7 @@ class MetadataCollector {
     year: _commonTags['year'] as int?,
     title: _commonTags['title'] as String?,
     artist: _commonTags['artist'] as String?,
-    artists: _commonTags['artists'] as List<String>?,
+    artists: _typedList<String>(_commonTags['artists']),
     albumartist: _commonTags['albumartist'] as String?,
     albumartists: _commonTags['albumartists'] as List<String>?,
     album: _commonTags['album'] as String?,
@@ -274,43 +368,43 @@ class MetadataCollector {
     originaldate: _commonTags['originaldate'] as String?,
     originalyear: _commonTags['originalyear'] as int?,
     releasedate: _commonTags['releasedate'] as String?,
-    comment: _commonTags['comment'] as List<Comment>?,
-    genre: _commonTags['genre'] as List<String>?,
-    picture: _commonTags['picture'] as List<Picture>?,
-    composer: _commonTags['composer'] as List<String>?,
-    lyrics: _commonTags['lyrics'] as List<LyricsTag>?,
+    comment: _typedList<Comment>(_commonTags['comment']),
+    genre: _typedList<String>(_commonTags['genre']),
+    picture: _typedList<Picture>(_commonTags['picture']),
+    composer: _typedList<String>(_commonTags['composer']),
+    lyrics: _typedList<LyricsTag>(_commonTags['lyrics']),
     albumsort: _commonTags['albumsort'] as String?,
     titlesort: _commonTags['titlesort'] as String?,
     work: _commonTags['work'] as String?,
     artistsort: _commonTags['artistsort'] as String?,
     albumartistsort: _commonTags['albumartistsort'] as String?,
     composersort: _commonTags['composersort'] as String?,
-    lyricist: _commonTags['lyricist'] as List<String>?,
-    writer: _commonTags['writer'] as List<String>?,
-    conductor: _commonTags['conductor'] as List<String>?,
-    remixer: _commonTags['remixer'] as List<String>?,
-    arranger: _commonTags['arranger'] as List<String>?,
-    engineer: _commonTags['engineer'] as List<String>?,
-    publisher: _commonTags['publisher'] as List<String>?,
-    producer: _commonTags['producer'] as List<String>?,
-    djmixer: _commonTags['djmixer'] as List<String>?,
-    mixer: _commonTags['mixer'] as List<String>?,
-    technician: _commonTags['technician'] as List<String>?,
-    label: _commonTags['label'] as List<String>?,
+    lyricist: _typedList<String>(_commonTags['lyricist']),
+    writer: _typedList<String>(_commonTags['writer']),
+    conductor: _typedList<String>(_commonTags['conductor']),
+    remixer: _typedList<String>(_commonTags['remixer']),
+    arranger: _typedList<String>(_commonTags['arranger']),
+    engineer: _typedList<String>(_commonTags['engineer']),
+    publisher: _typedList<String>(_commonTags['publisher']),
+    producer: _typedList<String>(_commonTags['producer']),
+    djmixer: _typedList<String>(_commonTags['djmixer']),
+    mixer: _typedList<String>(_commonTags['mixer']),
+    technician: _typedList<String>(_commonTags['technician']),
+    label: _typedList<String>(_commonTags['label']),
     grouping: _commonTags['grouping'] as String?,
-    subtitle: _commonTags['subtitle'] as List<String>?,
-    description: _commonTags['description'] as List<String>?,
+    subtitle: _typedList<String>(_commonTags['subtitle']),
+    description: _typedList<String>(_commonTags['description']),
     longDescription: _commonTags['longDescription'] as String?,
     discsubtitle: _commonTags['discsubtitle'] as List<String>?,
     totaltracks: _intToString(_commonTags['totaltracks']),
     totaldiscs: _intToString(_commonTags['totaldiscs']),
     movementTotal: _commonTags['movementTotal'] as int?,
     compilation: _commonTags['compilation'] as bool?,
-    rating: _commonTags['rating'] as List<Rating>?,
+    rating: _typedList<Rating>(_commonTags['rating']),
     bpm: _commonTags['bpm'] as int?,
     mood: _commonTags['mood'] as String?,
     media: _commonTags['media'] as String?,
-    catalognumber: _commonTags['catalognumber'] as List<String>?,
+    catalognumber: _typedList<String>(_commonTags['catalognumber']),
     tvShow: _commonTags['tvShow'] as String?,
     tvShowSort: _commonTags['tvShowSort'] as String?,
     tvSeason: _commonTags['tvSeason'] as int?,
@@ -320,7 +414,7 @@ class MetadataCollector {
     podcast: _commonTags['podcast'] as bool?,
     podcasturl: _commonTags['podcasturl'] as String?,
     releasestatus: _commonTags['releasestatus'] as String?,
-    releasetype: _commonTags['releasetype'] as List<String>?,
+    releasetype: _typedList<String>(_commonTags['releasetype']),
     releasecountry: _commonTags['releasecountry'] as String?,
     script: _commonTags['script'] as String?,
     language: _commonTags['language'] as String?,
@@ -330,14 +424,17 @@ class MetadataCollector {
     encodersettings: _commonTags['encodersettings'] as String?,
     gapless: _commonTags['gapless'] as bool?,
     barcode: _commonTags['barcode'] as String?,
-    isrc: _commonTags['isrc'] as List<String>?,
+    isrc: _typedList<String>(_commonTags['isrc']),
     asin: _commonTags['asin'] as String?,
     musicbrainz_recordingid: _commonTags['musicbrainz_recordingid'] as String?,
     musicbrainz_trackid: _commonTags['musicbrainz_trackid'] as String?,
     musicbrainz_albumid: _commonTags['musicbrainz_albumid'] as String?,
-    musicbrainz_artistid: _commonTags['musicbrainz_artistid'] as List<String>?,
-    musicbrainz_albumartistid:
-        _commonTags['musicbrainz_albumartistid'] as List<String>?,
+    musicbrainz_artistid: _typedList<String>(
+      _commonTags['musicbrainz_artistid'],
+    ),
+    musicbrainz_albumartistid: _typedList<String>(
+      _commonTags['musicbrainz_albumartistid'],
+    ),
     musicbrainz_releasegroupid:
         _commonTags['musicbrainz_releasegroupid'] as String?,
     musicbrainz_workid: _commonTags['musicbrainz_workid'] as String?,
@@ -348,13 +445,13 @@ class MetadataCollector {
     musicip_puid: _commonTags['musicip_puid'] as String?,
     musicip_fingerprint: _commonTags['musicip_fingerprint'] as String?,
     website: _commonTags['website'] as String?,
-    performerInstrument: _commonTags['performerInstrument'] as List<String>?,
+    performerInstrument: _typedList<String>(_commonTags['performerInstrument']),
     averageLevel: _commonTags['averageLevel'] as double?,
     peakLevel: _commonTags['peakLevel'] as double?,
-    notes: _commonTags['notes'] as List<String>?,
+    notes: _typedList<String>(_commonTags['notes']),
     originalalbum: _commonTags['originalalbum'] as String?,
     originalartist: _commonTags['originalartist'] as String?,
-    discogs_artist_id: _commonTags['discogs_artist_id'] as List<int>?,
+    discogs_artist_id: _typedList<int>(_commonTags['discogs_artist_id']),
     discogs_release_id: _commonTags['discogs_release_id'] as int?,
     discogs_label_id: _commonTags['discogs_label_id'] as int?,
     discogs_master_release_id: _commonTags['discogs_master_release_id'] as int?,
@@ -369,14 +466,16 @@ class MetadataCollector {
     replaygain_album_gain: _commonTags['replaygain_album_gain'] as Ratio?,
     replaygain_album_peak: _commonTags['replaygain_album_peak'] as Ratio?,
     replaygain_undo: _commonTags['replaygain_undo'] as Map<String, double>?,
-    replaygain_track_minmax:
-        _commonTags['replaygain_track_minmax'] as List<double>?,
-    replaygain_album_minmax:
-        _commonTags['replaygain_album_minmax'] as List<double>?,
+    replaygain_track_minmax: _typedList<double>(
+      _commonTags['replaygain_track_minmax'],
+    ),
+    replaygain_album_minmax: _typedList<double>(
+      _commonTags['replaygain_album_minmax'],
+    ),
     key: _commonTags['key'] as String?,
-    category: _commonTags['category'] as List<String>?,
+    category: _typedList<String>(_commonTags['category']),
     hdVideo: _commonTags['hdVideo'] as int?,
-    keywords: _commonTags['keywords'] as List<String>?,
+    keywords: _typedList<String>(_commonTags['keywords']),
     movement: _commonTags['movement'] as String?,
     podcastId: _commonTags['podcastId'] as String?,
     showMovement: _commonTags['showMovement'] as bool?,

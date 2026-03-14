@@ -373,7 +373,7 @@ class Format {
   final double? duration;
 
   /// Bitrate in bits per second
-  final int? bitrate;
+  final num? bitrate;
 
   /// Sample rate in samples per second
   final int? sampleRate;

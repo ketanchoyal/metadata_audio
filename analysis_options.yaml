@@ -13,16 +13,16 @@ analyzer:
     unused_local_variable: warning
     # Treat dead code as warnings
     dead_code: warning
+    public_member_api_docs: ignore
   exclude:
-    - '**/*.g.dart'
-    - '**/*.freezed.dart'
-    - 'test/fixtures/**'
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "test/fixtures/**"
 
 linter:
   rules:
     # Error rules
     - avoid_dynamic_calls
-    - avoid_returning_null_for_future
     - avoid_slow_async_io
     - avoid_type_to_string
     - cancel_subscriptions
@@ -31,7 +31,7 @@ linter:
     - no_adjacent_strings_in_list
     - test_types_in_equals
     - throw_in_finally
-    
+
     # Style rules
     - always_declare_return_types
     - always_put_required_named_parameters_first
@@ -55,7 +55,6 @@ linter:
     - avoid_redundant_argument_values
     - avoid_renaming_method_parameters
     - avoid_return_types_on_setters
-    - avoid_returning_null
     - avoid_returning_null_for_void
     - avoid_returning_this
     - avoid_setters_without_getters
@@ -108,7 +107,6 @@ linter:
     - one_member_abstracts
     - only_throw_errors
     - overridden_fields
-    - package_api_docs
     - package_prefixed_library_names
     - parameter_assignments
     - prefer_adjacent_string_concatenation

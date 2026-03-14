@@ -24,7 +24,7 @@ class FlacLoader extends ParserLoader {
       ..registerMapper('vorbis', FlacVorbisTagMapper());
 
     final metadata = MetadataCollector(mapper);
-    metadata.setFormat(container: 'flac');
+    metadata.setFormat(container: 'FLAC');
 
     final parser = FlacParser(
       metadata: metadata,

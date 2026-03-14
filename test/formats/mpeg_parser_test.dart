@@ -167,7 +167,7 @@ List<int> _buildMpegFrame({
     cursor += 4;
 
     // flags: frames + vbrScale
-    payload.setRange(cursor, cursor + 4, const <int>[0x90, 0x00, 0x00, 0x00]);
+    payload.setRange(cursor, cursor + 4, const <int>[0x00, 0x00, 0x00, 0x09]);
     cursor += 4;
 
     // numFrames = 100

@@ -324,6 +324,39 @@
     ]
   },
   {
+    "file": "mp4/The Dark Forest.m4a",
+    "format": {
+      "container": "M4A/3gp5/isom",
+      "codec": "MPEG-4/AAC",
+      "duration": 81433.54195011337,
+      "sampleRate": 22050,
+      "numberOfChannels": 2,
+      "bitrate": 32552.32279622475,
+      "lossless": false
+    },
+    "common": {
+      "title": "02 - The Dark Forest",
+      "artist": "Cixin Liu",
+      "album": "02 - The Dark Forest",
+      "albumartist": "Cixin Liu",
+      "year": 2008,
+      "track": {
+        "no": 1,
+        "of": 54
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      },
+      "genre": [
+        "Audiobook"
+      ]
+    },
+    "native": [
+      "iTunes"
+    ]
+  },
+  {
     "file": "wav/issue-819.wav",
     "format": {
       "container": "WAVE",

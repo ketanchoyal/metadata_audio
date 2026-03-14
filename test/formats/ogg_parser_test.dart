@@ -60,7 +60,7 @@ void main() {
         const ParseOptions(),
       );
 
-      expect(metadata.format.container, 'ogg');
+      expect(metadata.format.container, 'Ogg');
       expect(metadata.format.codec, 'Vorbis I');
       expect(metadata.format.sampleRate, 44100);
       expect(metadata.format.numberOfChannels, 2);

@@ -283,15 +283,11 @@ class Id3v1Parser {
       return false;
     }
 
-    // Skip if we've already consumed the last 128 bytes
     final offset = fileInfo.size! - id3v1Size;
-    if (tokenizer.position > offset) {
-      return false;
-    }
-
-    // Seek to ID3v1 tag location (or create a read window there)
     if (tokenizer.canSeek) {
       tokenizer.seek(offset);
+    } else if (tokenizer.position > offset) {
+      return false;
     }
 
     // Read the 128-byte ID3v1 block

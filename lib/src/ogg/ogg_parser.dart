@@ -53,6 +53,12 @@ class OggParser {
           header.streamSerialNumber,
           () => _OggStreamState(streamSerial: header.streamSerialNumber),
         );
+        if (stream.pendingOpusTagLength != null &&
+            !header.headerType.continued) {
+          stream.lastTagPageOffset =
+              tokenizer.position - stream.pendingOpusTagLength!;
+          stream.pendingOpusTagLength = null;
+        }
         stream.pageNumber = header.pageSequenceNo;
         stream.maxGranulePosition =
             header.absoluteGranulePosition > stream.maxGranulePosition
@@ -67,10 +73,6 @@ class OggParser {
 
         if (header.headerType.lastPage) {
           stream.closed = true;
-        }
-
-        if (!options.duration && stream.pageNumber > 12) {
-          break;
         }
 
         if (_streams.isNotEmpty &&
@@ -182,6 +184,7 @@ class OggParser {
           break;
         case 'Opus':
           if (OpusDecoder.isTagsHeader(pageData)) {
+            stream.pendingOpusTagLength = pageData.length;
             final comments = OpusDecoder.parseTags(pageData);
             _applyVorbisCommentHeader(comments);
           }
@@ -324,7 +327,7 @@ class OggParser {
         );
       }
 
-      if (!options.duration || stream.maxGranulePosition <= 0) {
+      if (stream.maxGranulePosition <= 0) {
         continue;
       }
 
@@ -336,6 +339,13 @@ class OggParser {
             numberOfSamples: samples,
             duration: samples / 48000.0,
           );
+          final fileSize = tokenizer.fileInfo?.size;
+          final lastTagPageOffset = stream.lastTagPageOffset;
+          if (fileSize != null && lastTagPageOffset != null) {
+            metadata.setFormat(
+              bitrate: 8 * (fileSize - lastTagPageOffset) / (samples / 48000.0),
+            );
+          }
         }
         continue;
       }
@@ -354,7 +364,10 @@ class OggParser {
 
     final fileSize = tokenizer.fileInfo?.size;
     final duration = metadata.format.duration;
-    if (fileSize != null && duration != null && duration > 0) {
+    if (fileSize != null &&
+        duration != null &&
+        duration > 0 &&
+        metadata.format.bitrate == null) {
       metadata.setFormat(bitrate: (8 * fileSize / duration).round());
     }
   }
@@ -371,5 +384,7 @@ class _OggStreamState {
   int? sampleRate;
   int? numberOfChannels;
   int? opusPreSkip;
+  int? lastTagPageOffset;
+  int? pendingOpusTagLength;
   bool flacMetadataComplete = false;
 }

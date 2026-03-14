@@ -4,7 +4,7 @@
     "format": {
       "container": "MPEG",
       "codec": "MPEG 1 Layer 3",
-      "duration": 0.809795918367347,
+      "duration": 0.7836734693877551,
       "sampleRate": 44100,
       "numberOfChannels": 2,
       "bitrate": 128000,
@@ -38,18 +38,14 @@
     "format": {
       "container": "MPEG",
       "codec": "MPEG 1 Layer 3",
-      "duration": 3.101857142857143,
+      "duration": 33.38448979591837,
       "sampleRate": 44100,
       "numberOfChannels": 2,
-      "bitrate": 56000,
+      "bitrate": 5203.134780907668,
       "lossless": false
     },
     "common": {
       "title": "Luomo - Tessio (Spektre Remix)",
-      "artist": null,
-      "album": null,
-      "albumartist": null,
-      "year": null,
       "track": {
         "no": null,
         "of": null
@@ -57,8 +53,7 @@
       "disk": {
         "no": null,
         "of": null
-      },
-      "genre": null
+      }
     },
     "native": [
       "ID3v1"
@@ -69,18 +64,13 @@
     "format": {
       "container": "MPEG",
       "codec": "MPEG 1 Layer 3",
-      "duration": 6.038428571428572,
+      "duration": 2.1681632653061222,
       "sampleRate": 44100,
       "numberOfChannels": 2,
-      "bitrate": 56000,
+      "bitrate": 155962.4246987952,
       "lossless": false
     },
     "common": {
-      "title": null,
-      "artist": null,
-      "album": null,
-      "albumartist": null,
-      "year": null,
       "track": {
         "no": null,
         "of": null
@@ -88,24 +78,42 @@
       "disk": {
         "no": null,
         "of": null
-      },
-      "genre": null
+      }
     },
     "native": []
   },
   {
     "file": "mp3/issue-347.mp3",
-    "error": "FormatException: Invalid value in input: 239"
+    "format": {
+      "container": "MPEG",
+      "codec": "MPEG 2.5 Layer 3",
+      "duration": 40.176,
+      "sampleRate": 8000,
+      "numberOfChannels": 1,
+      "bitrate": 8000,
+      "lossless": false
+    },
+    "common": {
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": []
   },
   {
     "file": "mp3/adts-0-frame.mp3",
     "format": {
       "container": "MPEG",
       "codec": "MPEG 1 Layer 3",
-      "duration": 0.26461538461538464,
+      "duration": 217.86122448979592,
       "sampleRate": 44100,
       "numberOfChannels": 2,
-      "bitrate": 104000,
+      "bitrate": 126.3189448441247,
       "lossless": false
     },
     "common": {
@@ -134,7 +142,7 @@
   {
     "file": "flac/sample.flac",
     "format": {
-      "container": "flac",
+      "container": "FLAC",
       "codec": "FLAC",
       "duration": 1.0,
       "sampleRate": 44100,
@@ -147,16 +155,17 @@
       "artist": "Yasmin Levy",
       "album": "Sentir",
       "albumartist": "Yasmin Levy",
-      "year": null,
+      "year": 2009,
       "track": {
         "no": 1,
-        "of": null
+        "of": 12
       },
       "disk": {
         "no": 1,
-        "of": null
+        "of": 1
       },
       "genre": [
+        "Flamenco",
         "Folk, World, & Country"
       ]
     },
@@ -167,7 +176,7 @@
   {
     "file": "flac/flac-multiple-album-artists-tags.flac",
     "format": {
-      "container": "flac",
+      "container": "FLAC",
       "codec": "FLAC",
       "duration": 1.0,
       "sampleRate": 44100,
@@ -177,10 +186,9 @@
     },
     "common": {
       "title": "Test Track",
-      "artist": "Artist Two",
+      "artist": "Artist One",
       "album": "Test Album",
       "albumartist": "Album Artist Two",
-      "year": null,
       "track": {
         "no": null,
         "of": null
@@ -188,8 +196,7 @@
       "disk": {
         "no": null,
         "of": null
-      },
-      "genre": null
+      }
     },
     "native": [
       "vorbis"
@@ -198,7 +205,7 @@
   {
     "file": "flac/testcase.flac",
     "format": {
-      "container": "flac",
+      "container": "FLAC",
       "codec": "FLAC",
       "duration": 1.0,
       "sampleRate": 44100,
@@ -210,7 +217,6 @@
       "title": "Testcase",
       "artist": "Testcase",
       "album": "Testcase",
-      "albumartist": null,
       "year": 2023,
       "track": {
         "no": 1,
@@ -231,29 +237,29 @@
   {
     "file": "ogg/vorbis.ogg",
     "format": {
-      "container": "ogg",
+      "container": "Ogg",
       "codec": "Vorbis I",
-      "duration": null,
+      "duration": 2.0,
       "sampleRate": 44100,
       "numberOfChannels": 2,
-      "bitrate": 64000,
-      "lossless": null
+      "bitrate": 64000
     },
     "common": {
       "title": "In Bloom",
       "artist": "Nirvana",
       "album": "Nevermind",
       "albumartist": "Nirvana",
-      "year": null,
+      "year": 1991,
       "track": {
         "no": 2,
-        "of": null
+        "of": 12
       },
       "disk": {
         "no": 1,
-        "of": null
+        "of": 1
       },
       "genre": [
+        "Grunge",
         "Alternative"
       ]
     },
@@ -264,20 +270,14 @@
   {
     "file": "ogg/opus.ogg",
     "format": {
-      "container": "ogg",
+      "container": "Ogg",
       "codec": "Opus",
-      "duration": null,
+      "duration": 2.9065833333333333,
       "sampleRate": 48000,
       "numberOfChannels": 2,
-      "bitrate": null,
-      "lossless": null
+      "bitrate": 68223.0568536942
     },
     "common": {
-      "title": null,
-      "artist": null,
-      "album": null,
-      "albumartist": null,
-      "year": null,
       "track": {
         "no": null,
         "of": null
@@ -285,8 +285,7 @@
       "disk": {
         "no": null,
         "of": null
-      },
-      "genre": null
+      }
     },
     "native": [
       "vorbis"
@@ -296,19 +295,18 @@
     "file": "mp4/sample.m4a",
     "format": {
       "container": "M4A/isom/iso2",
-      "codec": null,
-      "duration": 1.0,
-      "sampleRate": null,
-      "numberOfChannels": null,
-      "bitrate": 84376,
-      "lossless": null
+      "codec": "MPEG-4/AAC",
+      "duration": 1.023219954648526,
+      "sampleRate": 44100,
+      "numberOfChannels": 1,
+      "bitrate": 72891.46352273734,
+      "lossless": false
     },
     "common": {
       "title": "Testcase",
       "artist": "Testcase",
       "album": "Testcase",
-      "albumartist": null,
-      "year": null,
+      "year": 2023,
       "track": {
         "no": 1,
         "of": null
@@ -326,12 +324,83 @@
     ]
   },
   {
+    "file": "mp4/The Dark Forest.m4a",
+    "format": {
+      "container": "M4A/3gp5/isom",
+      "codec": "MPEG-4/AAC",
+      "duration": 81433.54195011337,
+      "sampleRate": 22050,
+      "numberOfChannels": 2,
+      "bitrate": 32552.32279622475,
+      "lossless": false
+    },
+    "common": {
+      "title": "02 - The Dark Forest",
+      "artist": "Cixin Liu",
+      "album": "02 - The Dark Forest",
+      "albumartist": "Cixin Liu",
+      "year": 2008,
+      "track": {
+        "no": 1,
+        "of": 54
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      },
+      "genre": [
+        "Audiobook"
+      ]
+    },
+    "native": [
+      "iTunes"
+    ]
+  },
+  {
     "file": "wav/issue-819.wav",
-    "error": "TokenizerException: Cannot skip 4294967195 bytes: only 4956 bytes available"
+    "format": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "duration": 0.154875,
+      "sampleRate": 16000,
+      "numberOfChannels": 1,
+      "bitrate": 256000,
+      "lossless": true
+    },
+    "common": {
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": []
   },
   {
     "file": "wav/odd-list-type.wav",
-    "error": "TokenizerException: Cannot skip 49503120 bytes: only 20 bytes available"
+    "format": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "duration": 0.00007558578987150416,
+      "sampleRate": 44100,
+      "numberOfChannels": 2,
+      "bitrate": 2116800,
+      "lossless": true
+    },
+    "common": {
+      "track": {
+        "no": null,
+        "of": null
+      },
+      "disk": {
+        "no": null,
+        "of": null
+      }
+    },
+    "native": []
   },
   {
     "file": "aiff/sample.aiff",
@@ -341,7 +410,7 @@
       "duration": 2.1229931972789116,
       "sampleRate": 44100,
       "numberOfChannels": 2,
-      "bitrate": 1411230,
+      "bitrate": 1411230.1461163803,
       "lossless": true
     },
     "common": {
@@ -349,7 +418,7 @@
       "artist": "Beth Hart & Joe Bonamassa",
       "album": "Don't Explain",
       "albumartist": "Beth Hart & Joe Bonamassa",
-      "year": null,
+      "year": 2011,
       "track": {
         "no": 1,
         "of": 10
@@ -357,8 +426,7 @@
       "disk": {
         "no": 1,
         "of": 1
-      },
-      "genre": null
+      }
     },
     "native": [
       "ID3v2.4"

@@ -109,7 +109,7 @@ List<int> _buildMpegFrameWithReplayGain({
   payload.setRange(cursor, cursor + xing.length, xing);
   cursor += 4;
 
-  payload.setRange(cursor, cursor + 4, const <int>[0x90, 0x00, 0x00, 0x00]);
+  payload.setRange(cursor, cursor + 4, const <int>[0x00, 0x00, 0x00, 0x09]);
   cursor += 4;
 
   payload.setRange(cursor, cursor + 4, const <int>[0x00, 0x00, 0x00, 0x64]);

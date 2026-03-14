@@ -24,6 +24,7 @@ class Mp4Parser {
   _TrackDescription? _currentTrack;
   bool _hasAudioTrack = false;
   bool _hasVideoTrack = false;
+  int? _audioLengthInBytes;
 
   Future<void> parse() async {
     var remaining = tokenizer.fileInfo?.size;
@@ -72,16 +73,36 @@ class Mp4Parser {
         _parseMvhd(tokenizer.readBytes(payloadLength));
         return;
       case 'tkhd':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
         _parseTkhd(tokenizer.readBytes(payloadLength));
         return;
       case 'mdhd':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
         _parseMdhd(tokenizer.readBytes(payloadLength));
         return;
       case 'hdlr':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
         _parseHdlr(tokenizer.readBytes(payloadLength));
         return;
       case 'stsd':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
         _parseStsd(tokenizer.readBytes(payloadLength));
+        return;
+      case 'mdat':
+        _audioLengthInBytes = payloadLength;
+        tokenizer.skip(payloadLength);
         return;
       default:
         if (atom.parent?.header.name == 'ilst') {
@@ -91,6 +112,11 @@ class Mp4Parser {
         }
         return;
     }
+  }
+
+  bool _isTrackScopedAtom(Mp4Atom atom) {
+    return atom.atomPath.startsWith('moov.trak.') ||
+        atom.atomPath.contains('.trak.');
   }
 
   void _parseFtyp(List<int> payload) {
@@ -376,9 +402,14 @@ class Mp4Parser {
     }
 
     final currentDuration = metadata.format.duration;
-    final fileSize = tokenizer.fileInfo?.size;
-    if (fileSize != null && currentDuration != null && currentDuration > 0) {
-      metadata.setFormat(bitrate: (8 * fileSize / currentDuration).round());
+    final audioLength = _audioLengthInBytes;
+    if (audioLength != null && currentDuration != null && currentDuration > 0) {
+      metadata.setFormat(bitrate: 8 * audioLength / currentDuration);
+    } else {
+      final fileSize = tokenizer.fileInfo?.size;
+      if (fileSize != null && currentDuration != null && currentDuration > 0) {
+        metadata.setFormat(bitrate: 8 * fileSize / currentDuration);
+      }
     }
 
     metadata.setFormat(hasAudio: _hasAudioTrack, hasVideo: _hasVideoTrack);

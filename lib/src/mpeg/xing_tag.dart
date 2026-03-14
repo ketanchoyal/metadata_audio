@@ -53,22 +53,22 @@ XingInfoTag parseXingHeader(List<int> data, int offset) {
   List<int>? toc;
   int? vbrScale;
 
-  if ((flags & 0x80000000) != 0 && cursor + 4 <= data.length) {
+  if ((flags & 0x00000001) != 0 && cursor + 4 <= data.length) {
     numFrames = _readUint32Be(data, cursor);
     cursor += 4;
   }
 
-  if ((flags & 0x40000000) != 0 && cursor + 4 <= data.length) {
+  if ((flags & 0x00000002) != 0 && cursor + 4 <= data.length) {
     streamSize = _readUint32Be(data, cursor);
     cursor += 4;
   }
 
-  if ((flags & 0x20000000) != 0 && cursor + 100 <= data.length) {
+  if ((flags & 0x00000004) != 0 && cursor + 100 <= data.length) {
     toc = data.sublist(cursor, cursor + 100);
     cursor += 100;
   }
 
-  if ((flags & 0x10000000) != 0 && cursor + 4 <= data.length) {
+  if ((flags & 0x00000008) != 0 && cursor + 4 <= data.length) {
     vbrScale = _readUint32Be(data, cursor);
     cursor += 4;
   }

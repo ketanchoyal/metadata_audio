@@ -29,7 +29,7 @@ void main() {
         const ParseOptions(),
       );
 
-      expect(metadata.format.container, 'flac');
+      expect(metadata.format.container, 'FLAC');
       expect(metadata.format.codec, 'FLAC');
       expect(metadata.format.hasAudio, isTrue);
       expect(metadata.format.lossless, isTrue);

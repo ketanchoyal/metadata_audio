@@ -96,13 +96,23 @@ class MpegParser {
       return;
     }
 
-    final tag = ascii.decode(frameData.sublist(offset, offset + 4));
+    final tag = ascii.decode(
+      frameData.sublist(offset, offset + 4),
+      allowInvalid: true,
+    );
     offset += 4;
 
     if (tag == 'Info') {
       metadata.setFormat(codecProfile: 'CBR');
       final info = parseXingHeader(frameData, offset);
-      _applyXingInfo(header, info, frameData, offset);
+      _applyXingInfo(
+        header,
+        info,
+        frameData,
+        offset,
+        applyVbrProfile: false,
+        useStreamSizeBitrate: false,
+      );
       return;
     }
 
@@ -131,9 +141,11 @@ class MpegParser {
     MpegFrameHeader header,
     XingInfoTag info,
     List<int> frameData,
-    int xingOffset,
-  ) {
-    if (info.vbrScale != null) {
+    int xingOffset, {
+    bool applyVbrProfile = true,
+    bool useStreamSizeBitrate = true,
+  }) {
+    if (applyVbrProfile && info.vbrScale != null) {
       final codecProfile = 'V${((100 - info.vbrScale!) / 10).floor()}';
       metadata.setFormat(codecProfile: codecProfile);
     }
@@ -153,6 +165,14 @@ class MpegParser {
       if (duration != null) {
         metadata.setFormat(duration: duration);
       }
+    }
+
+    final duration = metadata.format.duration;
+    if (useStreamSizeBitrate &&
+        info.streamSize != null &&
+        duration != null &&
+        duration > 0) {
+      metadata.setFormat(bitrate: 8 * info.streamSize! / duration);
     }
   }
 
@@ -204,16 +224,16 @@ class MpegParser {
     final flags = _readUint32Be(frameData, cursor);
     cursor += 4;
 
-    if ((flags & 0x80000000) != 0) {
+    if ((flags & 0x00000001) != 0) {
       cursor += 4;
     }
-    if ((flags & 0x40000000) != 0) {
+    if ((flags & 0x00000002) != 0) {
       cursor += 4;
     }
-    if ((flags & 0x20000000) != 0) {
+    if ((flags & 0x00000004) != 0) {
       cursor += 100;
     }
-    if ((flags & 0x10000000) != 0) {
+    if ((flags & 0x00000008) != 0) {
       cursor += 4;
     }
 
@@ -292,7 +312,7 @@ class MpegParser {
       }
     }
 
-    if (_frameCount == 4) {
+    if (_frameCount == 3) {
       final isCbr = _areAllSame(_bitrates);
       if (isCbr) {
         metadata.setFormat(codecProfile: 'CBR');
@@ -303,10 +323,10 @@ class MpegParser {
         return true;
       }
 
-      if (!options.duration) {
-        return true;
-      }
+      return false;
+    }
 
+    if (_frameCount == 4) {
       _calculateEofDuration = true;
     }
 
@@ -362,11 +382,7 @@ class MpegParser {
     }
 
     if (_frameCount == 3) {
-      if (options.duration) {
-        _calculateEofDuration = true;
-      } else {
-        return true;
-      }
+      _calculateEofDuration = true;
     }
 
     return false;
@@ -396,13 +412,6 @@ class MpegParser {
     final fileSize = tokenizer.fileInfo?.size;
     final sampleRate = metadata.format.sampleRate;
 
-    // Calculate average bitrate from collected frame bitrates
-    int? avgBitrate;
-    if (_bitrates.isNotEmpty) {
-      final sum = _bitrates.reduce((a, b) => a + b);
-      avgBitrate = (sum / _bitrates.length).round();
-    }
-
     if (fileSize != null &&
         _mpegOffset != null &&
         _frameSize != null &&
@@ -421,16 +430,11 @@ class MpegParser {
 
       final profile = metadata.format.codecProfile;
       final duration = metadata.format.duration;
-      if (profile != null &&
-          profile.startsWith('V') &&
-          duration != null &&
-          duration > 0) {
-        // For VBR files with known duration, calculate bitrate from file size
-        final calculatedBitrate = (mpegSize * 8 / duration).round();
+      if (duration != null &&
+          duration > 0 &&
+          (profile == null || profile.startsWith('V'))) {
+        final calculatedBitrate = mpegSize * 8 / duration;
         metadata.setFormat(bitrate: calculatedBitrate);
-      } else if (avgBitrate != null && metadata.format.bitrate == null) {
-        // Use average bitrate if no bitrate is set
-        metadata.setFormat(bitrate: avgBitrate);
       }
     }
 
@@ -440,46 +444,7 @@ class MpegParser {
         sampleRate != null) {
       final numberOfSamples = _frameCount * _samplesPerFrame!;
       metadata.setFormat(
-        numberOfSamples: numberOfSamples,
-        duration: numberOfSamples / sampleRate,
-      );
-    }
-
-    // For VBR files without Xing header, calculate bitrate from frame average
-    // if we have collected multiple frames with different bitrates
-    if (avgBitrate != null &&
-        _bitrates.length >= 4 &&
-        !_areAllSame(_bitrates) &&
-        metadata.format.codecProfile == null) {
-      metadata.setFormat(bitrate: avgBitrate);
-      // Mark as VBR since bitrates vary
-      metadata.setFormat(codecProfile: 'VBR');
-    }
-
-    // If we still don't have duration, estimate it from average bitrate and file size
-    // This is useful for VBR files without Xing header
-    if (metadata.format.duration == null &&
-        avgBitrate != null &&
-        avgBitrate > 0 &&
-        fileSize != null &&
-        _mpegOffset != null) {
-      final id3v1Size = _hasId3v1 ? 128 : 0;
-      final mpegSize = fileSize - _mpegOffset! - id3v1Size;
-      if (mpegSize > 0) {
-        final estimatedDuration = (mpegSize * 8) / avgBitrate;
-        metadata.setFormat(duration: estimatedDuration);
-      }
-    }
-
-    // If we still don't have duration but have frames and sample rate,
-    // calculate from the frames we've actually scanned (less accurate for partial scans)
-    if (metadata.format.duration == null &&
-        _samplesPerFrame != null &&
-        sampleRate != null &&
-        _frameCount > 0) {
-      final numberOfSamples = _frameCount * _samplesPerFrame!;
-      metadata.setFormat(
-        numberOfSamples: numberOfSamples,
+        numberOfSamples: options.duration ? numberOfSamples : null,
         duration: numberOfSamples / sampleRate,
       );
     }
@@ -582,7 +547,12 @@ class MpegFrameHeader {
     required this.frameLength,
   });
 
-  String get codec => 'MPEG ${version.floor()} Layer $layer';
+  String get codec {
+    final versionLabel = version == version.roundToDouble()
+        ? version.round().toString()
+        : version.toString();
+    return 'MPEG $versionLabel Layer $layer';
+  }
 
   int get samplesPerFrame {
     if (version == 1.0) {

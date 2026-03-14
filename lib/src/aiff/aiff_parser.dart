@@ -133,7 +133,7 @@ class AiffParser {
       case 'SSND':
         final duration = metadata.format.duration;
         if (duration != null && duration > 0) {
-          metadata.setFormat(bitrate: (8 * chunkSize / duration).round());
+          metadata.setFormat(bitrate: 8 * chunkSize / duration);
         }
         return 0;
 

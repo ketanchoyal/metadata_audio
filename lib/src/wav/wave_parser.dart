@@ -34,7 +34,20 @@ class WaveParser {
     }
 
     metadata.setFormat(hasAudio: true, hasVideo: false);
-    await _parseRiffChunk(riffHeader.chunkSize);
+    final fileSize = tokenizer.fileInfo?.size;
+    var riffSize = riffHeader.chunkSize;
+    if (fileSize != null) {
+      final maxReadable = fileSize - RiffChunk.headerLength;
+      if (riffSize > maxReadable) {
+        metadata.addWarning('RIFF chunk size exceeds file size');
+        riffSize = maxReadable;
+      }
+    }
+    try {
+      await _parseRiffChunk(riffSize);
+    } on TokenizerException {
+      metadata.addWarning('Unexpected end of RIFF/WAVE data');
+    }
   }
 
   Future<void> _parseRiffChunk(int chunkSize) async {
@@ -60,6 +73,10 @@ class WaveParser {
 
       final declaredSize = header.chunkSize;
       var readableSize = declaredSize;
+      if (readableSize < 0) {
+        metadata.addWarning('Ignore malformed negative RIFF chunk size');
+        break;
+      }
       if (readableSize > bytesRemaining) {
         metadata.addWarning('Data chunk size exceeds file size');
         readableSize = bytesRemaining;
@@ -80,25 +97,33 @@ class WaveParser {
     switch (chunkId) {
       case 'LIST':
         await _parseListTag(chunkSize);
+        return;
       case 'fact':
         metadata.setFormat(lossless: false);
         _fact = FactChunk.fromBytes(tokenizer.readBytes(chunkSize));
+        return;
       case 'fmt ':
         _parseFmtChunk(tokenizer.readBytes(chunkSize));
+        return;
       case 'id3 ':
       case 'ID3 ':
         await _parseId3Chunk(tokenizer.readBytes(chunkSize));
+        return;
       case 'data':
         _parseDataChunk(chunkSize);
         tokenizer.skip(chunkSize);
+        return;
       case 'bext':
         tokenizer.skip(chunkSize);
+        return;
       case '\x00\x00\x00\x00':
         metadata.addWarning('Ignore chunk: RIFF/$chunkId');
         tokenizer.skip(chunkSize);
+        return;
       default:
         metadata.addWarning('Ignore chunk: RIFF/$chunkId');
         tokenizer.skip(chunkSize);
+        return;
     }
   }
 
@@ -187,14 +212,16 @@ class WaveParser {
       return;
     }
 
-    final numberOfSamples =
-        _fact?.sampleLength ??
-        (chunkSize == 0xFFFFFFFF ? null : chunkSize ~/ _blockAlign);
-    if (numberOfSamples != null) {
-      metadata.setFormat(numberOfSamples: numberOfSamples);
+    final computedSamples =
+        _fact?.sampleLength.toDouble() ??
+        (chunkSize == 0xFFFFFFFF ? null : chunkSize / _blockAlign);
+    if (computedSamples != null) {
+      if (computedSamples == computedSamples.roundToDouble()) {
+        metadata.setFormat(numberOfSamples: computedSamples.round());
+      }
       final sampleRate = metadata.format.sampleRate;
       if (sampleRate != null && sampleRate > 0) {
-        metadata.setFormat(duration: numberOfSamples / sampleRate);
+        metadata.setFormat(duration: computedSamples / sampleRate);
       }
     }
 

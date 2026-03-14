@@ -33,7 +33,7 @@ void main() {
           // Duration is estimated from average bitrate and file size
           // (not from EOF frame counting, which requires duration: true)
           expect(metadata.format.duration, isNotNull);
-          // numberOfSamples requires full frame counting (duration: true)
+          // numberOfSamples remains unset unless duration=true
           expect(metadata.format.numberOfSamples, isNull);
         },
       );

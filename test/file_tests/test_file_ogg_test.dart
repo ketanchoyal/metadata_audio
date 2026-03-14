@@ -23,7 +23,7 @@ void main() {
 
       final metadata = await parseFile(file.path);
 
-      checkFormat(metadata.format, container: 'ogg', codec: 'Vorbis I');
+      checkFormat(metadata.format, container: 'Ogg', codec: 'Vorbis I');
 
       // Should have Vorbis comments
       expect(metadata.native.containsKey('vorbis'), isTrue);
@@ -38,7 +38,7 @@ void main() {
 
       final metadata = await parseFile(file.path);
 
-      checkFormat(metadata.format, container: 'ogg', codec: 'Opus');
+      checkFormat(metadata.format, container: 'Ogg', codec: 'Opus');
     });
   });
 }

@@ -1,6 +1,6 @@
---- output_ts.json	2026-03-14 17:43:25
-+++ output_dart.json	2026-03-14 17:43:26
-@@ -1,14 +1,10 @@
+--- output_ts.json	2026-03-14 18:42:25
++++ output_dart.json	2026-03-14 18:42:25
+@@ -1,7 +1,3 @@
 -
 -> audio-metadata-comparison@1.0.0 test:ts
 -> tsx test-typescript.ts
@@ -8,24 +8,21 @@
  [
    {
      "file": "mp3/id3v2.3.mp3",
-     "format": {
-       "container": "MPEG",
-       "codec": "MPEG 1 Layer 3",
--      "duration": 0.7836734693877551,
-+      "duration": 0.809795918367347,
+@@ -11,7 +7,7 @@
+       "duration": 0.7836734693877551,
        "sampleRate": 44100,
        "numberOfChannels": 2,
-       "bitrate": 128000,
-@@ -42,14 +38,18 @@
-     "format": {
-       "container": "MPEG",
-       "codec": "MPEG 1 Layer 3",
--      "duration": 33.38448979591837,
-+      "duration": 3.101857142857143,
+-      "bitrate": 128000,
++      "bitrate": 132249,
+       "lossless": false
+     },
+     "common": {
+@@ -45,11 +41,15 @@
+       "duration": 33.38448979591837,
        "sampleRate": 44100,
        "numberOfChannels": 2,
 -      "bitrate": 5203.134780907668,
-+      "bitrate": 56000,
++      "bitrate": 5203,
        "lossless": false
      },
      "common": {
@@ -47,16 +44,12 @@
      },
      "native": [
        "ID3v1"
-@@ -68,13 +69,18 @@
-     "format": {
-       "container": "MPEG",
-       "codec": "MPEG 1 Layer 3",
--      "duration": 2.1681632653061222,
-+      "duration": 6.038428571428572,
+@@ -71,10 +72,15 @@
+       "duration": 2.1681632653061222,
        "sampleRate": 44100,
        "numberOfChannels": 2,
 -      "bitrate": 155962.4246987952,
-+      "bitrate": 56000,
++      "bitrate": 155962,
        "lossless": false
      },
      "common": {
@@ -68,7 +61,7 @@
        "track": {
          "no": null,
          "of": null
-@@ -82,42 +88,24 @@
+@@ -82,7 +88,8 @@
        "disk": {
          "no": null,
          "of": null
@@ -78,102 +71,64 @@
      },
      "native": []
    },
-   {
-     "file": "mp3/issue-347.mp3",
--    "format": {
--      "container": "MPEG",
--      "codec": "MPEG 2.5 Layer 3",
--      "duration": 40.176,
--      "sampleRate": 8000,
--      "numberOfChannels": 1,
--      "bitrate": 8000,
--      "lossless": false
--    },
--    "common": {
--      "track": {
--        "no": null,
--        "of": null
--      },
--      "disk": {
--        "no": null,
--        "of": null
--      }
--    },
--    "native": []
-+    "error": "FormatException: Invalid value in input: 239"
-   },
-   {
-     "file": "mp3/adts-0-frame.mp3",
-     "format": {
-       "container": "MPEG",
-       "codec": "MPEG 1 Layer 3",
--      "duration": 217.86122448979592,
-+      "duration": 0.26461538461538464,
-       "sampleRate": 44100,
-       "numberOfChannels": 2,
--      "bitrate": 126.3189448441247,
-+      "bitrate": 104000,
+@@ -98,6 +105,11 @@
        "lossless": false
      },
      "common": {
-@@ -146,9 +134,9 @@
-   {
-     "file": "flac/sample.flac",
++      "title": null,
++      "artist": null,
++      "album": null,
++      "albumartist": null,
++      "year": null,
+       "track": {
+         "no": null,
+         "of": null
+@@ -105,7 +117,8 @@
+       "disk": {
+         "no": null,
+         "of": null
+-      }
++      },
++      "genre": null
+     },
+     "native": []
+   },
+@@ -117,7 +130,7 @@
+       "duration": 217.86122448979592,
+       "sampleRate": 44100,
+       "numberOfChannels": 2,
+-      "bitrate": 126.3189448441247,
++      "bitrate": 126,
+       "lossless": false
+     },
+     "common": {
+@@ -148,7 +161,7 @@
      "format": {
--      "container": "FLAC",
-+      "container": "flac",
+       "container": "FLAC",
        "codec": "FLAC",
 -      "duration": 1,
 +      "duration": 1.0,
        "sampleRate": 44100,
        "numberOfChannels": 2,
        "bitrate": 511808,
-@@ -159,17 +147,16 @@
-       "artist": "Yasmin Levy",
-       "album": "Sentir",
-       "albumartist": "Yasmin Levy",
--      "year": 2009,
-+      "year": null,
-       "track": {
-         "no": 1,
--        "of": 12
-+        "of": null
-       },
-       "disk": {
-         "no": 1,
--        "of": 1
-+        "of": null
-       },
-       "genre": [
--        "Flamenco",
-         "Folk, World, & Country"
-       ]
-     },
-@@ -180,9 +167,9 @@
-   {
-     "file": "flac/flac-multiple-album-artists-tags.flac",
+@@ -182,7 +195,7 @@
      "format": {
--      "container": "FLAC",
-+      "container": "flac",
+       "container": "FLAC",
        "codec": "FLAC",
 -      "duration": 1,
 +      "duration": 1.0,
        "sampleRate": 44100,
        "numberOfChannels": 2,
        "bitrate": 1136,
-@@ -190,9 +177,10 @@
-     },
-     "common": {
-       "title": "Test Track",
--      "artist": "Artist One",
-+      "artist": "Artist Two",
+@@ -193,6 +206,7 @@
+       "artist": "Artist One",
        "album": "Test Album",
        "albumartist": "Album Artist Two",
 +      "year": null,
        "track": {
          "no": null,
          "of": null
-@@ -200,7 +188,8 @@
+@@ -200,7 +214,8 @@
        "disk": {
          "no": null,
          "of": null
@@ -183,19 +138,16 @@
      },
      "native": [
        "vorbis"
-@@ -209,9 +198,9 @@
-   {
-     "file": "flac/testcase.flac",
+@@ -211,7 +226,7 @@
      "format": {
--      "container": "FLAC",
-+      "container": "flac",
+       "container": "FLAC",
        "codec": "FLAC",
 -      "duration": 1,
 +      "duration": 1.0,
        "sampleRate": 44100,
        "numberOfChannels": 1,
        "bitrate": 211656,
-@@ -221,6 +210,7 @@
+@@ -221,6 +236,7 @@
        "title": "Testcase",
        "artist": "Testcase",
        "album": "Testcase",
@@ -203,15 +155,12 @@
        "year": 2023,
        "track": {
          "no": 1,
-@@ -241,29 +231,29 @@
-   {
-     "file": "ogg/vorbis.ogg",
+@@ -243,10 +259,11 @@
      "format": {
--      "container": "Ogg",
-+      "container": "ogg",
+       "container": "Ogg",
        "codec": "Vorbis I",
 -      "duration": 2,
-+      "duration": null,
++      "duration": 2.0,
        "sampleRate": 44100,
        "numberOfChannels": 2,
 -      "bitrate": 64000
@@ -220,39 +169,12 @@
      },
      "common": {
        "title": "In Bloom",
-       "artist": "Nirvana",
-       "album": "Nevermind",
-       "albumartist": "Nirvana",
--      "year": 1991,
-+      "year": null,
-       "track": {
-         "no": 2,
--        "of": 12
-+        "of": null
-       },
-       "disk": {
-         "no": 1,
--        "of": 1
-+        "of": null
-       },
-       "genre": [
--        "Grunge",
-         "Alternative"
-       ]
-     },
-@@ -274,14 +264,20 @@
-   {
-     "file": "ogg/opus.ogg",
-     "format": {
--      "container": "Ogg",
-+      "container": "ogg",
-       "codec": "Opus",
--      "duration": 2.9065833333333333,
-+      "duration": null,
+@@ -279,9 +296,15 @@
+       "duration": 2.9065833333333333,
        "sampleRate": 48000,
        "numberOfChannels": 2,
 -      "bitrate": 68223.0568536942
-+      "bitrate": null,
++      "bitrate": 100872,
 +      "lossless": null
      },
      "common": {
@@ -264,7 +186,7 @@
        "track": {
          "no": null,
          "of": null
-@@ -289,7 +285,8 @@
+@@ -289,7 +312,8 @@
        "disk": {
          "no": null,
          "of": null
@@ -274,86 +196,76 @@
      },
      "native": [
        "vorbis"
-@@ -299,18 +296,19 @@
-     "file": "mp4/sample.m4a",
-     "format": {
-       "container": "M4A/isom/iso2",
--      "codec": "MPEG-4/AAC",
--      "duration": 1.023219954648526,
--      "sampleRate": 44100,
--      "numberOfChannels": 1,
+@@ -303,13 +327,14 @@
+       "duration": 1.023219954648526,
+       "sampleRate": 44100,
+       "numberOfChannels": 1,
 -      "bitrate": 72891.46352273734,
--      "lossless": false
-+      "codec": null,
-+      "duration": 1.0,
-+      "sampleRate": null,
-+      "numberOfChannels": null,
-+      "bitrate": 84376,
-+      "lossless": null
++      "bitrate": 72891,
+       "lossless": false
      },
      "common": {
        "title": "Testcase",
        "artist": "Testcase",
        "album": "Testcase",
--      "year": 2023,
++      "albumartist": null,
+       "year": 2023,
+       "track": {
+         "no": 1,
+@@ -335,7 +360,7 @@
+       "duration": 81433.54195011337,
+       "sampleRate": 22050,
+       "numberOfChannels": 2,
+-      "bitrate": 32552.32279622475,
++      "bitrate": 32552,
+       "lossless": false
+     },
+     "common": {
+@@ -372,6 +397,11 @@
+       "lossless": true
+     },
+     "common": {
++      "title": null,
++      "artist": null,
++      "album": null,
 +      "albumartist": null,
 +      "year": null,
        "track": {
-         "no": 1,
+         "no": null,
          "of": null
-@@ -329,49 +327,11 @@
-   },
-   {
-     "file": "wav/issue-819.wav",
--    "format": {
--      "container": "WAVE",
--      "codec": "PCM",
--      "duration": 0.154875,
--      "sampleRate": 16000,
--      "numberOfChannels": 1,
--      "bitrate": 256000,
--      "lossless": true
--    },
--    "common": {
--      "track": {
--        "no": null,
--        "of": null
--      },
--      "disk": {
--        "no": null,
--        "of": null
+@@ -379,7 +409,8 @@
+       "disk": {
+         "no": null,
+         "of": null
 -      }
--    },
--    "native": []
-+    "error": "TokenizerException: Cannot skip 4294967195 bytes: only 4956 bytes available"
++      },
++      "genre": null
+     },
+     "native": []
    },
-   {
-     "file": "wav/odd-list-type.wav",
--    "format": {
--      "container": "WAVE",
--      "codec": "PCM",
--      "duration": 0.00007558578987150416,
--      "sampleRate": 44100,
--      "numberOfChannels": 2,
--      "bitrate": 2116800,
--      "lossless": true
--    },
--    "common": {
--      "track": {
--        "no": null,
--        "of": null
--      },
--      "disk": {
--        "no": null,
--        "of": null
+@@ -395,6 +426,11 @@
+       "lossless": true
+     },
+     "common": {
++      "title": null,
++      "artist": null,
++      "album": null,
++      "albumartist": null,
++      "year": null,
+       "track": {
+         "no": null,
+         "of": null
+@@ -402,7 +438,8 @@
+       "disk": {
+         "no": null,
+         "of": null
 -      }
--    },
--    "native": []
-+    "error": "TokenizerException: Cannot skip 49503120 bytes: only 20 bytes available"
++      },
++      "genre": null
+     },
+     "native": []
    },
-   {
-     "file": "aiff/sample.aiff",
-@@ -381,7 +341,7 @@
+@@ -414,7 +451,7 @@
        "duration": 2.1229931972789116,
        "sampleRate": 44100,
        "numberOfChannels": 2,
@@ -362,16 +274,7 @@
        "lossless": true
      },
      "common": {
-@@ -389,7 +349,7 @@
-       "artist": "Beth Hart & Joe Bonamassa",
-       "album": "Don't Explain",
-       "albumartist": "Beth Hart & Joe Bonamassa",
--      "year": 2011,
-+      "year": null,
-       "track": {
-         "no": 1,
-         "of": 10
-@@ -397,7 +357,8 @@
+@@ -430,7 +467,8 @@
        "disk": {
          "no": 1,
          "of": 1

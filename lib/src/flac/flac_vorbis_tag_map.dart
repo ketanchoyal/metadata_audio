@@ -8,11 +8,17 @@ import 'package:audio_metadata/src/model/types.dart';
 final _vorbisTagMap = {
   'TITLE': 'title',
   'ARTIST': 'artist',
+  'ARTISTS': 'artists',
   'ALBUM': 'album',
-  'DATE': 'year',
+  'DATE': 'date',
   'TRACKNUMBER': 'track',
+  'TRACKTOTAL': 'totaltracks',
+  'TOTALTRACKS': 'totaltracks',
   'DISCNUMBER': 'disk',
+  'DISCTOTAL': 'totaldiscs',
+  'TOTALDISCS': 'totaldiscs',
   'GENRE': 'genre',
+  'STYLE': 'genre',
   'ALBUMARTIST': 'albumartist',
   'ALBUM ARTIST': 'albumartist',
   'METADATA_BLOCK_PICTURE': 'picture',
@@ -55,11 +61,16 @@ class FlacVorbisTagMapper extends GenericTagMapper {
       case 'artist':
       case 'album':
       case 'albumartist':
+      case 'date':
         return _singleString(value);
       case 'year':
       case 'track':
       case 'disk':
+      case 'totaltracks':
+      case 'totaldiscs':
         return _parseLeadingInt(_singleString(value));
+      case 'artists':
+        return _stringList(value);
       case 'genre':
         final genre = _singleString(value);
         return genre == null ? null : <String>[genre];
@@ -76,6 +87,20 @@ class FlacVorbisTagMapper extends GenericTagMapper {
   static String? _singleString(dynamic value) {
     if (value is String) {
       return value;
+    }
+    return null;
+  }
+
+  static List<String>? _stringList(dynamic value) {
+    if (value is String) {
+      return <String>[value];
+    }
+    if (value is List) {
+      final values = value
+          .whereType<String>()
+          .where((v) => v.isNotEmpty)
+          .toList();
+      return values.isEmpty ? null : values;
     }
     return null;
   }

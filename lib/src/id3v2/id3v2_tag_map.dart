@@ -15,7 +15,8 @@ final _id3v2TagMap = {
   'TALB': 'album',
   'TYE': 'year',
   'TYER': 'year',
-  'TDRC': 'year',
+  'TDRC': 'date',
+  'TDOR': 'originaldate',
   'TRK': 'track',
   'TRCK': 'track',
   'TPA': 'disk',
@@ -113,6 +114,8 @@ class Id3v2TagMapper extends GenericTagMapper {
       case 'artist':
       case 'album':
       case 'albumartist':
+      case 'date':
+      case 'originaldate':
         return _singleString(value);
       case 'year':
         return _parseLeadingInt(_singleString(value));
