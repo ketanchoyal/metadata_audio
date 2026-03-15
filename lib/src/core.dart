@@ -30,6 +30,8 @@ export 'tokenizer/http_tokenizers.dart'
         FileDownloadError,
         HttpTokenizer,
         ParseStrategy,
+        ProbeStrategy,
+        ProbingRangeTokenizer,
         RandomAccessTokenizer,
         RangeTokenizer,
         StrategyInfo,

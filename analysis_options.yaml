@@ -17,6 +17,7 @@ analyzer:
     unnecessary_null_checks: ignore
     no_leading_underscores_for_local_identifiers: ignore
     non_constant_identifier_names: ignore
+    parameter_assignments: ignore
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
