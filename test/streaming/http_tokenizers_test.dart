@@ -21,8 +21,9 @@ void main() {
       initializeParserFactory(ParserFactory(registry));
     });
 
-    const testUrl =
-        'https://example.com/test-audio-file.m4a';
+    // NOTE: Replace with your own test URL for large file testing
+    // This should be a large audio file (300MB+) that supports HTTP Range requests
+    const testUrl = 'https://example.com/test-audio-file.m4a';
 
     group('Strategy Detection', () {
       test(
