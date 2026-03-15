@@ -2,7 +2,7 @@ import 'package:metadata_audio/metadata_audio.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('audio_metadata package', () {
+  group('metadata_audio package', () {
     test('package exports parse error types', () {
       expect(CouldNotDetermineFileTypeError('test'), isA<ParseError>());
       expect(UnsupportedFileTypeError('test'), isA<ParseError>());

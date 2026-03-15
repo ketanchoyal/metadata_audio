@@ -1,4 +1,4 @@
-# Contributing to audio_metadata
+# Contributing to metadata_audio
 
 Thank you for your interest in contributing! This document outlines the process and guidelines.
 

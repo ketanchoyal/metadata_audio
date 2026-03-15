@@ -14,7 +14,7 @@ void main() {
 
     setUpAll(() async {
       tempDir = await Directory.systemTemp.createTemp(
-        'audio_metadata_concurrent_',
+        'metadata_audio_concurrent_',
       );
 
       fixtureA = await _writeFixture(

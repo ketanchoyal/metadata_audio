@@ -1,5 +1,5 @@
 {
-  "description": "Test fixtures manifest for audio_metadata library. The project uses synthetic data generation for test fixtures rather than storing binary audio files.",
+  "description": "Test fixtures manifest for metadata_audio library. The project uses synthetic data generation for test fixtures rather than storing binary audio files.",
   "fixtures": [],
   "synthetic_fixtures": [
     {

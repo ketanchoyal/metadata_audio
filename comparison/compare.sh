@@ -16,7 +16,7 @@ cd "$SCRIPT_DIR"
 npm run test:ts > output_ts.json 2>/dev/null || true
 
 # Run Dart
-echo "Running Dart audio_metadata..."
+echo "Running Dart metadata_audio..."
 cd "$PROJECT_ROOT"
 dart run tool/compare_metadata.dart > comparison/output_dart.json 2>/dev/null || true
 
