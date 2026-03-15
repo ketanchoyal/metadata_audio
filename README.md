@@ -7,6 +7,7 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 - **Multi-format support**: MP3, FLAC, Ogg Vorbis, MP4, WAV, AIFF, APE, ASF, Matroska, and more
 - **Comprehensive metadata**: ID3, Vorbis comments, iTunes tags, and other metadata standards
 - **Chapter/Track boundaries**: Extract embedded chapter markers, cue points, and track boundaries (MP4, FLAC, Ogg, WAV, Matroska)
+- **Smart URL parsing**: Automatically selects optimal download strategy for remote files
 - **Streaming support**: Parse metadata without loading entire files into memory
 - **Type-safe**: Full Dart type safety with comprehensive error handling
 - **Well-tested**: Extensive test suite with TDD principles
@@ -35,6 +36,8 @@ dart pub get
 
 ## Usage
 
+### Parse Local Files
+
 ```dart
 import 'package:audio_metadata/audio_metadata.dart';
 
@@ -46,28 +49,52 @@ print('Title: ${metadata.common.title}');
 print('Artist: ${metadata.common.artist}');
 print('Album: ${metadata.common.album}');
 print('Duration: ${metadata.format.duration}');
+```
 
-// Parse bytes
+### Parse from URL (Smart)
+
+The `parseUrl()` function automatically selects the best strategy based on file size and server capabilities:
+
+```dart
+// Small files (< 5MB): Full download
+// Medium files (5-50MB): Header-only download (~256KB)
+// Large files (> 50MB): Random access with on-demand fetching
+
+final metadata = await parseUrl('https://example.com/audio.m4a');
+
+// With callback to see selected strategy
+final metadata = await parseUrl(
+  'https://example.com/large-audio.m4a',
+  onStrategySelected: (strategy, reason) {
+    print('Using $strategy because $reason');
+  },
+);
+```
+
+### Parse Bytes
+
+```dart
 final bytes = await File('/path/to/audio.flac').readAsBytes();
-final meta = await parseBytes(bytes, fileInfo: FileInfo(mimeType: 'audio/flac'));
+final metadata = await parseBytes(
+  bytes,
+  fileInfo: FileInfo(mimeType: 'audio/flac'),
+);
+```
 
-// Parse from URL (optimized for large files)
-// Uses HTTP Range requests to download only metadata (~256KB vs full file)
-final metadata = await parseUrlSmart('https://example.com/large-audio.m4a');
+### Chapter Extraction
 
-// Parse with chapter extraction (audiobooks, podcasts, DJ mixes)
+```dart
 final metadata = await parseFile(
   '/path/to/audiobook.m4a',
   options: const ParseOptions(includeChapters: true),
 );
+
 if (metadata.format.chapters != null) {
   for (final chapter in metadata.format.chapters!) {
     print('${chapter.title}: ${chapter.start}ms - ${chapter.end}ms');
   }
 }
 ```
-
-For more examples, see the [test directory](test/) for comprehensive usage examples across all supported formats.
 
 ## Supported Formats
 
@@ -86,6 +113,49 @@ For more examples, see the [test directory](test/) for comprehensive usage examp
 | WavPack| ✅ Complete | APEv2 tags |
 | DSD    | ✅ Complete | DSF, DSDIFF |
 
+## URL Parsing Strategies
+
+When parsing from URLs, the library automatically selects the most efficient strategy:
+
+| Strategy | File Size | Method | Use Case |
+|----------|-----------|--------|----------|
+| `fullDownload` | ≤ 5MB | Download entire file | Small files, any server |
+| `headerOnly` | 5-50MB | Download first 256KB | Medium files with Range support |
+| `randomAccess` | > 50MB | On-demand chunk fetching | Large files with Range support |
+
+### Manual Strategy Selection
+
+```dart
+import 'package:audio_metadata/audio_metadata.dart';
+
+// Force specific strategy
+final metadata = await parseUrl(
+  url,
+  strategy: ParseStrategy.headerOnly, // or fullDownload, randomAccess
+);
+
+// Detect strategy without parsing
+final info = await detectStrategy(url);
+print('Strategy: ${info.strategy}');
+print('File size: ${info.fileSize}');
+print('Range support: ${info.supportsRange}');
+```
+
+### HTTP Tokenizers
+
+For advanced use cases, you can use the underlying tokenizers directly:
+
+```dart
+// Full download - works with any server
+final tokenizer = await HttpTokenizer.fromUrl(url);
+
+// Header-only - requires Range support
+final tokenizer = await RangeTokenizer.fromUrl(url);
+
+// Random access - on-demand fetching
+final tokenizer = await RandomAccessTokenizer.fromUrl(url);
+```
+
 ## Chapter/Boundary Extraction
 
 The library supports extracting embedded track/disk boundaries and chapter markers from various audio formats. This is particularly useful for audiobooks, podcasts, DJ mixes, and live recordings.
@@ -103,25 +173,16 @@ The library supports extracting embedded track/disk boundaries and chapter marke
 | **WAV** | RIFF cue + adtl | `cue ` chunk with `labl`/`ltxt` in `LIST/adtl` |
 | **Matroska** | EditionEntry | MKV chapter atoms (EditionEntry) |
 
-### Usage Example
+### Chapter Model
 
 ```dart
-import 'package:audio_metadata/audio_metadata.dart';
-
-final metadata = await parseFile(
-  'audiobook.m4a',
-  options: const ParseOptions(includeChapters: true),
-);
-
-// Access chapter information
-final chapters = metadata.format.chapters;
-if (chapters != null) {
-  for (final chapter in chapters) {
-    print('${chapter.title}: ${chapter.start}ms - ${chapter.end}ms');
-    if (chapter.sampleOffset != null) {
-      print('  Sample offset: ${chapter.sampleOffset}');
-    }
-  }
+class Chapter {
+  final String? id;
+  final String title;
+  final int start;        // Start time in milliseconds
+  final int? end;         // End time in milliseconds
+  final int? sampleOffset;// Sample-accurate position
+  final int timeScale;    // Time scale (typically 1000 for ms)
 }
 ```
 
@@ -163,6 +224,7 @@ This package is a Dart port of the TypeScript [music-metadata](https://github.co
 | Duration calculation | ✅ Complete | MPEG Xing/Info, format-specific logic |
 | Bitrate calculation | ✅ Complete | Float precision matches upstream |
 | Picture extraction | ✅ Complete | Cover art from all formats |
+| URL parsing | ✅ Complete | Smart strategy selection |
 
 To verify parity, run the comparison tool:
 
