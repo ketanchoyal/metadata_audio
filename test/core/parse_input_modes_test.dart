@@ -169,24 +169,6 @@ void main() {
       });
     });
 
-    group('parseBuffer', () {
-      test('is deprecated alias for parseBytes', () async {
-        final mockParser = _MockParser(
-          mimeType: ['audio/test'],
-          onParse: (_1, _2) async => _createMockMetadata(),
-        );
-        registry.register(mockParser);
-
-        // Should work identically to parseBytes
-        final metadata = await parseBuffer(
-          testBytes,
-          fileInfo: FileInfo(mimeType: 'audio/test'),
-        );
-
-        expect(metadata.common.title, 'Test Title');
-      });
-    });
-
     group('parseFile', () {
       test('opens file and delegates to parseFromTokenizer', () async {
         final mockParser = _MockParser(

@@ -140,16 +140,6 @@ Future<AudioMetadata> parseStream(
   );
 }
 
-/// Deprecated: Use parseBytes instead.
-///
-/// This is an alias for parseBytes provided for upstream compatibility.
-@deprecated
-Future<AudioMetadata> parseBuffer(
-  Uint8List bytes, {
-  FileInfo? fileInfo,
-  ParseOptions? options,
-}) async => parseBytes(bytes, fileInfo: fileInfo, options: options);
-
 /// Parse audio metadata from a tokenizer.
 ///
 /// This is the core parsing function that all other entry points delegate to.
