@@ -114,13 +114,13 @@ void main() {
         print('');
         print('=== Strategy Detection ===');
         print(
-          'URL: \${testUrl.substring(0, testUrl.length > 50 ? 50 : testUrl.length)}...',
+          'URL: ${testUrl.substring(0, testUrl.length > 50 ? 50 : testUrl.length)}...',
         );
-        print('Detected strategy: \${info.strategy}');
+        print('Detected strategy: ${info.strategy}');
         print(
-          'File size: \${info.fileSize != null ? "\${info.fileSize! ~/ 1024}KB" : "unknown"}',
+          'File size: ${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}',
         );
-        print('Range support: \${info.supportsRange}');
+        print('Range support: ${info.supportsRange}');
         print('');
 
         // Verify strategy selection logic
@@ -140,8 +140,8 @@ void main() {
           } else if (info.supportsRange) {
             expect(
               info.strategy,
-              equals(ParseStrategy.headerOnly),
-              reason: 'Medium files with Range should use headerOnly',
+              equals(ParseStrategy.probe),
+              reason: 'Medium files with Range should use probe',
             );
           } else {
             expect(
@@ -181,11 +181,11 @@ void main() {
 
         print('');
         print('=== Smart parseUrl ===');
-        print('Selected strategy: \$selectedStrategy');
-        print('Reason: \$reason');
-        print('Format: \${metadata.format.container}');
-        print('Codec: \${metadata.format.codec}');
-        print('Duration: \${metadata.format.duration?.toStringAsFixed(2)}s');
+        print('Selected strategy: $selectedStrategy');
+        print('Reason: $reason');
+        print('Format: ${metadata.format.container}');
+        print('Codec: ${metadata.format.codec}');
+        print('Duration: ${metadata.format.duration?.toStringAsFixed(2)}s');
         print('');
 
         expect(selectedStrategy, isNotNull);
@@ -209,8 +209,8 @@ void main() {
 
         print('');
         print('=== Full Download Strategy ===');
-        print('Format: \${metadata.format.container}');
-        print('Codec: \${metadata.format.codec}');
+        print('Format: ${metadata.format.container}');
+        print('Codec: ${metadata.format.codec}');
         print('');
 
         expect(metadata.format.container, isNotNull);
@@ -231,14 +231,36 @@ void main() {
 
         print('');
         print('=== Header-Only Strategy ===');
-        print('Format: \${metadata.format.container}');
-        print('Codec: \${metadata.format.codec}');
+        print('Format: ${metadata.format.container}');
+        print('Codec: ${metadata.format.codec}');
         print('');
 
         expect(metadata.format.container, isNotNull);
       },
       skip: testUrl.isEmpty ? 'No test URL configured' : false,
       timeout: const Timeout(Duration(seconds: 60)),
+    );
+
+    test(
+      'probe strategy works',
+      () async {
+        final metadata = await parseUrl(
+          testUrl,
+          timeout: const Duration(seconds: 60),
+          strategy: ParseStrategy.probe,
+          probeStrategy: ProbeStrategy.scatter,
+        );
+
+        print('');
+        print('=== Probe Strategy ===');
+        print('Format: ${metadata.format.container}');
+        print('Codec: ${metadata.format.codec}');
+        print('');
+
+        expect(metadata.format.container, isNotNull);
+      },
+      skip: testUrl.isEmpty ? 'No test URL configured' : false,
+      timeout: const Timeout(Duration(seconds: 120)),
     );
 
     test(
@@ -252,8 +274,8 @@ void main() {
 
         print('');
         print('=== Random Access Strategy ===');
-        print('Format: \${metadata.format.container}');
-        print('Codec: \${metadata.format.codec}');
+        print('Format: ${metadata.format.container}');
+        print('Codec: ${metadata.format.codec}');
         print('');
 
         expect(metadata.format.container, isNotNull);
@@ -271,8 +293,8 @@ void main() {
 
         print('');
         print('=== HttpTokenizer ===');
-        print('File size: \${tokenizer.fileInfo?.size} bytes');
-        print('Can seek: \${tokenizer.canSeek}');
+        print('File size: ${tokenizer.fileInfo?.size} bytes');
+        print('Can seek: ${tokenizer.canSeek}');
         print('');
 
         expect(tokenizer.fileInfo?.size, greaterThan(0));
@@ -295,8 +317,8 @@ void main() {
 
         print('');
         print('=== RangeTokenizer ===');
-        print('Header size: \${tokenizer.headerSize} bytes');
-        print('Total size: \${tokenizer.totalSize} bytes');
+        print('Header size: ${tokenizer.headerSize} bytes');
+        print('Total size: ${tokenizer.totalSize} bytes');
         print('');
 
         expect(tokenizer.headerSize, greaterThan(0));
@@ -311,14 +333,65 @@ void main() {
     );
 
     test(
+      'ProbingRangeTokenizer fetches scattered ranges',
+      () async {
+        final tokenizer = await ProbingRangeTokenizer.fromUrl(
+          testUrl,
+          probeStrategy: ProbeStrategy.scatter,
+        );
+
+        print('');
+        print('=== ProbingRangeTokenizer ===');
+        print('Can seek: ${tokenizer.canSeek}');
+        print('Total size: ${tokenizer.fileInfo?.size}');
+        print('Fetched: ${tokenizer.fetchedRanges}');
+        print('');
+
+        expect(tokenizer.canSeek, isTrue);
+        expect(
+          tokenizer.fetchedRanges['chunks'],
+          greaterThan(1),
+          reason: 'Should fetch multiple chunks for scatter strategy',
+        );
+
+        tokenizer.close();
+      },
+      skip: testUrl.isEmpty ? 'No test URL configured' : false,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+
+    test(
+      'ProbingRangeTokenizer with mp4Optimized strategy',
+      () async {
+        final tokenizer = await ProbingRangeTokenizer.fromUrl(
+          testUrl,
+          probeStrategy: ProbeStrategy.mp4Optimized,
+        );
+
+        print('');
+        print('=== ProbingRangeTokenizer (MP4 Optimized) ===');
+        print('Can seek: ${tokenizer.canSeek}');
+        print('Total size: ${tokenizer.fileInfo?.size}');
+        print('Fetched: ${tokenizer.fetchedRanges}');
+        print('');
+
+        expect(tokenizer.canSeek, isTrue);
+
+        tokenizer.close();
+      },
+      skip: testUrl.isEmpty ? 'No test URL configured' : false,
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
+
+    test(
       'RandomAccessTokenizer provides random access',
       () async {
         final tokenizer = await RandomAccessTokenizer.fromUrl(testUrl);
 
         print('');
         print('=== RandomAccessTokenizer ===');
-        print('Can seek: \${tokenizer.canSeek}');
-        print('Total size: \${tokenizer.fileInfo?.size}');
+        print('Can seek: ${tokenizer.canSeek}');
+        print('Total size: ${tokenizer.fileInfo?.size}');
         print('');
 
         expect(tokenizer.canSeek, isTrue);
