@@ -24,12 +24,17 @@ export 'package:audio_metadata/src/musepack/sv8/mpc_sv8_parser.dart';
 export 'package:audio_metadata/src/musepack/sv8/stream_version8.dart';
 export 'package:audio_metadata/src/wavpack/wavpack_loader.dart';
 export 'package:audio_metadata/src/wavpack/wavpack_parser.dart';
-export 'package:audio_metadata/src/dsf/dsf_chunk.dart';
-export 'package:audio_metadata/src/dsf/dsf_loader.dart';
-export 'package:audio_metadata/src/dsf/dsf_parser.dart';
-export 'package:audio_metadata/src/dsdiff/dsdiff_loader.dart';
-export 'package:audio_metadata/src/dsdiff/dsdiff_parser.dart';
-export 'package:audio_metadata/src/dsdiff/dsdiff_token.dart';
+
+export 'tokenizer/http_tokenizers.dart'
+    show
+        parseUrl,
+        FileDownloadError,
+        ParseStrategy,
+        StrategyInfo,
+        detectStrategy,
+        HttpTokenizer,
+        RangeTokenizer,
+        RandomAccessTokenizer;
 
 // Global parser factory instance (initialized by application code)
 late ParserFactory _parserFactory;

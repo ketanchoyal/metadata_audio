@@ -6,9 +6,11 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 
 - **Multi-format support**: MP3, FLAC, Ogg Vorbis, MP4, WAV, AIFF, APE, ASF, Matroska, and more
 - **Comprehensive metadata**: ID3, Vorbis comments, iTunes tags, and other metadata standards
+- **Chapter/Track boundaries**: Extract embedded chapter markers, cue points, and track boundaries (MP4, FLAC, Ogg, WAV, Matroska)
 - **Streaming support**: Parse metadata without loading entire files into memory
 - **Type-safe**: Full Dart type safety with comprehensive error handling
 - **Well-tested**: Extensive test suite with TDD principles
+- **TypeScript parity**: Ported from [music-metadata](https://github.com/Borewit/music-metadata) with exact output compatibility
 
 ## Getting started
 
@@ -48,6 +50,21 @@ print('Duration: ${metadata.format.duration}');
 // Parse bytes
 final bytes = await File('/path/to/audio.flac').readAsBytes();
 final meta = await parseBytes(bytes, fileInfo: FileInfo(mimeType: 'audio/flac'));
+
+// Parse from URL (optimized for large files)
+// Uses HTTP Range requests to download only metadata (~256KB vs full file)
+final metadata = await parseUrlSmart('https://example.com/large-audio.m4a');
+
+// Parse with chapter extraction (audiobooks, podcasts, DJ mixes)
+final metadata = await parseFile(
+  '/path/to/audiobook.m4a',
+  options: const ParseOptions(includeChapters: true),
+);
+if (metadata.format.chapters != null) {
+  for (final chapter in metadata.format.chapters!) {
+    print('${chapter.title}: ${chapter.start}ms - ${chapter.end}ms');
+  }
+}
 ```
 
 For more examples, see the [test directory](test/) for comprehensive usage examples across all supported formats.
@@ -56,18 +73,57 @@ For more examples, see the [test directory](test/) for comprehensive usage examp
 
 | Format | Status | Notes |
 |--------|--------|-------|
-| MP3    | ✅ Complete | ID3v1, ID3v2.2/2.3/2.4, MPEG audio, Lyrics3 |
-| FLAC   | ✅ Complete | Vorbis comments, picture metadata |
-| OGG    | ✅ Complete | Vorbis, Opus, Speex, FLAC-in-Ogg |
-| MP4/M4A| ✅ Complete | iTunes atoms, chapters |
-| WAV    | ✅ Complete | RIFF, LIST-INFO, BWF |
+| MP3    | ✅ Complete | ID3v1, ID3v2.2/2.3/2.4, MPEG audio, Lyrics3, ID3v2 chapters (CHAP/CTOC) |
+| FLAC   | ✅ Complete | Vorbis comments, picture metadata, CUESHEET block → chapters |
+| OGG    | ✅ Complete | Vorbis, Opus, Speex, FLAC-in-Ogg, Vorbis chapter tags (CHAPTER###) |
+| MP4/M4A| ✅ Complete | iTunes atoms, chapter tracks (chap/tref), QuickTime chapters |
+| WAV    | ✅ Complete | RIFF, LIST-INFO, BWF, cue points + adtl labels, ltxt chunks |
 | AIFF   | ✅ Complete | AIFF-C, ID3, chunks |
-| APE    | ✅ Complete | APEv2 tags |
+| APE    | ✅ Complete | APEv2 tags, Monkey's Audio header |
 | ASF/WMA| ✅ Complete | Windows Media metadata |
-| Matroska| ✅ Complete | MKV, WebM tags |
+| Matroska| ✅ Complete | MKV, WebM tags, EditionEntry chapters |
 | Musepack| ✅ Complete | SV7, SV8 |
 | WavPack| ✅ Complete | APEv2 tags |
 | DSD    | ✅ Complete | DSF, DSDIFF |
+
+## Chapter/Boundary Extraction
+
+The library supports extracting embedded track/disk boundaries and chapter markers from various audio formats. This is particularly useful for audiobooks, podcasts, DJ mixes, and live recordings.
+
+### Supported Chapter Sources
+
+| Format | Source | Description |
+|--------|--------|-------------|
+| **MP3** | ID3v2 CHAP/CTOC | ID3v2.3/2.4 chapter frames |
+| **MP4/M4A** | Chapter track | QuickTime `chap` track reference with sample tables |
+| **MP4/M4A** | iTunes chapters | Text track chapters in M4B audiobooks |
+| **FLAC** | CUESHEET | FLAC native CUESHEET metadata block |
+| **FLAC** | Vorbis comments | `CHAPTER###` and `CHAPTER###NAME` tags |
+| **Ogg** | Vorbis comments | `CHAPTER###` timestamp tags |
+| **WAV** | RIFF cue + adtl | `cue ` chunk with `labl`/`ltxt` in `LIST/adtl` |
+| **Matroska** | EditionEntry | MKV chapter atoms (EditionEntry) |
+
+### Usage Example
+
+```dart
+import 'package:audio_metadata/audio_metadata.dart';
+
+final metadata = await parseFile(
+  'audiobook.m4a',
+  options: const ParseOptions(includeChapters: true),
+);
+
+// Access chapter information
+final chapters = metadata.format.chapters;
+if (chapters != null) {
+  for (final chapter in chapters) {
+    print('${chapter.title}: ${chapter.start}ms - ${chapter.end}ms');
+    if (chapter.sampleOffset != null) {
+      print('  Sample offset: ${chapter.sampleOffset}');
+    }
+  }
+}
+```
 
 ## Development
 
@@ -93,9 +149,27 @@ dart format lib/ test/
 
 MIT - See LICENSE file for details
 
-## Upstream
+## Upstream Compatibility
 
-This package is ported from the TypeScript [music-metadata](https://github.com/Borewit/music-metadata) library.
+This package is a Dart port of the TypeScript [music-metadata](https://github.com/Borewit/music-metadata) library, maintaining exact output compatibility. The goal is 1:1 parity with the upstream library for all supported formats.
+
+### TypeScript Parity Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Core metadata extraction | ✅ Complete | All formats match upstream output |
+| Chapter extraction | ✅ Complete | All chapter sources supported |
+| Tag mapping | ✅ Complete | Common tag normalization |
+| Duration calculation | ✅ Complete | MPEG Xing/Info, format-specific logic |
+| Bitrate calculation | ✅ Complete | Float precision matches upstream |
+| Picture extraction | ✅ Complete | Cover art from all formats |
+
+To verify parity, run the comparison tool:
+
+```bash
+dart tool/compare_metadata.dart > comparison/output_dart.json
+cd comparison && npm run compare
+```
 
 ## Additional Information
 
