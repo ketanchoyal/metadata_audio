@@ -4,10 +4,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/core.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/parse_error.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/core.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 /// Error thrown when downloading a file from URL fails.
 class FileDownloadError extends ParseError {

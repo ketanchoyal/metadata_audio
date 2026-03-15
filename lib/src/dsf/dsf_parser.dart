@@ -1,10 +1,10 @@
 library;
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/dsf/dsf_chunk.dart';
-import 'package:audio_metadata/src/id3v2/id3v2_parser.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/dsf/dsf_chunk.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class DsfParser {
   DsfParser({

@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/lyrics3/lyrics3_parser.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/lyrics3/lyrics3_parser.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 /// Mock tokenizer for testing Lyrics3 parser

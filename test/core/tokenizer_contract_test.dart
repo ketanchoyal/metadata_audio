@@ -1,5 +1,5 @@
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 /// Mock tokenizer for testing the interface contract

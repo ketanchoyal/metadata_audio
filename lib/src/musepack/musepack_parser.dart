@@ -5,17 +5,17 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/ebml/ebml_iterator.dart';
-import 'package:audio_metadata/src/ebml/types.dart';
-import 'package:audio_metadata/src/id3v2/id3v2_parser.dart';
-import 'package:audio_metadata/src/matroska/matroska_dtd.dart';
-import 'package:audio_metadata/src/matroska/types.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/musepack/musepack_content_error.dart';
-import 'package:audio_metadata/src/musepack/sv7/mpc_sv7_parser.dart';
-import 'package:audio_metadata/src/musepack/sv8/mpc_sv8_parser.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/ebml/ebml_iterator.dart';
+import 'package:metadata_audio/src/ebml/types.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
+import 'package:metadata_audio/src/matroska/matroska_dtd.dart';
+import 'package:metadata_audio/src/matroska/types.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/musepack/musepack_content_error.dart';
+import 'package:metadata_audio/src/musepack/sv7/mpc_sv7_parser.dart';
+import 'package:metadata_audio/src/musepack/sv8/mpc_sv8_parser.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class MusepackParser {
   MusepackParser({

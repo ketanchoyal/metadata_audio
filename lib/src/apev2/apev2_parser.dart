@@ -2,11 +2,11 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/apev2/apev2_token.dart';
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/parse_error.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/apev2/apev2_token.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class ApeContentError extends UnexpectedFileContentError {
   ApeContentError(String message) : super('APEv2', message);

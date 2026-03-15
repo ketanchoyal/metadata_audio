@@ -1,4 +1,4 @@
-import 'package:audio_metadata/src/lrc/lrc_parser.dart';
+import 'package:metadata_audio/src/lrc/lrc_parser.dart';
 import 'package:test/test.dart';
 
 void main() {

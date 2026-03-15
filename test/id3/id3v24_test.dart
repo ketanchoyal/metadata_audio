@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:audio_metadata/src/id3v2/id3v2_loader.dart';
-import 'package:audio_metadata/src/model/types.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_loader.dart';
+import 'package:metadata_audio/src/model/types.dart';
 import 'package:test/test.dart';
 
 import 'id3_test_utils.dart';

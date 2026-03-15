@@ -6,8 +6,8 @@
 /// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/id3v1/ID3v1TagMap.ts
 library;
 
-import 'package:audio_metadata/src/common/case_insensitive_tag_map.dart';
-import 'package:audio_metadata/src/common/generic_tag_mapper.dart';
+import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
+import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
 
 /// ID3v1 tag field names mapping to generic tag names.
 ///

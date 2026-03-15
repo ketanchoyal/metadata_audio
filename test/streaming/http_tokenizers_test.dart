@@ -1,10 +1,10 @@
-import 'package:audio_metadata/audio_metadata.dart';
-import 'package:audio_metadata/src/aiff/aiff_loader.dart';
-import 'package:audio_metadata/src/flac/flac_loader.dart';
-import 'package:audio_metadata/src/mp4/mp4_loader.dart';
-import 'package:audio_metadata/src/mpeg/mpeg_loader.dart';
-import 'package:audio_metadata/src/ogg/ogg_loader.dart';
-import 'package:audio_metadata/src/wav/wave_loader.dart';
+import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/aiff/aiff_loader.dart';
+import 'package:metadata_audio/src/flac/flac_loader.dart';
+import 'package:metadata_audio/src/mp4/mp4_loader.dart';
+import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
+import 'package:metadata_audio/src/ogg/ogg_loader.dart';
+import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:test/test.dart';
 
 /// Tests for the three HTTP tokenizers and smart parseUrl function.

@@ -1,7 +1,7 @@
 library;
 
-import 'package:audio_metadata/src/iff/iff_parser.dart';
-import 'package:audio_metadata/src/parse_error.dart';
+import 'package:metadata_audio/src/iff/iff_parser.dart';
+import 'package:metadata_audio/src/parse_error.dart';
 
 class DsdiffContentError extends UnexpectedFileContentError {
   DsdiffContentError(String message) : super('DSDIFF', message);

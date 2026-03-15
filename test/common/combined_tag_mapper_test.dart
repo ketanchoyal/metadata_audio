@@ -1,6 +1,6 @@
-import 'package:audio_metadata/src/common/case_insensitive_tag_map.dart';
-import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
-import 'package:audio_metadata/src/common/generic_tag_mapper.dart';
+import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
 import 'package:test/test.dart';
 
 /// Mock tag mapper for testing

@@ -1,6 +1,6 @@
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/parser_factory.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 class MockTokenizer implements Tokenizer {

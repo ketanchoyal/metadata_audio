@@ -13,7 +13,7 @@
 /// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/lrc/LyricsParser.ts
 library;
 
-import 'package:audio_metadata/src/model/types.dart';
+import 'package:metadata_audio/src/model/types.dart';
 
 /// Regex pattern for LRC timestamps: [mm:ss.xx]
 /// - Matches [MM:SS.CC] or [MM:SS.CCC] format

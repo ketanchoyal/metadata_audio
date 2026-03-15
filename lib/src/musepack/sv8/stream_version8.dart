@@ -4,7 +4,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class Sv8PacketHeader {
   const Sv8PacketHeader({required this.key, required this.payloadLength});

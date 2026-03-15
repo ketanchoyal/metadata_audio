@@ -2,7 +2,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/parse_error.dart';
+import 'package:metadata_audio/src/parse_error.dart';
 
 class Mp4ContentError extends UnexpectedFileContentError {
   Mp4ContentError(String message) : super('MP4', message);

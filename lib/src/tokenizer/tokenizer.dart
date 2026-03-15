@@ -1,6 +1,6 @@
 library;
 
-import 'package:audio_metadata/src/model/types.dart';
+import 'package:metadata_audio/src/model/types.dart';
 
 /// Exception thrown when attempting an unsupported operation on a tokenizer
 class TokenizerException implements Exception {

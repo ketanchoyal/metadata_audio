@@ -2,7 +2,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/id3v2/id3v2_token.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_token.dart';
 
 typedef WarningCollector = void Function(String warning);
 

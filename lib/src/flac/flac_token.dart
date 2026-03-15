@@ -2,8 +2,8 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/parse_error.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parse_error.dart';
 
 enum FlacBlockType {
   streamInfo(0),

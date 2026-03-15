@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class MockTokenizer implements Tokenizer {
 

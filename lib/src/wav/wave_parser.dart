@@ -3,13 +3,13 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/id3v2/id3v2_parser.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/riff/riff_chunk.dart';
-import 'package:audio_metadata/src/tokenizer/io_tokenizers.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
-import 'package:audio_metadata/src/wav/wave_chunk.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/riff/riff_chunk.dart';
+import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/wav/wave_chunk.dart';
 
 class WaveParser {
   WaveParser({

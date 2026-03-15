@@ -2,7 +2,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/flac/flac_token.dart';
+import 'package:metadata_audio/src/flac/flac_token.dart';
 
 class OggFlacMetadataBlock {
   const OggFlacMetadataBlock({

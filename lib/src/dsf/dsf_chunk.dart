@@ -2,7 +2,7 @@ library;
 
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/parse_error.dart';
+import 'package:metadata_audio/src/parse_error.dart';
 
 class DsdContentError extends UnexpectedFileContentError {
   DsdContentError(String message) : super('DSD', message);

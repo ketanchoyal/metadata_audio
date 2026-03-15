@@ -2,13 +2,13 @@ library;
 
 // ignore_for_file: public_member_api_docs
 
-import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/matroska/matroska_parser.dart';
-import 'package:audio_metadata/src/matroska/matroska_tag_mapper.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/parser_factory.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/matroska/matroska_parser.dart';
+import 'package:metadata_audio/src/matroska/matroska_tag_mapper.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class MatroskaLoader extends ParserLoader {
   @override

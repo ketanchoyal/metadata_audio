@@ -1,4 +1,4 @@
-import 'package:audio_metadata/src/model/types.dart';
+import 'package:metadata_audio/src/model/types.dart';
 import 'package:test/test.dart';
 
 void main() {

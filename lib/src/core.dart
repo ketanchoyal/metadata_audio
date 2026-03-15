@@ -3,27 +3,27 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/parse_error.dart';
-import 'package:audio_metadata/src/parser_factory.dart';
-import 'package:audio_metadata/src/tokenizer/io_tokenizers.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
-export 'package:audio_metadata/src/matroska/matroska_dtd.dart';
-export 'package:audio_metadata/src/matroska/matroska_loader.dart';
-export 'package:audio_metadata/src/matroska/matroska_parser.dart';
-export 'package:audio_metadata/src/matroska/matroska_tag_mapper.dart';
-export 'package:audio_metadata/src/matroska/types.dart';
-export 'package:audio_metadata/src/musepack/musepack_content_error.dart';
-export 'package:audio_metadata/src/musepack/musepack_loader.dart';
-export 'package:audio_metadata/src/musepack/musepack_parser.dart';
-export 'package:audio_metadata/src/musepack/sv7/bit_reader.dart';
-export 'package:audio_metadata/src/musepack/sv7/mpc_sv7_parser.dart';
-export 'package:audio_metadata/src/musepack/sv7/stream_version7.dart';
-export 'package:audio_metadata/src/musepack/sv8/mpc_sv8_parser.dart';
-export 'package:audio_metadata/src/musepack/sv8/stream_version8.dart';
-export 'package:audio_metadata/src/wavpack/wavpack_loader.dart';
-export 'package:audio_metadata/src/wavpack/wavpack_parser.dart';
+export 'package:metadata_audio/src/matroska/matroska_dtd.dart';
+export 'package:metadata_audio/src/matroska/matroska_loader.dart';
+export 'package:metadata_audio/src/matroska/matroska_parser.dart';
+export 'package:metadata_audio/src/matroska/matroska_tag_mapper.dart';
+export 'package:metadata_audio/src/matroska/types.dart';
+export 'package:metadata_audio/src/musepack/musepack_content_error.dart';
+export 'package:metadata_audio/src/musepack/musepack_loader.dart';
+export 'package:metadata_audio/src/musepack/musepack_parser.dart';
+export 'package:metadata_audio/src/musepack/sv7/bit_reader.dart';
+export 'package:metadata_audio/src/musepack/sv7/mpc_sv7_parser.dart';
+export 'package:metadata_audio/src/musepack/sv7/stream_version7.dart';
+export 'package:metadata_audio/src/musepack/sv8/mpc_sv8_parser.dart';
+export 'package:metadata_audio/src/musepack/sv8/stream_version8.dart';
+export 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
+export 'package:metadata_audio/src/wavpack/wavpack_parser.dart';
 
 export 'tokenizer/http_tokenizers.dart'
     show

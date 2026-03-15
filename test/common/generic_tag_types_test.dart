@@ -1,4 +1,4 @@
-import 'package:audio_metadata/src/common/generic_tag_types.dart';
+import 'package:metadata_audio/src/common/generic_tag_types.dart';
 import 'package:test/test.dart';
 
 void main() {

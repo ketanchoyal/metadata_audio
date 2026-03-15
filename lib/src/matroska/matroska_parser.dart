@@ -4,14 +4,14 @@ library;
 
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/ebml/ebml_iterator.dart';
-import 'package:audio_metadata/src/ebml/types.dart';
-import 'package:audio_metadata/src/matroska/matroska_dtd.dart';
-import 'package:audio_metadata/src/matroska/types.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/parse_error.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/ebml/ebml_iterator.dart';
+import 'package:metadata_audio/src/ebml/types.dart';
+import 'package:metadata_audio/src/matroska/matroska_dtd.dart';
+import 'package:metadata_audio/src/matroska/types.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class MatroskaContentError extends UnexpectedFileContentError {
   MatroskaContentError(String message) : super('Matroska', message);

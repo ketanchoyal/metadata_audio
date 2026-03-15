@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:audio_metadata/src/id3v2/frame_header.dart';
-import 'package:audio_metadata/src/id3v2/frame_parser.dart';
-import 'package:audio_metadata/src/id3v2/id3v2_token.dart';
-import 'package:audio_metadata/src/model/types.dart';
+import 'package:metadata_audio/src/id3v2/frame_header.dart';
+import 'package:metadata_audio/src/id3v2/frame_parser.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_token.dart';
+import 'package:metadata_audio/src/model/types.dart';
 import 'package:test/test.dart';
 
 void main() {

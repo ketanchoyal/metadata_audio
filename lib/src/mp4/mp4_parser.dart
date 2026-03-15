@@ -2,11 +2,11 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/mp4/atom.dart';
-import 'package:audio_metadata/src/mp4/atom_token.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/mp4/atom.dart';
+import 'package:metadata_audio/src/mp4/atom_token.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class Mp4Parser {
   Mp4Parser({

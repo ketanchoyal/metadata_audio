@@ -11,8 +11,8 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 /// Standard ID3v1 genres (0-255).
 ///

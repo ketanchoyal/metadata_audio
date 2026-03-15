@@ -1,7 +1,7 @@
 library;
 
-import 'package:audio_metadata/src/parse_error.dart';
-import 'package:audio_metadata/src/riff/riff_chunk.dart';
+import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/riff/riff_chunk.dart';
 
 class WaveContentError extends UnexpectedFileContentError {
   WaveContentError(String message) : super('Wave', message);

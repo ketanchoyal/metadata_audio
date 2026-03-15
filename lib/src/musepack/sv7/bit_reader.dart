@@ -2,7 +2,7 @@ library;
 
 // ignore_for_file: parameter_assignments, public_member_api_docs
 
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class BitReader {
   BitReader(this._tokenizer);

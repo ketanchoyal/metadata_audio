@@ -2,7 +2,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/ogg/ogg_token.dart';
+import 'package:metadata_audio/src/ogg/ogg_token.dart';
 
 class SpeexHeader {
   const SpeexHeader({

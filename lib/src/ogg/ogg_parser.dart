@@ -2,17 +2,17 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/flac/flac_token.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/ogg/flac_stream.dart';
-import 'package:audio_metadata/src/ogg/ogg_token.dart';
-import 'package:audio_metadata/src/ogg/opus/opus_decoder.dart';
-import 'package:audio_metadata/src/ogg/speex/speex_decoder.dart';
-import 'package:audio_metadata/src/ogg/theora/theora_decoder.dart';
-import 'package:audio_metadata/src/ogg/vorbis/vorbis_decoder.dart';
-import 'package:audio_metadata/src/parse_error.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/flac/flac_token.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/ogg/flac_stream.dart';
+import 'package:metadata_audio/src/ogg/ogg_token.dart';
+import 'package:metadata_audio/src/ogg/opus/opus_decoder.dart';
+import 'package:metadata_audio/src/ogg/speex/speex_decoder.dart';
+import 'package:metadata_audio/src/ogg/theora/theora_decoder.dart';
+import 'package:metadata_audio/src/ogg/vorbis/vorbis_decoder.dart';
+import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class OggContentError extends UnexpectedFileContentError {
   OggContentError(String message) : super('Ogg', message);

@@ -1,7 +1,7 @@
 library;
 
-import 'package:audio_metadata/src/mp4/atom_token.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/mp4/atom_token.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 typedef AtomDataHandler =
     Future<void> Function(Mp4Atom atom, int payloadLength);

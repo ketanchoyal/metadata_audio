@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/matroska/matroska_loader.dart';
-import 'package:audio_metadata/src/matroska/matroska_parser.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/tokenizer/io_tokenizers.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/matroska/matroska_loader.dart';
+import 'package:metadata_audio/src/matroska/matroska_parser.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 void main() {

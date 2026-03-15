@@ -1,12 +1,12 @@
 library;
 
-import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/mp4/mp4_parser.dart';
-import 'package:audio_metadata/src/mp4/mp4_tag_mapper.dart';
-import 'package:audio_metadata/src/parser_factory.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/mp4/mp4_parser.dart';
+import 'package:metadata_audio/src/mp4/mp4_tag_mapper.dart';
+import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class Mp4Loader extends ParserLoader {
   @override

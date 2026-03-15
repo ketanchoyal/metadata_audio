@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:audio_metadata/audio_metadata.dart';
+import 'package:metadata_audio/metadata_audio.dart';
 import 'package:test/test.dart';
 
 void main() {

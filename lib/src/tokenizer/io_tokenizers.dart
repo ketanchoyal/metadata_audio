@@ -3,8 +3,8 @@ library;
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 /// Tokenizer implementation for file-based audio data using dart:io
 ///

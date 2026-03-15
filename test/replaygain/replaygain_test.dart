@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/mpeg/mpeg_loader.dart';
-import 'package:audio_metadata/src/mpeg/replay_gain_data_format.dart';
-import 'package:audio_metadata/src/tokenizer/io_tokenizers.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
+import 'package:metadata_audio/src/mpeg/replay_gain_data_format.dart';
+import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:test/test.dart';
 
 void main() {

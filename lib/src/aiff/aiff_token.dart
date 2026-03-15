@@ -2,7 +2,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/parse_error.dart';
+import 'package:metadata_audio/src/parse_error.dart';
 
 const Map<String, String> compressionTypes = <String, String>{
   'NONE': 'not compressed PCM Apple Computer',

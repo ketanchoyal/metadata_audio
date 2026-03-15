@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:audio_metadata/audio_metadata.dart';
-import 'package:audio_metadata/src/aiff/aiff_loader.dart';
+import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/aiff/aiff_loader.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

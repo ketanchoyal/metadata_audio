@@ -10,9 +10,9 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 /// Lyrics3 tag end marker for version 2.00
 const String lyrics3v2EndTag = 'LYRICS200';

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:audio_metadata/audio_metadata.dart';
+import 'package:metadata_audio/metadata_audio.dart';
 import 'package:test/test.dart';
 
 /// Helper to check format metadata fields

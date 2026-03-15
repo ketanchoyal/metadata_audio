@@ -6,7 +6,7 @@
 /// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/common/GenericTagMapper.ts
 library;
 
-import 'package:audio_metadata/src/common/case_insensitive_tag_map.dart';
+import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
 
 /// Abstract base class for format-specific tag mappers.
 ///

@@ -8,9 +8,9 @@
 /// https://github.com/Borewit/music-metadata/blob/master/lib/common/MetadataCollector.ts
 library;
 
-import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
-import 'package:audio_metadata/src/common/generic_tag_types.dart';
-import 'package:audio_metadata/src/model/types.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/generic_tag_types.dart';
+import 'package:metadata_audio/src/model/types.dart';
 
 /// Collects audio metadata from multiple sources and formats.
 ///

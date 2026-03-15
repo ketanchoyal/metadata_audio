@@ -2,15 +2,15 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/id3v1/id3v1_parser.dart';
-import 'package:audio_metadata/src/id3v2/id3v2_parser.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/mpeg/adts_frame_header.dart';
-import 'package:audio_metadata/src/mpeg/replay_gain_data_format.dart';
-import 'package:audio_metadata/src/mpeg/xing_tag.dart';
-import 'package:audio_metadata/src/parse_error.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/id3v1/id3v1_parser.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/mpeg/adts_frame_header.dart';
+import 'package:metadata_audio/src/mpeg/replay_gain_data_format.dart';
+import 'package:metadata_audio/src/mpeg/xing_tag.dart';
+import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class MpegContentError extends ParseError {
   MpegContentError(super.message);

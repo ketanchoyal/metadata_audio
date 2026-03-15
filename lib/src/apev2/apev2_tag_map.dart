@@ -1,9 +1,9 @@
 library;
 
-import 'package:audio_metadata/src/apev2/apev2_token.dart';
-import 'package:audio_metadata/src/common/case_insensitive_tag_map.dart';
-import 'package:audio_metadata/src/common/generic_tag_mapper.dart';
-import 'package:audio_metadata/src/model/types.dart';
+import 'package:metadata_audio/src/apev2/apev2_token.dart';
+import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
+import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
+import 'package:metadata_audio/src/model/types.dart';
 
 final _apev2TagMap = <String, String>{
   'Title': 'title',

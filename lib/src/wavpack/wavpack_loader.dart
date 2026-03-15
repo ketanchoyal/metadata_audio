@@ -1,12 +1,12 @@
 library;
 
-import 'package:audio_metadata/src/apev2/apev2_tag_map.dart';
-import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
-import 'package:audio_metadata/src/common/metadata_collector.dart';
-import 'package:audio_metadata/src/model/types.dart';
-import 'package:audio_metadata/src/parser_factory.dart';
-import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
-import 'package:audio_metadata/src/wavpack/wavpack_parser.dart';
+import 'package:metadata_audio/src/apev2/apev2_tag_map.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/wavpack/wavpack_parser.dart';
 
 class WavPackLoader extends ParserLoader {
   @override

@@ -2,8 +2,8 @@ library;
 
 import 'dart:convert';
 
-import 'package:audio_metadata/src/ogg/ogg_token.dart';
-import 'package:audio_metadata/src/ogg/vorbis/vorbis_decoder.dart';
+import 'package:metadata_audio/src/ogg/ogg_token.dart';
+import 'package:metadata_audio/src/ogg/vorbis/vorbis_decoder.dart';
 
 class OpusIdHeader {
   const OpusIdHeader({

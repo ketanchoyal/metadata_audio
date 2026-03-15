@@ -1,4 +1,4 @@
-# audio_metadata
+# metadata_audio
 
 A Dart-native audio metadata parser library that provides comprehensive metadata extraction for various audio formats. This package is a port of the TypeScript [music-metadata](https://github.com/Borewit/music-metadata) library, maintaining architecture parity with a Dart-first TDD approach.
 
@@ -21,7 +21,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  audio_metadata: ^0.1.0
+  metadata_audio: ^0.1.0
 ```
 
 Then run:
@@ -39,7 +39,7 @@ dart pub get
 ### Parse Local Files
 
 ```dart
-import 'package:audio_metadata/audio_metadata.dart';
+import 'package:metadata_audio/metadata_audio.dart';
 
 // Parse a file
 final metadata = await parseFile('/path/to/audio.mp3');
@@ -126,7 +126,7 @@ When parsing from URLs, the library automatically selects the most efficient str
 ### Manual Strategy Selection
 
 ```dart
-import 'package:audio_metadata/audio_metadata.dart';
+import 'package:metadata_audio/metadata_audio.dart';
 
 // Force specific strategy
 final metadata = await parseUrl(
