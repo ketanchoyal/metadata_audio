@@ -8,6 +8,10 @@ import 'package:audio_metadata/src/wav/wave_loader.dart';
 import 'package:test/test.dart';
 
 /// Tests for the three HTTP tokenizers and smart parseUrl function.
+///
+/// NOTE: These tests require a real HTTP URL to test against.
+/// Set [testUrl] below to a large audio file URL (300MB+) that supports
+/// HTTP Range requests, or leave empty to skip these tests.
 void main() {
   group('HTTP Tokenizers', () {
     setUpAll(() {
@@ -21,9 +25,10 @@ void main() {
       initializeParserFactory(ParserFactory(registry));
     });
 
-    // NOTE: Replace with your own test URL for large file testing
-    // This should be a large audio file (300MB+) that supports HTTP Range requests
-    const testUrl = 'https://example.com/test-audio-file.m4a';
+    // Configuration: Set to your own test URL or leave empty to skip
+    // Example: 'https://example.com/large-audio.m4a'
+    const testUrl = '';
+    final hasTestUrl = testUrl.isNotEmpty;
 
     group('Strategy Detection', () {
       test(
@@ -42,6 +47,7 @@ void main() {
           expect(info.fileSize, greaterThan(300 * 1024 * 1024));
           expect(info.supportsRange, isTrue);
         },
+        skip: hasTestUrl ? false : 'No test URL configured',
         timeout: const Timeout(Duration(seconds: 10)),
       );
     });
@@ -74,6 +80,7 @@ void main() {
           expect(selectedStrategy, isNotNull);
           expect(metadata.format.container, contains('M4A'));
         },
+        skip: hasTestUrl ? false : 'No test URL configured',
         timeout: const Timeout(Duration(seconds: 60)),
       );
     });
@@ -81,25 +88,30 @@ void main() {
     group('Explicit strategies', () {
       test('fullDownload strategy works', () async {
         // Skip this test as it would download 323MB
-        print('Skipping fullDownload test (would download 323MB)');
+        print('Skipping fullDownload test (would download large file)');
         expect(true, isTrue);
-      });
+      }, skip: 'Skipped to avoid large download');
 
-      test('headerOnly strategy works', () async {
-        final metadata = await parseUrl(
-          testUrl,
-          timeout: const Duration(seconds: 30),
-          strategy: ParseStrategy.headerOnly,
-        );
+      test(
+        'headerOnly strategy works',
+        () async {
+          final metadata = await parseUrl(
+            testUrl,
+            timeout: const Duration(seconds: 30),
+            strategy: ParseStrategy.headerOnly,
+          );
 
-        print('');
-        print('=== Header-Only Strategy ===');
-        print('Format: ${metadata.format.container}');
-        print('Codec: ${metadata.format.codec}');
-        print('');
+          print('');
+          print('=== Header-Only Strategy ===');
+          print('Format: ${metadata.format.container}');
+          print('Codec: ${metadata.format.codec}');
+          print('');
 
-        expect(metadata.format.container, contains('M4A'));
-      }, timeout: const Timeout(Duration(seconds: 60)));
+          expect(metadata.format.container, contains('M4A'));
+        },
+        skip: hasTestUrl ? false : 'No test URL configured',
+        timeout: const Timeout(Duration(seconds: 60)),
+      );
 
       test(
         'randomAccess strategy works',
@@ -118,16 +130,21 @@ void main() {
 
           expect(metadata.format.container, contains('M4A'));
         },
+        skip: hasTestUrl ? false : 'No test URL configured',
         timeout: const Timeout(Duration(seconds: 60)),
       );
     });
 
     group('Tokenizer classes', () {
-      test('HttpTokenizer creates successfully', () async {
-        // Skip to avoid large download
-        print('Skipping HttpTokenizer test (would download 323MB)');
-        expect(true, isTrue);
-      });
+      test(
+        'HttpTokenizer creates successfully',
+        () async {
+          // Skip to avoid large download
+          print('Skipping HttpTokenizer test (would download large file)');
+          expect(true, isTrue);
+        },
+        skip: 'Skipped to avoid large download',
+      );
 
       test(
         'RangeTokenizer creates and parses',
@@ -145,6 +162,7 @@ void main() {
 
           tokenizer.close();
         },
+        skip: hasTestUrl ? false : 'No test URL configured',
         timeout: const Timeout(Duration(seconds: 30)),
       );
 
@@ -163,6 +181,7 @@ void main() {
 
           tokenizer.close();
         },
+        skip: hasTestUrl ? false : 'No test URL configured',
         timeout: const Timeout(Duration(seconds: 30)),
       );
     });
