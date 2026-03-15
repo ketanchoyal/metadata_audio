@@ -244,8 +244,69 @@ class OggParser {
       metadata.addNativeTag('vorbis', 'METADATA_BLOCK_PICTURE', block.picture!);
     }
 
+    if (block.cueSheet != null && options.includeChapters) {
+      _applyFlacCueSheet(stream, block.cueSheet!);
+    }
+
     if (block.lastBlock) {
       stream.flacMetadataComplete = true;
+    }
+  }
+
+  void _applyFlacCueSheet(_OggStreamState stream, FlacCueSheet cueSheet) {
+    final sampleRate = stream.sampleRate ?? metadata.format.sampleRate;
+    if (sampleRate == null || sampleRate <= 0) return;
+
+    // Filter tracks with valid offsets (non-zero track number)
+    final tracks = cueSheet.tracks.where((t) => t.number > 0).toList()
+      ..sort((a, b) => a.offset.compareTo(b.offset));
+
+    if (tracks.isEmpty) return;
+
+    final chapters = <Chapter>[];
+    for (var i = 0; i < tracks.length; i++) {
+      final track = tracks[i];
+      // Prefer INDEX 01 if available, otherwise use track offset
+      int trackOffset = track.offset;
+      if (track.indices.isNotEmpty) {
+        final idx01 = track.indices.where((idx) => idx.number == 1).firstOrNull;
+        if (idx01 != null) {
+          trackOffset = idx01.offset;
+        }
+      }
+
+      // Calculate end from next track
+      int? endOffset;
+      if (i + 1 < tracks.length) {
+        final nextTrack = tracks[i + 1];
+        endOffset = nextTrack.offset;
+        // Also check for INDEX 01 on next track
+        if (nextTrack.indices.isNotEmpty) {
+          final nextIdx01 = nextTrack.indices
+              .where((idx) => idx.number == 1)
+              .firstOrNull;
+          if (nextIdx01 != null) {
+            endOffset = nextIdx01.offset;
+          }
+        }
+      }
+
+      chapters.add(
+        Chapter(
+          id: 'cue-${track.number}',
+          title: 'Track ${track.number}',
+          sampleOffset: trackOffset,
+          start: ((trackOffset * 1000) / sampleRate).round(),
+          end: endOffset == null
+              ? null
+              : ((endOffset * 1000) / sampleRate).round(),
+          timeScale: 1000,
+        ),
+      );
+    }
+
+    if (chapters.isNotEmpty) {
+      metadata.setFormat(chapters: chapters);
     }
   }
 
@@ -388,7 +449,7 @@ class OggParser {
         duration != null &&
         duration > 0 &&
         metadata.format.bitrate == null) {
-      metadata.setFormat(bitrate: (8 * fileSize / duration).round());
+      metadata.setFormat(bitrate: 8 * fileSize / duration);
     }
 
     _applyVorbisChapters();

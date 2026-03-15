@@ -104,6 +104,56 @@ class CuePoint {
   final int sampleOffset;
 }
 
+class LtxtChunk {
+  const LtxtChunk({
+    required this.cueId,
+    required this.sampleLength,
+    required this.purposeId,
+    required this.country,
+    required this.language,
+    required this.dialect,
+    required this.codePage,
+    required this.text,
+  });
+
+  final int cueId;
+  final int sampleLength;
+  final String purposeId;
+  final int country;
+  final int language;
+  final int dialect;
+  final int codePage;
+  final String text;
+
+  static LtxtChunk? fromBytes(List<int> bytes) {
+    if (bytes.length < 20) {
+      return null;
+    }
+
+    final cueId = RiffChunk.readUint32Le(bytes, 0);
+    final sampleLength = RiffChunk.readUint32Le(bytes, 4);
+    final purposeId = String.fromCharCodes(bytes.sublist(8, 12));
+    final country = RiffChunk.readUint16Le(bytes, 12);
+    final language = RiffChunk.readUint16Le(bytes, 14);
+    final dialect = RiffChunk.readUint16Le(bytes, 16);
+    final codePage = RiffChunk.readUint16Le(bytes, 18);
+    final text = bytes.length > 20
+        ? String.fromCharCodes(bytes.sublist(20))
+        : '';
+
+    return LtxtChunk(
+      cueId: cueId,
+      sampleLength: sampleLength,
+      purposeId: purposeId,
+      country: country,
+      language: language,
+      dialect: dialect,
+      codePage: codePage,
+      text: text,
+    );
+  }
+}
+
 class CueChunk {
   const CueChunk({required this.points});
 

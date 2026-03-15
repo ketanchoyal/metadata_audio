@@ -26,6 +26,7 @@ class WaveParser {
   int _blockAlign = 0;
   CueChunk? _cueChunk;
   final Map<int, String> _cueLabels = <int, String>{};
+  final Map<int, int> _cueDurations = <int, int>{}; // From ltxt chunks
 
   Future<void> parse() async {
     final riffHeader = RiffChunk.parseHeader(
@@ -183,6 +184,23 @@ class WaveParser {
         }
       }
 
+      if (header.chunkId == 'ltxt' && payload.length >= 20) {
+        final cueId = RiffChunk.readUint32Le(payload, 0);
+        final sampleLength = RiffChunk.readUint32Le(payload, 4);
+        if (sampleLength > 0) {
+          _cueDurations[cueId] = sampleLength;
+        }
+        // Also check for text label after the header
+        if (payload.length > 20) {
+          final text = _stripNulls(
+            ascii.decode(payload.sublist(20), allowInvalid: true),
+          );
+          if (text.isNotEmpty && !_cueLabels.containsKey(cueId)) {
+            _cueLabels[cueId] = text;
+          }
+        }
+      }
+
       if (paddedLength > header.chunkSize) {
         tokenizer.skip(paddedLength - header.chunkSize);
       }
@@ -311,9 +329,14 @@ class WaveParser {
     final chapters = <Chapter>[];
     for (var i = 0; i < points.length; i++) {
       final point = points[i];
-      final endOffset = i + 1 < points.length
-          ? points[i + 1].sampleOffset
-          : null;
+      // Check for explicit duration from ltxt chunk
+      final ltxtDuration = _cueDurations[point.id];
+      int? endOffset;
+      if (ltxtDuration != null && ltxtDuration > 0) {
+        endOffset = point.sampleOffset + ltxtDuration;
+      } else if (i + 1 < points.length) {
+        endOffset = points[i + 1].sampleOffset;
+      }
       chapters.add(
         Chapter(
           id: 'cue-${point.id}',

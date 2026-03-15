@@ -11,6 +11,7 @@ class OggFlacMetadataBlock {
     this.streamInfo,
     this.comments,
     this.picture,
+    this.cueSheet,
   });
 
   final bool lastBlock;
@@ -18,6 +19,7 @@ class OggFlacMetadataBlock {
   final FlacStreamInfo? streamInfo;
   final List<String>? comments;
   final FlacPicture? picture;
+  final FlacCueSheet? cueSheet;
 }
 
 class OggFlacStream {
@@ -67,10 +69,15 @@ class OggFlacStream {
           type: header.type,
           picture: FlacToken.parsePicture(payload),
         );
+      case FlacBlockType.cueSheet:
+        return OggFlacMetadataBlock(
+          lastBlock: header.lastBlock,
+          type: header.type,
+          cueSheet: FlacToken.parseCueSheet(payload),
+        );
       case FlacBlockType.padding:
       case FlacBlockType.application:
       case FlacBlockType.seekTable:
-      case FlacBlockType.cueSheet:
       case FlacBlockType.unknown:
         return OggFlacMetadataBlock(
           lastBlock: header.lastBlock,
