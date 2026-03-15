@@ -1,5 +1,5 @@
-import 'package:test/test.dart';
 import 'package:audio_metadata/src/common/generic_tag_types.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('GenericTagType enum', () {
@@ -15,7 +15,7 @@ void main() {
     });
 
     test('enum values are distinct', () {
-      final values = GenericTagType.values;
+      const values = GenericTagType.values;
       final uniqueValues = values.toSet();
       expect(values.length, equals(uniqueValues.length));
     });
@@ -35,7 +35,7 @@ void main() {
     });
 
     test('creates list semantics with duplicate values', () {
-      const semantics = TagTypeSemantics(isSingleton: false, isUnique: false);
+      const semantics = TagTypeSemantics(isSingleton: false);
       expect(semantics.isSingleton, isFalse);
       expect(semantics.isUnique, isFalse);
     });
@@ -298,8 +298,8 @@ void main() {
       ];
 
       for (final role in creatorRoles) {
-        expect(GenericTagTypes.isList(role), isTrue, reason: '$role');
-        expect(GenericTagTypes.isUnique(role), isTrue, reason: '$role');
+        expect(GenericTagTypes.isList(role), isTrue, reason: role);
+        expect(GenericTagTypes.isUnique(role), isTrue, reason: role);
       }
     });
 

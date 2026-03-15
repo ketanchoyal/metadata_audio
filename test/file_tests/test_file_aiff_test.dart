@@ -29,9 +29,9 @@ void main() {
       expect(metadata.native.containsKey('ID3v2.4'), isTrue);
 
       // Check metadata
-      expect(metadata.common.title, equals('Sinner\'s Prayer'));
+      expect(metadata.common.title, equals("Sinner's Prayer"));
       expect(metadata.common.artist, contains('Beth Hart'));
-      expect(metadata.common.album, equals('Don\'t Explain'));
+      expect(metadata.common.album, equals("Don't Explain"));
     });
   });
 }

@@ -1,17 +1,19 @@
-import 'package:audio_metadata/src/core.dart';
+import 'package:audio_metadata/src/apev2/apev2_tag_map.dart';
+import 'package:audio_metadata/src/asf/asf_tag_map.dart';
 import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
 import 'package:audio_metadata/src/common/metadata_collector.dart';
+import 'package:audio_metadata/src/core.dart';
 import 'package:audio_metadata/src/id3v2/id3v2_tag_map.dart';
 import 'package:audio_metadata/src/model/types.dart';
 import 'package:audio_metadata/src/mp4/mp4_tag_mapper.dart';
-import 'package:audio_metadata/src/parser_factory.dart';
 import 'package:audio_metadata/src/parse_error.dart';
+import 'package:audio_metadata/src/parser_factory.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
-import 'package:audio_metadata/src/apev2/apev2_tag_map.dart';
-import 'package:audio_metadata/src/asf/asf_tag_map.dart';
 import 'package:test/test.dart';
 
 class _StaticParserLoader implements ParserLoader {
+
+  _StaticParserLoader({required this.extension, required this.mimeType});
   @override
   final List<String> extension;
 
@@ -20,8 +22,6 @@ class _StaticParserLoader implements ParserLoader {
 
   @override
   bool get hasRandomAccessRequirements => false;
-
-  _StaticParserLoader({required this.extension, required this.mimeType});
 
   @override
   bool supports(Tokenizer tokenizer) =>
@@ -148,7 +148,7 @@ void main() {
     });
 
     test('converts 0.0 to 1 star', () {
-      expect(ratingToStars(0.0), equals(1));
+      expect(ratingToStars(0), equals(1));
     });
 
     test('converts 0.25 to 2 stars', () {
@@ -164,17 +164,17 @@ void main() {
     });
 
     test('converts 1.0 to 5 stars', () {
-      expect(ratingToStars(1.0), equals(5));
+      expect(ratingToStars(1), equals(5));
     });
 
     test('clamps values below 0.0 to 1 star', () {
       expect(ratingToStars(-0.5), equals(1));
-      expect(ratingToStars(-1.0), equals(1));
+      expect(ratingToStars(-1), equals(1));
     });
 
     test('clamps values above 1.0 to 5 stars', () {
       expect(ratingToStars(1.5), equals(5));
-      expect(ratingToStars(2.0), equals(5));
+      expect(ratingToStars(2), equals(5));
     });
 
     test('rounds intermediate values correctly', () {
@@ -306,16 +306,16 @@ void main() {
     });
 
     test('maps APEv2 core common fields with normalized value types', () {
-      collector.addNativeTag('apev2', 'Title', 'Sinner\'s Prayer');
+      collector.addNativeTag('apev2', 'Title', "Sinner's Prayer");
       collector.addNativeTag('apev2', 'Artist', 'Beth Hart');
-      collector.addNativeTag('apev2', 'Album', 'Don\'t Explain');
+      collector.addNativeTag('apev2', 'Album', "Don't Explain");
       collector.addNativeTag('apev2', 'Year', '2011');
       collector.addNativeTag('apev2', 'Genre', ['Blues Rock']);
 
       final metadata = collector.toAudioMetadata();
-      expect(metadata.common.title, equals('Sinner\'s Prayer'));
+      expect(metadata.common.title, equals("Sinner's Prayer"));
       expect(metadata.common.artist, equals('Beth Hart'));
-      expect(metadata.common.album, equals('Don\'t Explain'));
+      expect(metadata.common.album, equals("Don't Explain"));
       expect(metadata.common.year, equals(2011));
       expect(metadata.common.genre, equals(['Blues Rock']));
     });

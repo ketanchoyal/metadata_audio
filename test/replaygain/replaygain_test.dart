@@ -84,9 +84,7 @@ void main() {
   });
 }
 
-List<int> _buildId3v2Header() {
-  return <int>[0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
-}
+List<int> _buildId3v2Header() => <int>[0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
 List<int> _buildMpegFrameWithReplayGain({
   required List<int> trackGainWord,
@@ -97,8 +95,8 @@ List<int> _buildMpegFrameWithReplayGain({
   const sampleRate = 44100;
   const samplesPerFrame = 1152;
   const bitrateKbps = 128;
-  final bitrate = bitrateKbps * 1000;
-  final frameLength = ((samplesPerFrame / 8.0 * bitrate / sampleRate)).floor();
+  const bitrate = bitrateKbps * 1000;
+  final frameLength = (samplesPerFrame / 8.0 * bitrate / sampleRate).floor();
 
   final header = <int>[0xFF, 0xFB, (bitrateIndex << 4), 0x40];
   final payload = List<int>.filled(frameLength - 4, 0);

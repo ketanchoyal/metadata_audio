@@ -220,22 +220,16 @@ class WavPackParser {
     );
   }
 
-  _WavPackMetadataId _parseMetadataId(int value) {
-    return _WavPackMetadataId(
+  _WavPackMetadataId _parseMetadataId(int value) => _WavPackMetadataId(
       functionId: _getBitAlignedNumber(value, 0, 6),
       isOptional: _isBitSet(value, 5),
       isOddSize: _isBitSet(value, 6),
       largeBlock: _isBitSet(value, 7),
     );
-  }
 
-  bool _isBitSet(int value, int bitOffset) {
-    return _getBitAlignedNumber(value, bitOffset, 1) == 1;
-  }
+  bool _isBitSet(int value, int bitOffset) => _getBitAlignedNumber(value, bitOffset, 1) == 1;
 
-  int _getBitAlignedNumber(int value, int bitOffset, int length) {
-    return (value >>> bitOffset) & (0xFFFFFFFF >>> (32 - length));
-  }
+  int _getBitAlignedNumber(int value, int bitOffset, int length) => (value >>> bitOffset) & (0xFFFFFFFF >>> (32 - length));
 
   int _readUint24Le(List<int> bytes, int offset) {
     if (offset < 0 || offset + 3 > bytes.length) {

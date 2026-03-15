@@ -147,7 +147,7 @@ List<int> _buildMatroskaFile({required String docType}) {
     const <int>[0x15, 0x49, 0xA9, 0x66],
     <int>[
       ..._element(const <int>[0x2A, 0xD7, 0xB1], _encodeUint(1000000)),
-      ..._element(const <int>[0x44, 0x89], _encodeFloat64(5000.0)),
+      ..._element(const <int>[0x44, 0x89], _encodeFloat64(5000)),
       ..._element(const <int>[0x7B, 0xA9], utf8.encode('Segment Title')),
       ..._element(const <int>[0x57, 0x41], utf8.encode('unit-writer')),
     ],
@@ -182,7 +182,7 @@ List<int> _buildMatroskaFile({required String docType}) {
       ..._element(
         const <int>[0xE1],
         <int>[
-          ..._element(const <int>[0xB5], _encodeFloat32(48000.0)),
+          ..._element(const <int>[0xB5], _encodeFloat32(48000)),
           ..._element(const <int>[0x9F], _encodeUint(2)),
         ],
       ),

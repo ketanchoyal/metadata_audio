@@ -65,7 +65,7 @@ void main() {
     );
 
     test(
-      'parses Monkey\'s Audio header and reads APEv2 footer tag at end',
+      "parses Monkey's Audio header and reads APEv2 footer tag at end",
       () async {
         final bytes = _buildApeFileWithTailTag(
           items: <List<int>>[
@@ -226,21 +226,18 @@ List<int> _tagItem({
   required String key,
   required List<int> value,
   required int flags,
-}) {
-  return <int>[
+}) => <int>[
     ..._u32le(value.length),
     ..._u32le(flags),
     ...ascii.encode(key),
     0,
     ...value,
   ];
-}
 
 List<int> _descriptor({
   required int headerBytes,
   required int apeFrameDataBytes,
-}) {
-  return <int>[
+}) => <int>[
     ...ascii.encode('MAC '),
     ..._u32le(3990),
     ..._u32le(Apev2Token.descriptorLength),
@@ -252,7 +249,6 @@ List<int> _descriptor({
     ..._u32le(0),
     ...List<int>.filled(16, 0),
   ];
-}
 
 List<int> _header({
   required int compressionLevel,
@@ -263,8 +259,7 @@ List<int> _header({
   required int bitsPerSample,
   required int channels,
   required int sampleRate,
-}) {
-  return <int>[
+}) => <int>[
     ..._u16le(compressionLevel),
     ..._u16le(formatFlags),
     ..._u32le(blocksPerFrame),
@@ -274,14 +269,12 @@ List<int> _header({
     ..._u16le(channels),
     ..._u32le(sampleRate),
   ];
-}
 
 List<int> _apeTagFooter({
   required int size,
   required int fields,
   required int flags,
-}) {
-  return <int>[
+}) => <int>[
     ...ascii.encode(Apev2Token.preamble),
     ..._u32le(2000),
     ..._u32le(size),
@@ -289,24 +282,17 @@ List<int> _apeTagFooter({
     ..._u32le(flags),
     ...List<int>.filled(8, 0),
   ];
-}
 
-List<int> _u16le(int value) {
-  return <int>[value & 0xFF, (value >> 8) & 0xFF];
-}
+List<int> _u16le(int value) => <int>[value & 0xFF, (value >> 8) & 0xFF];
 
-List<int> _u32le(int value) {
-  return <int>[
+List<int> _u32le(int value) => <int>[
     value & 0xFF,
     (value >> 8) & 0xFF,
     (value >> 16) & 0xFF,
     (value >> 24) & 0xFF,
   ];
-}
 
-List<int> _jpegSample() {
-  return <int>[0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46];
-}
+List<int> _jpegSample() => <int>[0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46];
 
 class _NonSeekTokenizer extends Tokenizer {
   @override

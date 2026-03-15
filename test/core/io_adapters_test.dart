@@ -512,7 +512,7 @@ void main() {
 
       test('uses provided FileInfo', () {
         final bytes = Uint8List.fromList([1, 2, 3]);
-        final fileInfo = FileInfo(size: 3, path: 'test.bin');
+        const fileInfo = FileInfo(size: 3, path: 'test.bin');
         final tokenizer = BytesTokenizer(bytes, fileInfo: fileInfo);
         expect(tokenizer.fileInfo, equals(fileInfo));
         expect(tokenizer.fileInfo!.path, equals('test.bin'));
@@ -561,14 +561,14 @@ void main() {
         final tokenizer = BytesTokenizer(bytes);
         tokenizer.readUint8();
         tokenizer.readUint8();
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
       });
 
       test('throws with descriptive message at end', () {
         final bytes = Uint8List.fromList([1]);
         final tokenizer = BytesTokenizer(bytes);
         tokenizer.readUint8();
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
       });
     });
 
@@ -592,7 +592,7 @@ void main() {
         final bytes = Uint8List.fromList([0xFF]);
         final tokenizer = BytesTokenizer(bytes);
         expect(
-          () => tokenizer.readUint16(),
+          tokenizer.readUint16,
           throwsA(isA<TokenizerException>()),
         );
       });
@@ -601,7 +601,7 @@ void main() {
         final bytes = Uint8List.fromList([0x12]);
         final tokenizer = BytesTokenizer(bytes);
         expect(
-          () => tokenizer.readUint16(),
+          tokenizer.readUint16,
           throwsA(isA<TokenizerException>()),
         );
       });
@@ -636,7 +636,7 @@ void main() {
         final bytes = Uint8List.fromList([0xFF, 0xFF, 0xFF]);
         final tokenizer = BytesTokenizer(bytes);
         expect(
-          () => tokenizer.readUint32(),
+          tokenizer.readUint32,
           throwsA(isA<TokenizerException>()),
         );
       });
@@ -645,7 +645,7 @@ void main() {
         final bytes = Uint8List.fromList([0xFF]);
         final tokenizer = BytesTokenizer(bytes);
         expect(
-          () => tokenizer.readUint32(),
+          tokenizer.readUint32,
           throwsA(isA<TokenizerException>()),
         );
       });
@@ -717,13 +717,13 @@ void main() {
         final bytes = Uint8List.fromList([1]);
         final tokenizer = BytesTokenizer(bytes);
         tokenizer.readUint8();
-        expect(() => tokenizer.peekUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.peekUint8, throwsA(isA<TokenizerException>()));
       });
 
       test('throws on empty buffer', () {
         final bytes = Uint8List(0);
         final tokenizer = BytesTokenizer(bytes);
-        expect(() => tokenizer.peekUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.peekUint8, throwsA(isA<TokenizerException>()));
       });
     });
 
@@ -809,7 +809,7 @@ void main() {
         final bytes = Uint8List.fromList([1, 2, 3]);
         final tokenizer = BytesTokenizer(bytes);
         tokenizer.skip(3);
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
       });
     });
 
@@ -837,7 +837,7 @@ void main() {
         final tokenizer = BytesTokenizer(bytes);
         tokenizer.seek(3);
         expect(tokenizer.position, equals(3));
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
       });
 
       test('seek backward', () {
@@ -920,7 +920,7 @@ void main() {
 
       test('large buffer operations', () {
         final data = Uint8List(1000);
-        for (int i = 0; i < 1000; i++) {
+        for (var i = 0; i < 1000; i++) {
           data[i] = i % 256;
         }
         final tokenizer = BytesTokenizer(data);
@@ -976,7 +976,7 @@ void main() {
         expect(tokenizer.fileInfo!.size, equals(0));
         expect(tokenizer.position, equals(0));
         expect(tokenizer.canSeek, isTrue);
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
       });
 
       test('single byte buffer', () {
@@ -984,13 +984,13 @@ void main() {
         final tokenizer = BytesTokenizer(bytes);
         expect(tokenizer.readUint8(), equals(0xFF));
         expect(tokenizer.position, equals(1));
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
       });
 
       test('buffer with all zeros', () {
         final bytes = Uint8List(10);
         final tokenizer = BytesTokenizer(bytes);
-        for (int i = 0; i < 10; i++) {
+        for (var i = 0; i < 10; i++) {
           expect(tokenizer.readUint8(), equals(0));
         }
       });
@@ -1029,7 +1029,7 @@ void main() {
 
       test('fileInfo with custom path', () {
         final bytes = Uint8List.fromList([1, 2, 3]);
-        final fileInfo = FileInfo(size: 3, path: '/path/to/file');
+        const fileInfo = FileInfo(size: 3, path: '/path/to/file');
         final tokenizer = BytesTokenizer(bytes, fileInfo: fileInfo);
         expect(tokenizer.fileInfo!.path, equals('/path/to/file'));
       });
@@ -1055,10 +1055,10 @@ void main() {
         expect(tokenizer.canSeek, isTrue);
 
         // Verify all required methods can be called
-        expect(() => tokenizer.readUint8(), returnsNormally);
+        expect(tokenizer.readUint8, returnsNormally);
         expect(tokenizer.position, equals(1));
 
-        expect(() => tokenizer.peekUint8(), returnsNormally);
+        expect(tokenizer.peekUint8, returnsNormally);
         expect(() => tokenizer.skip(1), returnsNormally);
         expect(() => tokenizer.seek(0), returnsNormally);
       });

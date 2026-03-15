@@ -9,13 +9,13 @@ import 'package:test/test.dart';
 
 /// Mock tokenizer for testing Lyrics3 parser
 class MockLyrics3Tokenizer implements Tokenizer {
-  final List<int> _data;
-  int _position = 0;
-  final FileInfo _fileInfo;
 
   MockLyrics3Tokenizer({required List<int> data, required int fileSize})
     : _data = data,
       _fileInfo = FileInfo(size: fileSize, path: 'test.mp3');
+  final List<int> _data;
+  int _position = 0;
+  final FileInfo _fileInfo;
 
   @override
   bool get canSeek => true;
@@ -145,8 +145,8 @@ void main() {
       // Create a file large enough for Lyrics3
       final padding = List<int>.filled(150, 0);
 
-      final lyricsText = 'This is test lyrics content';
-      final lyricsField = '[LYR:${lyricsText.length}]$lyricsText';
+      const lyricsText = 'This is test lyrics content';
+      const lyricsField = '[LYR:${lyricsText.length}]$lyricsText';
       final lyricsData = latin1.encode(lyricsField);
 
       final sizeStr = lyricsData.length.toString().padLeft(6, '0');
@@ -174,14 +174,14 @@ void main() {
 
       // Create Lyrics3 with multiple fields
       // Calculate actual sizes for each field
-      final indValue = '\x00\x00\x00';
-      final indField = '[IND:${indValue.length}]$indValue';
+      const indValue = '\x00\x00\x00';
+      const indField = '[IND:${indValue.length}]$indValue';
 
-      final lyrValue = 'Test Lyrics\n';
-      final lyrField = '[LYR:${lyrValue.length}]$lyrValue';
+      const lyrValue = 'Test Lyrics\n';
+      const lyrField = '[LYR:${lyrValue.length}]$lyrValue';
 
-      final infValue = 'Descriptor';
-      final infField = '[INF:${infValue.length}]$infValue';
+      const infValue = 'Descriptor';
+      const infField = '[INF:${infValue.length}]$infValue';
 
       final lyricsData = latin1.encode('$indField$lyrField$infField');
 
@@ -241,8 +241,8 @@ void main() {
     test('handles non-seekable tokenizer', () async {
       // This test verifies graceful handling of non-seekable tokenizers
       // Create a minimal Lyrics3 data with footer
-      final lyricsText = 'Test';
-      final lyricsField = '[LYR:${lyricsText.length}]$lyricsText';
+      const lyricsText = 'Test';
+      const lyricsField = '[LYR:${lyricsText.length}]$lyricsText';
       final lyricsData = latin1.encode(lyricsField);
       final sizeStr = lyricsData.length.toString().padLeft(6, '0');
       final footer = latin1.encode(
@@ -264,7 +264,7 @@ void main() {
 
     test('ignores invalid Lyrics3 size', () async {
       // Create footer with invalid size (non-numeric)
-      final sizeStr = 'INVALID';
+      const sizeStr = 'INVALID';
       final footer = latin1.encode(
         '$sizeStr'
         'LYRICS200',
@@ -286,7 +286,7 @@ void main() {
 
     test('rejects oversized Lyrics3 data', () async {
       // Create footer with size exceeding max
-      final sizeStr = '9999999'; // Too large
+      const sizeStr = '9999999'; // Too large
       final footer = latin1.encode(
         '${sizeStr.substring(0, 6)}'
         'LYRICS200',

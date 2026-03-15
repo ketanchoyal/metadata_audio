@@ -25,15 +25,12 @@ void main() {
           flags: _buildFlags(
             bitsPerSample: 16,
             sampleRateIndex: 9,
-            isMono: false,
-            isHybrid: false,
-            isDsd: false,
           ),
           payload: blockPayload,
         ),
         ..._buildApev2FooterTag(
           items: <List<int>>[
-            _textItem('Title', 'Sinner\'s Prayer'),
+            _textItem('Title', "Sinner's Prayer"),
             _textItem('Artist', 'Beth Hart'),
             _textItem('Artists', 'Beth Hart\u0000Joe Bonamassa'),
           ],
@@ -62,7 +59,7 @@ void main() {
       );
       expect(metadata.format.audioMD5, equals(_md5Sample()));
       expect(metadata.format.bitrate, isNotNull);
-      expect(metadata.common.title, 'Sinner\'s Prayer');
+      expect(metadata.common.title, "Sinner's Prayer");
       expect(metadata.common.artist, 'Beth Hart');
       expect(
         metadata.common.artists,
@@ -78,8 +75,6 @@ void main() {
         flags: _buildFlags(
           bitsPerSample: 16,
           sampleRateIndex: 9,
-          isMono: false,
-          isHybrid: false,
           isDsd: true,
         ),
         payload: <int>[
@@ -200,8 +195,7 @@ List<int> _apeTagFooter({
   required int size,
   required int fields,
   required int flags,
-}) {
-  return <int>[
+}) => <int>[
     ...ascii.encode(Apev2Token.preamble),
     ..._u32le(2000),
     ..._u32le(size),
@@ -209,7 +203,6 @@ List<int> _apeTagFooter({
     ..._u32le(flags),
     ...List<int>.filled(8, 0),
   ];
-}
 
 int _buildFlags({
   required int bitsPerSample,
@@ -235,18 +228,14 @@ int _buildFlags({
 
 List<int> _md5Sample() => List<int>.generate(16, (index) => index);
 
-List<int> _u16le(int value) {
-  return <int>[value & 0xFF, (value >> 8) & 0xFF];
-}
+List<int> _u16le(int value) => <int>[value & 0xFF, (value >> 8) & 0xFF];
 
-List<int> _u32le(int value) {
-  return <int>[
+List<int> _u32le(int value) => <int>[
     value & 0xFF,
     (value >> 8) & 0xFF,
     (value >> 16) & 0xFF,
     (value >> 24) & 0xFF,
   ];
-}
 
 class _NonSeekTokenizer extends Tokenizer {
   @override

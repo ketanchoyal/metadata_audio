@@ -4,7 +4,6 @@ import 'package:test/test.dart';
 
 /// Concrete implementation of GenericTagMapper for testing.
 class TestTagMapper extends GenericTagMapper {
-  late CaseInsensitiveTagMap<String> _tagMap;
 
   TestTagMapper({Map<String, String>? initialMap}) {
     _tagMap = CaseInsensitiveTagMap<String>();
@@ -12,6 +11,7 @@ class TestTagMapper extends GenericTagMapper {
       _tagMap.addAll(initialMap);
     }
   }
+  late CaseInsensitiveTagMap<String> _tagMap;
 
   @override
   CaseInsensitiveTagMap<String> get tagMap => _tagMap;

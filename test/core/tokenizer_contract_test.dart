@@ -4,11 +4,11 @@ import 'package:test/test.dart';
 
 /// Mock tokenizer for testing the interface contract
 class MockTokenizer implements Tokenizer {
+
+  MockTokenizer(this._data, {bool canSeek = true}) : _canSeek = canSeek;
   final List<int> _data;
   int _position = 0;
   final bool _canSeek;
-
-  MockTokenizer(this._data, {bool canSeek = true}) : _canSeek = canSeek;
 
   @override
   FileInfo? get fileInfo => FileInfo(size: _data.length);
@@ -112,7 +112,7 @@ void main() {
       });
 
       test('canSeek indicates random access capability', () {
-        final seekable = MockTokenizer([1, 2, 3], canSeek: true);
+        final seekable = MockTokenizer([1, 2, 3]);
         expect(seekable.canSeek, isTrue);
 
         final nonSeekable = MockTokenizer([1, 2, 3], canSeek: false);
@@ -151,13 +151,13 @@ void main() {
       test('readUint8() throws at end of data', () {
         final tokenizer = MockTokenizer([1]);
         tokenizer.readUint8();
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
       });
 
       test('readUint16() throws with insufficient data', () {
         final tokenizer = MockTokenizer([0xFF]);
         expect(
-          () => tokenizer.readUint16(),
+          tokenizer.readUint16,
           throwsA(isA<TokenizerException>()),
         );
       });
@@ -165,7 +165,7 @@ void main() {
       test('readUint32() throws with insufficient data', () {
         final tokenizer = MockTokenizer([0xFF, 0xFF, 0xFF]);
         expect(
-          () => tokenizer.readUint32(),
+          tokenizer.readUint32,
           throwsA(isA<TokenizerException>()),
         );
       });
@@ -202,7 +202,7 @@ void main() {
       test('peekUint8() throws at end of data', () {
         final tokenizer = MockTokenizer([1]);
         tokenizer.readUint8();
-        expect(() => tokenizer.peekUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.peekUint8, throwsA(isA<TokenizerException>()));
       });
 
       test('peekBytes() throws with insufficient data', () {
@@ -235,7 +235,7 @@ void main() {
       });
 
       test('seek() changes position on seekable tokenizer', () {
-        final tokenizer = MockTokenizer([1, 2, 3, 4], canSeek: true);
+        final tokenizer = MockTokenizer([1, 2, 3, 4]);
         tokenizer.seek(2);
         expect(tokenizer.position, equals(2));
         expect(tokenizer.readUint8(), equals(3));
@@ -247,17 +247,17 @@ void main() {
       });
 
       test('seek() throws with negative position', () {
-        final tokenizer = MockTokenizer([1, 2, 3], canSeek: true);
+        final tokenizer = MockTokenizer([1, 2, 3]);
         expect(() => tokenizer.seek(-1), throwsA(isA<TokenizerException>()));
       });
 
       test('seek() throws with position beyond data', () {
-        final tokenizer = MockTokenizer([1, 2, 3], canSeek: true);
+        final tokenizer = MockTokenizer([1, 2, 3]);
         expect(() => tokenizer.seek(10), throwsA(isA<TokenizerException>()));
       });
 
       test('seek(0) resets to beginning', () {
-        final tokenizer = MockTokenizer([1, 2, 3, 4], canSeek: true);
+        final tokenizer = MockTokenizer([1, 2, 3, 4]);
         tokenizer.readBytes(3);
         expect(tokenizer.position, equals(3));
         tokenizer.seek(0);
@@ -284,7 +284,7 @@ void main() {
           0x33,
           0x44,
           0x55,
-        ], canSeek: true);
+        ]);
         tokenizer.seek(2);
         expect(tokenizer.readUint8(), equals(0x33));
         tokenizer.seek(0);
@@ -292,14 +292,14 @@ void main() {
       });
 
       test('peek does not affect subsequent seek', () {
-        final tokenizer = MockTokenizer([1, 2, 3, 4, 5], canSeek: true);
+        final tokenizer = MockTokenizer([1, 2, 3, 4, 5]);
         tokenizer.peekBytes(2);
         tokenizer.seek(3);
         expect(tokenizer.readUint8(), equals(4));
       });
 
       test('fileInfo accessible throughout stream', () {
-        final tokenizer = MockTokenizer([1, 2, 3], canSeek: true);
+        final tokenizer = MockTokenizer([1, 2, 3]);
         expect(tokenizer.fileInfo!.size, equals(3));
         tokenizer.readBytes(2);
         expect(tokenizer.fileInfo!.size, equals(3));
@@ -311,15 +311,15 @@ void main() {
     group('Edge Cases', () {
       test('empty tokenizer', () {
         final tokenizer = MockTokenizer([]);
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
-        expect(() => tokenizer.peekUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
+        expect(tokenizer.peekUint8, throwsA(isA<TokenizerException>()));
         expect(tokenizer.canSeek, isTrue);
       });
 
       test('seek to end then read throws', () {
-        final tokenizer = MockTokenizer([1, 2, 3], canSeek: true);
+        final tokenizer = MockTokenizer([1, 2, 3]);
         tokenizer.seek(3);
-        expect(() => tokenizer.readUint8(), throwsA(isA<TokenizerException>()));
+        expect(tokenizer.readUint8, throwsA(isA<TokenizerException>()));
       });
 
       test('large data read in chunks', () {

@@ -66,32 +66,24 @@ class ParserRegistry {
   /// Returns the registered loader for [extension], or null if no loader
   /// is registered for this extension.
   /// Extension matching is case-insensitive.
-  ParserLoader? getLoader(String extension) {
-    return _extensionMap[extension.toLowerCase()];
-  }
+  ParserLoader? getLoader(String extension) => _extensionMap[extension.toLowerCase()];
 
   /// Get a parser loader by MIME type.
   ///
   /// Returns the registered loader for [mimeType], or null if no loader
   /// is registered for this MIME type.
   /// MIME type matching is case-sensitive.
-  ParserLoader? getLoaderForMimeType(String mimeType) {
-    return _mimeTypeMap[mimeType];
-  }
+  ParserLoader? getLoaderForMimeType(String mimeType) => _mimeTypeMap[mimeType];
 
   /// Get all registered file extensions.
   ///
   /// Returns a sorted list of all extensions that have registered loaders.
-  List<String> getRegisteredExtensions() {
-    return _extensionMap.keys.toList()..sort();
-  }
+  List<String> getRegisteredExtensions() => _extensionMap.keys.toList()..sort();
 
   /// Get all registered MIME types.
   ///
   /// Returns a sorted list of all MIME types that have registered loaders.
-  List<String> getRegisteredMimeTypes() {
-    return _mimeTypeMap.keys.toList()..sort();
-  }
+  List<String> getRegisteredMimeTypes() => _mimeTypeMap.keys.toList()..sort();
 }
 
 /// Factory for selecting and retrieving appropriate parser loaders.
@@ -103,11 +95,11 @@ class ParserRegistry {
 ///
 /// Throws [CouldNotDetermineFileTypeError] if no parser can be determined.
 class ParserFactory {
-  /// Parser registry containing registered loaders.
-  final ParserRegistry registry;
 
   /// Create a ParserFactory with the given registry.
   ParserFactory(this.registry);
+  /// Parser registry containing registered loaders.
+  final ParserRegistry registry;
 
   /// Select a parser loader based on FileInfo and tokenizer.
   ///

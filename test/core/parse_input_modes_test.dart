@@ -78,7 +78,7 @@ void main() {
 
         final tokenizer = BytesTokenizer(
           testBytes,
-          fileInfo: FileInfo(mimeType: 'audio/test'),
+          fileInfo: const FileInfo(mimeType: 'audio/test'),
         );
         final result = await parseFromTokenizer(tokenizer);
 
@@ -117,14 +117,14 @@ void main() {
 
         final metadata = await parseBytes(
           testBytes,
-          fileInfo: FileInfo(mimeType: 'audio/test'),
+          fileInfo: const FileInfo(mimeType: 'audio/test'),
         );
 
         expect(metadata.common.title, 'Test Title');
       });
 
       test('uses BytesTokenizer with provided FileInfo', () async {
-        var capturedFileInfo = <FileInfo?>[];
+        final capturedFileInfo = <FileInfo?>[];
         final mockParser = _MockParser(
           mimeType: ['audio/test'],
           onParse: (tokenizer, _2) async {
@@ -134,7 +134,7 @@ void main() {
         );
         registry.register(mockParser);
 
-        final fileInfo = FileInfo(
+        const fileInfo = FileInfo(
           path: 'test.mp3',
           mimeType: 'audio/test',
           size: 1024,
@@ -147,7 +147,7 @@ void main() {
       });
 
       test('respects ParseOptions', () async {
-        var capturedOptions = <ParseOptions>[];
+        final capturedOptions = <ParseOptions>[];
         final mockParser = _MockParser(
           mimeType: ['audio/test'],
           onParse: (_1, options) async {
@@ -157,10 +157,10 @@ void main() {
         );
         registry.register(mockParser);
 
-        final options = ParseOptions(skipCovers: true, includeChapters: true);
+        const options = ParseOptions(skipCovers: true, includeChapters: true);
         await parseBytes(
           testBytes,
-          fileInfo: FileInfo(mimeType: 'audio/test'),
+          fileInfo: const FileInfo(mimeType: 'audio/test'),
           options: options,
         );
 
@@ -208,7 +208,7 @@ void main() {
       });
 
       test('creates FileInfo from file path', () async {
-        var capturedFileInfo = <FileInfo?>[];
+        final capturedFileInfo = <FileInfo?>[];
         final mockParser = _MockParser(
           extension: ['mp3'],
           mimeType: ['audio/mpeg'],
@@ -242,7 +242,7 @@ void main() {
 
         final metadata = await parseStream(
           stream,
-          fileInfo: FileInfo(mimeType: 'audio/test'),
+          fileInfo: const FileInfo(mimeType: 'audio/test'),
         );
 
         expect(metadata.common.title, 'Test Title');
@@ -259,7 +259,7 @@ void main() {
         registry.register(mockParser);
 
         final stream = Stream.fromIterable(<List<int>>[]);
-        await parseStream(stream, fileInfo: FileInfo(mimeType: 'audio/test'));
+        await parseStream(stream, fileInfo: const FileInfo(mimeType: 'audio/test'));
 
         // Should complete without error
         expect(true, isTrue);
@@ -295,14 +295,14 @@ void main() {
         }
 
         final stream = Stream.fromIterable(chunks);
-        await parseStream(stream, fileInfo: FileInfo(mimeType: 'audio/test'));
+        await parseStream(stream, fileInfo: const FileInfo(mimeType: 'audio/test'));
 
         // Should have received all bytes
         expect(totalBytesReceived, testBytes.length);
       });
 
       test('passes through FileInfo to parseBytes', () async {
-        var capturedFileInfo = <FileInfo?>[];
+        final capturedFileInfo = <FileInfo?>[];
         final mockParser = _MockParser(
           mimeType: ['audio/test'],
           onParse: (tokenizer, _) async {
@@ -312,7 +312,7 @@ void main() {
         );
         registry.register(mockParser);
 
-        final fileInfo = FileInfo(
+        const fileInfo = FileInfo(
           path: 'remote.mp3',
           mimeType: 'audio/test',
           url: 'https://example.com/audio.mp3',
@@ -328,7 +328,7 @@ void main() {
     group('scanPostHeaders', () {
       test('skips scan when skipPostHeaders is true', () async {
         final tokenizer = BytesTokenizer(testBytes);
-        final options = ParseOptions(skipPostHeaders: true);
+        const options = ParseOptions(skipPostHeaders: true);
 
         // Should complete without error even with empty tokenizer
         await scanPostHeaders(tokenizer, options);
@@ -338,7 +338,7 @@ void main() {
 
       test('skips scan when tokenizer cannot seek', () async {
         final tokenizer = _NonSeekableTokenizer(testBytes);
-        final options = ParseOptions(skipPostHeaders: false);
+        const options = ParseOptions();
 
         // Should complete without error even though we can't seek
         await scanPostHeaders(tokenizer, options);
@@ -348,7 +348,7 @@ void main() {
 
       test('allows scan when tokenizer supports seek', () async {
         final tokenizer = BytesTokenizer(testBytes);
-        final options = ParseOptions(skipPostHeaders: false);
+        const options = ParseOptions();
 
         // Should complete without error
         await scanPostHeaders(tokenizer, options);
@@ -381,7 +381,7 @@ void main() {
 
         final metadata = await parseBytes(
           testBytes,
-          fileInfo: FileInfo(mimeType: 'audio/test'),
+          fileInfo: const FileInfo(mimeType: 'audio/test'),
         );
 
         expect(metadata.common.album, 'Test Album');
@@ -397,7 +397,7 @@ void main() {
         final stream = Stream.fromIterable([testBytes]);
         final metadata = await parseStream(
           stream,
-          fileInfo: FileInfo(mimeType: 'audio/test'),
+          fileInfo: const FileInfo(mimeType: 'audio/test'),
         );
 
         expect(metadata.format.duration, 3.5);
@@ -407,8 +407,7 @@ void main() {
 }
 
 // Helper function to create mock metadata
-AudioMetadata _createMockMetadata() {
-  return AudioMetadata(
+AudioMetadata _createMockMetadata() => const AudioMetadata(
     format: Format(
       container: 'mp3',
       duration: 3.5,
@@ -428,14 +427,9 @@ AudioMetadata _createMockMetadata() {
     ),
     quality: QualityInformation(),
   );
-}
 
 // Mock parser implementation
 class _MockParser implements ParserLoader {
-  final List<String> extension;
-  final List<String> mimeType;
-  final bool hasRandomAccessRequirements;
-  final Future<AudioMetadata> Function(Tokenizer, ParseOptions)? onParse;
 
   _MockParser({
     this.extension = const [],
@@ -443,6 +437,13 @@ class _MockParser implements ParserLoader {
     this.hasRandomAccessRequirements = false,
     this.onParse,
   });
+  @override
+  final List<String> extension;
+  @override
+  final List<String> mimeType;
+  @override
+  final bool hasRandomAccessRequirements;
+  final Future<AudioMetadata> Function(Tokenizer, ParseOptions)? onParse;
 
   @override
   Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
@@ -463,10 +464,10 @@ class _MockParser implements ParserLoader {
 
 // Non-seekable tokenizer for testing
 class _NonSeekableTokenizer implements Tokenizer {
-  final Uint8List _bytes;
-  int _position = 0;
 
   _NonSeekableTokenizer(this._bytes);
+  final Uint8List _bytes;
+  int _position = 0;
 
   @override
   bool get canSeek => false;

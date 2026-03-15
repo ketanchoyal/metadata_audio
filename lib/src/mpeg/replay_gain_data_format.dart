@@ -15,15 +15,15 @@ class ReplayGainOriginator {
 }
 
 class ReplayGainData {
-  final int type;
-  final int origin;
-  final double adjustment;
 
   const ReplayGainData({
     required this.type,
     required this.origin,
     required this.adjustment,
   });
+  final int type;
+  final int origin;
+  final double adjustment;
 }
 
 class ReplayGainDataFormat {

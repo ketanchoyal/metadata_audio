@@ -14,6 +14,9 @@ analyzer:
     # Treat dead code as warnings
     dead_code: warning
     public_member_api_docs: ignore
+    unnecessary_null_checks: ignore
+    no_leading_underscores_for_local_identifiers: ignore
+    non_constant_identifier_names: ignore
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"

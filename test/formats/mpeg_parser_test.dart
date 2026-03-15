@@ -53,10 +53,10 @@ void main() {
 
     test('calculates VBR duration at EOF when enabled', () async {
       final frames = <int>[
-        ..._buildMpegFrame(bitrateIndex: 9),
+        ..._buildMpegFrame(),
         ..._buildMpegFrame(bitrateIndex: 11),
         ..._buildMpegFrame(bitrateIndex: 10),
-        ..._buildMpegFrame(bitrateIndex: 9),
+        ..._buildMpegFrame(),
         ..._buildMpegFrame(bitrateIndex: 11),
       ];
 
@@ -129,9 +129,7 @@ void main() {
   });
 }
 
-List<int> _buildId3v2Header() {
-  return <int>[0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
-}
+List<int> _buildId3v2Header() => <int>[0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
 List<int> _buildId3v1({required String title}) {
   final tag = List<int>.filled(128, 0);
@@ -155,7 +153,7 @@ List<int> _buildMpegFrame({
   const samplesPerFrame = 1152;
   final bitrateKbps = _bitrateFromIndex(bitrateIndex);
   final bitrate = bitrateKbps * 1000;
-  final frameLength = ((samplesPerFrame / 8.0 * bitrate / sampleRate)).floor();
+  final frameLength = (samplesPerFrame / 8.0 * bitrate / sampleRate).floor();
 
   final header = <int>[0xFF, 0xFB, (bitrateIndex << 4), 0x40];
 
@@ -228,7 +226,7 @@ List<int> _buildAdtsFrame({
   int frameLength = 100,
   bool protectionAbsent = true,
 }) {
-  final byte0 = 0xFF;
+  const byte0 = 0xFF;
   final byte1 =
       0xE0 |
       ((versionIndex & 0x03) << 3) |
@@ -242,7 +240,7 @@ List<int> _buildAdtsFrame({
       ((channelConfigIndex & 0x03) << 6) | ((frameLength >> 11) & 0x03);
   final byte4 = (frameLength >> 3) & 0xFF;
   final byte5 = ((frameLength & 0x07) << 5) | 0x1F;
-  final byte6 = 0xFC;
+  const byte6 = 0xFC;
 
   final header = <int>[byte0, byte1, byte2, byte3, byte4, byte5, byte6];
   final crc = protectionAbsent ? <int>[] : <int>[0x00, 0x00];

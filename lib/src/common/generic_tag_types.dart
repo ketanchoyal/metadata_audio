@@ -162,6 +162,8 @@ enum GenericTagType {
 
 /// Defines the semantics of a tag (singleton vs list, unique vs duplicate).
 class TagTypeSemantics {
+
+  const TagTypeSemantics({required this.isSingleton, this.isUnique = false});
   /// Whether this tag should have at most one value (singleton).
   /// If false, the tag can have multiple values (list).
   final bool isSingleton;
@@ -169,12 +171,12 @@ class TagTypeSemantics {
   /// Whether duplicate values should be filtered to keep only unique values.
   /// Only relevant when [isSingleton] is false.
   final bool isUnique;
-
-  const TagTypeSemantics({required this.isSingleton, this.isUnique = false});
 }
 
 /// Catalog of generic tag types and their semantics.
 class GenericTagTypes {
+
+  GenericTagTypes._();
   static const Map<String, TagTypeSemantics> _semanticsMap = {
     // Core metadata - most are singletons
     'title': TagTypeSemantics(isSingleton: true),
@@ -195,9 +197,9 @@ class GenericTagTypes {
 
     // Descriptive tags - often lists
     'genre': TagTypeSemantics(isSingleton: false, isUnique: true),
-    'comment': TagTypeSemantics(isSingleton: false, isUnique: false),
+    'comment': TagTypeSemantics(isSingleton: false),
     'picture': TagTypeSemantics(isSingleton: false, isUnique: true),
-    'lyrics': TagTypeSemantics(isSingleton: false, isUnique: false),
+    'lyrics': TagTypeSemantics(isSingleton: false),
 
     // Sorting keys - singletons
     'titlesort': TagTypeSemantics(isSingleton: true),
@@ -223,7 +225,7 @@ class GenericTagTypes {
 
     // Album/release info
     'grouping': TagTypeSemantics(isSingleton: true),
-    'subtitle': TagTypeSemantics(isSingleton: false, isUnique: false),
+    'subtitle': TagTypeSemantics(isSingleton: false),
     'discsubtitle': TagTypeSemantics(isSingleton: true),
     'compilation': TagTypeSemantics(isSingleton: true),
     'work': TagTypeSemantics(isSingleton: true),
@@ -234,7 +236,7 @@ class GenericTagTypes {
     'bpm': TagTypeSemantics(isSingleton: true),
     'key': TagTypeSemantics(isSingleton: true),
     'mood': TagTypeSemantics(isSingleton: true),
-    'rating': TagTypeSemantics(isSingleton: false, isUnique: false),
+    'rating': TagTypeSemantics(isSingleton: false),
     'averagelevel': TagTypeSemantics(isSingleton: true),
     'peaklevel': TagTypeSemantics(isSingleton: true),
 
@@ -247,7 +249,7 @@ class GenericTagTypes {
 
     // Content identifiers - mostly singletons
     'barcode': TagTypeSemantics(isSingleton: true),
-    'isrc': TagTypeSemantics(isSingleton: false, isUnique: false),
+    'isrc': TagTypeSemantics(isSingleton: false),
     'asin': TagTypeSemantics(isSingleton: true),
 
     // MusicBrainz identifiers - mostly singletons except artist IDs
@@ -329,8 +331,6 @@ class GenericTagTypes {
       isUnique: true,
     ),
   };
-
-  GenericTagTypes._();
 
   static TagTypeSemantics getSemantics(String tagName) =>
       _semanticsMap[tagName.toLowerCase()] ??

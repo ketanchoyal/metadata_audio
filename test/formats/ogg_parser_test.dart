@@ -69,7 +69,7 @@ void main() {
     });
 
     test('parses Vorbis comments and maps common tags', () async {
-      final streamSerial = 3;
+      const streamSerial = 3;
       final firstPage = _buildOggPage(
         headerTypeFlags: 0x02,
         granulePosition: 0,
@@ -121,7 +121,7 @@ void main() {
     });
 
     test('parses Vorbis chapter tags into format.chapters', () async {
-      final streamSerial = 31;
+      const streamSerial = 31;
       final firstPage = _buildOggPage(
         headerTypeFlags: 0x02,
         granulePosition: 0,
@@ -175,7 +175,7 @@ void main() {
     });
 
     test('parses Opus identification header and OpusTags comments', () async {
-      final streamSerial = 5;
+      const streamSerial = 5;
       final firstPage = _buildOggPage(
         headerTypeFlags: 0x02,
         granulePosition: 0,
@@ -307,7 +307,7 @@ void main() {
     });
 
     test('derives duration from granule position on last page', () async {
-      final streamSerial = 9;
+      const streamSerial = 9;
       final firstPage = _buildOggPage(
         headerTypeFlags: 0x02,
         granulePosition: 0,
@@ -397,8 +397,7 @@ List<int> _buildOggPage({
 List<int> _buildVorbisIdentificationPayload({
   required int channels,
   required int sampleRate,
-}) {
-  return <int>[
+}) => <int>[
     0x01,
     ...ascii.encode('vorbis'),
     ..._uint32Le(0),
@@ -410,7 +409,6 @@ List<int> _buildVorbisIdentificationPayload({
     0,
     1,
   ];
-}
 
 List<int> _buildVorbisCommentPayload({
   required String vendor,
@@ -436,8 +434,7 @@ List<int> _buildOpusHeadPayload({
   required int channels,
   required int preSkip,
   required int sampleRate,
-}) {
-  return <int>[
+}) => <int>[
     ...ascii.encode('OpusHead'),
     1,
     channels,
@@ -448,7 +445,6 @@ List<int> _buildOpusHeadPayload({
     0,
     0,
   ];
-}
 
 List<int> _buildOpusTagsPayload({
   required String vendor,
@@ -534,7 +530,7 @@ List<int> _buildFlacStreamInfoBlock({required int totalSamples}) {
   streamInfo[2] = 0x10;
   streamInfo[3] = 0x00;
 
-  final sampleRateShifted = sampleRate << 4;
+  const sampleRateShifted = sampleRate << 4;
   streamInfo[10] = (sampleRateShifted >> 16) & 0xFF;
   streamInfo[11] = (sampleRateShifted >> 8) & 0xFF;
   streamInfo[12] =
@@ -558,14 +554,12 @@ void _writeInt32Le(List<int> target, int offset, int value) {
   target[offset + 3] = (value >> 24) & 0xFF;
 }
 
-List<int> _uint32Le(int value) {
-  return <int>[
+List<int> _uint32Le(int value) => <int>[
     value & 0xFF,
     (value >> 8) & 0xFF,
     (value >> 16) & 0xFF,
     (value >> 24) & 0xFF,
   ];
-}
 
 List<int> _uint64Le(int value) {
   final low = value & 0xFFFFFFFF;

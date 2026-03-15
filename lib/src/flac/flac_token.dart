@@ -164,12 +164,12 @@ class FlacToken {
             ((bytes[offset + 13] >> 4) & 0x0F)) +
         1;
     final totalSamples =
-        (((bytes[offset + 13] & 0x0F) << 32) |
+        ((bytes[offset + 13] & 0x0F) << 32) |
                 (bytes[offset + 14] << 24) |
                 (bytes[offset + 15] << 16) |
                 (bytes[offset + 16] << 8) |
-                bytes[offset + 17])
-            .toInt();
+                bytes[offset + 17]
+            ;
 
     return FlacStreamInfo(
       minimumBlockSize: uint16Be(bytes, offset),
@@ -331,14 +331,12 @@ class FlacToken {
         (bytes[offset + 3] << 24);
   }
 
-  static Picture toCommonPicture(FlacPicture picture) {
-    return Picture(
+  static Picture toCommonPicture(FlacPicture picture) => Picture(
       format: picture.format,
       data: picture.data,
       description: picture.description,
       type: picture.type,
     );
-  }
 
   static void _expectLength(
     List<int> bytes,

@@ -21,8 +21,7 @@ class TestParserLoader extends ParserLoader {
   final bool hasRandomAccessRequirements;
 
   @override
-  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
-    return const AudioMetadata(
+  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async => const AudioMetadata(
       format: Format(),
       native: {},
       common: CommonTags(
@@ -32,7 +31,6 @@ class TestParserLoader extends ParserLoader {
       ),
       quality: QualityInformation(),
     );
-  }
 }
 
 class MockTokenizer implements Tokenizer {
@@ -107,7 +105,7 @@ void main() {
     });
 
     test('Priority 1: MIME type selection (audio/mpeg)', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/file.unknown',
         mimeType: 'audio/mpeg',
       );
@@ -117,7 +115,7 @@ void main() {
     });
 
     test('Priority 1: MIME type selection (audio/flac)', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/file.unknown',
         mimeType: 'audio/flac',
       );
@@ -127,7 +125,7 @@ void main() {
     });
 
     test('Priority 1: MIME type overrides extension', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/file.mp3',
         mimeType: 'audio/flac', // Different MIME type
       );
@@ -137,9 +135,8 @@ void main() {
     });
 
     test('Priority 2: Extension selection when MIME type is missing', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/file.flac',
-        mimeType: null, // No MIME type
       );
 
       final loader = factory.selectParser(fileInfo, MockTokenizer());
@@ -147,28 +144,28 @@ void main() {
     });
 
     test('Priority 2: Extension selection with .mp3 extension', () {
-      final fileInfo = FileInfo(path: '/path/to/audio.mp3', mimeType: null);
+      const fileInfo = FileInfo(path: '/path/to/audio.mp3');
 
       final loader = factory.selectParser(fileInfo, MockTokenizer());
       expect(loader, same(mp3Loader));
     });
 
     test('Priority 2: Extension selection with alternative extension', () {
-      final fileInfo = FileInfo(path: '/path/to/audio.mpeg', mimeType: null);
+      const fileInfo = FileInfo(path: '/path/to/audio.mpeg');
 
       final loader = factory.selectParser(fileInfo, MockTokenizer());
       expect(loader, same(mp3Loader));
     });
 
     test('Priority 2: Extension selection is case-insensitive', () {
-      final fileInfo = FileInfo(path: '/path/to/audio.FLAC', mimeType: null);
+      const fileInfo = FileInfo(path: '/path/to/audio.FLAC');
 
       final loader = factory.selectParser(fileInfo, MockTokenizer());
       expect(loader, same(flacLoader));
     });
 
     test('Priority 2: Handle multiple MIME types for same loader', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/file.unknown',
         mimeType: 'application/ogg', // Second MIME type for OGG loader
       );
@@ -178,7 +175,7 @@ void main() {
     });
 
     test('Error: No parser found when MIME and path are missing', () {
-      final fileInfo = FileInfo(path: null, mimeType: null);
+      const fileInfo = FileInfo();
 
       expect(
         () => factory.selectParser(fileInfo, MockTokenizer()),
@@ -187,7 +184,7 @@ void main() {
     });
 
     test('Error: No parser found for unknown MIME type', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/file.unknown',
         mimeType: 'audio/unknown',
       );
@@ -199,7 +196,7 @@ void main() {
     });
 
     test('Error: No parser found for unknown extension', () {
-      final fileInfo = FileInfo(path: '/path/to/file.xyz', mimeType: null);
+      const fileInfo = FileInfo(path: '/path/to/file.xyz');
 
       expect(
         () => factory.selectParser(fileInfo, MockTokenizer()),
@@ -208,9 +205,8 @@ void main() {
     });
 
     test('Error: No parser found for file with no extension', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/filename_without_extension',
-        mimeType: null,
       );
 
       expect(
@@ -220,7 +216,7 @@ void main() {
     });
 
     test('Error: No parser found for file ending with dot', () {
-      final fileInfo = FileInfo(path: '/path/to/filename.', mimeType: null);
+      const fileInfo = FileInfo(path: '/path/to/filename.');
 
       expect(
         () => factory.selectParser(fileInfo, MockTokenizer()),
@@ -229,7 +225,7 @@ void main() {
     });
 
     test('Error message indicates what information was checked', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/file.unknown',
         mimeType: 'audio/unknown',
       );
@@ -247,9 +243,8 @@ void main() {
     });
 
     test('Extension extraction handles paths with multiple dots', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/archive.tar.flac',
-        mimeType: null,
       );
 
       final loader = factory.selectParser(fileInfo, MockTokenizer());
@@ -257,7 +252,7 @@ void main() {
     });
 
     test('Empty MIME type string is treated as missing', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '/path/to/file.flac',
         mimeType: '', // Empty string
       );
@@ -267,7 +262,7 @@ void main() {
     });
 
     test('Empty path string is treated as missing', () {
-      final fileInfo = FileInfo(
+      const fileInfo = FileInfo(
         path: '', // Empty string
         mimeType: 'audio/flac',
       );

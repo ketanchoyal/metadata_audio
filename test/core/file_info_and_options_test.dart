@@ -1,10 +1,10 @@
-import 'package:test/test.dart';
 import 'package:audio_metadata/src/model/types.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('FileInfo', () {
     test('creates FileInfo with all parameters', () {
-      final info = FileInfo(
+      const info = FileInfo(
         path: '/path/to/file.mp3',
         mimeType: 'audio/mpeg',
         size: 5242880,
@@ -18,7 +18,7 @@ void main() {
     });
 
     test('creates FileInfo with optional parameters', () {
-      final info = FileInfo(path: '/path/to/file.mp3');
+      const info = FileInfo(path: '/path/to/file.mp3');
 
       expect(info.path, equals('/path/to/file.mp3'));
       expect(info.mimeType, isNull);
@@ -27,7 +27,7 @@ void main() {
     });
 
     test('creates empty FileInfo', () {
-      final info = FileInfo();
+      const info = FileInfo();
 
       expect(info.path, isNull);
       expect(info.mimeType, isNull);
@@ -67,7 +67,7 @@ void main() {
 
   group('ParseOptions', () {
     test('creates ParseOptions with default values', () {
-      final options = ParseOptions();
+      const options = ParseOptions();
 
       expect(options.skipCovers, isFalse);
       expect(options.skipPostHeaders, isFalse);
@@ -129,11 +129,11 @@ void main() {
     });
 
     test('ParseOptions observer can be set', () {
-      bool called = false;
+      var called = false;
       void observer(MetadataEvent event) => called = true;
 
       final options = ParseOptions(observer: observer);
-      options.observer!(MetadataEvent());
+      options.observer!(const MetadataEvent());
 
       expect(called, isTrue);
     });

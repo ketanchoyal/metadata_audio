@@ -2,19 +2,15 @@ library;
 
 import 'dart:convert';
 
-import 'package:collection/collection.dart';
 import 'package:audio_metadata/src/common/metadata_collector.dart';
 import 'package:audio_metadata/src/id3v2/frame_header.dart';
 import 'package:audio_metadata/src/id3v2/frame_parser.dart';
 import 'package:audio_metadata/src/id3v2/id3v2_token.dart';
 import 'package:audio_metadata/src/model/types.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
+import 'package:collection/collection.dart';
 
 class Id3v2ChapterInfo {
-  final int startTime;
-  final int endTime;
-  final int? startOffset;
-  final int? endOffset;
 
   const Id3v2ChapterInfo({
     required this.startTime,
@@ -22,49 +18,53 @@ class Id3v2ChapterInfo {
     required this.startOffset,
     required this.endOffset,
   });
+  final int startTime;
+  final int endTime;
+  final int? startOffset;
+  final int? endOffset;
 }
 
 class Id3v2ChapterFrame {
-  final String label;
-  final Id3v2ChapterInfo info;
-  final Map<String, dynamic> frames;
 
   const Id3v2ChapterFrame({
     required this.label,
     required this.info,
     required this.frames,
   });
+  final String label;
+  final Id3v2ChapterInfo info;
+  final Map<String, dynamic> frames;
 }
 
 class Id3v2TocFlags {
-  final bool topLevel;
-  final bool ordered;
 
   const Id3v2TocFlags({required this.topLevel, required this.ordered});
+  final bool topLevel;
+  final bool ordered;
 }
 
 class Id3v2TocFrame {
-  final String label;
-  final Id3v2TocFlags flags;
-  final List<String> childElementIds;
 
   const Id3v2TocFrame({
     required this.label,
     required this.flags,
     required this.childElementIds,
   });
+  final String label;
+  final Id3v2TocFlags flags;
+  final List<String> childElementIds;
 }
 
 class Id3v2Parser {
-  final MetadataCollector metadata;
-  final Tokenizer tokenizer;
-  final ParseOptions options;
 
   Id3v2Parser({
     required this.metadata,
     required this.tokenizer,
     required this.options,
   });
+  final MetadataCollector metadata;
+  final Tokenizer tokenizer;
+  final ParseOptions options;
 
   Future<void> parse() async {
     while (_hasNextId3Header()) {
@@ -204,10 +204,10 @@ class Id3v2Parser {
       var frameData = data.sublist(offset, offset + frameHeader.length);
       offset += frameHeader.length;
 
-      if (frameHeader.flags?.format.unsynchronisation == true) {
+      if (frameHeader.flags?.format.unsynchronisation ?? false) {
         frameData = removeUnsyncBytes(frameData);
       }
-      if (frameHeader.flags?.format.dataLengthIndicator == true &&
+      if ((frameHeader.flags?.format.dataLengthIndicator ?? false) &&
           frameData.length >= 4) {
         frameData = frameData.sublist(4);
       }
@@ -582,20 +582,20 @@ class Id3v2Parser {
 }
 
 class _CStringResult {
-  final String text;
-  final int nextOffset;
 
   const _CStringResult({required this.text, required this.nextOffset});
+  final String text;
+  final int nextOffset;
 }
 
 class _ParsedFrames {
-  final Map<String, dynamic> tags;
-  final List<Id3v2ChapterFrame> chapters;
-  final List<Id3v2TocFrame> tocs;
 
   const _ParsedFrames({
     required this.tags,
     required this.chapters,
     required this.tocs,
   });
+  final Map<String, dynamic> tags;
+  final List<Id3v2ChapterFrame> chapters;
+  final List<Id3v2TocFrame> tocs;
 }

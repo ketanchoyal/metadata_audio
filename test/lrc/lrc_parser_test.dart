@@ -4,7 +4,8 @@ import 'package:test/test.dart';
 void main() {
   group('LrcParser', () {
     test('parses synchronized lyrics with timestamps', () {
-      const lrcContent = '''[ti:Test Song]
+      const lrcContent = '''
+[ti:Test Song]
 [ar:Test Artist]
 [al:Test Album]
 [00:00.00]First line
@@ -54,7 +55,8 @@ void main() {
     });
 
     test('parses metadata tags', () {
-      const lrcContent = '''[ti:My Title]
+      const lrcContent = '''
+[ti:My Title]
 [ar:My Artist]
 [al:My Album]
 [re:Editor Name]
@@ -68,7 +70,8 @@ void main() {
     });
 
     test('combines multiple lyrics into text field', () {
-      const lrcContent = '''[00:00.00]Line 1
+      const lrcContent = '''
+[00:00.00]Line 1
 [00:05.00]Line 2
 [00:10.00]Line 3''';
 
@@ -90,7 +93,8 @@ void main() {
     });
 
     test('handles empty lines', () {
-      const lrcContent = '''[00:00.00]First line
+      const lrcContent = '''
+[00:00.00]First line
 
 [00:05.00]Second line
 
@@ -124,12 +128,12 @@ void main() {
     });
 
     test('handles special characters in lyrics', () {
-      const lrcContent = '[00:00.00]Line with special chars: @#\$%^&*()';
+      const lrcContent = r'[00:00.00]Line with special chars: @#$%^&*()';
 
       final result = LrcParser.parseLyrics(lrcContent);
 
       expect(result.syncText[0].text, contains('@'));
-      expect(result.syncText[0].text, contains('\$'));
+      expect(result.syncText[0].text, contains(r'$'));
     });
 
     test('trims whitespace from lyrics', () {

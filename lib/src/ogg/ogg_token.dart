@@ -84,13 +84,11 @@ class OggToken {
     );
   }
 
-  static OggHeaderType _parseHeaderType(int value) {
-    return OggHeaderType(
+  static OggHeaderType _parseHeaderType(int value) => OggHeaderType(
       continued: (value & 0x01) != 0,
       firstPage: (value & 0x02) != 0,
       lastPage: (value & 0x04) != 0,
     );
-  }
 
   static int uint32Le(List<int> bytes, [int offset = 0]) {
     _expectLength(bytes, offset, 4, 'unsigned 32-bit integer (LE)');

@@ -215,9 +215,7 @@ void main() {
   });
 }
 
-List<int> _buildId3v2Header() {
-  return <int>[0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
-}
+List<int> _buildId3v2Header() => <int>[0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
 List<int> _buildFlacFile({
   required List<int> streamInfo,
@@ -287,7 +285,7 @@ List<int> _buildStreamInfoBlock({required int totalSamples}) {
   streamInfo[2] = 0x10;
   streamInfo[3] = 0x00;
 
-  final sampleRateShifted = sampleRate << 4;
+  const sampleRateShifted = sampleRate << 4;
   streamInfo[10] = (sampleRateShifted >> 16) & 0xFF;
   streamInfo[11] = (sampleRateShifted >> 8) & 0xFF;
   streamInfo[12] =
@@ -364,26 +362,21 @@ List<int> _buildCueSheetBlock({
   return payload;
 }
 
-List<int> _uInt32Le(int value) {
-  return <int>[
+List<int> _uInt32Le(int value) => <int>[
     value & 0xFF,
     (value >> 8) & 0xFF,
     (value >> 16) & 0xFF,
     (value >> 24) & 0xFF,
   ];
-}
 
-List<int> _uInt32Be(int value) {
-  return <int>[
+List<int> _uInt32Be(int value) => <int>[
     (value >> 24) & 0xFF,
     (value >> 16) & 0xFF,
     (value >> 8) & 0xFF,
     value & 0xFF,
   ];
-}
 
-List<int> _uInt64Be(int value) {
-  return <int>[
+List<int> _uInt64Be(int value) => <int>[
     (value >> 56) & 0xFF,
     (value >> 48) & 0xFF,
     (value >> 40) & 0xFF,
@@ -393,7 +386,6 @@ List<int> _uInt64Be(int value) {
     (value >> 8) & 0xFF,
     value & 0xFF,
   ];
-}
 
 class _NonSeekTokenizer implements Tokenizer {
   @override

@@ -19,11 +19,11 @@ class FileDownloadError extends ParseError {
 
 /// Abstract base class for HTTP-based tokenizers.
 abstract class HttpBasedTokenizer extends Tokenizer {
+
+  HttpBasedTokenizer({required this.url, required this.fileInfo});
   final String url;
   @override
   final FileInfo? fileInfo;
-
-  HttpBasedTokenizer({required this.url, required this.fileInfo});
 
   /// Close any resources held by the tokenizer.
   void close();
@@ -34,15 +34,15 @@ abstract class HttpBasedTokenizer extends Tokenizer {
 /// This is the simplest approach and works with any HTTP server,
 /// but can be slow for large files.
 class HttpTokenizer extends HttpBasedTokenizer {
-  final Uint8List _bytes;
-  int _position = 0;
-  bool _isClosed = false;
 
   HttpTokenizer({
     required super.url,
     required super.fileInfo,
     required Uint8List bytes,
   }) : _bytes = bytes;
+  final Uint8List _bytes;
+  int _position = 0;
+  bool _isClosed = false;
 
   @override
   bool get canSeek => true;
@@ -164,10 +164,6 @@ class HttpTokenizer extends HttpBasedTokenizer {
 /// Efficient for formats where metadata is at the beginning of the file.
 /// Falls back to full download if Range requests aren't supported.
 class RangeTokenizer extends HttpBasedTokenizer {
-  final Uint8List _bytes;
-  int _position = 0;
-  bool _isClosed = false;
-  final int? _totalSize;
 
   RangeTokenizer({
     required super.url,
@@ -176,6 +172,10 @@ class RangeTokenizer extends HttpBasedTokenizer {
     int? totalSize,
   }) : _bytes = bytes,
        _totalSize = totalSize;
+  final Uint8List _bytes;
+  int _position = 0;
+  bool _isClosed = false;
+  final int? _totalSize;
 
   @override
   bool get canSeek => true;
@@ -338,15 +338,6 @@ class RangeTokenizer extends HttpBasedTokenizer {
 /// This is the most efficient for large files as it only fetches data
 /// that is actually read by the parser. It caches fetched chunks.
 class RandomAccessTokenizer extends HttpBasedTokenizer {
-  final HttpClient _client;
-  final Duration _timeout;
-  final int? _totalSize;
-  final int _chunkSize;
-
-  final Map<int, Uint8List> _cache = {};
-  int _position = 0;
-  bool _isClosed = false;
-  int _totalBytesFetched = 0;
 
   RandomAccessTokenizer({
     required super.url,
@@ -359,6 +350,15 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
        _timeout = timeout,
        _chunkSize = chunkSize,
        _totalSize = totalSize;
+  final HttpClient _client;
+  final Duration _timeout;
+  final int? _totalSize;
+  final int _chunkSize;
+
+  final Map<int, Uint8List> _cache = {};
+  int _position = 0;
+  bool _isClosed = false;
+  int _totalBytesFetched = 0;
 
   @override
   bool get canSeek => true;
@@ -562,15 +562,15 @@ enum ParseStrategy {
 
 /// Result of strategy detection.
 class StrategyInfo {
-  final ParseStrategy strategy;
-  final int? fileSize;
-  final bool supportsRange;
 
   StrategyInfo({
     required this.strategy,
     required this.fileSize,
     required this.supportsRange,
   });
+  final ParseStrategy strategy;
+  final int? fileSize;
+  final bool supportsRange;
 }
 
 /// Detect the best parsing strategy for a URL.

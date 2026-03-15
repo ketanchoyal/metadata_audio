@@ -211,8 +211,7 @@ List<int> _chunk(String id, List<int> payload) {
   return <int>[...ascii.encode(id), ..._u32be(payload.length), ...padded];
 }
 
-List<int> _sampleRateExtended80(int sampleRate) {
-  return <int>[
+List<int> _sampleRateExtended80(int sampleRate) => <int>[
     0x40,
     0x0E,
     (sampleRate >> 8) & 0xFF,
@@ -224,7 +223,6 @@ List<int> _sampleRateExtended80(int sampleRate) {
     0,
     0,
   ];
-}
 
 List<int> _buildId3v23Tag({required String title}) {
   final titlePayload = <int>[0x00, ...latin1.encode(title)];
@@ -246,27 +244,21 @@ List<int> _buildId3v23Tag({required String title}) {
   ];
 }
 
-List<int> _u16be(int value) {
-  return <int>[(value >> 8) & 0xFF, value & 0xFF];
-}
+List<int> _u16be(int value) => <int>[(value >> 8) & 0xFF, value & 0xFF];
 
-List<int> _u32be(int value) {
-  return <int>[
+List<int> _u32be(int value) => <int>[
     (value >> 24) & 0xFF,
     (value >> 16) & 0xFF,
     (value >> 8) & 0xFF,
     value & 0xFF,
   ];
-}
 
-List<int> _synchsafe(int value) {
-  return <int>[
+List<int> _synchsafe(int value) => <int>[
     (value >> 21) & 0x7F,
     (value >> 14) & 0x7F,
     (value >> 7) & 0x7F,
     value & 0x7F,
   ];
-}
 
 class _NonSeekTokenizer extends Tokenizer {
   @override

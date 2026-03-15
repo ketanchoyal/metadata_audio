@@ -201,7 +201,7 @@ List<int> _buildMatroskaMusepackFile() {
     const <int>[0x15, 0x49, 0xA9, 0x66],
     <int>[
       ..._element(const <int>[0x2A, 0xD7, 0xB1], _encodeUint(1000000)),
-      ..._element(const <int>[0x44, 0x89], _encodeFloat64(5000.0)),
+      ..._element(const <int>[0x44, 0x89], _encodeFloat64(5000)),
       ..._element(const <int>[0x57, 0x41], utf8.encode('mk-writer')),
     ],
   );
@@ -216,7 +216,7 @@ List<int> _buildMatroskaMusepackFile() {
       ..._element(
         const <int>[0xE1],
         <int>[
-          ..._element(const <int>[0xB5], _encodeFloat32(48000.0)),
+          ..._element(const <int>[0xB5], _encodeFloat32(48000)),
           ..._element(const <int>[0x9F], _encodeUint(2)),
         ],
       ),
@@ -304,7 +304,7 @@ List<int> _buildSv7Header({
 
   bytes.setRange(4, 8, _u32le(frameCount));
 
-  var word2b2 = (sampleFrequencyIndex & 0x03) << 6;
+  final word2b2 = (sampleFrequencyIndex & 0x03) << 6;
   bytes[10] = word2b2;
   var word2b3 = 0;
   if (intensityStereo) {
@@ -401,8 +401,7 @@ List<int> _apeTagFooter({
   required int size,
   required int fields,
   required int flags,
-}) {
-  return <int>[
+}) => <int>[
     ...ascii.encode('APETAGEX'),
     ..._u32le(2000),
     ..._u32le(size),
@@ -410,7 +409,6 @@ List<int> _apeTagFooter({
     ..._u32le(flags),
     ...List<int>.filled(8, 0),
   ];
-}
 
 List<int> _tagEntry({
   required int targetTypeValue,

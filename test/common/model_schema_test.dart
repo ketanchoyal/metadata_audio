@@ -34,7 +34,7 @@ void main() {
 
   group('Picture', () {
     test('creates Picture with format and data', () {
-      final picture = Picture(
+      const picture = Picture(
         format: 'image/jpeg',
         data: [1, 2, 3, 4, 5],
         description: 'Cover art',
@@ -45,7 +45,7 @@ void main() {
     });
 
     test('Picture with optional fields', () {
-      final picture = Picture(
+      const picture = Picture(
         format: 'image/png',
         data: [],
         type: 'Front',
@@ -56,7 +56,7 @@ void main() {
     });
 
     test('Picture toString includes format and size', () {
-      final picture = Picture(format: 'image/jpeg', data: [1, 2, 3]);
+      const picture = Picture(format: 'image/jpeg', data: [1, 2, 3]);
       expect(picture.toString(), contains('image/jpeg'));
       expect(picture.toString(), contains('3'));
     });
@@ -371,11 +371,11 @@ void main() {
     });
 
     test('CommonTags with pictures', () {
-      final picture = Picture(format: 'image/jpeg', data: [1, 2, 3]);
+      const picture = Picture(format: 'image/jpeg', data: [1, 2, 3]);
       const track = TrackNo();
       const disk = TrackNo();
       const movementIndex = TrackNo();
-      final tags = CommonTags(
+      const tags = CommonTags(
         track: track,
         disk: disk,
         movementIndex: movementIndex,
@@ -466,7 +466,7 @@ void main() {
     test('NativeTags is a Map type', () {
       const tag1 = Tag(id: 'test1', value: 'value1');
       const tag2 = Tag(id: 'test2', value: 'value2');
-      final Map<String, List<Tag>> nativeTags = {
+      final nativeTags = <String, List<Tag>>{
         'ID3v2': [tag1],
         'Vorbis': [tag2],
       };
@@ -504,7 +504,7 @@ void main() {
 
     test('AudioMetadata with native tags', () {
       const format = Format(container: 'flac');
-      final tag = const Tag(id: 'artist', value: 'The Beatles');
+      const tag = Tag(id: 'artist', value: 'The Beatles');
       final nativeTags = <String, List<Tag>>{
         'Vorbis': [tag],
       };

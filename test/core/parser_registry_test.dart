@@ -57,8 +57,7 @@ class TestParserLoader extends ParserLoader {
   final bool hasRandomAccessRequirements;
 
   @override
-  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
-    return const AudioMetadata(
+  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async => const AudioMetadata(
       format: Format(),
       native: {},
       common: CommonTags(
@@ -68,7 +67,6 @@ class TestParserLoader extends ParserLoader {
       ),
       quality: QualityInformation(),
     );
-  }
 }
 
 void main() {

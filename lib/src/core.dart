@@ -27,14 +27,14 @@ export 'package:audio_metadata/src/wavpack/wavpack_parser.dart';
 
 export 'tokenizer/http_tokenizers.dart'
     show
-        parseUrl,
         FileDownloadError,
+        HttpTokenizer,
         ParseStrategy,
+        RandomAccessTokenizer,
+        RangeTokenizer,
         StrategyInfo,
         detectStrategy,
-        HttpTokenizer,
-        RangeTokenizer,
-        RandomAccessTokenizer;
+        parseUrl;
 
 // Global parser factory instance (initialized by application code)
 late ParserFactory _parserFactory;

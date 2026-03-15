@@ -164,7 +164,5 @@ class AiffParser {
     return chunkSize;
   }
 
-  static String _decodeAscii(List<int> bytes) {
-    return ascii.decode(bytes, allowInvalid: true);
-  }
+  static String _decodeAscii(List<int> bytes) => ascii.decode(bytes, allowInvalid: true);
 }

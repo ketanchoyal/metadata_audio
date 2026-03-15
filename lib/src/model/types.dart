@@ -7,14 +7,14 @@ typedef MetadataObserver = void Function(MetadataEvent event);
 
 /// Tag representation with id and value
 class Tag {
+
+  /// Create a Tag
+  const Tag({required this.id, required this.value});
   /// Tag identifier
   final String id;
 
   /// Tag value
   final dynamic value;
-
-  /// Create a Tag
-  const Tag({required this.id, required this.value});
 
   @override
   String toString() => 'Tag(id: $id, value: $value)';
@@ -22,11 +22,11 @@ class Tag {
 
 /// Parser warning information
 class ParserWarning {
-  /// Warning message
-  final String message;
 
   /// Create a ParserWarning
   const ParserWarning({required this.message});
+  /// Warning message
+  final String message;
 
   @override
   String toString() => 'ParserWarning(message: $message)';
@@ -34,6 +34,15 @@ class ParserWarning {
 
 /// Picture/cover art information
 class Picture {
+
+  /// Create a Picture
+  const Picture({
+    required this.format,
+    required this.data,
+    this.description,
+    this.type,
+    this.name,
+  });
   /// Image MIME type (e.g., 'image/jpeg')
   final String format;
 
@@ -49,15 +58,6 @@ class Picture {
   /// File name
   final String? name;
 
-  /// Create a Picture
-  const Picture({
-    required this.format,
-    required this.data,
-    this.description,
-    this.type,
-    this.name,
-  });
-
   @override
   String toString() =>
       'Picture(format: $format, size: ${data.length}, description: $description)';
@@ -65,14 +65,14 @@ class Picture {
 
 /// Rating information
 class Rating {
+
+  /// Create a Rating
+  const Rating({this.source, this.rating});
   /// Rating source (typically an email address)
   final String? source;
 
   /// Rating value [0..1]
   final double? rating;
-
-  /// Create a Rating
-  const Rating({this.source, this.rating});
 
   @override
   String toString() => 'Rating(source: $source, rating: $rating)';
@@ -80,6 +80,9 @@ class Rating {
 
 /// Comment information
 class Comment {
+
+  /// Create a Comment
+  const Comment({this.descriptor, this.language, this.text});
   /// Optional descriptor/type
   final String? descriptor;
 
@@ -89,9 +92,6 @@ class Comment {
   /// Comment text
   final String? text;
 
-  /// Create a Comment
-  const Comment({this.descriptor, this.language, this.text});
-
   @override
   String toString() =>
       'Comment(descriptor: $descriptor, language: $language, text: $text)';
@@ -99,14 +99,14 @@ class Comment {
 
 /// Lyrics text with optional timestamp
 class LyricsText {
+
+  /// Create LyricsText
+  const LyricsText({required this.text, this.timestamp});
   /// Lyrics text content
   final String text;
 
   /// Optional timestamp in milliseconds
   final int? timestamp;
-
-  /// Create LyricsText
-  const LyricsText({required this.text, this.timestamp});
 
   @override
   String toString() {
@@ -117,6 +117,13 @@ class LyricsText {
 
 /// Synchronized lyrics tag
 class LyricsTag extends Comment {
+
+  /// Create LyricsTag
+  const LyricsTag({
+    required this.contentType, required this.timeStampFormat, required this.syncText, super.descriptor,
+    super.language,
+    super.text,
+  });
   /// Content type
   final String contentType;
 
@@ -126,16 +133,6 @@ class LyricsTag extends Comment {
   /// Synchronized lyrics
   final List<LyricsText> syncText;
 
-  /// Create LyricsTag
-  const LyricsTag({
-    super.descriptor,
-    super.language,
-    super.text,
-    required this.contentType,
-    required this.timeStampFormat,
-    required this.syncText,
-  });
-
   @override
   String toString() =>
       'LyricsTag(contentType: $contentType, syncLines: ${syncText.length})';
@@ -143,6 +140,15 @@ class LyricsTag extends Comment {
 
 /// Audio track information
 class AudioTrack {
+
+  /// Create AudioTrack
+  const AudioTrack({
+    this.samplingFrequency,
+    this.outputSamplingFrequency,
+    this.channels,
+    this.channelPositions,
+    this.bitDepth,
+  });
   /// Sampling frequency in Hz
   final int? samplingFrequency;
 
@@ -158,15 +164,6 @@ class AudioTrack {
   /// Bit depth
   final int? bitDepth;
 
-  /// Create AudioTrack
-  const AudioTrack({
-    this.samplingFrequency,
-    this.outputSamplingFrequency,
-    this.channels,
-    this.channelPositions,
-    this.bitDepth,
-  });
-
   @override
   String toString() =>
       'AudioTrack(freq: $samplingFrequency, channels: $channels, bitDepth: $bitDepth)';
@@ -174,6 +171,20 @@ class AudioTrack {
 
 /// Video track information
 class VideoTrack {
+
+  /// Create VideoTrack
+  const VideoTrack({
+    this.flagInterlaced,
+    this.stereoMode,
+    this.pixelWidth,
+    this.pixelHeight,
+    this.displayWidth,
+    this.displayHeight,
+    this.displayUnit,
+    this.aspectRatioType,
+    this.colourSpace,
+    this.gammaValue,
+  });
   /// Interlaced flag
   final bool? flagInterlaced;
 
@@ -204,20 +215,6 @@ class VideoTrack {
   /// Gamma value
   final double? gammaValue;
 
-  /// Create VideoTrack
-  const VideoTrack({
-    this.flagInterlaced,
-    this.stereoMode,
-    this.pixelWidth,
-    this.pixelHeight,
-    this.displayWidth,
-    this.displayHeight,
-    this.displayUnit,
-    this.aspectRatioType,
-    this.colourSpace,
-    this.gammaValue,
-  });
-
   @override
   String toString() =>
       'VideoTrack(${pixelWidth}x$pixelHeight, interlaced: $flagInterlaced)';
@@ -225,6 +222,20 @@ class VideoTrack {
 
 /// Track information
 class TrackInfo {
+
+  /// Create TrackInfo
+  const TrackInfo({
+    this.type,
+    this.codecName,
+    this.codecSettings,
+    this.flagEnabled,
+    this.flagDefault,
+    this.flagLacing,
+    this.name,
+    this.language,
+    this.audio,
+    this.video,
+  });
   /// Track type
   final String? type;
 
@@ -255,20 +266,6 @@ class TrackInfo {
   /// Video track info
   final VideoTrack? video;
 
-  /// Create TrackInfo
-  const TrackInfo({
-    this.type,
-    this.codecName,
-    this.codecSettings,
-    this.flagEnabled,
-    this.flagDefault,
-    this.flagLacing,
-    this.name,
-    this.language,
-    this.audio,
-    this.video,
-  });
-
   @override
   String toString() =>
       'TrackInfo(type: $type, codec: $codecName, lang: $language)';
@@ -276,14 +273,14 @@ class TrackInfo {
 
 /// URL reference
 class Url {
+
+  /// Create Url
+  const Url({required this.url, required this.description});
   /// URL string
   final String url;
 
   /// URL description
   final String description;
-
-  /// Create Url
-  const Url({required this.url, required this.description});
 
   @override
   String toString() => 'Url($url)';
@@ -291,6 +288,16 @@ class Url {
 
 /// Chapter information
 class Chapter {
+
+  /// Create Chapter
+  const Chapter({
+    required this.title, required this.start, this.id,
+    this.url,
+    this.sampleOffset,
+    this.end,
+    this.timeScale,
+    this.image,
+  });
   /// Internal chapter reference
   final String? id;
 
@@ -315,32 +322,20 @@ class Chapter {
   /// Chapter cover image
   final Picture? image;
 
-  /// Create Chapter
-  const Chapter({
-    this.id,
-    required this.title,
-    this.url,
-    this.sampleOffset,
-    required this.start,
-    this.end,
-    this.timeScale,
-    this.image,
-  });
-
   @override
   String toString() => 'Chapter(title: $title, start: $start, end: $end)';
 }
 
 /// Ratio with dB value
 class Ratio {
+
+  /// Create Ratio
+  const Ratio({required this.ratio, required this.dB});
   /// Ratio value [0..1]
   final double ratio;
 
   /// Decibel value
   final double dB;
-
-  /// Create Ratio
-  const Ratio({required this.ratio, required this.dB});
 
   @override
   String toString() => 'Ratio(ratio: $ratio, dB: $dB)';
@@ -348,14 +343,14 @@ class Ratio {
 
 /// TrackNo with number and total
 class TrackNo {
+
+  /// Create TrackNo
+  const TrackNo({this.no, this.of});
   /// Track number
   final int? no;
 
   /// Total number of tracks
   final int? of;
-
-  /// Create TrackNo
-  const TrackNo({this.no, this.of});
 
   @override
   String toString() => 'TrackNo($no${of != null ? '/$of' : ''})';
@@ -363,6 +358,32 @@ class TrackNo {
 
 /// Format information about the audio
 class Format {
+
+  /// Create Format
+  const Format({
+    this.container,
+    this.tagTypes = const [],
+    this.duration,
+    this.bitrate,
+    this.sampleRate,
+    this.bitsPerSample,
+    this.tool,
+    this.codec,
+    this.codecProfile,
+    this.lossless,
+    this.numberOfChannels,
+    this.numberOfSamples,
+    this.audioMD5,
+    this.chapters,
+    this.creationTime,
+    this.modificationTime,
+    this.trackGain,
+    this.trackPeakLevel,
+    this.albumGain,
+    this.hasAudio,
+    this.hasVideo,
+    this.trackInfo = const [],
+  });
   /// Container format (e.g., 'flac', 'mp3')
   final String? container;
 
@@ -429,32 +450,6 @@ class Format {
   /// Track information
   final List<TrackInfo> trackInfo;
 
-  /// Create Format
-  const Format({
-    this.container,
-    this.tagTypes = const [],
-    this.duration,
-    this.bitrate,
-    this.sampleRate,
-    this.bitsPerSample,
-    this.tool,
-    this.codec,
-    this.codecProfile,
-    this.lossless,
-    this.numberOfChannels,
-    this.numberOfSamples,
-    this.audioMD5,
-    this.chapters,
-    this.creationTime,
-    this.modificationTime,
-    this.trackGain,
-    this.trackPeakLevel,
-    this.albumGain,
-    this.hasAudio,
-    this.hasVideo,
-    this.trackInfo = const [],
-  });
-
   @override
   String toString() =>
       'Format(container: $container, codec: $codec, duration: $duration, bitrate: $bitrate)';
@@ -462,6 +457,126 @@ class Format {
 
 /// Common tags (standardized metadata)
 class CommonTags {
+
+  /// Create CommonTags
+  const CommonTags({
+    required this.track,
+    required this.disk,
+    required this.movementIndex,
+    this.year,
+    this.title,
+    this.artist,
+    this.artists,
+    this.albumartist,
+    this.albumartists,
+    this.album,
+    this.date,
+    this.originaldate,
+    this.originalyear,
+    this.releasedate,
+    this.comment,
+    this.genre,
+    this.picture,
+    this.composer,
+    this.lyrics,
+    this.albumsort,
+    this.titlesort,
+    this.work,
+    this.artistsort,
+    this.albumartistsort,
+    this.composersort,
+    this.lyricist,
+    this.writer,
+    this.conductor,
+    this.remixer,
+    this.arranger,
+    this.engineer,
+    this.publisher,
+    this.producer,
+    this.djmixer,
+    this.mixer,
+    this.technician,
+    this.label,
+    this.grouping,
+    this.subtitle,
+    this.description,
+    this.longDescription,
+    this.discsubtitle,
+    this.totaltracks,
+    this.totaldiscs,
+    this.movementTotal,
+    this.compilation,
+    this.rating,
+    this.bpm,
+    this.mood,
+    this.media,
+    this.catalognumber,
+    this.tvShow,
+    this.tvShowSort,
+    this.tvSeason,
+    this.tvEpisode,
+    this.tvEpisodeId,
+    this.tvNetwork,
+    this.podcast,
+    this.podcasturl,
+    this.releasestatus,
+    this.releasetype,
+    this.releasecountry,
+    this.script,
+    this.language,
+    this.copyright,
+    this.license,
+    this.encodedby,
+    this.encodersettings,
+    this.gapless,
+    this.barcode,
+    this.isrc,
+    this.asin,
+    this.musicbrainz_recordingid,
+    this.musicbrainz_trackid,
+    this.musicbrainz_albumid,
+    this.musicbrainz_artistid,
+    this.musicbrainz_albumartistid,
+    this.musicbrainz_releasegroupid,
+    this.musicbrainz_workid,
+    this.musicbrainz_trmid,
+    this.musicbrainz_discid,
+    this.acoustid_id,
+    this.acoustid_fingerprint,
+    this.musicip_puid,
+    this.musicip_fingerprint,
+    this.website,
+    this.performerInstrument,
+    this.averageLevel,
+    this.peakLevel,
+    this.notes,
+    this.originalalbum,
+    this.originalartist,
+    this.discogs_artist_id,
+    this.discogs_release_id,
+    this.discogs_label_id,
+    this.discogs_master_release_id,
+    this.discogs_votes,
+    this.discogs_rating,
+    this.replaygain_track_gain_ratio,
+    this.replaygain_track_peak_ratio,
+    this.replaygain_track_gain,
+    this.replaygain_track_peak,
+    this.replaygain_album_gain,
+    this.replaygain_album_peak,
+    this.replaygain_undo,
+    this.replaygain_track_minmax,
+    this.replaygain_album_minmax,
+    this.key,
+    this.category,
+    this.hdVideo,
+    this.keywords,
+    this.movement,
+    this.podcastId,
+    this.showMovement,
+    this.stik,
+    this.playCounter,
+  });
   /// Track number
   final TrackNo track;
 
@@ -810,126 +925,6 @@ class CommonTags {
   /// Play counter
   final int? playCounter;
 
-  /// Create CommonTags
-  const CommonTags({
-    required this.track,
-    required this.disk,
-    required this.movementIndex,
-    this.year,
-    this.title,
-    this.artist,
-    this.artists,
-    this.albumartist,
-    this.albumartists,
-    this.album,
-    this.date,
-    this.originaldate,
-    this.originalyear,
-    this.releasedate,
-    this.comment,
-    this.genre,
-    this.picture,
-    this.composer,
-    this.lyrics,
-    this.albumsort,
-    this.titlesort,
-    this.work,
-    this.artistsort,
-    this.albumartistsort,
-    this.composersort,
-    this.lyricist,
-    this.writer,
-    this.conductor,
-    this.remixer,
-    this.arranger,
-    this.engineer,
-    this.publisher,
-    this.producer,
-    this.djmixer,
-    this.mixer,
-    this.technician,
-    this.label,
-    this.grouping,
-    this.subtitle,
-    this.description,
-    this.longDescription,
-    this.discsubtitle,
-    this.totaltracks,
-    this.totaldiscs,
-    this.movementTotal,
-    this.compilation,
-    this.rating,
-    this.bpm,
-    this.mood,
-    this.media,
-    this.catalognumber,
-    this.tvShow,
-    this.tvShowSort,
-    this.tvSeason,
-    this.tvEpisode,
-    this.tvEpisodeId,
-    this.tvNetwork,
-    this.podcast,
-    this.podcasturl,
-    this.releasestatus,
-    this.releasetype,
-    this.releasecountry,
-    this.script,
-    this.language,
-    this.copyright,
-    this.license,
-    this.encodedby,
-    this.encodersettings,
-    this.gapless,
-    this.barcode,
-    this.isrc,
-    this.asin,
-    this.musicbrainz_recordingid,
-    this.musicbrainz_trackid,
-    this.musicbrainz_albumid,
-    this.musicbrainz_artistid,
-    this.musicbrainz_albumartistid,
-    this.musicbrainz_releasegroupid,
-    this.musicbrainz_workid,
-    this.musicbrainz_trmid,
-    this.musicbrainz_discid,
-    this.acoustid_id,
-    this.acoustid_fingerprint,
-    this.musicip_puid,
-    this.musicip_fingerprint,
-    this.website,
-    this.performerInstrument,
-    this.averageLevel,
-    this.peakLevel,
-    this.notes,
-    this.originalalbum,
-    this.originalartist,
-    this.discogs_artist_id,
-    this.discogs_release_id,
-    this.discogs_label_id,
-    this.discogs_master_release_id,
-    this.discogs_votes,
-    this.discogs_rating,
-    this.replaygain_track_gain_ratio,
-    this.replaygain_track_peak_ratio,
-    this.replaygain_track_gain,
-    this.replaygain_track_peak,
-    this.replaygain_album_gain,
-    this.replaygain_album_peak,
-    this.replaygain_undo,
-    this.replaygain_track_minmax,
-    this.replaygain_album_minmax,
-    this.key,
-    this.category,
-    this.hdVideo,
-    this.keywords,
-    this.movement,
-    this.podcastId,
-    this.showMovement,
-    this.stik,
-    this.playCounter,
-  });
-
   @override
   String toString() =>
       'CommonTags(title: $title, artist: $artist, album: $album)';
@@ -937,11 +932,11 @@ class CommonTags {
 
 /// Quality information with parser warnings
 class QualityInformation {
-  /// Parser warnings
-  final List<ParserWarning> warnings;
 
   /// Create QualityInformation
   const QualityInformation({this.warnings = const []});
+  /// Parser warnings
+  final List<ParserWarning> warnings;
 
   @override
   String toString() => 'QualityInformation(warnings: ${warnings.length})';
@@ -954,19 +949,6 @@ typedef NativeTags = Map<String, List<Tag>>;
 ///
 /// Corresponds to the FileInfo concept used for parsing hints
 class FileInfo {
-  /// File path of the audio file
-  final String? path;
-
-  /// MIME type hint for the audio file
-  ///
-  /// Example: 'audio/mpeg', 'audio/flac'
-  final String? mimeType;
-
-  /// File size in bytes
-  final int? size;
-
-  /// Source URL if the audio data comes from a stream or remote source
-  final String? url;
 
   /// Create FileInfo from file metadata
   const FileInfo({this.path, this.mimeType, this.size, this.url});
@@ -980,12 +962,46 @@ class FileInfo {
   /// Create FileInfo with MIME type hint
   factory FileInfo.withMimeType(String? path, String mimeType) =>
       FileInfo(path: path, mimeType: mimeType);
+  /// File path of the audio file
+  final String? path;
+
+  /// MIME type hint for the audio file
+  ///
+  /// Example: 'audio/mpeg', 'audio/flac'
+  final String? mimeType;
+
+  /// File size in bytes
+  final int? size;
+
+  /// Source URL if the audio data comes from a stream or remote source
+  final String? url;
 }
 
 /// Options for parsing audio metadata
 ///
 /// Controls parsing behavior and what metadata to extract
 class ParseOptions {
+
+  /// Create ParseOptions with custom parsing configuration
+  const ParseOptions({
+    this.skipCovers = false,
+    this.skipPostHeaders = false,
+    this.includeChapters = false,
+    this.duration = false,
+    this.observer,
+  });
+
+  /// Create ParseOptions with all parsing enabled
+  factory ParseOptions.all({MetadataObserver? observer}) =>
+      ParseOptions(includeChapters: true, duration: true, observer: observer);
+
+  /// Create ParseOptions for minimal parsing (fast mode)
+  factory ParseOptions.minimal() =>
+      const ParseOptions(skipCovers: true, skipPostHeaders: true);
+
+  /// Create ParseOptions for metadata-only parsing
+  factory ParseOptions.metadataOnly() =>
+      const ParseOptions(skipPostHeaders: true);
   /// Skip reading cover art / picture tags
   ///
   /// Default: false
@@ -1012,27 +1028,6 @@ class ParseOptions {
   ///
   /// Called as metadata is discovered during parsing
   final MetadataObserver? observer;
-
-  /// Create ParseOptions with custom parsing configuration
-  const ParseOptions({
-    this.skipCovers = false,
-    this.skipPostHeaders = false,
-    this.includeChapters = false,
-    this.duration = false,
-    this.observer,
-  });
-
-  /// Create ParseOptions with all parsing enabled
-  factory ParseOptions.all({MetadataObserver? observer}) =>
-      ParseOptions(includeChapters: true, duration: true, observer: observer);
-
-  /// Create ParseOptions for minimal parsing (fast mode)
-  factory ParseOptions.minimal() =>
-      const ParseOptions(skipCovers: true, skipPostHeaders: true);
-
-  /// Create ParseOptions for metadata-only parsing
-  factory ParseOptions.metadataOnly() =>
-      const ParseOptions(skipPostHeaders: true);
 }
 
 /// Event representing a metadata change during parsing
@@ -1043,6 +1038,14 @@ class MetadataEvent {
 
 /// Complete audio metadata including format, native tags, and common tags
 class AudioMetadata {
+
+  /// Create AudioMetadata
+  const AudioMetadata({
+    required this.format,
+    required this.native,
+    required this.common,
+    required this.quality,
+  });
   /// Audio format information
   final Format format;
 
@@ -1054,14 +1057,6 @@ class AudioMetadata {
 
   /// Quality information including warnings
   final QualityInformation quality;
-
-  /// Create AudioMetadata
-  const AudioMetadata({
-    required this.format,
-    required this.native,
-    required this.common,
-    required this.quality,
-  });
 
   @override
   String toString() =>

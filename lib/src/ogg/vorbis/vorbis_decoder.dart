@@ -39,17 +39,13 @@ class VorbisCommentHeader {
 class VorbisDecoder {
   static const int commonHeaderLength = 7;
 
-  static bool isIdentificationHeader(List<int> data) {
-    return data.length >= commonHeaderLength &&
+  static bool isIdentificationHeader(List<int> data) => data.length >= commonHeaderLength &&
         data[0] == 0x01 &&
         _ascii(data, 1, 6) == 'vorbis';
-  }
 
-  static bool isCommentHeader(List<int> data) {
-    return data.length >= commonHeaderLength &&
+  static bool isCommentHeader(List<int> data) => data.length >= commonHeaderLength &&
         data[0] == 0x03 &&
         _ascii(data, 1, 6) == 'vorbis';
-  }
 
   static VorbisIdentificationHeader parseIdentificationHeader(List<int> data) {
     if (!isIdentificationHeader(data) ||
@@ -57,7 +53,7 @@ class VorbisDecoder {
       throw const FormatException('Invalid Vorbis identification header');
     }
 
-    final offset = commonHeaderLength;
+    const offset = commonHeaderLength;
     return VorbisIdentificationHeader(
       version: OggToken.uint32Le(data, offset),
       channelMode: data[offset + 4],

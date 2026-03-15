@@ -92,7 +92,7 @@ class AsfParser {
             tokenizer.readBytes(AsfHeaderExtensionObject.length),
           );
 
-          final alreadyConsumed = AsfHeaderExtensionObject.length;
+          const alreadyConsumed = AsfHeaderExtensionObject.length;
           final toParse = extHeader.extensionDataSize;
           final extra = header.payloadSize - alreadyConsumed - toParse;
           if (extra < 0) {

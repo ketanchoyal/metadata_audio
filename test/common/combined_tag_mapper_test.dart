@@ -5,7 +5,6 @@ import 'package:test/test.dart';
 
 /// Mock tag mapper for testing
 class MockId3v2Mapper extends GenericTagMapper {
-  late CaseInsensitiveTagMap<String> _tagMap;
 
   MockId3v2Mapper() {
     _tagMap = CaseInsensitiveTagMap<String>();
@@ -14,6 +13,7 @@ class MockId3v2Mapper extends GenericTagMapper {
     _tagMap['TALB'] = 'album';
     _tagMap['TRCK'] = 'track';
   }
+  late CaseInsensitiveTagMap<String> _tagMap;
 
   @override
   CaseInsensitiveTagMap<String> get tagMap => _tagMap;
@@ -21,7 +21,6 @@ class MockId3v2Mapper extends GenericTagMapper {
 
 /// Mock Vorbis tag mapper for testing
 class MockVorbisMapper extends GenericTagMapper {
-  late CaseInsensitiveTagMap<String> _tagMap;
 
   MockVorbisMapper() {
     _tagMap = CaseInsensitiveTagMap<String>();
@@ -30,6 +29,7 @@ class MockVorbisMapper extends GenericTagMapper {
     _tagMap['ALBUM'] = 'album';
     _tagMap['TRACKNUMBER'] = 'track';
   }
+  late CaseInsensitiveTagMap<String> _tagMap;
 
   @override
   CaseInsensitiveTagMap<String> get tagMap => _tagMap;
@@ -37,7 +37,6 @@ class MockVorbisMapper extends GenericTagMapper {
 
 /// Mock MP4 tag mapper for testing
 class MockMp4Mapper extends GenericTagMapper {
-  late CaseInsensitiveTagMap<String> _tagMap;
 
   MockMp4Mapper() {
     _tagMap = CaseInsensitiveTagMap<String>();
@@ -46,6 +45,7 @@ class MockMp4Mapper extends GenericTagMapper {
     _tagMap['©alb'] = 'album';
     _tagMap['trkn'] = 'track';
   }
+  late CaseInsensitiveTagMap<String> _tagMap;
 
   @override
   CaseInsensitiveTagMap<String> get tagMap => _tagMap;
@@ -378,7 +378,7 @@ void main() {
       });
 
       test('can catch UnknownFormatException specifically', () {
-        bool caught = false;
+        var caught = false;
         try {
           combined.mapTags('undefined_format', {});
         } on UnknownFormatException {

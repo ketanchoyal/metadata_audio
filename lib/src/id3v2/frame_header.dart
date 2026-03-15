@@ -7,23 +7,18 @@ import 'package:audio_metadata/src/id3v2/id3v2_token.dart';
 typedef WarningCollector = void Function(String warning);
 
 class FrameStatusFlags {
-  final bool tagAlterPreservation;
-  final bool fileAlterPreservation;
-  final bool readOnly;
 
   const FrameStatusFlags({
     required this.tagAlterPreservation,
     required this.fileAlterPreservation,
     required this.readOnly,
   });
+  final bool tagAlterPreservation;
+  final bool fileAlterPreservation;
+  final bool readOnly;
 }
 
 class FrameFormatFlags {
-  final bool groupingIdentity;
-  final bool compression;
-  final bool encryption;
-  final bool unsynchronisation;
-  final bool dataLengthIndicator;
 
   const FrameFormatFlags({
     required this.groupingIdentity,
@@ -32,21 +27,26 @@ class FrameFormatFlags {
     required this.unsynchronisation,
     required this.dataLengthIndicator,
   });
+  final bool groupingIdentity;
+  final bool compression;
+  final bool encryption;
+  final bool unsynchronisation;
+  final bool dataLengthIndicator;
 }
 
 class FrameFlags {
-  final FrameStatusFlags status;
-  final FrameFormatFlags format;
 
   const FrameFlags({required this.status, required this.format});
+  final FrameStatusFlags status;
+  final FrameFormatFlags format;
 }
 
 class FrameHeader {
+
+  const FrameHeader({required this.id, required this.length, this.flags});
   final String id;
   final int length;
   final FrameFlags? flags;
-
-  const FrameHeader({required this.id, required this.length, this.flags});
 
   bool get isPadding => id.trim().isEmpty || id.codeUnits.every((c) => c == 0);
 
@@ -87,7 +87,7 @@ class FrameHeader {
     WarningCollector? warningCollector,
   ) {
     if (bytes.length < 6) {
-      throw Id3v2ContentError('ID3v2.2 frame header must be 6 bytes');
+      throw const Id3v2ContentError('ID3v2.2 frame header must be 6 bytes');
     }
 
     final id = ascii.decode(bytes.sublist(0, 3), allowInvalid: true);
@@ -126,8 +126,7 @@ class FrameHeader {
     return FrameHeader(id: id, length: length, flags: flags);
   }
 
-  static FrameFlags _readFrameFlags(int statusByte, int formatByte) {
-    return FrameFlags(
+  static FrameFlags _readFrameFlags(int statusByte, int formatByte) => FrameFlags(
       status: FrameStatusFlags(
         tagAlterPreservation: _bit(statusByte, 6),
         fileAlterPreservation: _bit(statusByte, 5),
@@ -141,7 +140,6 @@ class FrameHeader {
         dataLengthIndicator: _bit(formatByte, 0),
       ),
     );
-  }
 
   static bool _bit(int value, int bitIndexFromLsb) =>
       (value & (1 << bitIndexFromLsb)) != 0;

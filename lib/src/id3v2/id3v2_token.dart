@@ -5,26 +5,22 @@ import 'dart:convert';
 typedef Id3v2MajorVersion = int;
 
 class Id3v2ContentError implements Exception {
-  final String message;
 
   const Id3v2ContentError(this.message);
+  final String message;
 
   @override
   String toString() => 'Id3v2ContentError: $message';
 }
 
 class Id3v2Version {
-  final Id3v2MajorVersion major;
-  final int revision;
 
   const Id3v2Version({required this.major, required this.revision});
+  final Id3v2MajorVersion major;
+  final int revision;
 }
 
 class Id3v2HeaderFlags {
-  final bool unsynchronisation;
-  final bool isExtendedHeader;
-  final bool expIndicator;
-  final bool footer;
 
   const Id3v2HeaderFlags({
     required this.unsynchronisation,
@@ -32,13 +28,13 @@ class Id3v2HeaderFlags {
     required this.expIndicator,
     required this.footer,
   });
+  final bool unsynchronisation;
+  final bool isExtendedHeader;
+  final bool expIndicator;
+  final bool footer;
 }
 
 class Id3v2Header {
-  final String fileIdentifier;
-  final Id3v2Version version;
-  final Id3v2HeaderFlags flags;
-  final int size;
 
   const Id3v2Header({
     required this.fileIdentifier,
@@ -46,25 +42,27 @@ class Id3v2Header {
     required this.flags,
     required this.size,
   });
+  final String fileIdentifier;
+  final Id3v2Version version;
+  final Id3v2HeaderFlags flags;
+  final int size;
 }
 
 class TextEncodingInfo {
-  final String encoding;
-  final bool bom;
 
   const TextEncodingInfo({required this.encoding, this.bom = false});
+  final String encoding;
+  final bool bom;
 }
 
 class TextHeader {
-  final TextEncodingInfo encoding;
-  final String language;
 
   const TextHeader({required this.encoding, required this.language});
+  final TextEncodingInfo encoding;
+  final String language;
 }
 
 class SyncTextHeader extends TextHeader {
-  final int timeStampFormat;
-  final int contentType;
 
   const SyncTextHeader({
     required super.encoding,
@@ -72,6 +70,8 @@ class SyncTextHeader extends TextHeader {
     required this.timeStampFormat,
     required this.contentType,
   });
+  final int timeStampFormat;
+  final int contentType;
 }
 
 class ID3v2Token {

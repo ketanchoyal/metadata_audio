@@ -73,7 +73,7 @@ void main() {
         expect(metadata.format.hasAudio, isTrue);
         expect(metadata.format.hasVideo, isFalse);
 
-        expect(metadata.common.title, 'Don\'t Bring Me Down');
+        expect(metadata.common.title, "Don't Bring Me Down");
         expect(metadata.common.artist, 'Electric Light Orchestra');
         expect(metadata.common.albumartist, 'Electric Light Orchestra');
         expect(metadata.common.album, 'Discovery');
@@ -146,7 +146,7 @@ List<int> _buildSyntheticAsf() {
   final contentDescription = _asfObject(
     AsfGuid.contentDescriptionObject,
     _contentDescriptionBody(
-      title: 'Don\'t Bring Me Down',
+      title: "Don't Bring Me Down",
       author: 'Electric Light Orchestra',
       copyright: '(C) 2001',
       description: 'Synthetic ASF fixture',
@@ -211,15 +211,12 @@ List<int> _buildSyntheticAsf() {
   ];
 }
 
-List<int> _asfObject(AsfGuid guid, List<int> payload) {
-  return <int>[...guid.toBytes(), ..._u64le(payload.length + 24), ...payload];
-}
+List<int> _asfObject(AsfGuid guid, List<int> payload) => <int>[...guid.toBytes(), ..._u64le(payload.length + 24), ...payload];
 
 List<int> _filePropertiesBody({
   required int playDuration100ns,
   required int prerollMs,
-}) {
-  return <int>[
+}) => <int>[
     ...List<int>.filled(16, 0),
     ..._u64le(0),
     ..._u64le(0),
@@ -232,11 +229,8 @@ List<int> _filePropertiesBody({
     ..._u32le(0),
     ..._u32le(192639),
   ];
-}
 
-List<int> _streamPropertiesBody() {
-  return <int>[...AsfGuid.audioMedia.toBytes(), ...List<int>.filled(16, 0)];
-}
+List<int> _streamPropertiesBody() => <int>[...AsfGuid.audioMedia.toBytes(), ...List<int>.filled(16, 0)];
 
 List<int> _codecListBody() {
   final codecName = _utf16('Windows Media Audio 9.1');
@@ -277,8 +271,7 @@ List<int> _contentDescriptionBody({
   ];
 }
 
-List<int> _extendedContentDescriptionBody(List<_ExtAttr> attrs) {
-  return <int>[
+List<int> _extendedContentDescriptionBody(List<_ExtAttr> attrs) => <int>[
     ..._u16le(attrs.length),
     for (final attr in attrs) ...[
       ..._u16le(_utf16(attr.name).length),
@@ -288,19 +281,15 @@ List<int> _extendedContentDescriptionBody(List<_ExtAttr> attrs) {
       ...attr.value,
     ],
   ];
-}
 
-List<int> _headerExtensionBody(List<int> extensionObjects) {
-  return <int>[
+List<int> _headerExtensionBody(List<int> extensionObjects) => <int>[
     ...AsfGuid.headerObject.toBytes(),
     ..._u16le(6),
     ..._u32le(extensionObjects.length),
     ...extensionObjects,
   ];
-}
 
-List<int> _metadataBody(List<_MetadataRecord> records) {
-  return <int>[
+List<int> _metadataBody(List<_MetadataRecord> records) => <int>[
     ..._u16le(records.length),
     for (final record in records) ...[
       ..._u16le(0),
@@ -312,7 +301,6 @@ List<int> _metadataBody(List<_MetadataRecord> records) {
       ...record.data,
     ],
   ];
-}
 
 List<int> _wmPicturePayload() {
   final imageData = <int>[0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3, 4];
@@ -332,18 +320,14 @@ List<int> _wmPicturePayload() {
   ];
 }
 
-List<int> _u16le(int value) {
-  return <int>[value & 0xFF, (value >> 8) & 0xFF];
-}
+List<int> _u16le(int value) => <int>[value & 0xFF, (value >> 8) & 0xFF];
 
-List<int> _u32le(int value) {
-  return <int>[
+List<int> _u32le(int value) => <int>[
     value & 0xFF,
     (value >> 8) & 0xFF,
     (value >> 16) & 0xFF,
     (value >> 24) & 0xFF,
   ];
-}
 
 List<int> _u64le(int value) {
   final lower = value & 0xFFFFFFFF;

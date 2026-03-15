@@ -171,15 +171,13 @@ class Apev2Token {
     );
   }
 
-  static ApeTagFlags parseTagFlags(int flags) {
-    return ApeTagFlags(
+  static ApeTagFlags parseTagFlags(int flags) => ApeTagFlags(
       containsHeader: _isBitSet(flags, 31),
       containsFooter: _isBitSet(flags, 30),
       isHeader: _isBitSet(flags, 29),
       readOnly: _isBitSet(flags, 0),
       dataType: (flags & 6) >> 1,
     );
-  }
 
   static bool _isBitSet(int value, int bit) => (value & (1 << bit)) != 0;
 

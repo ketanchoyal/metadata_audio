@@ -35,7 +35,7 @@ class AsfObjectHeader {
     }
 
     return AsfObjectHeader(
-      objectId: AsfGuid.fromBytes(bytes, 0),
+      objectId: AsfGuid.fromBytes(bytes),
       objectSize: readUint64Le(bytes, 16).toInt(),
     );
   }
@@ -60,7 +60,7 @@ class AsfTopLevelHeader extends AsfObjectHeader {
     }
 
     return AsfTopLevelHeader(
-      objectId: AsfGuid.fromBytes(bytes, 0),
+      objectId: AsfGuid.fromBytes(bytes),
       objectSize: readUint64Le(bytes, 16).toInt(),
       numberOfHeaderObjects: readUint32Le(bytes, 24),
     );
@@ -109,7 +109,7 @@ class AsfStreamPropertiesObject {
       );
     }
 
-    final mediaTypeGuid = AsfGuid.fromBytes(bytes, 0);
+    final mediaTypeGuid = AsfGuid.fromBytes(bytes);
 
     return AsfStreamPropertiesObject(
       streamType: AsfGuid.decodeMediaType(mediaTypeGuid),
@@ -139,7 +139,7 @@ class AsfHeaderExtensionObject {
     }
 
     return AsfHeaderExtensionObject(
-      reserved1: AsfGuid.fromBytes(bytes, 0),
+      reserved1: AsfGuid.fromBytes(bytes),
       reserved2: readUint16Le(bytes, 16),
       extensionDataSize: readUint32Le(bytes, 18),
     );
@@ -354,9 +354,7 @@ List<AsfNativeTag> parseMetadataObject(List<int> bytes) {
   return tags;
 }
 
-List<AsfNativeTag> parseMetadataLibraryObject(List<int> bytes) {
-  return parseMetadataObject(bytes);
-}
+List<AsfNativeTag> parseMetadataLibraryObject(List<int> bytes) => parseMetadataObject(bytes);
 
 AsfNativeTag _postProcessTag(String name, int valueType, List<int> data) {
   if (name == 'WM/Picture') {

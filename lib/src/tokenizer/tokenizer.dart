@@ -4,11 +4,11 @@ import 'package:audio_metadata/src/model/types.dart';
 
 /// Exception thrown when attempting an unsupported operation on a tokenizer
 class TokenizerException implements Exception {
-  /// Error message
-  final String message;
 
   /// Create a TokenizerException
   TokenizerException(this.message);
+  /// Error message
+  final String message;
 
   @override
   String toString() => 'TokenizerException: $message';

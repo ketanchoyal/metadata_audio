@@ -1,6 +1,6 @@
+import 'package:audio_metadata/src/common/case_insensitive_tag_map.dart';
 import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
 import 'package:audio_metadata/src/common/generic_tag_mapper.dart';
-import 'package:audio_metadata/src/common/case_insensitive_tag_map.dart';
 import 'package:audio_metadata/src/common/metadata_collector.dart';
 import 'package:audio_metadata/src/model/types.dart';
 import 'package:test/test.dart';
@@ -86,7 +86,7 @@ void main() {
     });
 
     test('should collect warnings with metadata and tags', () {
-      collector.setFormat(container: 'mp3', duration: 180.0);
+      collector.setFormat(container: 'mp3', duration: 180);
       collector.addNativeTag('test', 'title', 'Test Title');
       collector.addWarning('Corrupted frame detected');
       collector.addWarning('Invalid encoding');
@@ -103,7 +103,7 @@ void main() {
     });
 
     test('should create ParserWarning objects with proper message', () {
-      final warningMsg = 'Test parser warning';
+      const warningMsg = 'Test parser warning';
       collector.addWarning(warningMsg);
 
       final metadata = collector.toAudioMetadata();

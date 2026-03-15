@@ -1,6 +1,15 @@
 library;
 
 class AdtsFrameHeader {
+
+  const AdtsFrameHeader({
+    required this.version,
+    required this.profileIndex,
+    required this.sampleRateIndex,
+    required this.channelConfigIndex,
+    required this.frameLength,
+    required this.protectionAbsent,
+  });
   static const List<String> _audioObjectTypes = <String>[
     'AAC Main',
     'AAC LC',
@@ -44,15 +53,6 @@ class AdtsFrameHeader {
   final int channelConfigIndex;
   final int frameLength;
   final bool protectionAbsent;
-
-  const AdtsFrameHeader({
-    required this.version,
-    required this.profileIndex,
-    required this.sampleRateIndex,
-    required this.channelConfigIndex,
-    required this.frameLength,
-    required this.protectionAbsent,
-  });
 
   static AdtsFrameHeader? parse(List<int> bytes) {
     if (bytes.length < 7) {

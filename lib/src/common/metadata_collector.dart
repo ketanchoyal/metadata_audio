@@ -30,6 +30,15 @@ import 'package:audio_metadata/src/model/types.dart';
 /// print(metadata.common.title); // 'Song Title'
 /// ```
 class MetadataCollector {
+
+  /// Create a MetadataCollector with a tag mapper.
+  ///
+  /// Parameters:
+  /// - [tagMapper]: CombinedTagMapper to convert native to common tags
+  MetadataCollector(this._tagMapper) {
+    // Initialize with default empty format
+    _format = const Format();
+  }
   static const Map<String, int> _formatPriority = {
     'ID3v1': 1,
     'ID3v2.2': 2,
@@ -55,15 +64,6 @@ class MetadataCollector {
 
   /// Collected warnings
   final List<String> _warnings = [];
-
-  /// Create a MetadataCollector with a tag mapper.
-  ///
-  /// Parameters:
-  /// - [tagMapper]: CombinedTagMapper to convert native to common tags
-  MetadataCollector(this._tagMapper) {
-    // Initialize with default empty format
-    _format = const Format();
-  }
 
   /// Sets the audio format information.
   ///

@@ -267,7 +267,7 @@ class OggParser {
     for (var i = 0; i < tracks.length; i++) {
       final track = tracks[i];
       // Prefer INDEX 01 if available, otherwise use track offset
-      int trackOffset = track.offset;
+      var trackOffset = track.offset;
       if (track.indices.isNotEmpty) {
         final idx01 = track.indices.where((idx) => idx.number == 1).firstOrNull;
         if (idx01 != null) {

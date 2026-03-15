@@ -23,12 +23,10 @@ class OggFlacMetadataBlock {
 }
 
 class OggFlacStream {
-  static bool isFirstPage(List<int> data) {
-    return data.length >= 13 &&
+  static bool isFirstPage(List<int> data) => data.length >= 13 &&
         data[0] == 0x7F &&
         _ascii(data, 1, 4) == 'FLAC' &&
         _ascii(data, 9, 4) == 'fLaC';
-  }
 
   static OggFlacMetadataBlock parseFirstPage(List<int> data) {
     if (!isFirstPage(data)) {
@@ -44,7 +42,7 @@ class OggFlacStream {
     }
 
     final header = FlacToken.parseBlockHeader(data);
-    final payloadOffset = FlacToken.blockHeaderLength;
+    const payloadOffset = FlacToken.blockHeaderLength;
     if (payloadOffset + header.length > data.length) {
       throw const FormatException('Unexpected end of Ogg-FLAC metadata block');
     }

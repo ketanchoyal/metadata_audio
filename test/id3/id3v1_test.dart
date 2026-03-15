@@ -1,17 +1,13 @@
-import 'package:audio_metadata/src/id3v1/id3v1_parser.dart';
-import 'package:audio_metadata/src/id3v1/id3v1_tag_map.dart';
 import 'package:audio_metadata/src/common/combined_tag_mapper.dart';
 import 'package:audio_metadata/src/common/metadata_collector.dart';
+import 'package:audio_metadata/src/id3v1/id3v1_parser.dart';
+import 'package:audio_metadata/src/id3v1/id3v1_tag_map.dart';
 import 'package:audio_metadata/src/model/types.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 /// Mock tokenizer for testing ID3v1 parser.
 class MockTokenizer implements Tokenizer {
-  final List<int> _data;
-  int _position = 0;
-  final bool _canSeek;
-  final FileInfo? _fileInfo;
 
   MockTokenizer({
     required List<int> data,
@@ -20,6 +16,10 @@ class MockTokenizer implements Tokenizer {
   }) : _data = data,
        _canSeek = canSeek,
        _fileInfo = fileInfo;
+  final List<int> _data;
+  int _position = 0;
+  final bool _canSeek;
+  final FileInfo? _fileInfo;
 
   @override
   bool get canSeek => _canSeek;
@@ -122,25 +122,25 @@ void main() {
 
         // Set title: "Test Title"
         const title = 'Test Title';
-        for (int i = 0; i < title.length; i++) {
+        for (var i = 0; i < title.length; i++) {
           id3v1Block[3 + i] = title.codeUnitAt(i);
         }
 
         // Set artist: "Test Artist"
         const artist = 'Test Artist';
-        for (int i = 0; i < artist.length; i++) {
+        for (var i = 0; i < artist.length; i++) {
           id3v1Block[33 + i] = artist.codeUnitAt(i);
         }
 
         // Set album: "Test Album"
         const album = 'Test Album';
-        for (int i = 0; i < album.length; i++) {
+        for (var i = 0; i < album.length; i++) {
           id3v1Block[63 + i] = album.codeUnitAt(i);
         }
 
         // Set year: "2024"
         const year = '2024';
-        for (int i = 0; i < year.length; i++) {
+        for (var i = 0; i < year.length; i++) {
           id3v1Block[93 + i] = year.codeUnitAt(i);
         }
 
@@ -185,7 +185,7 @@ void main() {
 
         // Set title
         const title = 'Song Title';
-        for (int i = 0; i < title.length; i++) {
+        for (var i = 0; i < title.length; i++) {
           id3v1Block[3 + i] = title.codeUnitAt(i);
         }
 
@@ -297,7 +297,7 @@ void main() {
 
         final tokenizer = MockTokenizer(
           data: id3v1Block,
-          fileInfo: const FileInfo(size: null),
+          fileInfo: const FileInfo(),
         );
 
         final parser = Id3v1Parser(metadata: metadata, tokenizer: tokenizer);
@@ -329,7 +329,7 @@ void main() {
 
         // Set "Test" followed by nulls
         const test = 'Test';
-        for (int i = 0; i < test.length; i++) {
+        for (var i = 0; i < test.length; i++) {
           block[i] = test.codeUnitAt(i);
         }
 
@@ -348,7 +348,7 @@ void main() {
 
         // Set "Test   " (with trailing spaces)
         const test = 'Test   ';
-        for (int i = 0; i < test.length; i++) {
+        for (var i = 0; i < test.length; i++) {
           block[i] = test.codeUnitAt(i);
         }
         // Should trim to "Test"

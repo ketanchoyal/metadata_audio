@@ -14,21 +14,6 @@ import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
 /// - Peeking without advancing position
 /// - Efficient RandomAccessFile operations
 class FileTokenizer extends Tokenizer {
-  /// Underlying file handle for random access operations
-  final RandomAccessFile _file;
-
-  /// File information metadata
-  @override
-  final FileInfo? fileInfo;
-
-  /// Current read position in bytes
-  int _position = 0;
-
-  /// Cache for peek operations (single byte)
-  int? _peekedByte;
-
-  /// Flag indicating if a byte has been peeked
-  bool _hasPeekedByte = false;
 
   /// Create a FileTokenizer from a file path
   ///
@@ -49,6 +34,21 @@ class FileTokenizer extends Tokenizer {
       fileInfo = _createFileInfo(file.path) {
     _validateFile();
   }
+  /// Underlying file handle for random access operations
+  final RandomAccessFile _file;
+
+  /// File information metadata
+  @override
+  final FileInfo? fileInfo;
+
+  /// Current read position in bytes
+  int _position = 0;
+
+  /// Cache for peek operations (single byte)
+  int? _peekedByte;
+
+  /// Flag indicating if a byte has been peeked
+  bool _hasPeekedByte = false;
 
   /// Close the underlying file handle
   ///
@@ -301,6 +301,14 @@ class FileTokenizer extends Tokenizer {
 /// - Peeking without advancing position
 /// - Efficient in-memory byte operations
 class BytesTokenizer extends Tokenizer {
+
+  /// Create a BytesTokenizer from a Uint8List
+  ///
+  /// [bytes]: The byte buffer to read from
+  /// [fileInfo]: Optional file information (auto-created with buffer size if not provided)
+  BytesTokenizer(Uint8List bytes, {FileInfo? fileInfo})
+    : _bytes = bytes,
+      fileInfo = fileInfo ?? FileInfo(size: bytes.length);
   /// Underlying byte buffer
   final Uint8List _bytes;
 
@@ -310,14 +318,6 @@ class BytesTokenizer extends Tokenizer {
 
   /// Current read position in bytes
   int _position = 0;
-
-  /// Create a BytesTokenizer from a Uint8List
-  ///
-  /// [bytes]: The byte buffer to read from
-  /// [fileInfo]: Optional file information (auto-created with buffer size if not provided)
-  BytesTokenizer(Uint8List bytes, {FileInfo? fileInfo})
-    : _bytes = bytes,
-      fileInfo = fileInfo ?? FileInfo(size: bytes.length);
 
   @override
   bool get canSeek => true;

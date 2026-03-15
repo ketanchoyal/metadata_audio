@@ -151,10 +151,8 @@ class Mp4Parser {
     }
   }
 
-  bool _isTrackScopedAtom(Mp4Atom atom) {
-    return atom.atomPath.startsWith('moov.trak.') ||
+  bool _isTrackScopedAtom(Mp4Atom atom) => atom.atomPath.startsWith('moov.trak.') ||
         atom.atomPath.contains('.trak.');
-  }
 
   void _parseFtyp(List<int> payload) {
     final brands = AtomToken.parseFtypBrands(payload);

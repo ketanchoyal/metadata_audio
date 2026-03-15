@@ -8,9 +8,9 @@ import 'package:audio_metadata/src/id3v2/id3v2_parser.dart';
 import 'package:audio_metadata/src/model/types.dart';
 import 'package:audio_metadata/src/mpeg/adts_frame_header.dart';
 import 'package:audio_metadata/src/mpeg/replay_gain_data_format.dart';
+import 'package:audio_metadata/src/mpeg/xing_tag.dart';
 import 'package:audio_metadata/src/parse_error.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
-import 'package:audio_metadata/src/mpeg/xing_tag.dart';
 
 class MpegContentError extends ParseError {
   MpegContentError(super.message);
@@ -20,6 +20,12 @@ class MpegContentError extends ParseError {
 }
 
 class MpegParser {
+
+  MpegParser({
+    required this.metadata,
+    required this.tokenizer,
+    required this.options,
+  });
   final MetadataCollector metadata;
   final Tokenizer tokenizer;
   final ParseOptions options;
@@ -32,12 +38,6 @@ class MpegParser {
   final List<int> _bitrates = <int>[];
   bool _hasId3v1 = false;
   int _adtsTotalDataLength = 0;
-
-  MpegParser({
-    required this.metadata,
-    required this.tokenizer,
-    required this.options,
-  });
 
   Future<void> parse() async {
     metadata.setFormat(lossless: false, hasAudio: true, hasVideo: false);
@@ -252,12 +252,10 @@ class MpegParser {
     return cursor + 9;
   }
 
-  int _readUint32Be(List<int> data, int offset) {
-    return (data[offset] << 24) |
+  int _readUint32Be(List<int> data, int offset) => (data[offset] << 24) |
         (data[offset + 1] << 16) |
         (data[offset + 2] << 8) |
         data[offset + 3];
-  }
 
   bool _parseMpegAudioFrame() {
     final frameStart = tokenizer.position;
@@ -495,7 +493,18 @@ class MpegParser {
 enum MpegChannelMode { stereo, jointStereo, dualChannel, mono }
 
 class MpegFrameHeader {
-  static const List<double?> _versionTable = <double?>[2.5, null, 2.0, 1.0];
+
+  const MpegFrameHeader({
+    required this.version,
+    required this.layer,
+    required this.isProtectedByCrc,
+    required this.bitrate,
+    required this.sampleRate,
+    required this.padding,
+    required this.channelMode,
+    required this.frameLength,
+  });
+  static const List<double?> _versionTable = <double?>[2.5, null, 2, 1];
   static const List<int> _layerTable = <int>[0, 3, 2, 1];
   static const List<MpegChannelMode> _channelModeTable = <MpegChannelMode>[
     MpegChannelMode.stereo,
@@ -535,17 +544,6 @@ class MpegFrameHeader {
   final bool padding;
   final MpegChannelMode channelMode;
   final int frameLength;
-
-  const MpegFrameHeader({
-    required this.version,
-    required this.layer,
-    required this.isProtectedByCrc,
-    required this.bitrate,
-    required this.sampleRate,
-    required this.padding,
-    required this.channelMode,
-    required this.frameLength,
-  });
 
   String get codec {
     final versionLabel = version == version.roundToDouble()
@@ -674,7 +672,7 @@ class MpegFrameHeader {
 enum _FrameSyncKind { mpeg, adts }
 
 class _FrameSyncResult {
-  final _FrameSyncKind kind;
 
   const _FrameSyncResult({required this.kind});
+  final _FrameSyncKind kind;
 }

@@ -11,9 +11,9 @@ import 'package:audio_metadata/src/common/generic_tag_mapper.dart';
 
 /// Exception thrown when attempting to map tags for an unknown format.
 class UnknownFormatException implements Exception {
-  final String formatId;
 
   UnknownFormatException(this.formatId);
+  final String formatId;
 
   @override
   String toString() =>

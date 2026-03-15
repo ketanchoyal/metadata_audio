@@ -17,9 +17,7 @@ class MockTagMapper extends GenericTagMapper {
   }
 
   @override
-  String? mapTag(String tag, dynamic value) {
-    return tagMap[tag];
-  }
+  String? mapTag(String tag, dynamic value) => tagMap[tag];
 
   @override
   Map<String, dynamic> mapTags(Map<String, dynamic> nativeTags) {
@@ -56,9 +54,7 @@ class MockVorbisMapper extends GenericTagMapper {
   }
 
   @override
-  String? mapTag(String tag, dynamic value) {
-    return tagMap[tag];
-  }
+  String? mapTag(String tag, dynamic value) => tagMap[tag];
 
   @override
   Map<String, dynamic> mapTags(Map<String, dynamic> nativeTags) {
@@ -290,7 +286,7 @@ void main() {
     test('should build complete AudioMetadata', () {
       collector.setFormat(
         container: 'mp3',
-        duration: 240.0,
+        duration: 240,
         bitrate: 320000,
         codec: 'MPEG-1 Layer 3',
       );

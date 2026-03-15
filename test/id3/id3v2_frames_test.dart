@@ -106,7 +106,7 @@ void main() {
 
   group('FrameParser', () {
     test('parses common text frame (TIT2)', () {
-      final parser = FrameParser(3);
+      const parser = FrameParser(3);
       final payload = <int>[0x00, ...latin1.encode('Song Title')];
 
       final value = parser.readData(payload, 'TIT2');
@@ -115,7 +115,7 @@ void main() {
     });
 
     test('parses multi-value text frame (TPE1) in ID3v2.3', () {
-      final parser = FrameParser(3);
+      const parser = FrameParser(3);
       final payload = <int>[0x00, ...latin1.encode('Artist 1/Artist 2')];
 
       final value = parser.readData(payload, 'TPE1') as List<String>;
@@ -124,7 +124,7 @@ void main() {
     });
 
     test('parses user text frame (TXXX)', () {
-      final parser = FrameParser(4);
+      const parser = FrameParser(4);
       final payload = <int>[
         0x03,
         ...utf8.encode('SOURCE'),
@@ -139,7 +139,7 @@ void main() {
     });
 
     test('parses comment frame (COMM) with UTF-16 text', () {
-      final parser = FrameParser(3);
+      const parser = FrameParser(3);
       final descriptor = _utf16LeWithBom('desc');
       final text = _utf16LeWithBom('Hello comment');
 
@@ -160,7 +160,7 @@ void main() {
     });
 
     test('parses APIC attached picture frame', () {
-      final parser = FrameParser(3);
+      const parser = FrameParser(3);
       final payload = <int>[
         0x00,
         ...ascii.encode('image/jpeg'),
@@ -182,7 +182,7 @@ void main() {
     });
 
     test('parses ID3v2.2 PIC frame', () {
-      final parser = FrameParser(2);
+      const parser = FrameParser(2);
       final payload = <int>[
         0x00,
         ...ascii.encode('JPG'),

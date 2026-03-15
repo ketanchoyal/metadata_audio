@@ -195,7 +195,7 @@ class DsdiffParser {
     }
 
     final format = metadata.format;
-    if (format.lossless == true &&
+    if ((format.lossless ?? false) &&
         format.sampleRate != null &&
         format.numberOfChannels != null &&
         format.bitsPerSample != null) {

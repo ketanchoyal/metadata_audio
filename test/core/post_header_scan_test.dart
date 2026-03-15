@@ -50,9 +50,9 @@ void main() {
           // Arrange
           final tokenizer = MockTokenizer(
             canSeek: true,
-            fileInfo: FileInfo(size: 1000),
+            fileInfo: const FileInfo(size: 1000),
           );
-          final options = ParseOptions(skipPostHeaders: true);
+          const options = ParseOptions(skipPostHeaders: true);
 
           // Act - should not throw
           await scanPostHeaders(tokenizer, options);
@@ -67,9 +67,9 @@ void main() {
           // Arrange
           final tokenizer = MockTokenizer(
             canSeek: false,
-            fileInfo: FileInfo(size: 1000),
+            fileInfo: const FileInfo(size: 1000),
           );
-          final options = ParseOptions(skipPostHeaders: true);
+          const options = ParseOptions(skipPostHeaders: true);
 
           // Act - should not throw
           await scanPostHeaders(tokenizer, options);
@@ -84,9 +84,9 @@ void main() {
           // Arrange
           final tokenizer = MockTokenizer(
             canSeek: true,
-            fileInfo: FileInfo(size: 1000),
+            fileInfo: const FileInfo(size: 1000),
           );
-          final options = ParseOptions(skipPostHeaders: false);
+          const options = ParseOptions();
 
           // Act - should not throw (placeholder implementation)
           await scanPostHeaders(tokenizer, options);
@@ -101,9 +101,9 @@ void main() {
           // Arrange
           final tokenizer = MockTokenizer(
             canSeek: false,
-            fileInfo: FileInfo(size: 1000),
+            fileInfo: const FileInfo(size: 1000),
           );
-          final options = ParseOptions(skipPostHeaders: false);
+          const options = ParseOptions();
 
           // Act - should not throw (gracefully continues without scan)
           await scanPostHeaders(tokenizer, options);
@@ -118,9 +118,9 @@ void main() {
         // Arrange
         final seekableTokenizer = MockTokenizer(
           canSeek: true,
-          fileInfo: FileInfo(size: 5000),
+          fileInfo: const FileInfo(size: 5000),
         );
-        final options = ParseOptions(skipPostHeaders: false);
+        const options = ParseOptions();
 
         // Act - should not throw
         await scanPostHeaders(seekableTokenizer, options);
@@ -132,9 +132,9 @@ void main() {
         // Arrange
         final nonSeekableTokenizer = MockTokenizer(
           canSeek: false,
-          fileInfo: FileInfo(size: 5000),
+          fileInfo: const FileInfo(size: 5000),
         );
-        final options = ParseOptions(skipPostHeaders: false);
+        const options = ParseOptions();
 
         // Act - should not throw
         await scanPostHeaders(nonSeekableTokenizer, options);
@@ -155,7 +155,7 @@ void main() {
           for (final (skip, seek) in testCases) {
             final tokenizer = MockTokenizer(
               canSeek: seek,
-              fileInfo: FileInfo(size: 1000),
+              fileInfo: const FileInfo(size: 1000),
             );
             final options = ParseOptions(skipPostHeaders: skip);
 
@@ -171,25 +171,25 @@ void main() {
         // Seekable: should proceed with scan
         final seekable = MockTokenizer(
           canSeek: true,
-          fileInfo: FileInfo(size: 1000),
+          fileInfo: const FileInfo(size: 1000),
         );
-        await scanPostHeaders(seekable, ParseOptions(skipPostHeaders: false));
+        await scanPostHeaders(seekable, const ParseOptions());
 
         // Non-seekable: should skip scan gracefully
         final nonSeekable = MockTokenizer(
           canSeek: false,
-          fileInfo: FileInfo(size: 1000),
+          fileInfo: const FileInfo(size: 1000),
         );
         await scanPostHeaders(
           nonSeekable,
-          ParseOptions(skipPostHeaders: false),
+          const ParseOptions(),
         );
       });
     });
 
     group('default ParseOptions', () {
       test('default ParseOptions has skipPostHeaders=false', () {
-        final options = ParseOptions();
+        const options = ParseOptions();
         expect(options.skipPostHeaders, isFalse);
       });
 
@@ -211,8 +211,8 @@ void main() {
 
     group('edge cases', () {
       test('handles tokenizer with no fileInfo', () async {
-        final tokenizer = MockTokenizer(canSeek: true, fileInfo: null);
-        final options = ParseOptions(skipPostHeaders: false);
+        final tokenizer = MockTokenizer(canSeek: true);
+        const options = ParseOptions();
 
         // Should not throw even without fileInfo
         await scanPostHeaders(tokenizer, options);
@@ -221,9 +221,9 @@ void main() {
       test('handles empty fileInfo', () async {
         final tokenizer = MockTokenizer(
           canSeek: true,
-          fileInfo: FileInfo(size: 0),
+          fileInfo: const FileInfo(size: 0),
         );
-        final options = ParseOptions(skipPostHeaders: false);
+        const options = ParseOptions();
 
         // Should handle zero-length files gracefully
         await scanPostHeaders(tokenizer, options);
@@ -232,9 +232,9 @@ void main() {
       test('handles large files', () async {
         final tokenizer = MockTokenizer(
           canSeek: true,
-          fileInfo: FileInfo(size: 1000000000), // 1GB file
+          fileInfo: const FileInfo(size: 1000000000), // 1GB file
         );
-        final options = ParseOptions(skipPostHeaders: false);
+        const options = ParseOptions();
 
         // Should handle large files
         await scanPostHeaders(tokenizer, options);
@@ -247,9 +247,9 @@ void main() {
         () async {
           final tokenizer = MockTokenizer(
             canSeek: true,
-            fileInfo: FileInfo(size: 1000),
+            fileInfo: const FileInfo(size: 1000),
           );
-          final options = ParseOptions(skipPostHeaders: false);
+          const options = ParseOptions();
 
           // Should complete without error
           await scanPostHeaders(tokenizer, options);

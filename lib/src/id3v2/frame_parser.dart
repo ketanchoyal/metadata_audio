@@ -6,10 +6,10 @@ import 'package:audio_metadata/src/id3v2/id3v2_token.dart';
 import 'package:audio_metadata/src/model/types.dart';
 
 class FrameParser {
-  final Id3v2MajorVersion majorVersion;
-  final void Function(String warning)? warningCollector;
 
   const FrameParser(this.majorVersion, {this.warningCollector});
+  final Id3v2MajorVersion majorVersion;
+  final void Function(String warning)? warningCollector;
 
   dynamic readData(
     List<int> bytes,
@@ -92,8 +92,8 @@ class FrameParser {
   }
 
   Comment _parseCommentFrame(List<int> bytes) {
-    final header = ID3v2Token.parseTextHeader(bytes, 0);
-    int offset = 4;
+    final header = ID3v2Token.parseTextHeader(bytes);
+    var offset = 4;
 
     final descriptorValue = _readNullTerminatedString(
       bytes.sublist(offset),
@@ -156,7 +156,7 @@ class FrameParser {
 
   Map<String, dynamic> _parseUfidFrame(List<int> bytes) {
     // Find null terminator for owner identifier
-    int nullIndex = bytes.indexWhere((b) => b == 0);
+    final nullIndex = bytes.indexWhere((b) => b == 0);
     if (nullIndex <= 0) {
       return {'owner': '', 'identifier': <int>[]};
     }
@@ -318,15 +318,15 @@ class FrameParser {
 }
 
 class _NullTerminatedText {
-  final String text;
-  final int len;
 
   const _NullTerminatedText({required this.text, required this.len});
+  final String text;
+  final int len;
 }
 
 class _IdentifierAndData {
-  final String id;
-  final List<int> data;
 
   const _IdentifierAndData({required this.id, required this.data});
+  final String id;
+  final List<int> data;
 }

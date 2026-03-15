@@ -217,6 +217,15 @@ const genres = [
 ///
 /// Contains parsed ID3v1 tag data from a 128-byte block.
 class _Id3v1Header {
+
+  _Id3v1Header({
+    required this.header,
+    required this.zeroByte, required this.track, required this.genre, this.title,
+    this.artist,
+    this.album,
+    this.year,
+    this.comment,
+  });
   final String header;
   final String? title;
   final String? artist;
@@ -226,18 +235,6 @@ class _Id3v1Header {
   final int zeroByte;
   final int track;
   final int genre;
-
-  _Id3v1Header({
-    required this.header,
-    this.title,
-    this.artist,
-    this.album,
-    this.year,
-    this.comment,
-    required this.zeroByte,
-    required this.track,
-    required this.genre,
-  });
 }
 
 /// Parser for ID3v1 metadata tags.
@@ -255,14 +252,14 @@ class _Id3v1Header {
 /// - Bytes 125-126: Track number (ID3v1.1 only), stored as: [0, track_number]
 /// - Byte 127: Genre (1 byte, unsigned)
 class Id3v1Parser {
+
+  /// Create an ID3v1Parser.
+  Id3v1Parser({required this.metadata, required this.tokenizer});
   static const int id3v1Size = 128;
   static const String id3v1Header = 'TAG';
 
   final MetadataCollector metadata;
   final Tokenizer tokenizer;
-
-  /// Create an ID3v1Parser.
-  Id3v1Parser({required this.metadata, required this.tokenizer});
 
   /// Parse ID3v1 tag from tokenizer.
   ///
@@ -353,7 +350,7 @@ class Id3v1Parser {
     // ID3v1.1 has track number in bytes 125-126
     // Byte 125 is a null byte separator, byte 126 is the track number
     final zeroByte = block[125];
-    int track = 0;
+    var track = 0;
     if (zeroByte == 0 && block[126] != 0) {
       // ID3v1.1 format with track number
       track = block[126];
@@ -392,8 +389,8 @@ class Id3v1Parser {
     final bytes = block.sublist(offset, offset + length);
 
     // Find the first null byte (string terminator in ID3v1)
-    int endIndex = bytes.length;
-    for (int i = 0; i < bytes.length; i++) {
+    var endIndex = bytes.length;
+    for (var i = 0; i < bytes.length; i++) {
       if (bytes[i] == 0) {
         endIndex = i;
         break;

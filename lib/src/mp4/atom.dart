@@ -36,9 +36,7 @@ class Mp4Atom {
     '<id>',
   };
 
-  bool get isContainer {
-    return _containerAtoms.contains(header.name);
-  }
+  bool get isContainer => _containerAtoms.contains(header.name);
 
   static Future<Mp4Atom> readAtom(
     Tokenizer tokenizer,
