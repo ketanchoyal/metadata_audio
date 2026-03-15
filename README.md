@@ -235,9 +235,9 @@ cd comparison && npm run compare
 
 ## Additional Information
 
-- **Issues**: [Report issues on GitHub](https://github.com/ketanchoyal/audio-metadata-dart/issues)
+- **Issues**: [Report issues on GitHub](https://github.com/ketanchoyal/audio-metadata/issues)
 - **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
-- **Repository**: [github.com/ketanchoyal/audio-metadata-dart](https://github.com/ketanchoyal/audio-metadata-dart)
+- **Repository**: [github.com/ketanchoyal/audio-metadata](https://github.com/ketanchoyal/audio-metadata)
 
 ---
 

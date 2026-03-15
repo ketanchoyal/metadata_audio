@@ -5,9 +5,9 @@ description: |
   WAV, AIFF, APE, ASF, Matroska, and more. Ported from music-metadata with 
   architecture parity and TDD approach.
 version: 0.1.0
-repository: https://github.com/ketanchoyal/audio-metadata-dart
-homepage: https://github.com/ketanchoyal/audio-metadata-dart
-issue_tracker: https://github.com/ketanchoyal/audio-metadata-dart/issues
+repository: https://github.com/ketanchoyal/audio-metadata
+homepage: https://github.com/ketanchoyal/audio-metadata
+issue_tracker: https://github.com/ketanchoyal/audio-metadata/issues
 
 environment:
   sdk: ^3.10.7

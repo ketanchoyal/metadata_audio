@@ -95,7 +95,7 @@ These issues have been fixed:
 
 ```bash
 # Run comparison
-cd /Users/ketanchoyal/CascadeProjects/audio-metadata-dart
+cd /Users/ketanchoyal/CascadeProjects/audio-metadata
 dart run tool/compare_metadata.dart > /tmp/dart_output.json
 cd comparison && npm run test:ts > /tmp/ts_output.json
 diff -u /tmp/ts_output.json /tmp/dart_output.json
