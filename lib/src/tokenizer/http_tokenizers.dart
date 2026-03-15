@@ -7,12 +7,11 @@ import 'dart:typed_data';
 import 'package:audio_metadata/src/core.dart';
 import 'package:audio_metadata/src/model/types.dart';
 import 'package:audio_metadata/src/parse_error.dart';
-import 'package:audio_metadata/src/tokenizer/io_tokenizers.dart';
 import 'package:audio_metadata/src/tokenizer/tokenizer.dart';
 
 /// Error thrown when downloading a file from URL fails.
 class FileDownloadError extends ParseError {
-  FileDownloadError(String message) : super(message);
+  FileDownloadError(super.message);
 
   @override
   String get name => 'FileDownloadError';
@@ -21,6 +20,7 @@ class FileDownloadError extends ParseError {
 /// Abstract base class for HTTP-based tokenizers.
 abstract class HttpBasedTokenizer extends Tokenizer {
   final String url;
+  @override
   final FileInfo? fileInfo;
 
   HttpBasedTokenizer({required this.url, required this.fileInfo});
@@ -418,23 +418,14 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     }
   }
 
-  /// Ensure chunk containing position is loaded.
-  Future<void> _ensureChunkLoaded(int position) async {
-    if (_isClosed) throw TokenizerException('Tokenizer is closed');
-
-    final chunkIndex = position ~/ _chunkSize;
-    if (_cache.containsKey(chunkIndex)) return;
-
-    await _fetchChunk(chunkIndex);
-  }
-
   /// Fetch a chunk from the server.
   Future<void> _fetchChunk(int chunkIndex) async {
     final start = chunkIndex * _chunkSize;
-    final end = _totalSize != null
-        ? (start + _chunkSize < _totalSize!
+    final totalSize = _totalSize;
+    final end = totalSize != null
+        ? (start + _chunkSize < totalSize
               ? start + _chunkSize - 1
-              : _totalSize! - 1)
+              : totalSize - 1)
         : start + _chunkSize - 1;
 
     try {
@@ -525,7 +516,8 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     if (newPosition < 0) {
       throw TokenizerException('Invalid seek position');
     }
-    if (_totalSize != null && newPosition > _totalSize!) {
+    final totalSize = _totalSize;
+    if (totalSize != null && newPosition > totalSize) {
       throw TokenizerException('Seek beyond file size');
     }
     _position = newPosition;

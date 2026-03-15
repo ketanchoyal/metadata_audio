@@ -128,13 +128,13 @@ class LyricsTag extends Comment {
 
   /// Create LyricsTag
   const LyricsTag({
-    String? descriptor,
-    String? language,
-    String? text,
+    super.descriptor,
+    super.language,
+    super.text,
     required this.contentType,
     required this.timeStampFormat,
     required this.syncText,
-  }) : super(descriptor: descriptor, language: language, text: text);
+  });
 
   @override
   String toString() =>
