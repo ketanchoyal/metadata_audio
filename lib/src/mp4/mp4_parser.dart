@@ -6,6 +6,7 @@ import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/atom.dart';
 import 'package:metadata_audio/src/mp4/atom_token.dart';
+import 'package:metadata_audio/src/tokenizer/http_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class Mp4Parser {
@@ -38,6 +39,34 @@ class Mp4Parser {
             'Error at offset=${tokenizer.position}: box.id=0',
           );
           break;
+        }
+
+        // For HTTP-based tokenizers, prefetch the entire moov atom
+        // since it can be much larger than the initial prefetch window
+        // (e.g. audiobooks often have 5-10MB moov atoms)
+        if (probeName == 'moov' && tokenizer is HttpBasedTokenizer) {
+          var moovSize = (probe[0] << 24) |
+              (probe[1] << 16) |
+              (probe[2] << 8) |
+              probe[3];
+          if (moovSize == 1) {
+            // Extended size: read 16 bytes to get the 64-bit size
+            try {
+              final extProbe = tokenizer.peekBytes(16);
+              moovSize = 0;
+              for (var i = 8; i < 16; i++) {
+                moovSize = (moovSize << 8) | extProbe[i];
+              }
+            } on TokenizerException catch (_) {
+              moovSize = 0;
+            }
+          }
+          if (moovSize > 0) {
+            await (tokenizer as HttpBasedTokenizer).prefetchRange(
+              tokenizer.position,
+              tokenizer.position + moovSize,
+            );
+          }
         }
 
         final atom = await Mp4Atom.readAtom(
@@ -137,7 +166,7 @@ class Mp4Parser {
         return;
       case 'mdat':
         _audioLengthInBytes = payloadLength;
-        if (!_tryParseChaptersFromMdat(payloadLength)) {
+        if (!await _tryParseChaptersFromMdat(payloadLength)) {
           tokenizer.skip(payloadLength);
         }
         return;
@@ -151,8 +180,9 @@ class Mp4Parser {
     }
   }
 
-  bool _isTrackScopedAtom(Mp4Atom atom) => atom.atomPath.startsWith('moov.trak.') ||
-        atom.atomPath.contains('.trak.');
+  bool _isTrackScopedAtom(Mp4Atom atom) =>
+      atom.atomPath.startsWith('moov.trak.') ||
+      atom.atomPath.contains('.trak.');
 
   void _parseFtyp(List<int> payload) {
     final brands = AtomToken.parseFtypBrands(payload);
@@ -496,7 +526,7 @@ class Mp4Parser {
     metadata.setFormat(hasAudio: _hasAudioTrack, hasVideo: _hasVideoTrack);
   }
 
-  bool _tryParseChaptersFromMdat(int payloadLength) {
+  Future<bool> _tryParseChaptersFromMdat(int payloadLength) async {
     if (!options.includeChapters) {
       return false;
     }
@@ -519,7 +549,7 @@ class Mp4Parser {
     }
 
     final chapterTrack = chapterTracks.single;
-    final chapters = _parseChapterTrack(
+    final chapters = await _parseChapterTrack(
       chapterTrack,
       chapterOwnerTrack,
       payloadLength,
@@ -532,11 +562,11 @@ class Mp4Parser {
     return true;
   }
 
-  List<Chapter>? _parseChapterTrack(
+  Future<List<Chapter>?> _parseChapterTrack(
     _TrackDescription chapterTrack,
     _TrackDescription referencedTrack,
     int payloadLength,
-  ) {
+  ) async {
     if (chapterTrack.chunkOffsetTable.isEmpty) {
       return null;
     }
@@ -551,6 +581,53 @@ class Mp4Parser {
     }
     if (referencedTrack.timeScale == null || referencedTrack.timeScale! <= 0) {
       return null;
+    }
+
+    // Calculate all chapter data ranges for prefetching
+    final chapterRanges = <(int, int)>[];
+    var tempRemaining = payloadLength;
+    var virtualPosition = tokenizer.position;
+    for (
+      var i = 0;
+      i < chapterTrack.chunkOffsetTable.length && tempRemaining > 0;
+      i++
+    ) {
+      final chunkOffset = chapterTrack.chunkOffsetTable[i];
+      final skipLength = chunkOffset - virtualPosition;
+      final sampleSize = chapterTrack.sampleSize! > 0
+          ? chapterTrack.sampleSize!
+          : chapterTrack.sampleSizeTable[i];
+      if (skipLength >= 0 &&
+          sampleSize >= 0 &&
+          tempRemaining >= skipLength + sampleSize) {
+        chapterRanges.add((chunkOffset, chunkOffset + sampleSize));
+        tempRemaining -= skipLength + sampleSize;
+        virtualPosition = chunkOffset + sampleSize;
+      }
+    }
+
+    // Prefetch individual chapter data ranges for HTTP-based tokenizers.
+    // We fetch each range individually in small batches rather than the entire
+    // min-to-max span, since chapter data may be scattered across a huge
+    // mdat atom (e.g. 300MB+) and we only need the small title samples.
+    if (chapterRanges.isNotEmpty) {
+      if (tokenizer case final HttpBasedTokenizer httpTokenizer) {
+        try {
+          // Batch prefetch to avoid overwhelming the server
+          const batchSize = 4;
+          for (var i = 0; i < chapterRanges.length; i += batchSize) {
+            final batch = chapterRanges.skip(i).take(batchSize);
+            await Future.wait(
+              batch.map(
+                (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
+              ),
+            );
+          }
+        } on Exception catch (e) {
+          metadata.addWarning('Failed to prefetch chapter data: $e');
+          return null;
+        }
+      }
     }
 
     var remaining = payloadLength;

@@ -54,7 +54,9 @@ async function parseFile(relativePath: string): Promise<TestResult> {
   }
 
   try {
-    const metadata = await mm.parseFile(filePath);
+    const metadata = await mm.parseFile(filePath, {
+      includeChapters: true,
+    });
     const chapters = metadata.format.chapters?.map((chapter) => ({
       ...(chapter.id != null ? { id: chapter.id } : {}),
       title: chapter.title,

@@ -227,12 +227,19 @@ List<int> _buildSyntheticMp4WithChapters() {
       <int>[1, 1],
     ]),
   );
+  final chapterStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[2, 1000],
+    ]),
+  );
   final chapterStsz = _atom(
     'stsz',
     _stszPayload(0, <int>[chapter1.length, chapter2.length]),
   );
   final chapterStco = _atom('stco', _stcoPayload(<int>[0, 0]));
   final chapterStbl = _atom('stbl', <int>[
+    ...chapterStts,
     ...chapterStsc,
     ...chapterStsz,
     ...chapterStco,

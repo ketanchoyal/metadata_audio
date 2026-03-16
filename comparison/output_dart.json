@@ -299,8 +299,31 @@
       "duration": 1.023219954648526,
       "sampleRate": 44100,
       "numberOfChannels": 1,
-      "bitrate": 72891.46352273734,
-      "lossless": false
+      "bitrate": 73149.47256448895,
+      "lossless": false,
+      "chapters": [
+        {
+          "title": "Chapter 1",
+          "start": 1023,
+          "end": 1023,
+          "sampleOffset": 45124,
+          "timeScale": 1000
+        },
+        {
+          "title": "Chapter 2",
+          "start": 1023,
+          "end": 1023,
+          "sampleOffset": 45124,
+          "timeScale": 1000
+        },
+        {
+          "title": "Chapter 3",
+          "start": 1023,
+          "end": 1023,
+          "sampleOffset": 45124,
+          "timeScale": 1000
+        }
+      ]
     },
     "common": {
       "title": "Testcase",

@@ -361,7 +361,6 @@ void main() {
           testUrl,
           timeout: const Duration(seconds: 60),
           strategy: ParseStrategy.probe,
-          probeStrategy: ProbeStrategy.scatter,
         );
 
         print('');
@@ -448,10 +447,7 @@ void main() {
     test(
       'ProbingRangeTokenizer fetches scattered ranges',
       () async {
-        final tokenizer = await ProbingRangeTokenizer.fromUrl(
-          testUrl,
-          probeStrategy: ProbeStrategy.scatter,
-        );
+        final tokenizer = await ProbingRangeTokenizer.fromUrl(testUrl);
 
         print('');
         print('=== ProbingRangeTokenizer ===');

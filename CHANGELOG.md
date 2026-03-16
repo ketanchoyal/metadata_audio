@@ -1,3 +1,10 @@
+## 0.3.0
+
+- **Fixed**: MP4 chapter extraction now works reliably with URL-based tokenizers by prefetching the entire `moov` atom when it exceeds the initial prefetch window.
+- **Feat**: Implemented **consolidated HTTP range requests** in `HttpBasedTokenizer`, reducing the number of network requests by up to 90% for large metadata blocks.
+- **Feat**: Added **retry logic with exponential backoff** to HTTP tokenizers to handle transient network errors.
+- **Fixed**: Improved MP4 chapter timing accuracy by using the chapter track's own Time-to-Sample (STTS) table instead of approximate byte-offset correlation.
+
 ## 0.2.0
 
 - **Fixed**: Auto-initialize parser factory to prevent "Field '_parserFactory' has not been initialized" error

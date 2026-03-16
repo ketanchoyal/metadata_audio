@@ -27,6 +27,16 @@ abstract class HttpBasedTokenizer extends Tokenizer {
 
   /// Close any resources held by the tokenizer.
   void close();
+
+  /// Prefetch a range of bytes asynchronously.
+  ///
+  /// For tokenizers that support on-demand fetching (RandomAccessTokenizer,
+  /// ProbingRangeTokenizer), this fetches the data from the server.
+  /// For tokenizers that already have all data (HttpTokenizer, RangeTokenizer),
+  /// this is a no-op.
+  Future<void> prefetchRange(int start, int end) async {
+    // Default: no-op for tokenizers that already have data
+  }
 }
 
 /// Tokenizer that downloads the entire file before parsing.
@@ -567,58 +577,50 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
     return merged;
   }
 
-  /// Fetch a specific byte range from the server.
+  /// Fetch a specific byte range from the server with retry logic.
   static Future<Uint8List> _fetchRange(
     String url,
     HttpClient client,
     Duration timeout,
     _ByteRange range,
   ) async {
-    try {
-      final request = await client.getUrl(Uri.parse(url));
-      request.headers.add('Range', 'bytes=${range.start}-${range.end - 1}');
+    const maxRetries = 3;
+    for (var attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        final request = await client.getUrl(Uri.parse(url));
+        request.headers.add('Range', 'bytes=${range.start}-${range.end - 1}');
 
-      final response = await request.close().timeout(timeout);
+        final response = await request.close().timeout(timeout);
 
-      if (response.statusCode != 206 && response.statusCode != 200) {
+        if (response.statusCode != 206 && response.statusCode != 200) {
+          throw FileDownloadError(
+            'Range request failed with status ${response.statusCode}',
+          );
+        }
+
+        final chunks = await response.toList();
+        return Uint8List.fromList([for (final chunk in chunks) ...chunk]);
+      } on FileDownloadError {
+        rethrow;
+      } catch (e) {
+        if (attempt < maxRetries - 1) {
+          await Future<void>.delayed(
+            Duration(milliseconds: 200 * (attempt + 1)),
+          );
+          continue;
+        }
         throw FileDownloadError(
-          'Range request failed with status ${response.statusCode}',
+          'Failed to fetch range ${range.start}-${range.end}: $e',
         );
       }
-
-      final chunks = await response.toList();
-      return Uint8List.fromList([for (final chunk in chunks) ...chunk]);
-    } catch (e) {
-      throw FileDownloadError(
-        'Failed to fetch range ${range.start}-${range.end}: $e',
-      );
     }
+    // Should never reach here, but Dart needs a return
+    throw FileDownloadError('Failed to fetch range after retries');
   }
 
   /// Get the chunk index for a given position.
   int _getChunkIndex(int position) => position ~/ _chunkSize;
 
-  /// Ensure the chunk containing [position] is loaded.
-  Future<void> _ensureChunkLoaded(int position) async {
-    if (_isClosed) throw TokenizerException('Tokenizer is closed');
-
-    final chunkIndex = _getChunkIndex(position);
-    if (_chunks.containsKey(chunkIndex)) return;
-
-    // Need to fetch this chunk
-    final start = chunkIndex * _chunkSize;
-    final end = min(start + _chunkSize, _totalSize);
-
-    final chunk = await _fetchRange(
-      url,
-      _client,
-      _timeout,
-      _ByteRange(start, end),
-    );
-
-    _chunks[chunkIndex] = chunk;
-    totalBytesFetched += chunk.length;
-  }
 
   @override
   int readUint8() {
@@ -702,20 +704,76 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
   }
 
   /// Prefetch a range of bytes asynchronously.
+  ///
+  /// Uses consolidated HTTP range requests when possible, fetching
+  /// large contiguous spans in a single request rather than many
+  /// individual chunk requests.
+  @override
   Future<void> prefetchRange(int start, int end) async {
     if (_isClosed) return;
 
     final startChunk = start ~/ _chunkSize;
     final endChunk = end ~/ _chunkSize;
 
-    final futures = <Future<void>>[];
+    final missingChunks = <int>[];
     for (var i = startChunk; i <= endChunk; i++) {
       if (!_chunks.containsKey(i)) {
-        futures.add(_ensureChunkLoaded(i * _chunkSize));
+        missingChunks.add(i);
       }
     }
 
-    await Future.wait(futures);
+    if (missingChunks.isEmpty) return;
+
+    // Group contiguous missing chunks into consolidated ranges
+    final ranges = _groupContiguousChunks(missingChunks);
+
+    // Fetch consolidated ranges in batches
+    const maxConcurrency = 4;
+    for (var i = 0; i < ranges.length; i += maxConcurrency) {
+      final batch = ranges.skip(i).take(maxConcurrency);
+      await Future.wait(batch.map((range) => _fetchAndSplitRange(range)));
+    }
+  }
+
+  /// Group contiguous chunk indices into (startChunk, endChunk) ranges.
+  List<(int, int)> _groupContiguousChunks(List<int> chunks) {
+    if (chunks.isEmpty) return [];
+    final ranges = <(int, int)>[];
+    var rangeStart = chunks.first;
+    var rangeEnd = chunks.first;
+    for (var i = 1; i < chunks.length; i++) {
+      if (chunks[i] == rangeEnd + 1) {
+        rangeEnd = chunks[i];
+      } else {
+        ranges.add((rangeStart, rangeEnd));
+        rangeStart = chunks[i];
+        rangeEnd = chunks[i];
+      }
+    }
+    ranges.add((rangeStart, rangeEnd));
+    return ranges;
+  }
+
+  /// Fetch a consolidated range and split into individual chunks.
+  Future<void> _fetchAndSplitRange((int, int) chunkRange) async {
+    final startByte = chunkRange.$1 * _chunkSize;
+    final endByte = min((chunkRange.$2 + 1) * _chunkSize, _totalSize);
+
+    final data = await _fetchRange(
+      url,
+      _client,
+      _timeout,
+      _ByteRange(startByte, endByte),
+    );
+
+    // Split into chunk-sized pieces for the cache
+    var offset = 0;
+    for (var i = chunkRange.$1; i <= chunkRange.$2 && offset < data.length; i++) {
+      final chunkEnd = min(offset + _chunkSize, data.length);
+      _chunks[i] = Uint8List.fromList(data.sublist(offset, chunkEnd));
+      offset = chunkEnd;
+    }
+    totalBytesFetched += data.length;
   }
 
   /// Get information about which ranges have been fetched.
@@ -772,6 +830,9 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
   @override
   bool get canSeek => true;
 
+  /// Get the total file size if known.
+  int? get totalSize => _totalSize;
+
   @override
   int get position => _position;
 
@@ -824,35 +885,6 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     }
   }
 
-  /// Fetch a chunk from the server.
-  Future<void> _fetchChunk(int chunkIndex) async {
-    final start = chunkIndex * _chunkSize;
-    final totalSize = _totalSize;
-    final end = totalSize != null
-        ? (start + _chunkSize < totalSize
-              ? start + _chunkSize - 1
-              : totalSize - 1)
-        : start + _chunkSize - 1;
-
-    try {
-      final request = await _client.getUrl(Uri.parse(url));
-      request.headers.add('Range', 'bytes=$start-$end');
-
-      final response = await request.close().timeout(_timeout);
-
-      if (response.statusCode != 206 && response.statusCode != 200) {
-        throw FileDownloadError('Range request failed: ${response.statusCode}');
-      }
-
-      final chunks = await response.toList();
-      final bytes = Uint8List.fromList([for (final chunk in chunks) ...chunk]);
-
-      _cache[chunkIndex] = bytes;
-      totalBytesFetched += bytes.length;
-    } catch (e) {
-      throw FileDownloadError('Failed to fetch chunk $chunkIndex: $e');
-    }
-  }
 
   @override
   int readUint8() {
@@ -937,20 +969,108 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
   }
 
   /// Prefetch a range of bytes asynchronously.
+  ///
+  /// Uses consolidated HTTP range requests when possible, fetching
+  /// large contiguous spans in a single request rather than many
+  /// individual chunk requests.
+  @override
   Future<void> prefetchRange(int start, int end) async {
     if (_isClosed) return;
 
     final startChunk = start ~/ _chunkSize;
     final endChunk = end ~/ _chunkSize;
 
-    final futures = <Future<void>>[];
+    final missingChunks = <int>[];
     for (var i = startChunk; i <= endChunk; i++) {
       if (!_cache.containsKey(i)) {
-        futures.add(_fetchChunk(i));
+        missingChunks.add(i);
       }
     }
 
-    await Future.wait(futures);
+    if (missingChunks.isEmpty) return;
+
+    // Group contiguous missing chunks into consolidated ranges
+    final ranges = _groupContiguousChunks(missingChunks);
+
+    // Fetch consolidated ranges in batches
+    const maxConcurrency = 4;
+    for (var i = 0; i < ranges.length; i += maxConcurrency) {
+      final batch = ranges.skip(i).take(maxConcurrency);
+      await Future.wait(batch.map((range) => _fetchAndSplitRange(range)));
+    }
+  }
+
+  /// Group contiguous chunk indices into (startChunk, endChunk) ranges.
+  List<(int, int)> _groupContiguousChunks(List<int> chunks) {
+    if (chunks.isEmpty) return [];
+    final ranges = <(int, int)>[];
+    var rangeStart = chunks.first;
+    var rangeEnd = chunks.first;
+    for (var i = 1; i < chunks.length; i++) {
+      if (chunks[i] == rangeEnd + 1) {
+        rangeEnd = chunks[i];
+      } else {
+        ranges.add((rangeStart, rangeEnd));
+        rangeStart = chunks[i];
+        rangeEnd = chunks[i];
+      }
+    }
+    ranges.add((rangeStart, rangeEnd));
+    return ranges;
+  }
+
+  /// Fetch a consolidated range and split into individual chunks.
+  Future<void> _fetchAndSplitRange((int, int) chunkRange) async {
+    final startByte = chunkRange.$1 * _chunkSize;
+    final totalSize = _totalSize;
+    final endByte = totalSize != null
+        ? min((chunkRange.$2 + 1) * _chunkSize, totalSize)
+        : (chunkRange.$2 + 1) * _chunkSize;
+
+    const maxRetries = 3;
+    for (var attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        final request = await _client.getUrl(Uri.parse(url));
+        request.headers.add('Range', 'bytes=$startByte-${endByte - 1}');
+
+        final response = await request.close().timeout(_timeout);
+
+        if (response.statusCode != 206 && response.statusCode != 200) {
+          throw FileDownloadError(
+            'Range request failed: ${response.statusCode}',
+          );
+        }
+
+        final responseChunks = await response.toList();
+        final data = Uint8List.fromList([
+          for (final chunk in responseChunks) ...chunk,
+        ]);
+
+        // Split into chunk-sized pieces for the cache
+        var offset = 0;
+        for (var i = chunkRange.$1;
+            i <= chunkRange.$2 && offset < data.length;
+            i++) {
+          final chunkEnd = min(offset + _chunkSize, data.length);
+          _cache[i] = Uint8List.fromList(data.sublist(offset, chunkEnd));
+          offset = chunkEnd;
+        }
+        totalBytesFetched += data.length;
+        return;
+      } on FileDownloadError {
+        rethrow;
+      } catch (e) {
+        if (attempt < maxRetries - 1) {
+          await Future<void>.delayed(
+            Duration(milliseconds: 200 * (attempt + 1)),
+          );
+          continue;
+        }
+        throw FileDownloadError(
+          'Failed to fetch range $startByte-$endByte: $e',
+        );
+      }
+    }
   }
 }
 
@@ -1168,31 +1288,22 @@ Future<AudioMetadata> _parseWithRandomAccess(
   ParseOptions options,
 ) async {
   final tokenizer = await RandomAccessTokenizer.fromUrl(url, timeout: timeout);
+  final totalSize = tokenizer.totalSize;
 
   try {
     // For random access, we need to prefetch chunks as the parser reads
-    // This is handled by wrapping the tokenizer
-    return await _parseWithPrefetching(tokenizer, options);
+    // Prefetch initial header (first 256KB)
+    await tokenizer.prefetchRange(0, 262144);
+
+    // For MP4/M4A files with chapters, also prefetch the tail region
+    // as moov atom is often at the end of streaming-optimized files
+    if (totalSize != null && totalSize > 512 * 1024) {
+      final tailStart = totalSize - 512 * 1024;
+      await tokenizer.prefetchRange(tailStart, totalSize);
+    }
+
+    return await parseFromTokenizer(tokenizer, options: options);
   } finally {
     tokenizer.close();
-  }
-}
-
-/// Parse with automatic prefetching for RandomAccessTokenizer.
-Future<AudioMetadata> _parseWithPrefetching(
-  RandomAccessTokenizer tokenizer,
-  ParseOptions options,
-) async {
-  // Prefetch initial header (first 256KB)
-  await tokenizer.prefetchRange(0, 262144);
-
-  try {
-    return await parseFromTokenizer(tokenizer, options: options);
-  } catch (e) {
-    // If parsing fails due to missing data, try with full download
-    if (e is TokenizerException && e.toString().contains('not available')) {
-      rethrow; // Can't recover without full download
-    }
-    rethrow;
   }
 }
