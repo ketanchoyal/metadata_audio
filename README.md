@@ -21,7 +21,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  metadata_audio: ^0.1.0
+  metadata_audio: any
 ```
 
 Then run:
@@ -35,6 +35,35 @@ dart pub get
 - Dart SDK 3.10.7 or higher
 
 ## Usage
+
+### Initialization
+
+The library auto-initializes with all format loaders on first use. No manual setup required.
+
+```dart
+import 'package:metadata_audio/metadata_audio.dart';
+
+// Just use it - auto-initializes on first call
+final metadata = await parseFile('/path/to/audio.mp3');
+```
+
+#### Custom Initialization (Optional)
+
+For custom configurations, you can initialize manually:
+
+```dart
+import 'package:metadata_audio/metadata_audio.dart';
+
+// Create a custom registry with only specific formats
+final registry = ParserRegistry()
+  ..register(MpegLoader())
+  ..register(FlacLoader());
+
+initializeParserFactory(ParserFactory(registry));
+
+// Now parsing will only use registered formats
+final metadata = await parseFile('/path/to/audio.mp3');
+```
 
 ### Parse Local Files
 

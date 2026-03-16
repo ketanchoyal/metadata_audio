@@ -3,27 +3,48 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:metadata_audio/src/aiff/aiff_loader.dart';
+import 'package:metadata_audio/src/apev2/apev2_loader.dart';
+import 'package:metadata_audio/src/asf/asf_loader.dart';
+import 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
+import 'package:metadata_audio/src/dsf/dsf_loader.dart';
+import 'package:metadata_audio/src/flac/flac_loader.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_loader.dart';
+import 'package:metadata_audio/src/matroska/matroska_loader.dart';
 import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
+import 'package:metadata_audio/src/mp4/mp4_loader.dart';
+import 'package:metadata_audio/src/musepack/musepack_loader.dart';
+import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/parser_factory.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/wav/wave_loader.dart';
+import 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
 
+export 'package:metadata_audio/src/aiff/aiff_loader.dart';
+export 'package:metadata_audio/src/apev2/apev2_loader.dart';
+export 'package:metadata_audio/src/asf/asf_loader.dart';
+export 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
+export 'package:metadata_audio/src/dsf/dsf_loader.dart';
+export 'package:metadata_audio/src/flac/flac_loader.dart';
+export 'package:metadata_audio/src/id3v2/id3v2_loader.dart';
 export 'package:metadata_audio/src/matroska/matroska_dtd.dart';
 export 'package:metadata_audio/src/matroska/matroska_loader.dart';
 export 'package:metadata_audio/src/matroska/matroska_parser.dart';
 export 'package:metadata_audio/src/matroska/matroska_tag_mapper.dart';
-export 'package:metadata_audio/src/matroska/types.dart';
-export 'package:metadata_audio/src/musepack/musepack_content_error.dart';
+export 'package:metadata_audio/src/model/types.dart';
+export 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
+export 'package:metadata_audio/src/mp4/mp4_loader.dart';
 export 'package:metadata_audio/src/musepack/musepack_loader.dart';
-export 'package:metadata_audio/src/musepack/musepack_parser.dart';
-export 'package:metadata_audio/src/musepack/sv7/bit_reader.dart';
-export 'package:metadata_audio/src/musepack/sv7/mpc_sv7_parser.dart';
-export 'package:metadata_audio/src/musepack/sv7/stream_version7.dart';
-export 'package:metadata_audio/src/musepack/sv8/mpc_sv8_parser.dart';
-export 'package:metadata_audio/src/musepack/sv8/stream_version8.dart';
+export 'package:metadata_audio/src/ogg/ogg_loader.dart';
+export 'package:metadata_audio/src/parse_error.dart';
+export 'package:metadata_audio/src/parser_factory.dart';
+export 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
+export 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+export 'package:metadata_audio/src/wav/wave_loader.dart';
 export 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
-export 'package:metadata_audio/src/wavpack/wavpack_parser.dart';
 
 export 'tokenizer/http_tokenizers.dart'
     show
@@ -38,15 +59,77 @@ export 'tokenizer/http_tokenizers.dart'
         detectStrategy,
         parseUrl;
 
-// Global parser factory instance (initialized by application code)
-late ParserFactory _parserFactory;
+// Global parser factory instance
+ParserFactory? _parserFactory;
+bool _isInitialized = false;
 
 /// Initialize the parser factory for public API entrypoints.
 ///
 /// This must be called before using parseFile, parseBytes, parseStream, or parseBuffer.
-/// Typically called by the application initialization code.
+/// If not called explicitly, a default factory with all format loaders will be created
+/// automatically on first use.
+///
+/// **Example:**
+/// ```dart
+/// // Option 1: Use default factory (automatic)
+/// final metadata = await parseFile('music.mp3'); // Auto-initializes
+///
+/// // Option 2: Custom initialization
+/// final registry = ParserRegistry()
+///   ..register(MpegLoader())
+///   ..register(FlacLoader());
+/// initializeParserFactory(ParserFactory(registry));
+/// final metadata = await parseFile('music.mp3');
+/// ```
 void initializeParserFactory(ParserFactory factory) {
   _parserFactory = factory;
+  _isInitialized = true;
+}
+
+/// Create a default ParserFactory with all format loaders registered.
+///
+/// This registers loaders for all supported formats:
+/// - MP3/MPEG (ID3v1, ID3v2)
+/// - FLAC
+/// - MP4/M4A
+/// - OGG (Vorbis, Opus, Speex)
+/// - WAV
+/// - AIFF
+/// - ASF/WMA
+/// - APE
+/// - Matroska/MKV
+/// - Musepack
+/// - WavPack
+/// - DSD (DSF, DSDIFF)
+ParserFactory createDefaultParserFactory() {
+  final registry = ParserRegistry()
+    ..register(MpegLoader())
+    ..register(FlacLoader())
+    ..register(Mp4Loader())
+    ..register(OggLoader())
+    ..register(WaveLoader())
+    ..register(AiffLoader())
+    ..register(AsfLoader())
+    ..register(Apev2Loader())
+    ..register(MatroskaLoader())
+    ..register(MusepackLoader())
+    ..register(WavPackLoader())
+    ..register(DsfLoader())
+    ..register(DsdiffLoader())
+    ..register(Id3v2Loader());
+
+  return ParserFactory(registry);
+}
+
+/// Ensures the parser factory is initialized.
+///
+/// If not already initialized, creates and sets a default factory
+/// with all format loaders registered.
+void _ensureInitialized() {
+  if (!_isInitialized) {
+    _parserFactory = createDefaultParserFactory();
+    _isInitialized = true;
+  }
 }
 
 /// Parse audio metadata from a file path.
@@ -170,13 +253,16 @@ Future<AudioMetadata> parseFromTokenizer(
   Tokenizer tokenizer, {
   ParseOptions? options,
 }) async {
+  // Ensure parser factory is initialized (auto-initialize if needed)
+  _ensureInitialized();
+
   options ??= const ParseOptions();
 
   // Get file info from tokenizer, or create minimal info if not available
   final fileInfo = tokenizer.fileInfo ?? const FileInfo();
 
   // Select appropriate parser based on file info and tokenizer
-  final parser = _parserFactory.selectParser(fileInfo, tokenizer);
+  final parser = _parserFactory!.selectParser(fileInfo, tokenizer);
 
   // Verify parser supports tokenizer capabilities
   if (!parser.supports(tokenizer)) {
