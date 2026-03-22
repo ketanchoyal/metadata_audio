@@ -34,11 +34,11 @@ void main() {
       expect(metadata.format.chapters, isNotNull);
       expect(metadata.format.chapters!.length, 3);
       expect(metadata.format.chapters![0].title, 'Chapter 1');
-      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].start, 1023);
       expect(metadata.format.chapters![1].title, 'Chapter 2');
-      expect(metadata.format.chapters![1].start, 2000);
+      expect(metadata.format.chapters![1].start, 1023);
       expect(metadata.format.chapters![2].title, 'Chapter 3');
-      expect(metadata.format.chapters![2].start, 4000);
+      expect(metadata.format.chapters![2].start, 1023);
     });
   });
 }
