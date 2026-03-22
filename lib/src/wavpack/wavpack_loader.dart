@@ -23,7 +23,7 @@ class WavPackLoader extends ParserLoader {
     final mapper = CombinedTagMapper()
       ..registerMapper('APEv2', Apev2TagMapper());
 
-    final metadata = MetadataCollector(mapper);
+    final metadata = MetadataCollector(mapper, observer: options.observer);
     final parser = WavPackParser(
       metadata: metadata,
       tokenizer: tokenizer,

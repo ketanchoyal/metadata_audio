@@ -26,7 +26,7 @@ class OggLoader extends ParserLoader {
   Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
     final mapper = CombinedTagMapper()
       ..registerMapper('vorbis', VorbisTagMapper());
-    final metadata = MetadataCollector(mapper);
+    final metadata = MetadataCollector(mapper, observer: options.observer);
     metadata.setFormat(container: 'Ogg');
 
     final parser = OggParser(

@@ -25,7 +25,7 @@ class DsfLoader extends ParserLoader {
       ..registerMapper('ID3v2.3', Id3v2TagMapper())
       ..registerMapper('ID3v2.4', Id3v2TagMapper());
 
-    final metadata = MetadataCollector(mapper);
+    final metadata = MetadataCollector(mapper, observer: options.observer);
     final parser = DsfParser(
       metadata: metadata,
       tokenizer: tokenizer,

@@ -133,7 +133,7 @@ void main() {
       void observer(MetadataEvent event) => called = true;
 
       final options = ParseOptions(observer: observer);
-      options.observer!(const MetadataEvent());
+      options.observer!(MetadataEvent(tag: const MetadataEventTag(type: 'common', id: 'test'), metadata: const AudioMetadata(format: Format(), native: {}, common: CommonTags(track: TrackNo(no: null, of: null), disk: TrackNo(no: null, of: null), movementIndex: TrackNo(no: null, of: null)), quality: QualityInformation())));
 
       expect(called, isTrue);
     });

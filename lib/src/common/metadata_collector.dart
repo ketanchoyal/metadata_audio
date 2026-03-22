@@ -20,7 +20,7 @@ import 'package:metadata_audio/src/model/types.dart';
 ///
 /// Usage:
 /// ```dart
-/// final collector = MetadataCollector(CombinedTagMapper());
+/// final collector = MetadataCollector(CombinedTagMapper(), observer: options.observer);
 /// collector.setFormat(container: 'mp3');
 /// collector.addNativeTag('id3v2', 'TIT2', 'Song Title');
 /// collector.addNativeTag('id3v2', 'TPE1', 'Artist');
@@ -30,12 +30,11 @@ import 'package:metadata_audio/src/model/types.dart';
 /// print(metadata.common.title); // 'Song Title'
 /// ```
 class MetadataCollector {
-
   /// Create a MetadataCollector with a tag mapper.
   ///
   /// Parameters:
   /// - [tagMapper]: CombinedTagMapper to convert native to common tags
-  MetadataCollector(this._tagMapper) {
+  MetadataCollector(this._tagMapper, {this.observer}) {
     // Initialize with default empty format
     _format = const Format();
   }
@@ -47,6 +46,9 @@ class MetadataCollector {
   };
 
   final CombinedTagMapper _tagMapper;
+
+  /// Observer for metadata events
+  final MetadataObserver? observer;
 
   /// Audio format information
   late Format _format;
@@ -65,7 +67,19 @@ class MetadataCollector {
   /// Collected warnings
   final List<String> _warnings = [];
 
+  void _triggerEvent(String type, String id) {
+    if (observer != null) {
+      observer!(
+        MetadataEvent(
+          tag: MetadataEventTag(type: type, id: id),
+          metadata: toAudioMetadata(),
+        ),
+      );
+    }
+  }
+
   /// Sets the audio format information.
+
   ///
   /// Parameters:
   /// - [container]: Container format (e.g., 'mp3', 'flac', 'ogg')
@@ -123,6 +137,27 @@ class MetadataCollector {
       hasVideo: hasVideo ?? _format.hasVideo,
       trackInfo: trackInfo ?? _format.trackInfo,
     );
+    if (container != null) _triggerEvent('format', 'container');
+    if (duration != null) _triggerEvent('format', 'duration');
+    if (bitrate != null) _triggerEvent('format', 'bitrate');
+    if (sampleRate != null) _triggerEvent('format', 'sampleRate');
+    if (bitsPerSample != null) _triggerEvent('format', 'bitsPerSample');
+    if (codec != null) _triggerEvent('format', 'codec');
+    if (numberOfChannels != null) _triggerEvent('format', 'numberOfChannels');
+    if (tool != null) _triggerEvent('format', 'tool');
+    if (codecProfile != null) _triggerEvent('format', 'codecProfile');
+    if (lossless != null) _triggerEvent('format', 'lossless');
+    if (numberOfSamples != null) _triggerEvent('format', 'numberOfSamples');
+    if (audioMD5 != null) _triggerEvent('format', 'audioMD5');
+    if (chapters != null) _triggerEvent('format', 'chapters');
+    if (creationTime != null) _triggerEvent('format', 'creationTime');
+    if (modificationTime != null) _triggerEvent('format', 'modificationTime');
+    if (trackGain != null) _triggerEvent('format', 'trackGain');
+    if (trackPeakLevel != null) _triggerEvent('format', 'trackPeakLevel');
+    if (albumGain != null) _triggerEvent('format', 'albumGain');
+    if (hasAudio != null) _triggerEvent('format', 'hasAudio');
+    if (hasVideo != null) _triggerEvent('format', 'hasVideo');
+    if (trackInfo != null) _triggerEvent('format', 'trackInfo');
   }
 
   /// Adds a native tag from a specific format.
@@ -197,6 +232,7 @@ class MetadataCollector {
       if (currentSource == null || newPriority >= currentPriority) {
         _commonTags[tagKey] = value;
         _commonTagSource[tagKey] = formatId;
+        _triggerEvent('common', tagKey);
       }
       return;
     }
@@ -217,6 +253,7 @@ class MetadataCollector {
 
     _commonTags[tagKey] = normalized;
     _commonTagSource[tagKey] = formatId;
+    _triggerEvent('common', tagKey);
   }
 
   static List<dynamic> _asList(dynamic value) {

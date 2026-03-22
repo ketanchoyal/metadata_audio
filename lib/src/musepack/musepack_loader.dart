@@ -32,7 +32,7 @@ class MusepackLoader extends ParserLoader {
       ..registerMapper('APEv2', Apev2TagMapper())
       ..registerMapper('matroska', MatroskaTagMapper());
 
-    final metadata = MetadataCollector(mapper);
+    final metadata = MetadataCollector(mapper, observer: options.observer);
     final parser = MusepackParser(
       metadata: metadata,
       tokenizer: tokenizer,

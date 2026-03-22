@@ -31,7 +31,7 @@ class AsfLoader extends ParserLoader {
   Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
     final mapper = CombinedTagMapper()..registerMapper('asf', AsfTagMapper());
 
-    final metadata = MetadataCollector(mapper);
+    final metadata = MetadataCollector(mapper, observer: options.observer);
     final parser = AsfParser(
       metadata: metadata,
       tokenizer: tokenizer,
