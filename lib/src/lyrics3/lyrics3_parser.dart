@@ -48,7 +48,6 @@ const String lyrics3BeginTag = 'LYRICSBEGIN';
 /// - EAU: Extended artist
 /// - ETT: Extended title
 class Lyrics3Parser {
-
   Lyrics3Parser({required this.metadata, required this.tokenizer});
   static const int lyrics3v2FooterLength = 15; // Size (6) + "LYRICS200" (9)
   static const int maxLyrics3Size = 102400; // 100 KB max

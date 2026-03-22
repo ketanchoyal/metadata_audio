@@ -227,28 +227,28 @@ List<int> _tagItem({
   required List<int> value,
   required int flags,
 }) => <int>[
-    ..._u32le(value.length),
-    ..._u32le(flags),
-    ...ascii.encode(key),
-    0,
-    ...value,
-  ];
+  ..._u32le(value.length),
+  ..._u32le(flags),
+  ...ascii.encode(key),
+  0,
+  ...value,
+];
 
 List<int> _descriptor({
   required int headerBytes,
   required int apeFrameDataBytes,
 }) => <int>[
-    ...ascii.encode('MAC '),
-    ..._u32le(3990),
-    ..._u32le(Apev2Token.descriptorLength),
-    ..._u32le(headerBytes),
-    ..._u32le(0),
-    ..._u32le(0),
-    ..._u32le(apeFrameDataBytes),
-    ..._u32le(0),
-    ..._u32le(0),
-    ...List<int>.filled(16, 0),
-  ];
+  ...ascii.encode('MAC '),
+  ..._u32le(3990),
+  ..._u32le(Apev2Token.descriptorLength),
+  ..._u32le(headerBytes),
+  ..._u32le(0),
+  ..._u32le(0),
+  ..._u32le(apeFrameDataBytes),
+  ..._u32le(0),
+  ..._u32le(0),
+  ...List<int>.filled(16, 0),
+];
 
 List<int> _header({
   required int compressionLevel,
@@ -260,39 +260,50 @@ List<int> _header({
   required int channels,
   required int sampleRate,
 }) => <int>[
-    ..._u16le(compressionLevel),
-    ..._u16le(formatFlags),
-    ..._u32le(blocksPerFrame),
-    ..._u32le(finalFrameBlocks),
-    ..._u32le(totalFrames),
-    ..._u16le(bitsPerSample),
-    ..._u16le(channels),
-    ..._u32le(sampleRate),
-  ];
+  ..._u16le(compressionLevel),
+  ..._u16le(formatFlags),
+  ..._u32le(blocksPerFrame),
+  ..._u32le(finalFrameBlocks),
+  ..._u32le(totalFrames),
+  ..._u16le(bitsPerSample),
+  ..._u16le(channels),
+  ..._u32le(sampleRate),
+];
 
 List<int> _apeTagFooter({
   required int size,
   required int fields,
   required int flags,
 }) => <int>[
-    ...ascii.encode(Apev2Token.preamble),
-    ..._u32le(2000),
-    ..._u32le(size),
-    ..._u32le(fields),
-    ..._u32le(flags),
-    ...List<int>.filled(8, 0),
-  ];
+  ...ascii.encode(Apev2Token.preamble),
+  ..._u32le(2000),
+  ..._u32le(size),
+  ..._u32le(fields),
+  ..._u32le(flags),
+  ...List<int>.filled(8, 0),
+];
 
 List<int> _u16le(int value) => <int>[value & 0xFF, (value >> 8) & 0xFF];
 
 List<int> _u32le(int value) => <int>[
-    value & 0xFF,
-    (value >> 8) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 24) & 0xFF,
-  ];
+  value & 0xFF,
+  (value >> 8) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 24) & 0xFF,
+];
 
-List<int> _jpegSample() => <int>[0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46];
+List<int> _jpegSample() => <int>[
+  0xFF,
+  0xD8,
+  0xFF,
+  0xE0,
+  0x00,
+  0x10,
+  0x4A,
+  0x46,
+  0x49,
+  0x46,
+];
 
 class _NonSeekTokenizer extends Tokenizer {
   @override

@@ -11,9 +11,8 @@ class TheoraIdentificationHeader {
 class TheoraDecoder {
   static const int identificationHeaderLength = 42;
 
-  static bool isIdentificationHeader(List<int> data) => data.length >= 7 &&
-        data[0] == 0x80 &&
-        _ascii(data, 1, 6) == 'theora';
+  static bool isIdentificationHeader(List<int> data) =>
+      data.length >= 7 && data[0] == 0x80 && _ascii(data, 1, 6) == 'theora';
 
   static TheoraIdentificationHeader parseIdentificationHeader(List<int> data) {
     if (!isIdentificationHeader(data) ||

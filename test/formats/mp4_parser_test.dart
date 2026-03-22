@@ -296,7 +296,8 @@ List<int> _dataAtom(int type, List<int> value) {
   return _atom('data', payload);
 }
 
-List<int> _nameLikeAtom(String id, String value) => _atom(id, <int>[0, 0, 0, 0, ...utf8.encode(value)]);
+List<int> _nameLikeAtom(String id, String value) =>
+    _atom(id, <int>[0, 0, 0, 0, ...utf8.encode(value)]);
 
 List<int> _chapterTextSample(String value) {
   final encoded = utf8.encode(value);
@@ -304,45 +305,45 @@ List<int> _chapterTextSample(String value) {
 }
 
 List<int> _sttsPayload(List<List<int>> entries) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(entries.length),
-    for (final entry in entries) ...<int>[..._u32(entry[0]), ..._u32(entry[1])],
-  ];
+  0,
+  0,
+  0,
+  0,
+  ..._u32(entries.length),
+  for (final entry in entries) ...<int>[..._u32(entry[0]), ..._u32(entry[1])],
+];
 
 List<int> _stscPayload(List<List<int>> entries) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(entries.length),
-    for (final entry in entries) ...<int>[
-      ..._u32(entry[0]),
-      ..._u32(entry[1]),
-      ..._u32(1),
-    ],
-  ];
+  0,
+  0,
+  0,
+  0,
+  ..._u32(entries.length),
+  for (final entry in entries) ...<int>[
+    ..._u32(entry[0]),
+    ..._u32(entry[1]),
+    ..._u32(1),
+  ],
+];
 
 List<int> _stszPayload(int sampleSize, List<int> entries) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(sampleSize),
-    ..._u32(entries.length),
-    for (final entry in entries) ..._u32(entry),
-  ];
+  0,
+  0,
+  0,
+  0,
+  ..._u32(sampleSize),
+  ..._u32(entries.length),
+  for (final entry in entries) ..._u32(entry),
+];
 
 List<int> _stcoPayload(List<int> offsets) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(offsets.length),
-    for (final offset in offsets) ..._u32(offset),
-  ];
+  0,
+  0,
+  0,
+  0,
+  ..._u32(offsets.length),
+  for (final offset in offsets) ..._u32(offset),
+];
 
 List<int> _atom(String name, List<int> payload) {
   final length = 8 + payload.length;
@@ -376,55 +377,57 @@ void _patchU32(List<int> target, int offset, int value) {
   target[offset + 3] = value & 0xFF;
 }
 
-List<int> _mvhdPayload({required int timeScale, required int duration}) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(0),
-    ..._u32(0),
-    ..._u32(timeScale),
-    ..._u32(duration),
-    ...List<int>.filled(80, 0),
-  ];
+List<int> _mvhdPayload({required int timeScale, required int duration}) =>
+    <int>[
+      0,
+      0,
+      0,
+      0,
+      ..._u32(0),
+      ..._u32(0),
+      ..._u32(timeScale),
+      ..._u32(duration),
+      ...List<int>.filled(80, 0),
+    ];
 
 List<int> _tkhdPayload({required int trackId}) => <int>[
-    0,
-    0,
-    0,
-    7,
-    ..._u32(0),
-    ..._u32(0),
-    ..._u32(trackId),
-    ..._u32(0),
-    ..._u32(88200),
-    ...List<int>.filled(60, 0),
-  ];
+  0,
+  0,
+  0,
+  7,
+  ..._u32(0),
+  ..._u32(0),
+  ..._u32(trackId),
+  ..._u32(0),
+  ..._u32(88200),
+  ...List<int>.filled(60, 0),
+];
 
-List<int> _mdhdPayload({required int timeScale, required int duration}) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(0),
-    ..._u32(0),
-    ..._u32(timeScale),
-    ..._u32(duration),
-    0,
-    0,
-    0,
-    0,
-  ];
+List<int> _mdhdPayload({required int timeScale, required int duration}) =>
+    <int>[
+      0,
+      0,
+      0,
+      0,
+      ..._u32(0),
+      ..._u32(0),
+      ..._u32(timeScale),
+      ..._u32(duration),
+      0,
+      0,
+      0,
+      0,
+    ];
 
 List<int> _hdlrPayload(String handlerType) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ...latin1.encode('mhlr'),
-    ...latin1.encode(handlerType),
-    ...List<int>.filled(12, 0),
-  ];
+  0,
+  0,
+  0,
+  0,
+  ...latin1.encode('mhlr'),
+  ...latin1.encode(handlerType),
+  ...List<int>.filled(12, 0),
+];
 
 List<int> _stsdPayloadMp4a() {
   final sampleEntry = <int>[
@@ -449,11 +452,11 @@ List<int> _stsdPayloadMp4a() {
 }
 
 List<int> _u32(int value) => <int>[
-    (value >> 24) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 8) & 0xFF,
-    value & 0xFF,
-  ];
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
 
 class _NonSeekTokenizer extends Tokenizer {
   @override

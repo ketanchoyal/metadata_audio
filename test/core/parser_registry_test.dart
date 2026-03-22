@@ -57,16 +57,19 @@ class TestParserLoader extends ParserLoader {
   final bool hasRandomAccessRequirements;
 
   @override
-  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async => const AudioMetadata(
-      format: Format(),
-      native: {},
-      common: CommonTags(
-        track: TrackNo(),
-        disk: TrackNo(),
-        movementIndex: TrackNo(),
-      ),
-      quality: QualityInformation(),
-    );
+  Future<AudioMetadata> parse(
+    Tokenizer tokenizer,
+    ParseOptions options,
+  ) async => const AudioMetadata(
+    format: Format(),
+    native: {},
+    common: CommonTags(
+      track: TrackNo(),
+      disk: TrackNo(),
+      movementIndex: TrackNo(),
+    ),
+    quality: QualityInformation(),
+  );
 }
 
 void main() {

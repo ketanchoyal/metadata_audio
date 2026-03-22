@@ -1,7 +1,6 @@
 library;
 
 class AdtsFrameHeader {
-
   const AdtsFrameHeader({
     required this.version,
     required this.profileIndex,

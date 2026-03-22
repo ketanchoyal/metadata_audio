@@ -4,7 +4,6 @@ import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class MockTokenizer implements Tokenizer {
-
   MockTokenizer({
     required List<int> data,
     bool canSeek = true,
@@ -112,12 +111,12 @@ List<int> encodeSynchsafeInt(int value) => [
 ];
 
 List<int> buildId3v22Frame(String id, List<int> payload) => [
-    ...ascii.encode(id),
-    (payload.length >> 16) & 0xFF,
-    (payload.length >> 8) & 0xFF,
-    payload.length & 0xFF,
-    ...payload,
-  ];
+  ...ascii.encode(id),
+  (payload.length >> 16) & 0xFF,
+  (payload.length >> 8) & 0xFF,
+  payload.length & 0xFF,
+  ...payload,
+];
 
 List<int> buildId3v23Frame(
   String id,
@@ -125,15 +124,15 @@ List<int> buildId3v23Frame(
   int flags1 = 0,
   int flags2 = 0,
 }) => [
-    ...ascii.encode(id),
-    (payload.length >> 24) & 0xFF,
-    (payload.length >> 16) & 0xFF,
-    (payload.length >> 8) & 0xFF,
-    payload.length & 0xFF,
-    flags1,
-    flags2,
-    ...payload,
-  ];
+  ...ascii.encode(id),
+  (payload.length >> 24) & 0xFF,
+  (payload.length >> 16) & 0xFF,
+  (payload.length >> 8) & 0xFF,
+  payload.length & 0xFF,
+  flags1,
+  flags2,
+  ...payload,
+];
 
 List<int> buildId3v24Frame(
   String id,
@@ -141,12 +140,12 @@ List<int> buildId3v24Frame(
   int flags1 = 0,
   int flags2 = 0,
 }) => [
-    ...ascii.encode(id),
-    ...encodeSynchsafeInt(payload.length),
-    flags1,
-    flags2,
-    ...payload,
-  ];
+  ...ascii.encode(id),
+  ...encodeSynchsafeInt(payload.length),
+  flags1,
+  flags2,
+  ...payload,
+];
 
 List<int> buildId3Tag({
   required int majorVersion,
@@ -154,10 +153,10 @@ List<int> buildId3Tag({
   required int flags,
   required List<int> payload,
 }) => [
-    ...ascii.encode('ID3'),
-    majorVersion,
-    revision,
-    flags,
-    ...encodeSynchsafeInt(payload.length),
-    ...payload,
-  ];
+  ...ascii.encode('ID3'),
+  majorVersion,
+  revision,
+  flags,
+  ...encodeSynchsafeInt(payload.length),
+  ...payload,
+];

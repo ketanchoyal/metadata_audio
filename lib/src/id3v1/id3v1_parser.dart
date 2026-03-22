@@ -217,10 +217,12 @@ const genres = [
 ///
 /// Contains parsed ID3v1 tag data from a 128-byte block.
 class _Id3v1Header {
-
   _Id3v1Header({
     required this.header,
-    required this.zeroByte, required this.track, required this.genre, this.title,
+    required this.zeroByte,
+    required this.track,
+    required this.genre,
+    this.title,
     this.artist,
     this.album,
     this.year,
@@ -252,7 +254,6 @@ class _Id3v1Header {
 /// - Bytes 125-126: Track number (ID3v1.1 only), stored as: [0, track_number]
 /// - Byte 127: Genre (1 byte, unsigned)
 class Id3v1Parser {
-
   /// Create an ID3v1Parser.
   Id3v1Parser({required this.metadata, required this.tokenizer});
   static const int id3v1Size = 128;

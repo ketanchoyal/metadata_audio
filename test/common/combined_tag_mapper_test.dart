@@ -5,7 +5,6 @@ import 'package:test/test.dart';
 
 /// Mock tag mapper for testing
 class MockId3v2Mapper extends GenericTagMapper {
-
   MockId3v2Mapper() {
     _tagMap = CaseInsensitiveTagMap<String>();
     _tagMap['TIT2'] = 'title';
@@ -21,7 +20,6 @@ class MockId3v2Mapper extends GenericTagMapper {
 
 /// Mock Vorbis tag mapper for testing
 class MockVorbisMapper extends GenericTagMapper {
-
   MockVorbisMapper() {
     _tagMap = CaseInsensitiveTagMap<String>();
     _tagMap['TITLE'] = 'title';
@@ -37,7 +35,6 @@ class MockVorbisMapper extends GenericTagMapper {
 
 /// Mock MP4 tag mapper for testing
 class MockMp4Mapper extends GenericTagMapper {
-
   MockMp4Mapper() {
     _tagMap = CaseInsensitiveTagMap<String>();
     _tagMap['©nam'] = 'title';

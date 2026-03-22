@@ -22,7 +22,8 @@ class DsdiffToken {
     );
   }
 
-  static String parseFourCc(List<int> bytes, [int offset = 0]) => IffParser.decodeFourCc(bytes, offset);
+  static String parseFourCc(List<int> bytes, [int offset = 0]) =>
+      IffParser.decodeFourCc(bytes, offset);
 
   static int readUint8(List<int> bytes, int offset) {
     if (offset < 0 || offset >= bytes.length) {
@@ -31,9 +32,11 @@ class DsdiffToken {
     return bytes[offset];
   }
 
-  static int readUint16Be(List<int> bytes, int offset) => IffParser.readUint16Be(bytes, offset);
+  static int readUint16Be(List<int> bytes, int offset) =>
+      IffParser.readUint16Be(bytes, offset);
 
-  static int readUint32Be(List<int> bytes, int offset) => IffParser.readUint32Be(bytes, offset);
+  static int readUint32Be(List<int> bytes, int offset) =>
+      IffParser.readUint32Be(bytes, offset);
 
   static int readUint32Le(List<int> bytes, int offset) {
     if (offset < 0 || offset + 4 > bytes.length) {

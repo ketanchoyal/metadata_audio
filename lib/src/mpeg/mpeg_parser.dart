@@ -20,7 +20,6 @@ class MpegContentError extends ParseError {
 }
 
 class MpegParser {
-
   MpegParser({
     required this.metadata,
     required this.tokenizer,
@@ -252,10 +251,11 @@ class MpegParser {
     return cursor + 9;
   }
 
-  int _readUint32Be(List<int> data, int offset) => (data[offset] << 24) |
-        (data[offset + 1] << 16) |
-        (data[offset + 2] << 8) |
-        data[offset + 3];
+  int _readUint32Be(List<int> data, int offset) =>
+      (data[offset] << 24) |
+      (data[offset + 1] << 16) |
+      (data[offset + 2] << 8) |
+      data[offset + 3];
 
   bool _parseMpegAudioFrame() {
     final frameStart = tokenizer.position;
@@ -493,7 +493,6 @@ class MpegParser {
 enum MpegChannelMode { stereo, jointStereo, dualChannel, mono }
 
 class MpegFrameHeader {
-
   const MpegFrameHeader({
     required this.version,
     required this.layer,
@@ -672,7 +671,6 @@ class MpegFrameHeader {
 enum _FrameSyncKind { mpeg, adts }
 
 class _FrameSyncResult {
-
   const _FrameSyncResult({required this.kind});
   final _FrameSyncKind kind;
 }

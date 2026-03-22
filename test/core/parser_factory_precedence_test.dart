@@ -21,16 +21,19 @@ class TestParserLoader extends ParserLoader {
   final bool hasRandomAccessRequirements;
 
   @override
-  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async => const AudioMetadata(
-      format: Format(),
-      native: {},
-      common: CommonTags(
-        track: TrackNo(),
-        disk: TrackNo(),
-        movementIndex: TrackNo(),
-      ),
-      quality: QualityInformation(),
-    );
+  Future<AudioMetadata> parse(
+    Tokenizer tokenizer,
+    ParseOptions options,
+  ) async => const AudioMetadata(
+    format: Format(),
+    native: {},
+    common: CommonTags(
+      track: TrackNo(),
+      disk: TrackNo(),
+      movementIndex: TrackNo(),
+    ),
+    quality: QualityInformation(),
+  );
 }
 
 class MockTokenizer implements Tokenizer {
@@ -135,9 +138,7 @@ void main() {
     });
 
     test('Priority 2: Extension selection when MIME type is missing', () {
-      const fileInfo = FileInfo(
-        path: '/path/to/file.flac',
-      );
+      const fileInfo = FileInfo(path: '/path/to/file.flac');
 
       final loader = factory.selectParser(fileInfo, MockTokenizer());
       expect(loader, same(flacLoader));
@@ -205,9 +206,7 @@ void main() {
     });
 
     test('Error: No parser found for file with no extension', () {
-      const fileInfo = FileInfo(
-        path: '/path/to/filename_without_extension',
-      );
+      const fileInfo = FileInfo(path: '/path/to/filename_without_extension');
 
       expect(
         () => factory.selectParser(fileInfo, MockTokenizer()),
@@ -243,9 +242,7 @@ void main() {
     });
 
     test('Extension extraction handles paths with multiple dots', () {
-      const fileInfo = FileInfo(
-        path: '/path/to/archive.tar.flac',
-      );
+      const fileInfo = FileInfo(path: '/path/to/archive.tar.flac');
 
       final loader = factory.selectParser(fileInfo, MockTokenizer());
       expect(loader, same(flacLoader)); // Should extract 'flac'

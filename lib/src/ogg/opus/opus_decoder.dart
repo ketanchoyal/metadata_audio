@@ -26,9 +26,11 @@ class OpusIdHeader {
 class OpusDecoder {
   static const int idHeaderMinLength = 19;
 
-  static bool isIdHeader(List<int> data) => data.length >= 8 && _ascii(data, 0, 8) == 'OpusHead';
+  static bool isIdHeader(List<int> data) =>
+      data.length >= 8 && _ascii(data, 0, 8) == 'OpusHead';
 
-  static bool isTagsHeader(List<int> data) => data.length >= 8 && _ascii(data, 0, 8) == 'OpusTags';
+  static bool isTagsHeader(List<int> data) =>
+      data.length >= 8 && _ascii(data, 0, 8) == 'OpusTags';
 
   static OpusIdHeader parseIdHeader(List<int> data) {
     if (!isIdHeader(data) || data.length < idHeaderMinLength) {

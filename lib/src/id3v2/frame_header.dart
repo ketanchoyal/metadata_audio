@@ -7,7 +7,6 @@ import 'package:metadata_audio/src/id3v2/id3v2_token.dart';
 typedef WarningCollector = void Function(String warning);
 
 class FrameStatusFlags {
-
   const FrameStatusFlags({
     required this.tagAlterPreservation,
     required this.fileAlterPreservation,
@@ -19,7 +18,6 @@ class FrameStatusFlags {
 }
 
 class FrameFormatFlags {
-
   const FrameFormatFlags({
     required this.groupingIdentity,
     required this.compression,
@@ -35,14 +33,12 @@ class FrameFormatFlags {
 }
 
 class FrameFlags {
-
   const FrameFlags({required this.status, required this.format});
   final FrameStatusFlags status;
   final FrameFormatFlags format;
 }
 
 class FrameHeader {
-
   const FrameHeader({required this.id, required this.length, this.flags});
   final String id;
   final int length;
@@ -126,20 +122,21 @@ class FrameHeader {
     return FrameHeader(id: id, length: length, flags: flags);
   }
 
-  static FrameFlags _readFrameFlags(int statusByte, int formatByte) => FrameFlags(
-      status: FrameStatusFlags(
-        tagAlterPreservation: _bit(statusByte, 6),
-        fileAlterPreservation: _bit(statusByte, 5),
-        readOnly: _bit(statusByte, 4),
-      ),
-      format: FrameFormatFlags(
-        groupingIdentity: _bit(formatByte, 7),
-        compression: _bit(formatByte, 3),
-        encryption: _bit(formatByte, 2),
-        unsynchronisation: _bit(formatByte, 1),
-        dataLengthIndicator: _bit(formatByte, 0),
-      ),
-    );
+  static FrameFlags _readFrameFlags(int statusByte, int formatByte) =>
+      FrameFlags(
+        status: FrameStatusFlags(
+          tagAlterPreservation: _bit(statusByte, 6),
+          fileAlterPreservation: _bit(statusByte, 5),
+          readOnly: _bit(statusByte, 4),
+        ),
+        format: FrameFormatFlags(
+          groupingIdentity: _bit(formatByte, 7),
+          compression: _bit(formatByte, 3),
+          encryption: _bit(formatByte, 2),
+          unsynchronisation: _bit(formatByte, 1),
+          dataLengthIndicator: _bit(formatByte, 0),
+        ),
+      );
 
   static bool _bit(int value, int bitIndexFromLsb) =>
       (value & (1 << bitIndexFromLsb)) != 0;

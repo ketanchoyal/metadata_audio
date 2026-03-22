@@ -5,7 +5,6 @@ import 'dart:convert';
 typedef Id3v2MajorVersion = int;
 
 class Id3v2ContentError implements Exception {
-
   const Id3v2ContentError(this.message);
   final String message;
 
@@ -14,14 +13,12 @@ class Id3v2ContentError implements Exception {
 }
 
 class Id3v2Version {
-
   const Id3v2Version({required this.major, required this.revision});
   final Id3v2MajorVersion major;
   final int revision;
 }
 
 class Id3v2HeaderFlags {
-
   const Id3v2HeaderFlags({
     required this.unsynchronisation,
     required this.isExtendedHeader,
@@ -35,7 +32,6 @@ class Id3v2HeaderFlags {
 }
 
 class Id3v2Header {
-
   const Id3v2Header({
     required this.fileIdentifier,
     required this.version,
@@ -49,21 +45,18 @@ class Id3v2Header {
 }
 
 class TextEncodingInfo {
-
   const TextEncodingInfo({required this.encoding, this.bom = false});
   final String encoding;
   final bool bom;
 }
 
 class TextHeader {
-
   const TextHeader({required this.encoding, required this.language});
   final TextEncodingInfo encoding;
   final String language;
 }
 
 class SyncTextHeader extends TextHeader {
-
   const SyncTextHeader({
     required super.encoding,
     required super.language,

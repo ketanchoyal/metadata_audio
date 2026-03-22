@@ -621,7 +621,6 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
   /// Get the chunk index for a given position.
   int _getChunkIndex(int position) => position ~/ _chunkSize;
 
-
   @override
   int readUint8() {
     final chunkIndex = _getChunkIndex(_position);
@@ -768,7 +767,11 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
     // Split into chunk-sized pieces for the cache
     var offset = 0;
-    for (var i = chunkRange.$1; i <= chunkRange.$2 && offset < data.length; i++) {
+    for (
+      var i = chunkRange.$1;
+      i <= chunkRange.$2 && offset < data.length;
+      i++
+    ) {
       final chunkEnd = min(offset + _chunkSize, data.length);
       _chunks[i] = Uint8List.fromList(data.sublist(offset, chunkEnd));
       offset = chunkEnd;
@@ -884,7 +887,6 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
       throw FileDownloadError('Failed to initialize: $e');
     }
   }
-
 
   @override
   int readUint8() {
@@ -1048,9 +1050,11 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
 
         // Split into chunk-sized pieces for the cache
         var offset = 0;
-        for (var i = chunkRange.$1;
-            i <= chunkRange.$2 && offset < data.length;
-            i++) {
+        for (
+          var i = chunkRange.$1;
+          i <= chunkRange.$2 && offset < data.length;
+          i++
+        ) {
           final chunkEnd = min(offset + _chunkSize, data.length);
           _cache[i] = Uint8List.fromList(data.sublist(offset, chunkEnd));
           offset = chunkEnd;

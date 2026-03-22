@@ -66,7 +66,8 @@ class ParserRegistry {
   /// Returns the registered loader for [extension], or null if no loader
   /// is registered for this extension.
   /// Extension matching is case-insensitive.
-  ParserLoader? getLoader(String extension) => _extensionMap[extension.toLowerCase()];
+  ParserLoader? getLoader(String extension) =>
+      _extensionMap[extension.toLowerCase()];
 
   /// Get a parser loader by MIME type.
   ///
@@ -95,9 +96,9 @@ class ParserRegistry {
 ///
 /// Throws [CouldNotDetermineFileTypeError] if no parser can be determined.
 class ParserFactory {
-
   /// Create a ParserFactory with the given registry.
   ParserFactory(this.registry);
+
   /// Parser registry containing registered loaders.
   final ParserRegistry registry;
 

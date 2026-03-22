@@ -402,13 +402,13 @@ List<int> _apeTagFooter({
   required int fields,
   required int flags,
 }) => <int>[
-    ...ascii.encode('APETAGEX'),
-    ..._u32le(2000),
-    ..._u32le(size),
-    ..._u32le(fields),
-    ..._u32le(flags),
-    ...List<int>.filled(8, 0),
-  ];
+  ...ascii.encode('APETAGEX'),
+  ..._u32le(2000),
+  ..._u32le(size),
+  ..._u32le(fields),
+  ..._u32le(flags),
+  ...List<int>.filled(8, 0),
+];
 
 List<int> _tagEntry({
   required int targetTypeValue,

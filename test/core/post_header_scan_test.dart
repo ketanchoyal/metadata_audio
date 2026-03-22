@@ -180,10 +180,7 @@ void main() {
           canSeek: false,
           fileInfo: const FileInfo(size: 1000),
         );
-        await scanPostHeaders(
-          nonSeekable,
-          const ParseOptions(),
-        );
+        await scanPostHeaders(nonSeekable, const ParseOptions());
       });
     });
 

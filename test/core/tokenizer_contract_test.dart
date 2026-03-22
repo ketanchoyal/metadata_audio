@@ -4,7 +4,6 @@ import 'package:test/test.dart';
 
 /// Mock tokenizer for testing the interface contract
 class MockTokenizer implements Tokenizer {
-
   MockTokenizer(this._data, {bool canSeek = true}) : _canSeek = canSeek;
   final List<int> _data;
   int _position = 0;
@@ -156,18 +155,12 @@ void main() {
 
       test('readUint16() throws with insufficient data', () {
         final tokenizer = MockTokenizer([0xFF]);
-        expect(
-          tokenizer.readUint16,
-          throwsA(isA<TokenizerException>()),
-        );
+        expect(tokenizer.readUint16, throwsA(isA<TokenizerException>()));
       });
 
       test('readUint32() throws with insufficient data', () {
         final tokenizer = MockTokenizer([0xFF, 0xFF, 0xFF]);
-        expect(
-          tokenizer.readUint32,
-          throwsA(isA<TokenizerException>()),
-        );
+        expect(tokenizer.readUint32, throwsA(isA<TokenizerException>()));
       });
 
       test('readBytes() throws with insufficient data', () {
@@ -278,13 +271,7 @@ void main() {
       });
 
       test('seek and read on seekable tokenizer', () {
-        final tokenizer = MockTokenizer([
-          0x11,
-          0x22,
-          0x33,
-          0x44,
-          0x55,
-        ]);
+        final tokenizer = MockTokenizer([0x11, 0x22, 0x33, 0x44, 0x55]);
         tokenizer.seek(2);
         expect(tokenizer.readUint8(), equals(0x33));
         tokenizer.seek(0);

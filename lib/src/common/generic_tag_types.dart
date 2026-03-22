@@ -162,8 +162,8 @@ enum GenericTagType {
 
 /// Defines the semantics of a tag (singleton vs list, unique vs duplicate).
 class TagTypeSemantics {
-
   const TagTypeSemantics({required this.isSingleton, this.isUnique = false});
+
   /// Whether this tag should have at most one value (singleton).
   /// If false, the tag can have multiple values (list).
   final bool isSingleton;
@@ -175,7 +175,6 @@ class TagTypeSemantics {
 
 /// Catalog of generic tag types and their semantics.
 class GenericTagTypes {
-
   GenericTagTypes._();
   static const Map<String, TagTypeSemantics> _semanticsMap = {
     // Core metadata - most are singletons

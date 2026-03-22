@@ -6,7 +6,6 @@ import 'package:metadata_audio/src/id3v2/id3v2_token.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
 class FrameParser {
-
   const FrameParser(this.majorVersion, {this.warningCollector});
   final Id3v2MajorVersion majorVersion;
   final void Function(String warning)? warningCollector;
@@ -318,14 +317,12 @@ class FrameParser {
 }
 
 class _NullTerminatedText {
-
   const _NullTerminatedText({required this.text, required this.len});
   final String text;
   final int len;
 }
 
 class _IdentifierAndData {
-
   const _IdentifierAndData({required this.id, required this.data});
   final String id;
   final List<int> data;

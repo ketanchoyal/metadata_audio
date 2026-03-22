@@ -354,7 +354,8 @@ List<AsfNativeTag> parseMetadataObject(List<int> bytes) {
   return tags;
 }
 
-List<AsfNativeTag> parseMetadataLibraryObject(List<int> bytes) => parseMetadataObject(bytes);
+List<AsfNativeTag> parseMetadataLibraryObject(List<int> bytes) =>
+    parseMetadataObject(bytes);
 
 AsfNativeTag _postProcessTag(String name, int valueType, List<int> data) {
   if (name == 'WM/Picture') {

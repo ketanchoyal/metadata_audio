@@ -45,10 +45,8 @@ class Mp4Parser {
         // since it can be much larger than the initial prefetch window
         // (e.g. audiobooks often have 5-10MB moov atoms)
         if (probeName == 'moov' && tokenizer is HttpBasedTokenizer) {
-          var moovSize = (probe[0] << 24) |
-              (probe[1] << 16) |
-              (probe[2] << 8) |
-              probe[3];
+          var moovSize =
+              (probe[0] << 24) | (probe[1] << 16) | (probe[2] << 8) | probe[3];
           if (moovSize == 1) {
             // Extended size: read 16 bytes to get the 64-bit size
             try {

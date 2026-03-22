@@ -22,10 +22,7 @@ void main() {
           blockIndex: 0,
           totalSamplesStored: totalSamples,
           blockSamples: totalSamples,
-          flags: _buildFlags(
-            bitsPerSample: 16,
-            sampleRateIndex: 9,
-          ),
+          flags: _buildFlags(bitsPerSample: 16, sampleRateIndex: 9),
           payload: blockPayload,
         ),
         ..._buildApev2FooterTag(
@@ -72,11 +69,7 @@ void main() {
         blockIndex: 0,
         totalSamplesStored: 70560,
         blockSamples: 70560,
-        flags: _buildFlags(
-          bitsPerSample: 16,
-          sampleRateIndex: 9,
-          isDsd: true,
-        ),
+        flags: _buildFlags(bitsPerSample: 16, sampleRateIndex: 9, isDsd: true),
         payload: <int>[
           ..._metadataSubBlock(
             functionId: 0x0E,
@@ -196,13 +189,13 @@ List<int> _apeTagFooter({
   required int fields,
   required int flags,
 }) => <int>[
-    ...ascii.encode(Apev2Token.preamble),
-    ..._u32le(2000),
-    ..._u32le(size),
-    ..._u32le(fields),
-    ..._u32le(flags),
-    ...List<int>.filled(8, 0),
-  ];
+  ...ascii.encode(Apev2Token.preamble),
+  ..._u32le(2000),
+  ..._u32le(size),
+  ..._u32le(fields),
+  ..._u32le(flags),
+  ...List<int>.filled(8, 0),
+];
 
 int _buildFlags({
   required int bitsPerSample,
@@ -231,11 +224,11 @@ List<int> _md5Sample() => List<int>.generate(16, (index) => index);
 List<int> _u16le(int value) => <int>[value & 0xFF, (value >> 8) & 0xFF];
 
 List<int> _u32le(int value) => <int>[
-    value & 0xFF,
-    (value >> 8) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 24) & 0xFF,
-  ];
+  value & 0xFF,
+  (value >> 8) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 24) & 0xFF,
+];
 
 class _NonSeekTokenizer extends Tokenizer {
   @override

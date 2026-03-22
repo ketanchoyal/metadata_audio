@@ -12,7 +12,6 @@ import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 class _StaticParserLoader implements ParserLoader {
-
   _StaticParserLoader({required this.extension, required this.mimeType});
   @override
   final List<String> extension;

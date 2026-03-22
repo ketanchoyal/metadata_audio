@@ -303,9 +303,11 @@ class WaveParser {
     }
   }
 
-  static String _decodeAscii(List<int> bytes) => ascii.decode(bytes, allowInvalid: true);
+  static String _decodeAscii(List<int> bytes) =>
+      ascii.decode(bytes, allowInvalid: true);
 
-  static String _stripNulls(String value) => value.replaceAll(RegExp(r'\x00+$'), '');
+  static String _stripNulls(String value) =>
+      value.replaceAll(RegExp(r'\x00+$'), '');
 
   void _applyCueChapters() {
     if (!options.includeChapters) {

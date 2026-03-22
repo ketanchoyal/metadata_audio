@@ -591,19 +591,13 @@ void main() {
       test('throws with insufficient data', () {
         final bytes = Uint8List.fromList([0xFF]);
         final tokenizer = BytesTokenizer(bytes);
-        expect(
-          tokenizer.readUint16,
-          throwsA(isA<TokenizerException>()),
-        );
+        expect(tokenizer.readUint16, throwsA(isA<TokenizerException>()));
       });
 
       test('throws when reading uint16 at end boundary', () {
         final bytes = Uint8List.fromList([0x12]);
         final tokenizer = BytesTokenizer(bytes);
-        expect(
-          tokenizer.readUint16,
-          throwsA(isA<TokenizerException>()),
-        );
+        expect(tokenizer.readUint16, throwsA(isA<TokenizerException>()));
       });
     });
 
@@ -635,19 +629,13 @@ void main() {
       test('throws with insufficient data', () {
         final bytes = Uint8List.fromList([0xFF, 0xFF, 0xFF]);
         final tokenizer = BytesTokenizer(bytes);
-        expect(
-          tokenizer.readUint32,
-          throwsA(isA<TokenizerException>()),
-        );
+        expect(tokenizer.readUint32, throwsA(isA<TokenizerException>()));
       });
 
       test('throws with only 1 byte available', () {
         final bytes = Uint8List.fromList([0xFF]);
         final tokenizer = BytesTokenizer(bytes);
-        expect(
-          tokenizer.readUint32,
-          throwsA(isA<TokenizerException>()),
-        );
+        expect(tokenizer.readUint32, throwsA(isA<TokenizerException>()));
       });
     });
 

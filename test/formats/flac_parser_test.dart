@@ -215,7 +215,18 @@ void main() {
   });
 }
 
-List<int> _buildId3v2Header() => <int>[0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+List<int> _buildId3v2Header() => <int>[
+  0x49,
+  0x44,
+  0x33,
+  0x03,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+];
 
 List<int> _buildFlacFile({
   required List<int> streamInfo,
@@ -363,29 +374,29 @@ List<int> _buildCueSheetBlock({
 }
 
 List<int> _uInt32Le(int value) => <int>[
-    value & 0xFF,
-    (value >> 8) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 24) & 0xFF,
-  ];
+  value & 0xFF,
+  (value >> 8) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 24) & 0xFF,
+];
 
 List<int> _uInt32Be(int value) => <int>[
-    (value >> 24) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 8) & 0xFF,
-    value & 0xFF,
-  ];
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
 
 List<int> _uInt64Be(int value) => <int>[
-    (value >> 56) & 0xFF,
-    (value >> 48) & 0xFF,
-    (value >> 40) & 0xFF,
-    (value >> 32) & 0xFF,
-    (value >> 24) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 8) & 0xFF,
-    value & 0xFF,
-  ];
+  (value >> 56) & 0xFF,
+  (value >> 48) & 0xFF,
+  (value >> 40) & 0xFF,
+  (value >> 32) & 0xFF,
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
 
 class _NonSeekTokenizer implements Tokenizer {
   @override

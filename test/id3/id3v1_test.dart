@@ -8,7 +8,6 @@ import 'package:test/test.dart';
 
 /// Mock tokenizer for testing ID3v1 parser.
 class MockTokenizer implements Tokenizer {
-
   MockTokenizer({
     required List<int> data,
     bool canSeek = true,

@@ -14,7 +14,6 @@ import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 /// - Peeking without advancing position
 /// - Efficient RandomAccessFile operations
 class FileTokenizer extends Tokenizer {
-
   /// Create a FileTokenizer from a file path
   ///
   /// Throws [FileSystemException] if file doesn't exist or can't be opened
@@ -34,6 +33,7 @@ class FileTokenizer extends Tokenizer {
       fileInfo = _createFileInfo(file.path) {
     _validateFile();
   }
+
   /// Underlying file handle for random access operations
   final RandomAccessFile _file;
 
@@ -301,7 +301,6 @@ class FileTokenizer extends Tokenizer {
 /// - Peeking without advancing position
 /// - Efficient in-memory byte operations
 class BytesTokenizer extends Tokenizer {
-
   /// Create a BytesTokenizer from a Uint8List
   ///
   /// [bytes]: The byte buffer to read from
@@ -309,6 +308,7 @@ class BytesTokenizer extends Tokenizer {
   BytesTokenizer(Uint8List bytes, {FileInfo? fileInfo})
     : _bytes = bytes,
       fileInfo = fileInfo ?? FileInfo(size: bytes.length);
+
   /// Underlying byte buffer
   final Uint8List _bytes;
 

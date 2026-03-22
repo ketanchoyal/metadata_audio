@@ -11,7 +11,6 @@ import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:collection/collection.dart';
 
 class Id3v2ChapterInfo {
-
   const Id3v2ChapterInfo({
     required this.startTime,
     required this.endTime,
@@ -25,7 +24,6 @@ class Id3v2ChapterInfo {
 }
 
 class Id3v2ChapterFrame {
-
   const Id3v2ChapterFrame({
     required this.label,
     required this.info,
@@ -37,14 +35,12 @@ class Id3v2ChapterFrame {
 }
 
 class Id3v2TocFlags {
-
   const Id3v2TocFlags({required this.topLevel, required this.ordered});
   final bool topLevel;
   final bool ordered;
 }
 
 class Id3v2TocFrame {
-
   const Id3v2TocFrame({
     required this.label,
     required this.flags,
@@ -56,7 +52,6 @@ class Id3v2TocFrame {
 }
 
 class Id3v2Parser {
-
   Id3v2Parser({
     required this.metadata,
     required this.tokenizer,
@@ -582,14 +577,12 @@ class Id3v2Parser {
 }
 
 class _CStringResult {
-
   const _CStringResult({required this.text, required this.nextOffset});
   final String text;
   final int nextOffset;
 }
 
 class _ParsedFrames {
-
   const _ParsedFrames({
     required this.tags,
     required this.chapters,

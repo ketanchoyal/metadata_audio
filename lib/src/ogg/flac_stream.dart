@@ -23,10 +23,11 @@ class OggFlacMetadataBlock {
 }
 
 class OggFlacStream {
-  static bool isFirstPage(List<int> data) => data.length >= 13 &&
-        data[0] == 0x7F &&
-        _ascii(data, 1, 4) == 'FLAC' &&
-        _ascii(data, 9, 4) == 'fLaC';
+  static bool isFirstPage(List<int> data) =>
+      data.length >= 13 &&
+      data[0] == 0x7F &&
+      _ascii(data, 1, 4) == 'FLAC' &&
+      _ascii(data, 9, 4) == 'fLaC';
 
   static OggFlacMetadataBlock parseFirstPage(List<int> data) {
     if (!isFirstPage(data)) {
