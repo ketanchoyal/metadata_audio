@@ -6,9 +6,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/core.dart';
-import 'package:metadata_audio/src/model/types.dart';
-import 'package:metadata_audio/src/parse_error.dart';
-import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 /// Error thrown when downloading a file from URL fails.
 class FileDownloadError extends ParseError {
@@ -730,7 +727,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
     const maxConcurrency = 4;
     for (var i = 0; i < ranges.length; i += maxConcurrency) {
       final batch = ranges.skip(i).take(maxConcurrency);
-      await Future.wait(batch.map((range) => _fetchAndSplitRange(range)));
+      await Future.wait(batch.map(_fetchAndSplitRange));
     }
   }
 
@@ -998,7 +995,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     const maxConcurrency = 4;
     for (var i = 0; i < ranges.length; i += maxConcurrency) {
       final batch = ranges.skip(i).take(maxConcurrency);
-      await Future.wait(batch.map((range) => _fetchAndSplitRange(range)));
+      await Future.wait(batch.map(_fetchAndSplitRange));
     }
   }
 

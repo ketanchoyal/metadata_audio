@@ -1,8 +1,8 @@
-import 'package:test/test.dart';
 import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_tag_map.dart';
 import 'package:metadata_audio/src/model/types.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('MetadataCollector - Observer', () {
@@ -14,9 +14,7 @@ void main() {
 
       final collector = MetadataCollector(
         tagMapper,
-        observer: (event) {
-          events.add(event);
-        },
+        observer: events.add,
       );
 
       // Update format

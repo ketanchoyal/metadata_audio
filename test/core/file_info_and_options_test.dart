@@ -134,15 +134,15 @@ void main() {
 
       final options = ParseOptions(observer: observer);
       options.observer!(
-        MetadataEvent(
-          tag: const MetadataEventTag(type: 'common', id: 'test'),
-          metadata: const AudioMetadata(
+        const MetadataEvent(
+          tag: MetadataEventTag(type: 'common', id: 'test'),
+          metadata: AudioMetadata(
             format: Format(),
             native: {},
             common: CommonTags(
-              track: TrackNo(no: null, of: null),
-              disk: TrackNo(no: null, of: null),
-              movementIndex: TrackNo(no: null, of: null),
+              track: TrackNo(),
+              disk: TrackNo(),
+              movementIndex: TrackNo(),
             ),
             quality: QualityInformation(),
           ),

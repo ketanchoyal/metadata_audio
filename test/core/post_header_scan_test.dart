@@ -1,6 +1,4 @@
 import 'package:metadata_audio/src/core.dart';
-import 'package:metadata_audio/src/model/types.dart';
-import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 /// Mock tokenizer for testing post-header scan behavior

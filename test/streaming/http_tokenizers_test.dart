@@ -2,12 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/aiff/aiff_loader.dart';
-import 'package:metadata_audio/src/flac/flac_loader.dart';
-import 'package:metadata_audio/src/mp4/mp4_loader.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
-import 'package:metadata_audio/src/ogg/ogg_loader.dart';
-import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:test/test.dart';
 
 /// Validates that a URL is accessible and supports Range requests.

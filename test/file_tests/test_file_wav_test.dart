@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

@@ -2,13 +2,13 @@ library;
 
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/id3v2/frame_header.dart';
 import 'package:metadata_audio/src/id3v2/frame_parser.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_token.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
-import 'package:collection/collection.dart';
 
 class Id3v2ChapterInfo {
   const Id3v2ChapterInfo({
