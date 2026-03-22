@@ -12,10 +12,7 @@ void main() {
       final tagMapper = CombinedTagMapper()
         ..registerMapper('ID3v2.4', Id3v2TagMapper());
 
-      final collector = MetadataCollector(
-        tagMapper,
-        observer: events.add,
-      );
+      final collector = MetadataCollector(tagMapper, observer: events.add);
 
       // Update format
       collector.setFormat(container: 'mp3', bitrate: 320000);
