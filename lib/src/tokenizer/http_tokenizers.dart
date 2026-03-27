@@ -526,10 +526,13 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
         // 1. Header (256KB) - ftyp, moov (if at start)
         ranges.add(_ByteRange(0, min(262144, totalSize)));
 
-        // 2. Tail (256KB) - moov often at end
-        if (totalSize > 262144) {
-          final tailStart = max(0, totalSize - 262144);
-          ranges.add(_ByteRange(tailStart, totalSize));
+        // 2. Tail (up to 16MB) - moov often at end, and can be very large
+        // for audiobooks with many chapters (5-10MB+)
+        const maxTailSize = 16 * 1024 * 1024; // 16MB
+        if (totalSize > maxTailSize) {
+          ranges.add(_ByteRange(totalSize - maxTailSize, totalSize));
+        } else {
+          ranges.add(_ByteRange(0, totalSize));
         }
 
         // 3. Look for moov atom in middle
@@ -620,7 +623,6 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
   /// Get the chunk index for a given position.
   int _getChunkIndex(int position) => position ~/ _chunkSize;
-
 
   @override
   int readUint8() {
@@ -768,7 +770,11 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
     // Split into chunk-sized pieces for the cache
     var offset = 0;
-    for (var i = chunkRange.$1; i <= chunkRange.$2 && offset < data.length; i++) {
+    for (
+      var i = chunkRange.$1;
+      i <= chunkRange.$2 && offset < data.length;
+      i++
+    ) {
       final chunkEnd = min(offset + _chunkSize, data.length);
       _chunks[i] = Uint8List.fromList(data.sublist(offset, chunkEnd));
       offset = chunkEnd;
@@ -884,7 +890,6 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
       throw FileDownloadError('Failed to initialize: $e');
     }
   }
-
 
   @override
   int readUint8() {
@@ -1048,9 +1053,11 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
 
         // Split into chunk-sized pieces for the cache
         var offset = 0;
-        for (var i = chunkRange.$1;
-            i <= chunkRange.$2 && offset < data.length;
-            i++) {
+        for (
+          var i = chunkRange.$1;
+          i <= chunkRange.$2 && offset < data.length;
+          i++
+        ) {
           final chunkEnd = min(offset + _chunkSize, data.length);
           _cache[i] = Uint8List.fromList(data.sublist(offset, chunkEnd));
           offset = chunkEnd;
@@ -1296,9 +1303,14 @@ Future<AudioMetadata> _parseWithRandomAccess(
     await tokenizer.prefetchRange(0, 262144);
 
     // For MP4/M4A files with chapters, also prefetch the tail region
-    // as moov atom is often at the end of streaming-optimized files
-    if (totalSize != null && totalSize > 512 * 1024) {
-      final tailStart = totalSize - 512 * 1024;
+    // as moov atom is often at the end of streaming-optimized files.
+    // Audiobooks can have very large moov atoms (5-10MB+) due to chapter data.
+    if (totalSize != null && totalSize > 0) {
+      // Prefetch up to 16MB at the tail (or entire file if smaller)
+      final tailSize = totalSize < 16 * 1024 * 1024
+          ? totalSize
+          : 16 * 1024 * 1024;
+      final tailStart = totalSize - tailSize;
       await tokenizer.prefetchRange(tailStart, totalSize);
     }
 

@@ -285,6 +285,7 @@ void main() {
 
         final metadata = await parseUrl(
           testUrl,
+          options: const ParseOptions(includeChapters: true),
           timeout: const Duration(seconds: 60),
           onStrategySelected: (strategy, r) {
             selectedStrategy = strategy;
@@ -298,12 +299,18 @@ void main() {
         print('Reason: $reason');
         print('Format: ${metadata.format.container}');
         print('Codec: ${metadata.format.codec}');
+        print('Chapters: ${metadata.format.chapters?.length}');
         print('Duration: ${metadata.format.duration?.toStringAsFixed(2)}s');
         print('');
 
         expect(selectedStrategy, isNotNull);
         expect(metadata.format.container, isNotNull);
         expect(metadata.format.codec, isNotNull);
+        for (final chapter in metadata.format.chapters ?? <Chapter>[]) {
+          print(
+            '  Chapter: ${chapter.title} [${chapter.start.toStringAsFixed(2)}s - ${chapter.end?.toStringAsFixed(2)}s] TimeScale: ${chapter.timeScale}',
+          );
+        }
       },
       skip: testUrl.isEmpty ? 'No test URL configured' : false,
       timeout: const Timeout(Duration(seconds: 120)),

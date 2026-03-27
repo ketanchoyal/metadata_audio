@@ -391,7 +391,8 @@ class AtomToken {
         (BigInt.from(bytes[offset + 5]) << 16) |
         (BigInt.from(bytes[offset + 6]) << 8) |
         BigInt.from(bytes[offset + 7]);
-    if (value > BigInt.from(0x7FFFFFFF)) {
+    // Dart int is 64-bit on native platforms, allow full signed 64-bit range
+    if (value > BigInt.from(0x7FFFFFFFFFFFFFFF)) {
       throw Mp4ContentError('64-bit integer overflow for parser runtime');
     }
     return value.toInt();

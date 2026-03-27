@@ -1,3 +1,11 @@
+## 0.4.0
+
+- **Fixed**: MP4 `chpl` (Nero chapter list) parsing now supports audiobook chapter extraction from files that expose chapter timing via chapter time base metadata.
+- **Fixed**: Chapter timestamp conversion now infers time base from file timing data instead of relying on a hardcoded scale, restoring full chapter lists (e.g. 73 chapters) for affected M4B files.
+- **Fixed**: MP4 parser now reads `chpl` atoms under `udta` and emits normalized chapter ranges (`start`/`end`) in milliseconds.
+- **Fixed**: 64-bit MP4 integer parsing overflow guard for large files / version-1 atom fields.
+- **Improved**: URL-based MP4 parsing reliability for large files by expanding tail prefetch windows for `moov` discovery in HTTP tokenizers.
+
 ## 0.3.0
 
 - **Fixed**: MP4 chapter extraction now works reliably with URL-based tokenizers by prefetching the entire `moov` atom when it exceeds the initial prefetch window.
