@@ -137,5 +137,21 @@ void main() {
 
       expect(called, isTrue);
     });
+
+    test('MetadataEvent exposes upstream-compatible payload fields', () {
+      const event = MetadataEvent(
+        tag: CommonMetadataEventTag(
+          id: MetadataCommonId.title,
+          value: 'Test Song',
+        ),
+      );
+
+      expect(event.tag, isNotNull);
+      expect(event.tag!.type, MetadataEventTagType.common);
+      expect(event.tag!.id, MetadataCommonId.title);
+      expect(event.tag!.key, 'title');
+      expect(event.tag!.value, 'Test Song');
+      expect(event.metadata, isNull);
+    });
   });
 }

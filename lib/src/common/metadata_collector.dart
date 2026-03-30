@@ -30,12 +30,11 @@ import 'package:metadata_audio/src/model/types.dart';
 /// print(metadata.common.title); // 'Song Title'
 /// ```
 class MetadataCollector {
-
   /// Create a MetadataCollector with a tag mapper.
   ///
   /// Parameters:
   /// - [tagMapper]: CombinedTagMapper to convert native to common tags
-  MetadataCollector(this._tagMapper) {
+  MetadataCollector(this._tagMapper, [this._options]) {
     // Initialize with default empty format
     _format = const Format();
   }
@@ -47,6 +46,7 @@ class MetadataCollector {
   };
 
   final CombinedTagMapper _tagMapper;
+  final ParseOptions? _options;
 
   /// Audio format information
   late Format _format;
@@ -123,6 +123,35 @@ class MetadataCollector {
       hasVideo: hasVideo ?? _format.hasVideo,
       trackInfo: trackInfo ?? _format.trackInfo,
     );
+
+    void notify(String id, dynamic value) {
+      if (value == null) {
+        return;
+      }
+      _emitFormatEvent(id, value);
+    }
+
+    notify('container', container);
+    notify('duration', duration);
+    notify('bitrate', bitrate);
+    notify('sampleRate', sampleRate);
+    notify('bitsPerSample', bitsPerSample);
+    notify('codec', codec);
+    notify('numberOfChannels', numberOfChannels);
+    notify('tool', tool);
+    notify('codecProfile', codecProfile);
+    notify('lossless', lossless);
+    notify('numberOfSamples', numberOfSamples);
+    notify('audioMD5', audioMD5);
+    notify('chapters', chapters);
+    notify('creationTime', creationTime);
+    notify('modificationTime', modificationTime);
+    notify('trackGain', trackGain);
+    notify('trackPeakLevel', trackPeakLevel);
+    notify('albumGain', albumGain);
+    notify('hasAudio', hasAudio);
+    notify('hasVideo', hasVideo);
+    notify('trackInfo', trackInfo);
   }
 
   /// Adds a native tag from a specific format.
@@ -167,7 +196,12 @@ class MetadataCollector {
 
   int _getPriority(String formatId) => _formatPriority[formatId] ?? 0;
 
-  void _mergeCommonTag(String formatId, String tagKey, dynamic value) {
+  void _mergeCommonTag(
+    String formatId,
+    String tagKey,
+    dynamic value, {
+    bool emitEvent = true,
+  }) {
     if (value == null) {
       return;
     }
@@ -175,7 +209,7 @@ class MetadataCollector {
     if (tagKey == 'date') {
       final derivedYear = _deriveYear(value);
       if (derivedYear != null) {
-        _mergeCommonTag(formatId, 'year', derivedYear);
+        _mergeCommonTag(formatId, 'year', derivedYear, emitEvent: false);
       }
     }
 
@@ -197,6 +231,9 @@ class MetadataCollector {
       if (currentSource == null || newPriority >= currentPriority) {
         _commonTags[tagKey] = value;
         _commonTagSource[tagKey] = formatId;
+        if (emitEvent) {
+          _emitCommonEvent(tagKey, value);
+        }
       }
       return;
     }
@@ -217,6 +254,45 @@ class MetadataCollector {
 
     _commonTags[tagKey] = normalized;
     _commonTagSource[tagKey] = formatId;
+    if (emitEvent) {
+      _emitCommonEvent(tagKey, value);
+    }
+  }
+
+  void _emitCommonEvent(String id, dynamic rawValue) {
+    final observer = _options?.observer;
+    if (observer == null) {
+      return;
+    }
+
+    final snapshot = toAudioMetadata();
+    observer(
+      MetadataEvent(
+        tag: CommonMetadataEventTag<Object?>(
+          id: MetadataCommonId<Object?>(id),
+          value: rawValue,
+        ),
+        metadata: snapshot,
+      ),
+    );
+  }
+
+  void _emitFormatEvent(String id, dynamic rawValue) {
+    final observer = _options?.observer;
+    if (observer == null) {
+      return;
+    }
+
+    final snapshot = toAudioMetadata();
+    observer(
+      MetadataEvent(
+        tag: FormatMetadataEventTag<Object?>(
+          id: MetadataFormatId<Object?>(id),
+          value: rawValue,
+        ),
+        metadata: snapshot,
+      ),
+    );
   }
 
   static List<dynamic> _asList(dynamic value) {

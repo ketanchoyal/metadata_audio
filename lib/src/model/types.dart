@@ -1,15 +1,17 @@
 library;
 
-/// Metadata event observer callback type
+part 'metadata_event.dart';
+
+/// Metadata event observer callback type.
 ///
-/// Called with incremental metadata updates during parsing
+/// Called with incremental metadata updates during parsing.
 typedef MetadataObserver = void Function(MetadataEvent event);
 
 /// Tag representation with id and value
 class Tag {
-
   /// Create a Tag
   const Tag({required this.id, required this.value});
+
   /// Tag identifier
   final String id;
 
@@ -22,9 +24,9 @@ class Tag {
 
 /// Parser warning information
 class ParserWarning {
-
   /// Create a ParserWarning
   const ParserWarning({required this.message});
+
   /// Warning message
   final String message;
 
@@ -34,7 +36,6 @@ class ParserWarning {
 
 /// Picture/cover art information
 class Picture {
-
   /// Create a Picture
   const Picture({
     required this.format,
@@ -43,6 +44,7 @@ class Picture {
     this.type,
     this.name,
   });
+
   /// Image MIME type (e.g., 'image/jpeg')
   final String format;
 
@@ -65,9 +67,9 @@ class Picture {
 
 /// Rating information
 class Rating {
-
   /// Create a Rating
   const Rating({this.source, this.rating});
+
   /// Rating source (typically an email address)
   final String? source;
 
@@ -80,9 +82,9 @@ class Rating {
 
 /// Comment information
 class Comment {
-
   /// Create a Comment
   const Comment({this.descriptor, this.language, this.text});
+
   /// Optional descriptor/type
   final String? descriptor;
 
@@ -99,9 +101,9 @@ class Comment {
 
 /// Lyrics text with optional timestamp
 class LyricsText {
-
   /// Create LyricsText
   const LyricsText({required this.text, this.timestamp});
+
   /// Lyrics text content
   final String text;
 
@@ -117,13 +119,16 @@ class LyricsText {
 
 /// Synchronized lyrics tag
 class LyricsTag extends Comment {
-
   /// Create LyricsTag
   const LyricsTag({
-    required this.contentType, required this.timeStampFormat, required this.syncText, super.descriptor,
+    required this.contentType,
+    required this.timeStampFormat,
+    required this.syncText,
+    super.descriptor,
     super.language,
     super.text,
   });
+
   /// Content type
   final String contentType;
 
@@ -140,7 +145,6 @@ class LyricsTag extends Comment {
 
 /// Audio track information
 class AudioTrack {
-
   /// Create AudioTrack
   const AudioTrack({
     this.samplingFrequency,
@@ -149,6 +153,7 @@ class AudioTrack {
     this.channelPositions,
     this.bitDepth,
   });
+
   /// Sampling frequency in Hz
   final int? samplingFrequency;
 
@@ -171,7 +176,6 @@ class AudioTrack {
 
 /// Video track information
 class VideoTrack {
-
   /// Create VideoTrack
   const VideoTrack({
     this.flagInterlaced,
@@ -185,6 +189,7 @@ class VideoTrack {
     this.colourSpace,
     this.gammaValue,
   });
+
   /// Interlaced flag
   final bool? flagInterlaced;
 
@@ -222,7 +227,6 @@ class VideoTrack {
 
 /// Track information
 class TrackInfo {
-
   /// Create TrackInfo
   const TrackInfo({
     this.type,
@@ -236,6 +240,7 @@ class TrackInfo {
     this.audio,
     this.video,
   });
+
   /// Track type
   final String? type;
 
@@ -273,9 +278,9 @@ class TrackInfo {
 
 /// URL reference
 class Url {
-
   /// Create Url
   const Url({required this.url, required this.description});
+
   /// URL string
   final String url;
 
@@ -288,16 +293,18 @@ class Url {
 
 /// Chapter information
 class Chapter {
-
   /// Create Chapter
   const Chapter({
-    required this.title, required this.start, this.id,
+    required this.title,
+    required this.start,
+    this.id,
     this.url,
     this.sampleOffset,
     this.end,
     this.timeScale,
     this.image,
   });
+
   /// Internal chapter reference
   final String? id;
 
@@ -328,9 +335,9 @@ class Chapter {
 
 /// Ratio with dB value
 class Ratio {
-
   /// Create Ratio
   const Ratio({required this.ratio, required this.dB});
+
   /// Ratio value [0..1]
   final double ratio;
 
@@ -343,9 +350,9 @@ class Ratio {
 
 /// TrackNo with number and total
 class TrackNo {
-
   /// Create TrackNo
   const TrackNo({this.no, this.of});
+
   /// Track number
   final int? no;
 
@@ -358,7 +365,6 @@ class TrackNo {
 
 /// Format information about the audio
 class Format {
-
   /// Create Format
   const Format({
     this.container,
@@ -384,6 +390,7 @@ class Format {
     this.hasVideo,
     this.trackInfo = const [],
   });
+
   /// Container format (e.g., 'flac', 'mp3')
   final String? container;
 
@@ -457,7 +464,6 @@ class Format {
 
 /// Common tags (standardized metadata)
 class CommonTags {
-
   /// Create CommonTags
   const CommonTags({
     required this.track,
@@ -577,6 +583,7 @@ class CommonTags {
     this.stik,
     this.playCounter,
   });
+
   /// Track number
   final TrackNo track;
 
@@ -932,9 +939,9 @@ class CommonTags {
 
 /// Quality information with parser warnings
 class QualityInformation {
-
   /// Create QualityInformation
   const QualityInformation({this.warnings = const []});
+
   /// Parser warnings
   final List<ParserWarning> warnings;
 
@@ -949,7 +956,6 @@ typedef NativeTags = Map<String, List<Tag>>;
 ///
 /// Corresponds to the FileInfo concept used for parsing hints
 class FileInfo {
-
   /// Create FileInfo from file metadata
   const FileInfo({this.path, this.mimeType, this.size, this.url});
 
@@ -962,6 +968,7 @@ class FileInfo {
   /// Create FileInfo with MIME type hint
   factory FileInfo.withMimeType(String? path, String mimeType) =>
       FileInfo(path: path, mimeType: mimeType);
+
   /// File path of the audio file
   final String? path;
 
@@ -981,7 +988,6 @@ class FileInfo {
 ///
 /// Controls parsing behavior and what metadata to extract
 class ParseOptions {
-
   /// Create ParseOptions with custom parsing configuration
   const ParseOptions({
     this.skipCovers = false,
@@ -1002,6 +1008,7 @@ class ParseOptions {
   /// Create ParseOptions for metadata-only parsing
   factory ParseOptions.metadataOnly() =>
       const ParseOptions(skipPostHeaders: true);
+
   /// Skip reading cover art / picture tags
   ///
   /// Default: false
@@ -1030,15 +1037,8 @@ class ParseOptions {
   final MetadataObserver? observer;
 }
 
-/// Event representing a metadata change during parsing
-class MetadataEvent {
-  /// Create a metadata event
-  const MetadataEvent();
-}
-
 /// Complete audio metadata including format, native tags, and common tags
 class AudioMetadata {
-
   /// Create AudioMetadata
   const AudioMetadata({
     required this.format,
@@ -1046,6 +1046,7 @@ class AudioMetadata {
     required this.common,
     required this.quality,
   });
+
   /// Audio format information
   final Format format;
 

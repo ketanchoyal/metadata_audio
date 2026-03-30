@@ -36,7 +36,7 @@ class MatroskaLoader extends ParserLoader {
     final mapper = CombinedTagMapper()
       ..registerMapper('matroska', MatroskaTagMapper());
 
-    final metadata = MetadataCollector(mapper);
+    final metadata = MetadataCollector(mapper, options);
 
     final parser = MatroskaParser(
       metadata: metadata,

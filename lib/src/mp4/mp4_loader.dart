@@ -34,7 +34,7 @@ class Mp4Loader extends ParserLoader {
     final mapper = CombinedTagMapper()
       ..registerMapper('iTunes', Mp4TagMapper());
 
-    final metadata = MetadataCollector(mapper);
+    final metadata = MetadataCollector(mapper, options);
     metadata.setFormat(container: 'mp4');
 
     final parser = Mp4Parser(

@@ -4,7 +4,7 @@ description: |
   metadata extraction for various audio formats including MP3, FLAC, Ogg, MP4, 
   WAV, AIFF, APE, ASF, Matroska, and more. Ported from music-metadata with 
   architecture parity and TDD approach.
-version: 0.4.0
+version: 0.5.0
 repository: https://github.com/ketanchoyal/metadata_audio
 homepage: https://github.com/ketanchoyal/metadata_audio
 issue_tracker: https://github.com/ketanchoyal/metadata_audio/issues

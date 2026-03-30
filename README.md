@@ -9,6 +9,7 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 - **Multi-format support**: MP3, FLAC, Ogg Vorbis, MP4, WAV, AIFF, APE, ASF, Matroska, and more
 - **Comprehensive metadata**: ID3, Vorbis comments, iTunes tags, and other metadata standards
 - **Chapter/Track boundaries**: Extract embedded chapter markers, cue points, and track boundaries (MP4, FLAC, Ogg, WAV, Matroska)
+- **Live metadata observation**: Receive incremental `format`, `common`, and chapter updates while parsing is still in progress
 - **Smart URL parsing**: Automatically selects optimal download strategy for remote files
 - **Streaming support**: Parse metadata without loading entire files into memory
 - **Type-safe**: Full Dart type safety with comprehensive error handling
@@ -125,6 +126,58 @@ if (metadata.format.chapters != null) {
     print('${chapter.title}: ${chapter.start}ms - ${chapter.end}ms');
   }
 }
+```
+
+### Observe Metadata While Parsing
+
+Use `ParseOptions.observer` to receive incremental updates while parsing is still running.
+
+```dart
+final metadata = await parseFile(
+  '/path/to/audiobook.m4b',
+  options: ParseOptions(
+    includeChapters: true,
+    observer: (event) {
+      final tag = event.tag;
+      if (tag == null) return;
+
+      if (tag.id == MetadataFormatId.container) {
+        print('Container discovered: ${tag.value}');
+      }
+
+      if (tag.id == MetadataCommonId.title) {
+        print('Title discovered: ${tag.value}');
+      }
+
+      if (tag.id == MetadataFormatId.chapters) {
+        final chapters = tag.value as List<Chapter>?;
+        print('Chapter count so far: ${chapters?.length ?? 0}');
+      }
+    },
+  ),
+);
+```
+
+Observer events include a snapshot of the accumulated metadata at that point:
+
+```dart
+ParseOptions(
+  observer: (event) {
+    final snapshot = event.metadata;
+    print('Current title: ${snapshot?.common.title}');
+    print('Current duration: ${snapshot?.format.duration}');
+  },
+);
+```
+
+IDs are extension types, so you can use built-in constants for known fields or create your own dynamically for unknown upstream keys:
+
+```dart
+const titleId = MetadataCommonId.title;
+const customId = MetadataCommonId<Object?>('my-custom-tag');
+
+print(titleId == const MetadataCommonId<Object?>('title')); // true
+print(customId.path); // my-custom-tag
 ```
 
 ## Supported Formats
@@ -251,6 +304,7 @@ This package is a Dart port of the TypeScript [music-metadata](https://github.co
 |---------|--------|-------|
 | Core metadata extraction | ✅ Complete | All formats match upstream output |
 | Chapter extraction | ✅ Complete | All chapter sources supported |
+| Metadata observer events | ✅ Complete | Incremental format/common/chapter updates during parsing |
 | Tag mapping | ✅ Complete | Common tag normalization |
 | Duration calculation | ✅ Complete | MPEG Xing/Info, format-specific logic |
 | Bitrate calculation | ✅ Complete | Float precision matches upstream |

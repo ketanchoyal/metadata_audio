@@ -23,7 +23,7 @@ class Apev2Loader extends ParserLoader {
     final mapper = CombinedTagMapper()
       ..registerMapper('APEv2', Apev2TagMapper());
 
-    final metadata = MetadataCollector(mapper);
+    final metadata = MetadataCollector(mapper, options);
     final parser = Apev2Parser(
       metadata: metadata,
       tokenizer: tokenizer,

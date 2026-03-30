@@ -1,3 +1,8 @@
+## 0.5.0
+
+- **Feat**: Added `MetadataObserver` support for incremental metadata updates during parsing.
+- **Feat**: Observer events now emit typed `format` and `common` IDs using Dart extension types, with support for ad hoc unknown IDs.
+- **Feat**: Added live observer coverage for file-backed parsing, including optional chapter-event verification for local audiobook samples.
 ## 0.4.0
 
 - **Fixed**: MP4 `chpl` (Nero chapter list) parsing now supports audiobook chapter extraction from files that expose chapter timing via chapter time base metadata.
