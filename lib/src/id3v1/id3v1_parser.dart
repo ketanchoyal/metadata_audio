@@ -217,10 +217,12 @@ const genres = [
 ///
 /// Contains parsed ID3v1 tag data from a 128-byte block.
 class _Id3v1Header {
-
   _Id3v1Header({
     required this.header,
-    required this.zeroByte, required this.track, required this.genre, this.title,
+    required this.zeroByte,
+    required this.track,
+    required this.genre,
+    this.title,
     this.artist,
     this.album,
     this.year,
@@ -252,7 +254,6 @@ class _Id3v1Header {
 /// - Bytes 125-126: Track number (ID3v1.1 only), stored as: [0, track_number]
 /// - Byte 127: Genre (1 byte, unsigned)
 class Id3v1Parser {
-
   /// Create an ID3v1Parser.
   Id3v1Parser({required this.metadata, required this.tokenizer});
   static const int id3v1Size = 128;
@@ -281,49 +282,54 @@ class Id3v1Parser {
     }
 
     final offset = fileInfo.size! - id3v1Size;
-    if (tokenizer.canSeek) {
-      tokenizer.seek(offset);
-    } else if (tokenizer.position > offset) {
-      return false;
-    }
-
-    // Read the 128-byte ID3v1 block
-    final block = tokenizer.readBytes(id3v1Size);
-
-    // Parse the block
-    final header = _parseId3v1Block(block);
-    if (header == null) {
-      return false;
-    }
-
-    // Add parsed tags to metadata
-    if (header.title != null) {
-      metadata.addNativeTag('ID3v1', 'title', header.title);
-    }
-    if (header.artist != null) {
-      metadata.addNativeTag('ID3v1', 'artist', header.artist);
-    }
-    if (header.album != null) {
-      metadata.addNativeTag('ID3v1', 'album', header.album);
-    }
-    if (header.year != null) {
-      metadata.addNativeTag('ID3v1', 'year', header.year);
-    }
-    if (header.comment != null) {
-      metadata.addNativeTag('ID3v1', 'comment', header.comment);
-    }
-    if (header.track > 0) {
-      metadata.addNativeTag('ID3v1', 'track', header.track);
-    }
-    // Only add genre if it's not 0 (which maps to 'Blues' but is often unused)
-    if (header.genre > 0) {
-      final genreName = _getGenre(header.genre);
-      if (genreName != null) {
-        metadata.addNativeTag('ID3v1', 'genre', genreName);
+    try {
+      if (tokenizer.canSeek) {
+        tokenizer.seek(offset);
+      } else if (tokenizer.position > offset) {
+        return false;
       }
-    }
 
-    return true;
+      // Read the 128-byte ID3v1 block
+      final block = tokenizer.readBytes(id3v1Size);
+
+      // Parse the block
+      final header = _parseId3v1Block(block);
+      if (header == null) {
+        return false;
+      }
+
+      // Add parsed tags to metadata
+      if (header.title != null) {
+        metadata.addNativeTag('ID3v1', 'title', header.title);
+      }
+      if (header.artist != null) {
+        metadata.addNativeTag('ID3v1', 'artist', header.artist);
+      }
+      if (header.album != null) {
+        metadata.addNativeTag('ID3v1', 'album', header.album);
+      }
+      if (header.year != null) {
+        metadata.addNativeTag('ID3v1', 'year', header.year);
+      }
+      if (header.comment != null) {
+        metadata.addNativeTag('ID3v1', 'comment', header.comment);
+      }
+      if (header.track > 0) {
+        metadata.addNativeTag('ID3v1', 'track', header.track);
+      }
+      // Only add genre if it's not 0 (which maps to 'Blues' but is often unused)
+      if (header.genre > 0) {
+        final genreName = _getGenre(header.genre);
+        if (genreName != null) {
+          metadata.addNativeTag('ID3v1', 'genre', genreName);
+        }
+      }
+
+      return true;
+    } on TokenizerException {
+      // Data not available (e.g., with ProbingRangeTokenizer)
+      return false;
+    }
   }
 
   /// Parse a 128-byte ID3v1 block.

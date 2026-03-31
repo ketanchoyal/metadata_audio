@@ -1,3 +1,8 @@
+## 0.5.1
+
+- **Fixed**: `ProbingRangeTokenizer` now correctly splits fetched data into 64KB chunks, fixing metadata parsing failures for MP3 files with large ID3v2 headers when using `ParseStrategy.probe`.
+- **Fixed**: ID3v1 parser now gracefully handles missing tail data (e.g., with partial HTTP range requests), preventing crashes when probing MP3 files.
+
 ## 0.5.0
 
 - **Feat**: Added `MetadataObserver` support for incremental metadata updates during parsing.

@@ -437,14 +437,25 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
       // Determine which ranges to fetch based on strategy
       final ranges = _calculateRanges(totalSize, probeStrategy);
 
-      // Fetch all ranges in parallel
+      // Fetch all ranges in parallel and split into 64KB chunks
       final chunks = <int, Uint8List>{};
       var totalBytes = 0;
 
       await Future.wait(
         ranges.map((range) async {
           final chunk = await _fetchRange(url, client, effectiveTimeout, range);
-          chunks[range.start ~/ 65536] = chunk;
+          // Split fetched data into 64KB chunks stored at correct indices
+          final startChunkIndex = range.start ~/ 65536;
+          var offset = 0;
+          var chunkIndex = startChunkIndex;
+          while (offset < chunk.length) {
+            final chunkEnd = min(offset + 65536, chunk.length);
+            chunks[chunkIndex] = Uint8List.fromList(
+              chunk.sublist(offset, chunkEnd),
+            );
+            offset = chunkEnd;
+            chunkIndex++;
+          }
           totalBytes += chunk.length;
         }),
       );
