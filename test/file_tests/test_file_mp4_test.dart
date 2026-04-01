@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:metadata_audio/src/mp4/mp4_loader.dart';
@@ -41,5 +43,107 @@ void main() {
       expect(metadata.format.chapters![2].title, 'Chapter 3');
       expect(metadata.format.chapters![2].start, 4000);
     });
+
+    test(
+      'parses mirrored Dune m4b sample with version 1 mvhd timestamps',
+      () async {
+        // This fixture mirrors the failure mode from the shared audiobook URL:
+        // version 1 mvhd fields with very large 64-bit timestamps.
+        final file = await _writeMirroredMvhdSample();
+        addTearDown(() async {
+          if (await file.exists()) {
+            await file.delete();
+          }
+        });
+
+        final metadata = await parseFile(
+          file.path,
+          options: const ParseOptions(duration: true),
+        );
+
+        expect(metadata.format.container, startsWith('M4A/isom'));
+        expect(
+          metadata.format.creationTime,
+          DateTime.fromMillisecondsSinceEpoch(8640000000000000, isUtc: true),
+        );
+        expect(
+          metadata.format.modificationTime,
+          DateTime.fromMillisecondsSinceEpoch(8640000000000000, isUtc: true),
+        );
+        expect(metadata.format.duration, closeTo(2.0, 0.0001));
+      },
+    );
   });
 }
+
+Future<File> _writeMirroredMvhdSample() async {
+  final file = File(
+    p.join(
+      Directory.systemTemp.path,
+      'metadata_audio_mirrored_mvhd_v1_${DateTime.now().microsecondsSinceEpoch}.m4b',
+    ),
+  );
+  await file.writeAsBytes(_buildMirroredMvhdSample());
+  return file;
+}
+
+List<int> _buildMirroredMvhdSample() {
+  final ftyp = _atom('ftyp', <int>[
+    ...latin1.encode('M4A '),
+    ...latin1.encode('isom'),
+    ...latin1.encode('mp42'),
+  ]);
+
+  final mvhd = _atom(
+    'mvhd',
+    _mvhdPayloadV1(
+      creationTime: 0x7FFFFFFFFFFFFFFF,
+      modificationTime: 0x7FFFFFFFFFFFFFFF,
+      timeScale: 1000,
+      duration: 2000,
+    ),
+  );
+
+  final moov = _atom('moov', mvhd);
+  return <int>[...ftyp, ...moov];
+}
+
+List<int> _mvhdPayloadV1({
+  required int creationTime,
+  required int modificationTime,
+  required int timeScale,
+  required int duration,
+}) => <int>[
+  1,
+  0,
+  0,
+  0,
+  ..._u64(creationTime),
+  ..._u64(modificationTime),
+  ..._u32(timeScale),
+  ..._u64(duration),
+  ...List<int>.filled(80, 0),
+];
+
+List<int> _atom(String name, List<int> payload) {
+  final length = 8 + payload.length;
+  return <int>[..._u32(length), ...latin1.encode(name), ...payload];
+}
+
+List<int> _u32(int value) => <int>[
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
+
+List<int> _u64(int value) => <int>[
+  (value >> 56) & 0xFF,
+  (value >> 48) & 0xFF,
+  (value >> 40) & 0xFF,
+  (value >> 32) & 0xFF,
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];

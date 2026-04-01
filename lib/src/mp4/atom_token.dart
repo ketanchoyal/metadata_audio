@@ -118,12 +118,16 @@ class AtomToken {
       );
     }
 
-    final extendedLength = readUint64Be(bytes, 8);
-    if (extendedLength > 0x7FFFFFFF) {
+    final extendedLength = _readUint64BeAsBigInt(bytes, 8);
+    if (extendedLength > BigInt.from(0x7FFFFFFF)) {
       throw Mp4ContentError('Atom too large for parser: $extendedLength bytes');
     }
 
-    return AtomHeader(length: extendedLength, name: name, headerLength: 16);
+    return AtomHeader(
+      length: extendedLength.toInt(),
+      name: name,
+      headerLength: 16,
+    );
   }
 
   static List<String> parseFtypBrands(List<int> bytes) {
@@ -150,15 +154,15 @@ class AtomToken {
       if (bytes.length < 32) {
         throw Mp4ContentError('mvhd version 1 payload too short');
       }
-      final creation = readUint64Be(bytes, 4);
-      final modification = readUint64Be(bytes, 12);
+      final creation = _readUint64BeAsBigInt(bytes, 4);
+      final modification = _readUint64BeAsBigInt(bytes, 12);
       final timeScale = readUint32Be(bytes, 20);
-      final duration = readUint64Be(bytes, 24);
+      final duration = _readUint64BeAsBigInt(bytes, 24);
       return MvhdAtomData(
-        creationTime: _macEpochToDate(creation),
-        modificationTime: _macEpochToDate(modification),
+        creationTime: _macEpochToDateBigInt(creation),
+        modificationTime: _macEpochToDateBigInt(modification),
         timeScale: timeScale,
-        duration: duration,
+        duration: duration.toInt(),
       );
     }
 
@@ -167,8 +171,8 @@ class AtomToken {
     final timeScale = readUint32Be(bytes, 12);
     final duration = readUint32Be(bytes, 16);
     return MvhdAtomData(
-      creationTime: _macEpochToDate(creation),
-      modificationTime: _macEpochToDate(modification),
+      creationTime: _macEpochToDateInt(creation),
+      modificationTime: _macEpochToDateInt(modification),
       timeScale: timeScale,
       duration: duration,
     );
@@ -186,7 +190,7 @@ class AtomToken {
       }
       return MdhdAtomData(
         timeScale: readUint32Be(bytes, 20),
-        duration: readUint64Be(bytes, 24),
+        duration: _readUint64BeAsBigInt(bytes, 24).toInt(),
       );
     }
 
@@ -381,9 +385,16 @@ class AtomToken {
   }
 
   static int readUint64Be(List<int> bytes, int offset) {
+    final value = _readUint64BeAsBigInt(bytes, offset);
+    if (value > BigInt.from(0x7FFFFFFFFFFFFFFF)) {
+      throw Mp4ContentError('64-bit integer overflow for parser runtime');
+    }
+    return value.toInt();
+  }
+
+  static BigInt _readUint64BeAsBigInt(List<int> bytes, int offset) {
     _ensureRange(bytes, offset, 8);
-    final value =
-        (BigInt.from(bytes[offset]) << 56) |
+    return (BigInt.from(bytes[offset]) << 56) |
         (BigInt.from(bytes[offset + 1]) << 48) |
         (BigInt.from(bytes[offset + 2]) << 40) |
         (BigInt.from(bytes[offset + 3]) << 32) |
@@ -391,17 +402,38 @@ class AtomToken {
         (BigInt.from(bytes[offset + 5]) << 16) |
         (BigInt.from(bytes[offset + 6]) << 8) |
         BigInt.from(bytes[offset + 7]);
-    // Dart int is 64-bit on native platforms, allow full signed 64-bit range
-    if (value > BigInt.from(0x7FFFFFFFFFFFFFFF)) {
-      throw Mp4ContentError('64-bit integer overflow for parser runtime');
-    }
-    return value.toInt();
   }
 
-  static DateTime _macEpochToDate(int secondsSinceMacEpoch) {
+  static DateTime _macEpochToDateInt(int secondsSinceMacEpoch) {
+    return _macEpochToDateBigInt(BigInt.from(secondsSinceMacEpoch));
+  }
+
+  static DateTime _macEpochToDateBigInt(BigInt secondsSinceMacEpoch) {
     const macToUnixEpochSeconds = 2082844800;
-    final unixSeconds = secondsSinceMacEpoch - macToUnixEpochSeconds;
-    return DateTime.fromMillisecondsSinceEpoch(unixSeconds * 1000, isUtc: true);
+    const maxDateTimeMilliseconds = 8640000000000000;
+    const minDateTimeMilliseconds = -8640000000000000;
+    final unixSeconds =
+        secondsSinceMacEpoch - BigInt.from(macToUnixEpochSeconds);
+    final milliseconds = unixSeconds * BigInt.from(1000);
+
+    if (milliseconds > BigInt.from(maxDateTimeMilliseconds)) {
+      return DateTime.fromMillisecondsSinceEpoch(
+        maxDateTimeMilliseconds,
+        isUtc: true,
+      );
+    }
+
+    if (milliseconds < BigInt.from(minDateTimeMilliseconds)) {
+      return DateTime.fromMillisecondsSinceEpoch(
+        minDateTimeMilliseconds,
+        isUtc: true,
+      );
+    }
+
+    return DateTime.fromMillisecondsSinceEpoch(
+      milliseconds.toInt(),
+      isUtc: true,
+    );
   }
 
   static void _ensureRange(List<int> bytes, int offset, int length) {

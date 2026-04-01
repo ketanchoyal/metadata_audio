@@ -1,3 +1,7 @@
+## 0.6.2
+
+- **Fixed**: MP4/M4B parsing now handles version-1 `mvhd` atoms with large 64-bit timestamps without crashing, including the audiobook URL regression case that previously overflowed `DateTime` conversion on some platforms.
+
 ## 0.6.1
 
 - **Fixed**: MP3 URL parsing now routes through the MPEG parser instead of the tag-only ID3 loader, restoring duration and bitrate extraction for real-world app usage.

@@ -93,6 +93,69 @@ void main() {
       expect(metadata.format.chapters![1].end, 2000);
     });
 
+    test('parses version 1 mvhd atoms with large 64-bit durations', () async {
+      final ftyp = _atom('ftyp', <int>[
+        ...latin1.encode('M4A '),
+        ...latin1.encode('isom'),
+      ]);
+      final mvhd = _atom(
+        'mvhd',
+        _mvhdPayloadV1(timeScale: 1000, duration: 0x8000000000000000),
+      );
+      final moov = _atom('moov', mvhd);
+      final bytes = <int>[...ftyp, ...moov];
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(duration: true),
+      );
+
+      expect(metadata.format.duration, isNotNull);
+      expect(metadata.format.duration!, greaterThan(9000000000000000));
+    });
+
+    test('clamps out-of-range mvhd timestamps instead of crashing', () async {
+      final ftyp = _atom('ftyp', <int>[
+        ...latin1.encode('M4A '),
+        ...latin1.encode('isom'),
+      ]);
+      final mvhd = _atom(
+        'mvhd',
+        _mvhdPayloadV1(
+          creationTime: 0x7FFFFFFFFFFFFFFF,
+          modificationTime: 0x7FFFFFFFFFFFFFFF,
+          timeScale: 1000,
+          duration: 2000,
+        ),
+      );
+      final moov = _atom('moov', mvhd);
+      final bytes = <int>[...ftyp, ...moov];
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(duration: true),
+      );
+
+      expect(metadata.format.creationTime, isNotNull);
+      expect(metadata.format.modificationTime, isNotNull);
+      expect(
+        metadata.format.creationTime,
+        DateTime.fromMillisecondsSinceEpoch(8640000000000000, isUtc: true),
+      );
+      expect(
+        metadata.format.modificationTime,
+        DateTime.fromMillisecondsSinceEpoch(8640000000000000, isUtc: true),
+      );
+    });
+
     test('ignores MP4 chapter track when includeChapters is false', () async {
       final bytes = _buildSyntheticMp4WithChapters();
 
@@ -296,7 +359,8 @@ List<int> _dataAtom(int type, List<int> value) {
   return _atom('data', payload);
 }
 
-List<int> _nameLikeAtom(String id, String value) => _atom(id, <int>[0, 0, 0, 0, ...utf8.encode(value)]);
+List<int> _nameLikeAtom(String id, String value) =>
+    _atom(id, <int>[0, 0, 0, 0, ...utf8.encode(value)]);
 
 List<int> _chapterTextSample(String value) {
   final encoded = utf8.encode(value);
@@ -304,45 +368,45 @@ List<int> _chapterTextSample(String value) {
 }
 
 List<int> _sttsPayload(List<List<int>> entries) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(entries.length),
-    for (final entry in entries) ...<int>[..._u32(entry[0]), ..._u32(entry[1])],
-  ];
+  0,
+  0,
+  0,
+  0,
+  ..._u32(entries.length),
+  for (final entry in entries) ...<int>[..._u32(entry[0]), ..._u32(entry[1])],
+];
 
 List<int> _stscPayload(List<List<int>> entries) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(entries.length),
-    for (final entry in entries) ...<int>[
-      ..._u32(entry[0]),
-      ..._u32(entry[1]),
-      ..._u32(1),
-    ],
-  ];
+  0,
+  0,
+  0,
+  0,
+  ..._u32(entries.length),
+  for (final entry in entries) ...<int>[
+    ..._u32(entry[0]),
+    ..._u32(entry[1]),
+    ..._u32(1),
+  ],
+];
 
 List<int> _stszPayload(int sampleSize, List<int> entries) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(sampleSize),
-    ..._u32(entries.length),
-    for (final entry in entries) ..._u32(entry),
-  ];
+  0,
+  0,
+  0,
+  0,
+  ..._u32(sampleSize),
+  ..._u32(entries.length),
+  for (final entry in entries) ..._u32(entry),
+];
 
 List<int> _stcoPayload(List<int> offsets) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(offsets.length),
-    for (final offset in offsets) ..._u32(offset),
-  ];
+  0,
+  0,
+  0,
+  0,
+  ..._u32(offsets.length),
+  for (final offset in offsets) ..._u32(offset),
+];
 
 List<int> _atom(String name, List<int> payload) {
   final length = 8 + payload.length;
@@ -376,55 +440,74 @@ void _patchU32(List<int> target, int offset, int value) {
   target[offset + 3] = value & 0xFF;
 }
 
-List<int> _mvhdPayload({required int timeScale, required int duration}) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(0),
-    ..._u32(0),
-    ..._u32(timeScale),
-    ..._u32(duration),
-    ...List<int>.filled(80, 0),
-  ];
+List<int> _mvhdPayload({required int timeScale, required int duration}) =>
+    <int>[
+      0,
+      0,
+      0,
+      0,
+      ..._u32(0),
+      ..._u32(0),
+      ..._u32(timeScale),
+      ..._u32(duration),
+      ...List<int>.filled(80, 0),
+    ];
+
+List<int> _mvhdPayloadV1({
+  required int timeScale,
+  required int duration,
+  int creationTime = 0,
+  int modificationTime = 0,
+}) => <int>[
+  1,
+  0,
+  0,
+  0,
+  ..._u64(creationTime),
+  ..._u64(modificationTime),
+  ..._u32(timeScale),
+  ..._u64(duration),
+  ...List<int>.filled(80, 0),
+];
 
 List<int> _tkhdPayload({required int trackId}) => <int>[
-    0,
-    0,
-    0,
-    7,
-    ..._u32(0),
-    ..._u32(0),
-    ..._u32(trackId),
-    ..._u32(0),
-    ..._u32(88200),
-    ...List<int>.filled(60, 0),
-  ];
+  0,
+  0,
+  0,
+  7,
+  ..._u32(0),
+  ..._u32(0),
+  ..._u32(trackId),
+  ..._u32(0),
+  ..._u32(88200),
+  ...List<int>.filled(60, 0),
+];
 
-List<int> _mdhdPayload({required int timeScale, required int duration}) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ..._u32(0),
-    ..._u32(0),
-    ..._u32(timeScale),
-    ..._u32(duration),
-    0,
-    0,
-    0,
-    0,
-  ];
+List<int> _mdhdPayload({required int timeScale, required int duration}) =>
+    <int>[
+      0,
+      0,
+      0,
+      0,
+      ..._u32(0),
+      ..._u32(0),
+      ..._u32(timeScale),
+      ..._u32(duration),
+      0,
+      0,
+      0,
+      0,
+    ];
 
 List<int> _hdlrPayload(String handlerType) => <int>[
-    0,
-    0,
-    0,
-    0,
-    ...latin1.encode('mhlr'),
-    ...latin1.encode(handlerType),
-    ...List<int>.filled(12, 0),
-  ];
+  0,
+  0,
+  0,
+  0,
+  ...latin1.encode('mhlr'),
+  ...latin1.encode(handlerType),
+  ...List<int>.filled(12, 0),
+];
 
 List<int> _stsdPayloadMp4a() {
   final sampleEntry = <int>[
@@ -449,11 +532,22 @@ List<int> _stsdPayloadMp4a() {
 }
 
 List<int> _u32(int value) => <int>[
-    (value >> 24) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 8) & 0xFF,
-    value & 0xFF,
-  ];
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
+
+List<int> _u64(int value) => <int>[
+  (value >> 56) & 0xFF,
+  (value >> 48) & 0xFF,
+  (value >> 40) & 0xFF,
+  (value >> 32) & 0xFF,
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
 
 class _NonSeekTokenizer extends Tokenizer {
   @override
