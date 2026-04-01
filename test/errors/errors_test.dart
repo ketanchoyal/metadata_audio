@@ -240,6 +240,9 @@ class _DummyTokenizer implements Tokenizer {
   bool get canSeek => true;
 
   @override
+  bool get hasCompleteData => true;
+
+  @override
   FileInfo? get fileInfo => null;
 
   @override
@@ -277,6 +280,9 @@ class _NonSeekTokenizer implements Tokenizer {
 
   @override
   bool get canSeek => false;
+
+  @override
+  bool get hasCompleteData => true;
 
   @override
   FileInfo? get fileInfo => _fileInfo;

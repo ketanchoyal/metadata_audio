@@ -334,6 +334,9 @@ class _NonSeekTokenizer implements Tokenizer {
   bool get canSeek => false;
 
   @override
+  bool get hasCompleteData => true;
+
+  @override
   FileInfo? get fileInfo => null;
 
   @override

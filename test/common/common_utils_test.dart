@@ -41,6 +41,9 @@ class _NoopTokenizer implements Tokenizer {
   bool get canSeek => false;
 
   @override
+  bool get hasCompleteData => true;
+
+  @override
   int get position => 0;
 
   @override

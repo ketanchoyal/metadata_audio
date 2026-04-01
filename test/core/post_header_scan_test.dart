@@ -5,6 +5,8 @@ import 'package:test/test.dart';
 
 /// Mock tokenizer for testing post-header scan behavior
 class MockTokenizer implements Tokenizer {
+  @override
+  bool get hasCompleteData => true;
   MockTokenizer({required this.canSeek, this.fileInfo});
 
   @override
