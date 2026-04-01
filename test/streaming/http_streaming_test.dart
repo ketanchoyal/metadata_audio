@@ -232,6 +232,9 @@ class _NonSeekableTokenizer implements Tokenizer {
   bool get canSeek => false;
 
   @override
+  bool get hasCompleteData => true;
+
+  @override
   FileInfo? get fileInfo => const FileInfo(mimeType: 'audio/mp4');
 
   @override

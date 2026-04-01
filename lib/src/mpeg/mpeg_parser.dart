@@ -424,6 +424,20 @@ class MpegParser {
         if (sampleRate != null && metadata.format.duration == null) {
           metadata.setFormat(duration: numberOfSamples / sampleRate);
         }
+      } else if (metadata.format.duration == null &&
+          !tokenizer.hasCompleteData &&
+          _bitrates.isNotEmpty &&
+          mpegSize > 0) {
+        // For VBR files without a Xing/LAME header, parsed from a URL with
+        // only partial data available, the frame-counting fallback would only
+        // see a tiny fraction of the file and give a grossly incorrect duration.
+        // Instead, estimate duration from the known file size and the average
+        // bitrate sampled from the frames we did parse.
+        final averageBitrate =
+            _bitrates.reduce((a, b) => a + b) / _bitrates.length;
+        if (averageBitrate > 0) {
+          metadata.setFormat(duration: mpegSize * 8 / averageBitrate);
+        }
       }
 
       final profile = metadata.format.codecProfile;

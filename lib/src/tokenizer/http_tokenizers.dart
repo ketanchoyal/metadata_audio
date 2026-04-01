@@ -189,6 +189,9 @@ class RangeTokenizer extends HttpBasedTokenizer {
   bool get canSeek => true;
 
   @override
+  bool get hasCompleteData => _totalSize != null && _bytes.length >= _totalSize;
+
+  @override
   int get position => _position;
 
   /// Create a RangeTokenizer by downloading header only.
@@ -398,6 +401,9 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
   bool get canSeek => true;
 
   @override
+  bool get hasCompleteData => false;
+
+  @override
   int get position => _position;
 
   /// Create a ProbingRangeTokenizer with scatter-gather pattern.
@@ -486,12 +492,18 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
   }
 
   /// Calculate byte ranges to fetch based on probe strategy.
+  ///
+  /// All range start positions are aligned down to [chunkSize] boundaries so
+  /// that the fetched data maps correctly onto the internal chunk cache.
   static List<_ByteRange> _calculateRanges(
     int totalSize,
     ProbeStrategy strategy,
   ) {
     final ranges = <_ByteRange>[];
     const chunkSize = 65536; // 64KB
+
+    // Align a byte offset down to the nearest chunk boundary.
+    int alignDown(int pos) => (pos ~/ chunkSize) * chunkSize;
 
     switch (strategy) {
       case ProbeStrategy.headerOnly:
@@ -502,7 +514,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
         // Header (256KB) + tail (64KB)
         ranges.add(_ByteRange(0, min(262144, totalSize)));
         if (totalSize > 262144) {
-          final tailStart = max(0, totalSize - 65536);
+          final tailStart = alignDown(max(0, totalSize - chunkSize));
           ranges.add(_ByteRange(tailStart, totalSize));
         }
 
@@ -513,22 +525,24 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
         // 2. Tail (64KB) - for ID3v1, etc.
         if (totalSize > 262144) {
-          final tailStart = max(0, totalSize - 65536);
+          final tailStart = alignDown(max(0, totalSize - chunkSize));
           ranges.add(_ByteRange(tailStart, totalSize));
         }
 
         // 3. Middle probe (64KB at 50%)
         if (totalSize > 524288) {
-          final middleStart = (totalSize ~/ 2) - 32768;
-          ranges.add(_ByteRange(middleStart, middleStart + 65536));
+          final middleStart = alignDown((totalSize ~/ 2) - 32768);
+          ranges.add(_ByteRange(middleStart, middleStart + chunkSize));
         }
 
         // 4. Random probes (2x 64KB chunks)
         if (totalSize > 1048576) {
           final random = Random();
           for (var i = 0; i < 2; i++) {
-            final start = random.nextInt(totalSize - 131072) + 65536;
-            ranges.add(_ByteRange(start, start + 65536));
+            final start = alignDown(
+              random.nextInt(totalSize - 131072) + chunkSize,
+            );
+            ranges.add(_ByteRange(start, start + chunkSize));
           }
         }
 
@@ -541,7 +555,8 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
         // for audiobooks with many chapters (5-10MB+)
         const maxTailSize = 16 * 1024 * 1024; // 16MB
         if (totalSize > maxTailSize) {
-          ranges.add(_ByteRange(totalSize - maxTailSize, totalSize));
+          final tailStart = alignDown(max(0, totalSize - maxTailSize));
+          ranges.add(_ByteRange(tailStart, totalSize));
         } else {
           ranges.add(_ByteRange(0, totalSize));
         }
@@ -744,7 +759,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
     const maxConcurrency = 4;
     for (var i = 0; i < ranges.length; i += maxConcurrency) {
       final batch = ranges.skip(i).take(maxConcurrency);
-      await Future.wait(batch.map((range) => _fetchAndSplitRange(range)));
+      await Future.wait(batch.map(_fetchAndSplitRange));
     }
   }
 
@@ -846,6 +861,9 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
 
   @override
   bool get canSeek => true;
+
+  @override
+  bool get hasCompleteData => false;
 
   /// Get the total file size if known.
   int? get totalSize => _totalSize;
@@ -1012,7 +1030,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     const maxConcurrency = 4;
     for (var i = 0; i < ranges.length; i += maxConcurrency) {
       final batch = ranges.skip(i).take(maxConcurrency);
-      await Future.wait(batch.map((range) => _fetchAndSplitRange(range)));
+      await Future.wait(batch.map(_fetchAndSplitRange));
     }
   }
 
@@ -1107,20 +1125,180 @@ enum ParseStrategy {
   randomAccess,
 }
 
+// ---------------------------------------------------------------------------
+// Internal helpers for format-aware strategy selection
+// ---------------------------------------------------------------------------
+
+/// Coarse audio format categories used only for strategy selection.
+enum _AudioFormatCategory {
+  /// MP4 / M4A / M4B – the moov atom can be anywhere in the file.
+  mp4,
+
+  /// MPEG / MP3 / AAC – ID3v2 at the start, optional ID3v1 at the end.
+  mpeg,
+
+  /// Formats that store all metadata exclusively at the start of the file
+  /// (FLAC, Ogg, WAV, AIFF, Matroska, ASF/WMA, DSF, etc.).
+  headerOnly,
+
+  /// Unrecognised format; use a safe default.
+  unknown,
+}
+
+/// Extract the file extension from a URL, ignoring query strings and fragments.
+///
+/// Returns the lowercase extension without the leading dot, or `null` if none
+/// is found.
+///
+/// Examples:
+/// - `https://example.com/audio.mp3` → `mp3`
+/// - `https://example.com/audio.mp3?token=x` → `mp3`
+/// - `https://example.com/stream` → `null`
+String? _extractUrlExtension(String url) {
+  try {
+    final path = Uri.parse(url).path;
+    final lastSlash = path.lastIndexOf('/');
+    final filename = lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
+    final lastDot = filename.lastIndexOf('.');
+    if (lastDot <= 0 || lastDot == filename.length - 1) return null;
+    return filename.substring(lastDot + 1).toLowerCase();
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Classify the audio format from an HTTP Content-Type header and URL.
+///
+/// [mimeType] (from the HTTP `Content-Type` header) takes precedence over the
+/// URL path extension.  Only the path component of [url] is inspected –
+/// query strings and fragments are ignored.
+///
+/// Returns the most specific [_AudioFormatCategory] that can be determined, or
+/// [_AudioFormatCategory.unknown] when the format cannot be identified.
+_AudioFormatCategory _detectAudioFormatCategory({
+  required String url,
+  String? mimeType,
+}) {
+  final mime = mimeType?.toLowerCase() ?? '';
+  final ext = _extractUrlExtension(url) ?? '';
+
+  // --- MP4 / M4A family ---
+  const _mp4Exts = {'mp4', 'm4a', 'm4b', 'm4p', 'm4r', 'm4v'};
+  if (mime.contains('/mp4') ||
+      mime.contains('m4a') ||
+      mime.contains('m4b') ||
+      _mp4Exts.contains(ext)) {
+    return _AudioFormatCategory.mp4;
+  }
+
+  // --- MPEG / MP3 / AAC family ---
+  const _mpegExts = {'mp3', 'mp2', 'mp1', 'aac', 'm2a', 'mpa', 'aacp'};
+  if (mime.contains('mpeg') ||
+      mime.contains('mp3') ||
+      mime.contains('/aac') ||
+      mime.contains('aacp') ||
+      _mpegExts.contains(ext)) {
+    return _AudioFormatCategory.mpeg;
+  }
+
+  // --- Header-only formats (metadata always at the start) ---
+  const _headerOnlyExts = {
+    'flac',
+    'ogg',
+    'oga',
+    'ogv',
+    'opus',
+    'wav',
+    'wave',
+    'aiff',
+    'aif',
+    'mkv',
+    'mka',
+    'webm',
+    'mpc',
+    'mpp',
+    'wv',
+    'wvp',
+    'ape',
+    'dsf',
+    'dff',
+    'asf',
+    'wma',
+    'wmv',
+  };
+  if (mime.contains('flac') ||
+      mime.contains('ogg') ||
+      mime.contains('vorbis') ||
+      mime.contains('opus') ||
+      mime.contains('wav') ||
+      mime.contains('aiff') ||
+      mime.contains('matroska') ||
+      mime.contains('webm') ||
+      mime.contains('musepack') ||
+      mime.contains('wavpack') ||
+      mime.contains('dsf') ||
+      mime.contains('dsdiff') ||
+      mime.contains('asf') ||
+      mime.contains('wma') ||
+      _headerOnlyExts.contains(ext)) {
+    return _AudioFormatCategory.headerOnly;
+  }
+
+  return _AudioFormatCategory.unknown;
+}
+
+// ---------------------------------------------------------------------------
+
 /// Result of strategy detection.
 class StrategyInfo {
   StrategyInfo({
     required this.strategy,
     required this.fileSize,
     required this.supportsRange,
+    this.probeStrategy = ProbeStrategy.scatter,
+    this.detectedFormat,
   });
 
   final ParseStrategy strategy;
   final int? fileSize;
   final bool supportsRange;
+
+  /// The probe strategy recommended for this URL and file type.
+  ///
+  /// Only relevant when [strategy] is [ParseStrategy.probe].
+  final ProbeStrategy probeStrategy;
+
+  /// A human-readable label for the detected audio format category, e.g.
+  /// `'mp4'`, `'mpeg'`, `'flac'`, or `'unknown'`.  Useful for logging.
+  final String? detectedFormat;
 }
 
+/// Returns the best [ProbeStrategy] for the given format category.
+///
+/// This value is always set on [StrategyInfo], even for small files that use
+/// [ParseStrategy.fullDownload], so callers can inspect the ideal probe
+/// strategy independently of the overall fetch strategy.
+ProbeStrategy _probeStrategyForCategory(_AudioFormatCategory category) =>
+    switch (category) {
+      _AudioFormatCategory.mp4 => ProbeStrategy.mp4Optimized,
+      _AudioFormatCategory.mpeg => ProbeStrategy.headerAndTail,
+      _AudioFormatCategory.headerOnly => ProbeStrategy.headerOnly,
+      _AudioFormatCategory.unknown => ProbeStrategy.scatter,
+    };
+
 /// Detect the best parsing strategy for a URL.
+///
+/// Takes into account the HTTP server capabilities (file size, Range support)
+/// **and** the audio format inferred from the Content-Type header and the URL
+/// path extension.  This allows choosing both the most efficient
+/// [ParseStrategy] and the most targeted [ProbeStrategy] for each format:
+///
+/// | Format | Probe strategy used |
+/// |--------|---------------------|
+/// | MP4 / M4A | [ProbeStrategy.mp4Optimized] |
+/// | MP3 / MPEG / AAC | [ProbeStrategy.headerAndTail] |
+/// | FLAC, OGG, WAV, AIFF … | [ParseStrategy.headerOnly] (no probe needed) |
+/// | Unknown | [ProbeStrategy.scatter] |
 ///
 /// Returns a [StrategyInfo] with the recommended strategy.
 Future<StrategyInfo> detectStrategy(
@@ -1149,32 +1327,63 @@ Future<StrategyInfo> detectStrategy(
     final supportsRange =
         acceptRanges?.toLowerCase().contains('bytes') ?? false;
 
-    // Decision logic
-    ParseStrategy strategy;
-    if (fileSize == null) {
-      // Unknown size, use full download to be safe
-      strategy = ParseStrategy.fullDownload;
-    } else if (fileSize <= largeFileThreshold) {
-      // Small file, full download is fine
-      strategy = ParseStrategy.fullDownload;
-    } else if (supportsRange) {
-      // Large file with Range support
-      // For very large files, random access is best
-      // For medium files, probe is best (scattered metadata)
-      if (fileSize > 50 * 1024 * 1024) {
-        strategy = ParseStrategy.randomAccess;
-      } else {
-        strategy = ParseStrategy.probe;
-      }
-    } else {
-      // Large file without Range support
-      strategy = ParseStrategy.fullDownload;
+    // Detect audio format from Content-Type and URL extension.
+    final mimeType = headResponse.headers.contentType?.mimeType;
+    final formatCategory = _detectAudioFormatCategory(
+      mimeType: mimeType,
+      url: url,
+    );
+    final detectedFormat = switch (formatCategory) {
+      _AudioFormatCategory.mp4 => 'mp4',
+      _AudioFormatCategory.mpeg => 'mpeg',
+      _AudioFormatCategory.headerOnly => 'header-only',
+      _AudioFormatCategory.unknown => 'unknown',
+    };
+
+    // Small files and servers without Range support always get a full download.
+    if (fileSize == null || fileSize <= largeFileThreshold || !supportsRange) {
+      return StrategyInfo(
+        strategy: ParseStrategy.fullDownload,
+        fileSize: fileSize,
+        supportsRange: supportsRange,
+        probeStrategy: _probeStrategyForCategory(formatCategory),
+        detectedFormat: detectedFormat,
+      );
+    }
+
+    // Large file with Range support: choose strategy and probe based on format.
+    final ParseStrategy strategy;
+
+    switch (formatCategory) {
+      case _AudioFormatCategory.mp4:
+        // moov atom can be anywhere – probe with mp4-optimised ranges.
+        strategy = fileSize > 50 * 1024 * 1024
+            ? ParseStrategy.randomAccess
+            : ParseStrategy.probe;
+
+      case _AudioFormatCategory.mpeg:
+        // ID3v2 at start, ID3v1 at end – a header+tail probe covers both.
+        strategy = fileSize > 50 * 1024 * 1024
+            ? ParseStrategy.randomAccess
+            : ParseStrategy.probe;
+
+      case _AudioFormatCategory.headerOnly:
+        // All metadata is at the very start – a header-only fetch is fastest.
+        strategy = ParseStrategy.headerOnly;
+
+      case _AudioFormatCategory.unknown:
+        // Fall back to the previous generic size-based heuristic.
+        strategy = fileSize > 50 * 1024 * 1024
+            ? ParseStrategy.randomAccess
+            : ParseStrategy.probe;
     }
 
     return StrategyInfo(
       strategy: strategy,
       fileSize: fileSize,
       supportsRange: supportsRange,
+      probeStrategy: _probeStrategyForCategory(formatCategory),
+      detectedFormat: detectedFormat,
     );
   } finally {
     client.close();
@@ -1183,18 +1392,24 @@ Future<StrategyInfo> detectStrategy(
 
 /// Smart URL parser that automatically selects the best strategy.
 ///
-/// Analyzes the URL and server capabilities to choose:
+/// Analyses the URL, server capabilities, and audio format to choose:
 /// - [HttpTokenizer] for small files or non-Range servers
-/// - [RangeTokenizer] for large files with Range support
-/// - [RandomAccessTokenizer] for very large files
+/// - [RangeTokenizer] for formats whose metadata is entirely at the start
+///   (FLAC, OGG, WAV, AIFF, …)
+/// - [ProbingRangeTokenizer] for formats with metadata at known locations
+///   (MP3 → header+tail, MP4 → mp4-optimised probe)
+/// - [RandomAccessTokenizer] for very large files (> 50 MB)
 ///
 /// Parameters:
 /// - [url]: The URL to parse
 /// - [options]: Parse options
 /// - [timeout]: HTTP timeout
 /// - [strategy]: Force a specific strategy (default: auto-detect)
-/// - [probeStrategy]: Probing strategy for scattered metadata
-/// - [onStrategySelected]: Callback when strategy is selected (for debugging)
+/// - [probeStrategy]: Override the probe strategy.  When `null` (the default),
+///   the best [ProbeStrategy] for the detected audio format is used
+///   automatically.  Only relevant when [strategy] is [ParseStrategy.probe].
+/// - [onStrategySelected]: Callback when strategy is selected (for debugging).
+///   The `reason` string includes detected format, file size, and Range support.
 ///
 /// Example:
 /// ```dart
@@ -1205,7 +1420,7 @@ Future<AudioMetadata> parseUrl(
   ParseOptions? options,
   Duration? timeout,
   ParseStrategy? strategy,
-  ProbeStrategy probeStrategy = ProbeStrategy.scatter,
+  ProbeStrategy? probeStrategy,
   void Function(ParseStrategy strategy, String reason)? onStrategySelected,
 }) async {
   options ??= const ParseOptions();
@@ -1218,10 +1433,15 @@ Future<AudioMetadata> parseUrl(
     strategy = info.strategy;
   }
 
+  // Resolve effective probe strategy: explicit override → auto-detected → scatter.
+  final effectiveProbeStrategy =
+      probeStrategy ?? info?.probeStrategy ?? ProbeStrategy.scatter;
+
   // Log strategy selection
   String reason;
   if (info != null) {
     reason =
+        'Format: ${info.detectedFormat ?? "unknown"}, '
         'File size: ${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}, '
         'Range support: ${info.supportsRange}';
   } else {
@@ -1238,7 +1458,12 @@ Future<AudioMetadata> parseUrl(
       return _parseWithHeaderOnly(url, effectiveTimeout, options);
 
     case ParseStrategy.probe:
-      return _parseWithProbe(url, effectiveTimeout, options, probeStrategy);
+      return _parseWithProbe(
+        url,
+        effectiveTimeout,
+        options,
+        effectiveProbeStrategy,
+      );
 
     case ParseStrategy.randomAccess:
       return _parseWithRandomAccess(url, effectiveTimeout, options);
@@ -1294,7 +1519,6 @@ Future<AudioMetadata> _parseWithProbe(
   try {
     return await parseFromTokenizer(tokenizer, options: options);
   } finally {
-    print('Probing stats: ${tokenizer.fetchedRanges}');
     tokenizer.close();
   }
 }

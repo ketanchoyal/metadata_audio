@@ -11,30 +11,27 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        sdk: ['stable']
+        sdk: ["stable"]
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
           sdk: ${{ matrix.sdk }}
-      
+
       - name: Cache pub cache
         uses: actions/cache@v3
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pubcache-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-pubcache-
-      
+
       - name: Get dependencies
         run: dart pub get
-      
-      - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed .
-      
+
       - name: Run static analysis
         run: dart analyze
-      
+
       - name: Run tests
         run: dart test

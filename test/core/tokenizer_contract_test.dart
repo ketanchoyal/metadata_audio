@@ -4,6 +4,8 @@ import 'package:test/test.dart';
 
 /// Mock tokenizer for testing the interface contract
 class MockTokenizer implements Tokenizer {
+  @override
+  bool get hasCompleteData => true;
 
   MockTokenizer(this._data, {bool canSeek = true}) : _canSeek = canSeek;
   final List<int> _data;

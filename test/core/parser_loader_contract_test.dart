@@ -4,6 +4,8 @@ import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 class MockTokenizer implements Tokenizer {
+  @override
+  bool get hasCompleteData => true;
   MockTokenizer({required this.canSeek});
 
   @override

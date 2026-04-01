@@ -39,6 +39,17 @@ abstract class Tokenizer {
   /// When false, [seek] will throw [TokenizerException].
   bool get canSeek;
 
+  /// Whether this tokenizer has access to the complete file data.
+  ///
+  /// Returns true for tokenizers that have the entire file available
+  /// (e.g., [FileTokenizer], [BytesTokenizer], full-download [HttpTokenizer]).
+  /// Returns false for partial tokenizers that only hold a subset of the file
+  /// (e.g., [RangeTokenizer], [ProbingRangeTokenizer], [RandomAccessTokenizer]).
+  ///
+  /// When false, duration calculations based on frame counting may be inaccurate
+  /// since the parser can only see a portion of the file.
+  bool get hasCompleteData => true;
+
   /// Read a single byte (unsigned 8-bit integer) and advance position
   ///
   /// Throws [TokenizerException] if at end of data.
