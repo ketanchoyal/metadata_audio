@@ -20,7 +20,6 @@ class MpegContentError extends ParseError {
 }
 
 class MpegParser {
-
   MpegParser({
     required this.metadata,
     required this.tokenizer,
@@ -252,10 +251,11 @@ class MpegParser {
     return cursor + 9;
   }
 
-  int _readUint32Be(List<int> data, int offset) => (data[offset] << 24) |
-        (data[offset + 1] << 16) |
-        (data[offset + 2] << 8) |
-        data[offset + 3];
+  int _readUint32Be(List<int> data, int offset) =>
+      (data[offset] << 24) |
+      (data[offset + 1] << 16) |
+      (data[offset + 2] << 8) |
+      data[offset + 3];
 
   bool _parseMpegAudioFrame() {
     final frameStart = tokenizer.position;
@@ -460,6 +460,24 @@ class MpegParser {
         duration: numberOfSamples / sampleRate,
       );
     }
+
+    if (fileSize != null &&
+        _mpegOffset != null &&
+        metadata.format.duration == null &&
+        tokenizer.hasCompleteData &&
+        _bitrates.isNotEmpty) {
+      final id3v1Size = _hasId3v1 ? 128 : 0;
+      final mpegSize = fileSize - _mpegOffset! - id3v1Size;
+      if (mpegSize > 0) {
+        // If we saw some MPEG frames but not enough to reach the EOF heuristic,
+        // fall back to file size plus the sampled average bitrate.
+        final averageBitrate =
+            _bitrates.reduce((a, b) => a + b) / _bitrates.length;
+        if (averageBitrate > 0) {
+          metadata.setFormat(duration: mpegSize * 8 / averageBitrate);
+        }
+      }
+    }
   }
 
   List<int>? _safeReadBytes(int length) {
@@ -507,7 +525,6 @@ class MpegParser {
 enum MpegChannelMode { stereo, jointStereo, dualChannel, mono }
 
 class MpegFrameHeader {
-
   const MpegFrameHeader({
     required this.version,
     required this.layer,
@@ -686,7 +703,6 @@ class MpegFrameHeader {
 enum _FrameSyncKind { mpeg, adts }
 
 class _FrameSyncResult {
-
   const _FrameSyncResult({required this.kind});
   final _FrameSyncKind kind;
 }

@@ -1517,10 +1517,28 @@ Future<AudioMetadata> _parseWithProbe(
   );
 
   try {
-    return await parseFromTokenizer(tokenizer, options: options);
+    final metadata = await parseFromTokenizer(tokenizer, options: options);
+    if (_shouldRetryWithFullDownload(metadata)) {
+      return _parseWithFullDownload(url, timeout, options);
+    }
+    return metadata;
   } finally {
     tokenizer.close();
   }
+}
+
+bool _shouldRetryWithFullDownload(AudioMetadata metadata) {
+  final format = metadata.format;
+  if (format.container != 'mp3' || format.duration != null) {
+    return false;
+  }
+
+  final warningMessages = metadata.quality.warnings
+      .map((warning) => warning.message)
+      .toList();
+  return warningMessages.any(
+    (message) => message.startsWith('Invalid ID3v2.3 frame header ID'),
+  );
 }
 
 /// Parse using random access.

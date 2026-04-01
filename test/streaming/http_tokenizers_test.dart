@@ -265,15 +265,13 @@ void main() {
       required String detectedFormat,
       int fileSize = 10 * 1024 * 1024,
       bool supportsRange = true,
-    }) {
-      return StrategyInfo(
-        strategy: strategy,
-        fileSize: fileSize,
-        supportsRange: supportsRange,
-        probeStrategy: probeStrategy,
-        detectedFormat: detectedFormat,
-      );
-    }
+    }) => StrategyInfo(
+      strategy: strategy,
+      fileSize: fileSize,
+      supportsRange: supportsRange,
+      probeStrategy: probeStrategy,
+      detectedFormat: detectedFormat,
+    );
 
     test('MP4/M4A uses mp4Optimized probe strategy', () {
       final info = _makeInfo(
@@ -628,7 +626,7 @@ void main() {
           probeStrategy: ProbeStrategy.mp4Optimized,
         );
 
-        final probePosition = totalSize - 32;
+        const probePosition = totalSize - 32;
         tokenizer.seek(probePosition);
 
         expect(tokenizer.readUint8(), equals(bytes[probePosition]));

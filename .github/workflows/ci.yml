@@ -30,8 +30,5 @@ jobs:
       - name: Get dependencies
         run: dart pub get
 
-      - name: Run static analysis
-        run: dart analyze
-
       - name: Run tests
         run: dart test

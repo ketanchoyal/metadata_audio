@@ -103,7 +103,6 @@ void initializeParserFactory(ParserFactory factory) {
 /// - DSD (DSF, DSDIFF)
 ParserFactory createDefaultParserFactory() {
   final registry = ParserRegistry()
-    ..register(MpegLoader())
     ..register(FlacLoader())
     ..register(Mp4Loader())
     ..register(OggLoader())
@@ -116,7 +115,8 @@ ParserFactory createDefaultParserFactory() {
     ..register(WavPackLoader())
     ..register(DsfLoader())
     ..register(DsdiffLoader())
-    ..register(Id3v2Loader());
+    ..register(Id3v2Loader())
+    ..register(MpegLoader());
 
   return ParserFactory(registry);
 }

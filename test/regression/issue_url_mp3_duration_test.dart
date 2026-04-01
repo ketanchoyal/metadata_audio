@@ -14,6 +14,7 @@ import 'dart:typed_data';
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
@@ -23,7 +24,7 @@ import 'package:test/test.dart';
 // ---------------------------------------------------------------------------
 class _PartialTokenizer extends Tokenizer {
   _PartialTokenizer(this._bytes, {required int fullFileSize})
-      : fileInfo = FileInfo(path: 'test.mp3', size: fullFileSize);
+    : fileInfo = FileInfo(path: 'test.mp3', size: fullFileSize);
 
   final Uint8List _bytes;
   int _position = 0;
@@ -237,9 +238,84 @@ void main() {
         final expectedDuration = totalFrames * samplesPerFrame / sampleRate;
 
         expect(metadata.format.duration, isNotNull);
+        expect(metadata.format.duration!, closeTo(expectedDuration, 0.01));
+      },
+    );
+
+    test(
+      'Full MP3 with too few frames still estimates duration from file size',
+      () async {
+        final bytes = <int>[
+          ..._buildFrame(bitrateIndex: 9),
+          ..._buildFrame(bitrateIndex: 10),
+          ..._buildFrame(bitrateIndex: 9),
+          ...List<int>.filled(1000, 0),
+        ];
+
+        final metadata = await parseBytes(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(path: 'short-mpeg.mp3', size: bytes.length),
+          options: const ParseOptions(duration: true),
+        );
+
+        expect(metadata.format.container, equals('MPEG'));
+        expect(metadata.format.codec, equals('MPEG 1 Layer 3'));
+        expect(metadata.format.duration, isNotNull);
         expect(
-          metadata.format.duration!,
-          closeTo(expectedDuration, 0.01),
+          metadata.format.duration,
+          closeTo(bytes.length * 8 / 128000, 0.05),
+        );
+      },
+    );
+
+    test(
+      'malformed ID3v2.3 frame header still allows MPEG duration recovery',
+      () async {
+        final malformedTag = <int>[
+          0x49,
+          0x44,
+          0x33,
+          0x03,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x0A,
+          0x74,
+          0x49,
+          0x54,
+          0x32,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+        ];
+
+        final bytes = <int>[
+          ...malformedTag,
+          ..._buildFrame(bitrateIndex: 9),
+          ..._buildFrame(bitrateIndex: 10),
+          ..._buildFrame(bitrateIndex: 9),
+        ];
+
+        final tokenizer = BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(path: 'malformed-id3.mp3', size: bytes.length),
+        );
+
+        final metadata = await parseFromTokenizer(tokenizer);
+
+        expect(metadata.format.container, equals('MPEG'));
+        expect(metadata.format.codec, isNotNull);
+        expect(metadata.format.duration, isNotNull);
+        expect(
+          metadata.quality.warnings.map((warning) => warning.message),
+          contains(
+            contains('Invalid ID3v2.3 frame header ID'),
+          ),
         );
       },
     );

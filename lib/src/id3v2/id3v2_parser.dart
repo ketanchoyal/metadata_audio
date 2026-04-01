@@ -110,6 +110,7 @@ class Id3v2Parser {
       return;
     }
 
+    final payloadStart = tokenizer.position;
     var data = tokenizer.readBytes(dataLen);
     if (header.flags.unsynchronisation && header.version.major < 4) {
       data = removeUnsyncBytes(data);
@@ -125,6 +126,11 @@ class Id3v2Parser {
       if (chapters != null) {
         metadata.setFormat(chapters: chapters);
       }
+    }
+
+    final recoveryOffset = parsed.recoveryOffset;
+    if (recoveryOffset != null && tokenizer.canSeek) {
+      tokenizer.seek(payloadStart + recoveryOffset);
     }
   }
 
@@ -175,12 +181,15 @@ class Id3v2Parser {
     final tags = <String, dynamic>{};
     final chapters = <Id3v2ChapterFrame>[];
     final tocs = <Id3v2TocFrame>[];
+    int? recoveryOffset;
 
     var offset = 0;
     while (offset < data.length) {
+      final frameStartOffset = offset;
       final frameHeaderLength = FrameHeader.getFrameHeaderLength(majorVersion);
       if (offset + frameHeaderLength > data.length) {
         metadata.addWarning('Illegal ID3v2 tag length');
+        recoveryOffset ??= _findMpegSyncOffset(data, frameStartOffset);
         break;
       }
 
@@ -196,8 +205,14 @@ class Id3v2Parser {
         break;
       }
 
+      if (!frameHeader.hasValidId) {
+        recoveryOffset ??= _findMpegSyncOffset(data, frameStartOffset);
+        break;
+      }
+
       if (frameHeader.length < 0 || offset + frameHeader.length > data.length) {
         metadata.addWarning('Illegal ID3v2 frame length for ${frameHeader.id}');
+        recoveryOffset ??= _findMpegSyncOffset(data, frameStartOffset);
         break;
       }
 
@@ -250,7 +265,12 @@ class Id3v2Parser {
       tags[frameHeader.id] = value;
     }
 
-    return _ParsedFrames(tags: tags, chapters: chapters, tocs: tocs);
+    return _ParsedFrames(
+      tags: tags,
+      chapters: chapters,
+      tocs: tocs,
+      recoveryOffset: recoveryOffset,
+    );
   }
 
   Id3v2ChapterFrame? _parseChapterFrame(
@@ -477,6 +497,15 @@ class Id3v2Parser {
   static int? _parseOptionalOffset(int value) =>
       value == 0xFFFFFFFF ? null : value;
 
+  static int? _findMpegSyncOffset(List<int> data, int startOffset) {
+    for (var i = startOffset; i + 1 < data.length; i++) {
+      if (data[i] == 0xFF && (data[i + 1] & 0xE0) == 0xE0) {
+        return i;
+      }
+    }
+    return null;
+  }
+
   String? _extractEmbeddedTitle(
     List<int> data,
     Id3v2MajorVersion majorVersion,
@@ -594,8 +623,10 @@ class _ParsedFrames {
     required this.tags,
     required this.chapters,
     required this.tocs,
+    required this.recoveryOffset,
   });
   final Map<String, dynamic> tags;
   final List<Id3v2ChapterFrame> chapters;
   final List<Id3v2TocFrame> tocs;
+  final int? recoveryOffset;
 }

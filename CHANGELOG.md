@@ -1,3 +1,9 @@
+## 0.6.1
+
+- **Fixed**: MP3 URL parsing now routes through the MPEG parser instead of the tag-only ID3 loader, restoring duration and bitrate extraction for real-world app usage.
+- **Fixed**: Malformed ID3v2.3 frame headers now trigger MPEG resync/fallback instead of leaving MP3 metadata stuck at `null`.
+- **Fixed**: MP3 duration now falls back to file-size plus sampled bitrate even when parsing stops before the EOF frame-count heuristic completes, improving URL parsing for malformed or tag-heavy files on mobile.
+
 ## 0.6.0
 
 - **Fixed**: `RangeTokenizer.hasCompleteData` now reports `true` when the entire remote file fits inside the initial header fetch.

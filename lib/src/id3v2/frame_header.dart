@@ -50,6 +50,14 @@ class FrameHeader {
 
   bool get isPadding => id.trim().isEmpty || id.codeUnits.every((c) => c == 0);
 
+  bool get hasValidId {
+    final expectedLength = id.length;
+    final pattern = expectedLength == 3
+        ? RegExp(r'^[A-Z0-9]{3}$')
+        : RegExp(r'^[A-Z0-9]{4}$');
+    return pattern.hasMatch(id);
+  }
+
   static int getFrameHeaderLength(Id3v2MajorVersion majorVersion) {
     switch (majorVersion) {
       case 2:
