@@ -34,6 +34,8 @@ class TestParserLoader extends ParserLoader {
 }
 
 class MockTokenizer implements Tokenizer {
+  @override
+  bool get hasCompleteData => true;
   MockTokenizer({this.canSeek = true});
 
   @override

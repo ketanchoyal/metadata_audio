@@ -21,6 +21,9 @@ class MockLyrics3Tokenizer implements Tokenizer {
   bool get canSeek => true;
 
   @override
+  bool get hasCompleteData => true;
+
+  @override
   FileInfo? get fileInfo => _fileInfo;
 
   @override

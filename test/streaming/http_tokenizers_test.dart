@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:metadata_audio/src/aiff/aiff_loader.dart';
@@ -8,7 +9,85 @@ import 'package:metadata_audio/src/mp4/mp4_loader.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/wav/wave_loader.dart';
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
+
+Future<HttpServer> _startBytesServer(
+  List<int> bytes, {
+  String contentType = 'application/octet-stream',
+}) async {
+  final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+  final data = Uint8List.fromList(bytes);
+
+  server.listen((request) async {
+    request.response.headers
+      ..set('Accept-Ranges', 'bytes')
+      ..set('Content-Type', contentType);
+
+    final rangeHeader = request.headers.value('range');
+    if (rangeHeader != null && rangeHeader.startsWith('bytes=')) {
+      final spec = rangeHeader.substring('bytes='.length);
+      final dash = spec.indexOf('-');
+      final start = int.parse(spec.substring(0, dash));
+      final endStr = spec.substring(dash + 1);
+      final end = endStr.isEmpty ? data.length - 1 : int.parse(endStr);
+      final sliceEnd = (end + 1).clamp(0, data.length);
+
+      request.response.statusCode = 206;
+      request.response.headers
+        ..set('Content-Range', 'bytes $start-$end/${data.length}')
+        ..contentLength = sliceEnd - start;
+      if (request.method != 'HEAD') {
+        request.response.add(data.sublist(start, sliceEnd));
+      }
+    } else {
+      request.response.headers.contentLength = data.length;
+      if (request.method != 'HEAD') {
+        request.response.add(data);
+      }
+    }
+
+    await request.response.close();
+  });
+
+  return server;
+}
+
+Future<HttpServer> _startSampleServer(
+  String relPath, {
+  String? contentType,
+}) async {
+  final bytes = await File(
+    p.join(Directory.current.path, 'test', 'samples', relPath),
+  ).readAsBytes();
+  return _startBytesServer(
+    bytes,
+    contentType: contentType ?? _mimeForFilename(relPath),
+  );
+}
+
+String _mimeForFilename(String filename) {
+  final ext = filename.split('.').last.toLowerCase();
+  switch (ext) {
+    case 'mp3':
+      return 'audio/mpeg';
+    case 'flac':
+      return 'audio/flac';
+    case 'ogg':
+      return 'audio/ogg';
+    case 'm4a':
+      return 'audio/mp4';
+    case 'mp4':
+      return 'video/mp4';
+    case 'wav':
+      return 'audio/wav';
+    case 'aiff':
+    case 'aif':
+      return 'audio/aiff';
+    default:
+      return 'application/octet-stream';
+  }
+}
 
 /// Validates that a URL is accessible and supports Range requests.
 /// Returns null if valid, or a skip message if invalid.
@@ -175,20 +254,129 @@ void main() {
     });
   });
 
+  // Unit tests for format-based strategy selection (no network required).
+  // These tests verify that StrategyInfo carries the right ProbeStrategy and
+  // ParseStrategy for each audio format by constructing StrategyInfo directly.
+  group('format-aware strategy selection (StrategyInfo)', () {
+    // Helper that simulates what detectStrategy() returns for a given format.
+    StrategyInfo _makeInfo({
+      required ParseStrategy strategy,
+      required ProbeStrategy probeStrategy,
+      required String detectedFormat,
+      int fileSize = 10 * 1024 * 1024,
+      bool supportsRange = true,
+    }) {
+      return StrategyInfo(
+        strategy: strategy,
+        fileSize: fileSize,
+        supportsRange: supportsRange,
+        probeStrategy: probeStrategy,
+        detectedFormat: detectedFormat,
+      );
+    }
+
+    test('MP4/M4A uses mp4Optimized probe strategy', () {
+      final info = _makeInfo(
+        strategy: ParseStrategy.probe,
+        probeStrategy: ProbeStrategy.mp4Optimized,
+        detectedFormat: 'mp4',
+      );
+      expect(info.strategy, equals(ParseStrategy.probe));
+      expect(info.probeStrategy, equals(ProbeStrategy.mp4Optimized));
+      expect(info.detectedFormat, equals('mp4'));
+    });
+
+    test('MP3/MPEG uses headerAndTail probe strategy', () {
+      final info = _makeInfo(
+        strategy: ParseStrategy.probe,
+        probeStrategy: ProbeStrategy.headerAndTail,
+        detectedFormat: 'mpeg',
+      );
+      expect(info.strategy, equals(ParseStrategy.probe));
+      expect(info.probeStrategy, equals(ProbeStrategy.headerAndTail));
+      expect(info.detectedFormat, equals('mpeg'));
+    });
+
+    test('FLAC/OGG/WAV uses headerOnly parse strategy', () {
+      final info = _makeInfo(
+        strategy: ParseStrategy.headerOnly,
+        probeStrategy: ProbeStrategy.headerOnly,
+        detectedFormat: 'header-only',
+      );
+      expect(info.strategy, equals(ParseStrategy.headerOnly));
+      expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
+      expect(info.detectedFormat, equals('header-only'));
+    });
+
+    test('unknown format falls back to scatter probe strategy', () {
+      final info = _makeInfo(
+        strategy: ParseStrategy.probe,
+        probeStrategy: ProbeStrategy.scatter,
+        detectedFormat: 'unknown',
+      );
+      expect(info.strategy, equals(ParseStrategy.probe));
+      expect(info.probeStrategy, equals(ProbeStrategy.scatter));
+      expect(info.detectedFormat, equals('unknown'));
+    });
+
+    test('very large MP4 (> 50MB) uses randomAccess regardless of format', () {
+      final info = _makeInfo(
+        strategy: ParseStrategy.randomAccess,
+        probeStrategy: ProbeStrategy.mp4Optimized,
+        detectedFormat: 'mp4',
+        fileSize: 100 * 1024 * 1024,
+      );
+      expect(info.strategy, equals(ParseStrategy.randomAccess));
+    });
+
+    test('very large MP3 (> 50MB) uses randomAccess', () {
+      final info = _makeInfo(
+        strategy: ParseStrategy.randomAccess,
+        probeStrategy: ProbeStrategy.headerAndTail,
+        detectedFormat: 'mpeg',
+        fileSize: 100 * 1024 * 1024,
+      );
+      expect(info.strategy, equals(ParseStrategy.randomAccess));
+    });
+
+    test('small file always uses fullDownload regardless of format', () {
+      for (final format in ['mp4', 'mpeg', 'header-only', 'unknown']) {
+        final info = _makeInfo(
+          strategy: ParseStrategy.fullDownload,
+          probeStrategy: ProbeStrategy.scatter,
+          detectedFormat: format,
+          fileSize: 1 * 1024 * 1024, // 1MB
+        );
+        expect(
+          info.strategy,
+          equals(ParseStrategy.fullDownload),
+          reason: 'Small $format file should use fullDownload',
+        );
+      }
+    });
+
+    test('StrategyInfo exposes detectedFormat for logging', () {
+      final info = StrategyInfo(
+        strategy: ParseStrategy.probe,
+        fileSize: 10 * 1024 * 1024,
+        supportsRange: true,
+        probeStrategy: ProbeStrategy.mp4Optimized,
+        detectedFormat: 'mp4',
+      );
+      expect(info.detectedFormat, isNotNull);
+      expect(info.detectedFormat, equals('mp4'));
+    });
+  });
+
   // =========================================================================
-  // CONFIGURATION: Set your test URL here
+  // CONFIGURATION: Live URL used for the tokenizer smoke tests
   // =========================================================================
-  // Example URLs that work well for testing:
-  // - Google Drive direct download (if public)
-  // - GitHub raw file URLs
-  // - Your own server with Range support
-  //
-  // Requirements:
-  // - Must support HTTP Range requests (Accept-Ranges: bytes)
-  // - Should be at least 5MB to test strategy selection
-  // - Must be accessible without authentication
+  // We keep these tests focused on the tokenizer layer, but they still need a
+  // real public file so the HTTP range and strategy paths are exercised.
   // =========================================================================
-  const testUrl = '';
+  const testUrl =
+      'https://archive.org/download/anyone_s_daughter_live_full_album/'
+      'anyone_s_daughter_live_full_album.mp3';
 
   // Minimum file size for strategy tests (5MB)
   const minFileSize = 5 * 1024 * 1024;
@@ -405,6 +593,159 @@ void main() {
   });
 
   group('Tokenizer classes', () {
+    test(
+      'RangeTokenizer reports full data when small file fits in header',
+      () async {
+        final server = await _startBytesServer(
+          List<int>.generate(1024, (index) => index % 256),
+          contentType: 'audio/mpeg',
+        );
+
+        try {
+          final tokenizer = await RangeTokenizer.fromUrl(
+            'http://localhost:${server.port}/tiny.mp3',
+          );
+
+          expect(tokenizer.totalSize, equals(1024));
+          expect(tokenizer.headerSize, equals(1024));
+          expect(tokenizer.hasCompleteData, isTrue);
+
+          tokenizer.close();
+        } finally {
+          await server.close(force: true);
+        }
+      },
+    );
+
+    test('ProbingRangeTokenizer mp4 tail data is readable near EOF', () async {
+      const totalSize = 17 * 1024 * 1024 + 123;
+      final bytes = List<int>.generate(totalSize, (index) => index % 251);
+      final server = await _startBytesServer(bytes, contentType: 'audio/mp4');
+
+      try {
+        final tokenizer = await ProbingRangeTokenizer.fromUrl(
+          'http://localhost:${server.port}/large.m4a',
+          probeStrategy: ProbeStrategy.mp4Optimized,
+        );
+
+        final probePosition = totalSize - 32;
+        tokenizer.seek(probePosition);
+
+        expect(tokenizer.readUint8(), equals(bytes[probePosition]));
+
+        tokenizer.close();
+      } finally {
+        await server.close(force: true);
+      }
+    });
+
+    test('HttpTokenizer downloads and parses FLAC sample', () async {
+      final server = await _startSampleServer('flac/sample.flac');
+
+      try {
+        final tokenizer = await HttpTokenizer.fromUrl(
+          'http://localhost:${server.port}/sample.flac',
+        );
+
+        expect(tokenizer.fileInfo?.size, equals(66183));
+        expect(tokenizer.canSeek, isTrue);
+
+        final metadata = await parseFromTokenizer(tokenizer);
+        expect(metadata.format.container, equals('FLAC'));
+        expect(metadata.format.lossless, isTrue);
+
+        tokenizer.close();
+      } finally {
+        await server.close(force: true);
+      }
+    });
+
+    test('RangeTokenizer keeps AIFF sample partially downloaded', () async {
+      final server = await _startSampleServer('aiff/sample.aiff');
+
+      try {
+        final tokenizer = await RangeTokenizer.fromUrl(
+          'http://localhost:${server.port}/sample.aiff',
+        );
+
+        expect(tokenizer.totalSize, equals(596904));
+        expect(tokenizer.headerSize, equals(262144));
+        expect(tokenizer.headerSize, lessThan(tokenizer.totalSize!));
+        expect(tokenizer.hasCompleteData, isFalse);
+
+        tokenizer.close();
+      } finally {
+        await server.close(force: true);
+      }
+    });
+
+    test('HttpTokenizer downloads and parses AIFF sample', () async {
+      final server = await _startSampleServer('aiff/sample.aiff');
+
+      try {
+        final tokenizer = await HttpTokenizer.fromUrl(
+          'http://localhost:${server.port}/sample.aiff',
+        );
+
+        final metadata = await parseFromTokenizer(tokenizer);
+        expect(metadata.format.container, equals('AIFF'));
+        expect(metadata.common.title, equals("Sinner's Prayer"));
+
+        tokenizer.close();
+      } finally {
+        await server.close(force: true);
+      }
+    });
+
+    test(
+      'ProbingRangeTokenizer parses M4A sample with mp4Optimized strategy',
+      () async {
+        final server = await _startSampleServer('mp4/sample.m4a');
+
+        try {
+          final tokenizer = await ProbingRangeTokenizer.fromUrl(
+            'http://localhost:${server.port}/sample.m4a',
+            probeStrategy: ProbeStrategy.mp4Optimized,
+          );
+
+          expect(tokenizer.canSeek, isTrue);
+          expect(tokenizer.fetchedRanges['chunks'], greaterThan(0));
+
+          final metadata = await parseFromTokenizer(tokenizer);
+          expect(metadata.format.container, startsWith('M4'));
+
+          tokenizer.close();
+        } finally {
+          await server.close(force: true);
+        }
+      },
+    );
+
+    test(
+      'RandomAccessTokenizer provides random access for WAV sample',
+      () async {
+        final server = await _startSampleServer('wav/issue-819.wav');
+
+        try {
+          final tokenizer = await RandomAccessTokenizer.fromUrl(
+            'http://localhost:${server.port}/sample.wav',
+          );
+
+          expect(tokenizer.canSeek, isTrue);
+
+          await tokenizer.prefetchRange(0, 1023);
+          expect(tokenizer.totalBytesFetched, greaterThan(0));
+
+          final metadata = await parseFromTokenizer(tokenizer);
+          expect(metadata.format.container, equals('WAVE'));
+
+          tokenizer.close();
+        } finally {
+          await server.close(force: true);
+        }
+      },
+    );
+
     test(
       'HttpTokenizer downloads and parses',
       () async {

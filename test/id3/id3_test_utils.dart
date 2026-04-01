@@ -4,6 +4,8 @@ import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class MockTokenizer implements Tokenizer {
+  @override
+  bool get hasCompleteData => true;
 
   MockTokenizer({
     required List<int> data,

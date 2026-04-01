@@ -1,3 +1,10 @@
+## 0.6.0
+
+- **Fixed**: `RangeTokenizer.hasCompleteData` now reports `true` when the entire remote file fits inside the initial header fetch.
+- **Fixed**: `ProbingRangeTokenizer` now aligns `mp4Optimized` tail fetches to chunk boundaries, preventing chunk-cache misindexing near the end of large MP4/M4A files.
+- **Added**: Real URL integration coverage for MP3, FLAC, OGG, M4B, plus 600+ MB FLAC and WAV files.
+- **Added**: Lower-level tokenizer smoke tests for FLAC, AIFF, M4A, and WAV sample files.
+
 ## 0.5.1
 
 - **Fixed**: `ProbingRangeTokenizer` now correctly splits fetched data into 64KB chunks, fixing metadata parsing failures for MP3 files with large ID3v2 headers when using `ParseStrategy.probe`.
