@@ -257,7 +257,7 @@ class DsdiffParser {
   }
 
   int _safeToInt(BigInt value) {
-    if (value < BigInt.zero || value > BigInt.from(0x7FFFFFFFFFFFFFFF)) {
+    if (value < BigInt.zero || value > BigInt.parse('7FFFFFFFFFFFFFFF', radix: 16)) {
       throw DsdiffContentError('Chunk size out of supported range: $value');
     }
     return value.toInt();

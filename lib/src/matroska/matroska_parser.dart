@@ -32,7 +32,7 @@ class MatroskaParser {
   int _seekHeadOffset = 0;
 
   Future<void> parse() async {
-    final containerSize = tokenizer.fileInfo?.size ?? 0x7FFFFFFFFFFFFFFF;
+    final containerSize = tokenizer.fileInfo?.size ?? 0x1FFFFFFFFFFFFF;
     final iterator = EbmlIterator(tokenizer);
 
     await iterator.iterate(

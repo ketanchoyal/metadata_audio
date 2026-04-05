@@ -386,7 +386,7 @@ class AtomToken {
 
   static int readUint64Be(List<int> bytes, int offset) {
     final value = _readUint64BeAsBigInt(bytes, offset);
-    if (value > BigInt.from(0x7FFFFFFFFFFFFFFF)) {
+    if (value > BigInt.parse('7FFFFFFFFFFFFFFF', radix: 16)) {
       throw Mp4ContentError('64-bit integer overflow for parser runtime');
     }
     return value.toInt();
