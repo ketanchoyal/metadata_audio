@@ -185,28 +185,35 @@ List<int> _i32le(int value) {
 }
 
 List<int> _i64le(int value) {
-  final data = ByteData(8)..setInt64(0, value, Endian.little);
-  return data.buffer.asUint8List();
+  return _u64le(value);
 }
 
 List<int> _u64le(int value) {
-  final data = ByteData(8)..setUint64(0, value, Endian.little);
-  return data.buffer.asUint8List();
+  return <int>[
+    value & 0xFF,
+    (value >> 8) & 0xFF,
+    (value >> 16) & 0xFF,
+    (value >> 24) & 0xFF,
+    (value >> 32) & 0xFF,
+    (value >> 40) & 0xFF,
+    (value >> 48) & 0xFF,
+    (value >> 56) & 0xFF,
+  ];
 }
 
 List<int> _u32be(int value) => <int>[
-    (value >> 24) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 8) & 0xFF,
-    value & 0xFF,
-  ];
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
 
 List<int> _synchsafe(int value) => <int>[
-    (value >> 21) & 0x7F,
-    (value >> 14) & 0x7F,
-    (value >> 7) & 0x7F,
-    value & 0x7F,
-  ];
+  (value >> 21) & 0x7F,
+  (value >> 14) & 0x7F,
+  (value >> 7) & 0x7F,
+  value & 0x7F,
+];
 
 class _NonSeekTokenizer extends Tokenizer {
   @override

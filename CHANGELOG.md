@@ -1,3 +1,10 @@
+## 0.7.0
+
+- **Fixed**: Chrome/web builds now compile and run against the package without JS-incompatible 64-bit integer literals in Matroska, Musepack, MP4, DSF, and DSDIFF parsing paths.
+- **Fixed**: Matroska chapter timing now preserves large EBML integer values in browser builds, restoring the expected chapter end time behavior.
+- **Fixed**: DSF and DSDIFF test fixtures now use browser-safe 64-bit byte encoders instead of `ByteData.setInt64`, so the parser suites run in Chrome.
+- **Verified**: Chrome test coverage now passes for MP4, Matroska, Musepack, DSF, and DSDIFF parser suites.
+
 ## 0.6.2
 
 - **Fixed**: MP4/M4B parsing now handles version-1 `mvhd` atoms with large 64-bit timestamps without crashing, including the audiobook URL regression case that previously overflowed `DateTime` conversion on some platforms.

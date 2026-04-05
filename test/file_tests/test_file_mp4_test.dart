@@ -97,8 +97,8 @@ List<int> _buildMirroredMvhdSample() {
   final mvhd = _atom(
     'mvhd',
     _mvhdPayloadV1(
-      creationTime: 0x7FFFFFFFFFFFFFFF,
-      modificationTime: 0x7FFFFFFFFFFFFFFF,
+      creationTime: BigInt.parse('9223372036854775807'),
+      modificationTime: BigInt.parse('9223372036854775807'),
       timeScale: 1000,
       duration: 2000,
     ),
@@ -109,19 +109,19 @@ List<int> _buildMirroredMvhdSample() {
 }
 
 List<int> _mvhdPayloadV1({
-  required int creationTime,
-  required int modificationTime,
+  required Object creationTime,
+  required Object modificationTime,
   required int timeScale,
-  required int duration,
+  required Object duration,
 }) => <int>[
   1,
   0,
   0,
   0,
-  ..._u64(creationTime),
-  ..._u64(modificationTime),
+  ..._u64Value(creationTime),
+  ..._u64Value(modificationTime),
   ..._u32(timeScale),
-  ..._u64(duration),
+  ..._u64Value(duration),
   ...List<int>.filled(80, 0),
 ];
 
@@ -146,4 +146,25 @@ List<int> _u64(int value) => <int>[
   (value >> 16) & 0xFF,
   (value >> 8) & 0xFF,
   value & 0xFF,
+];
+
+List<int> _u64Value(Object value) {
+  if (value is int) {
+    return _u64(value);
+  }
+  if (value is BigInt) {
+    return _u64BigInt(value);
+  }
+  throw ArgumentError.value(value, 'value', 'Expected int or BigInt');
+}
+
+List<int> _u64BigInt(BigInt value) => <int>[
+  ((value >> 56) & BigInt.from(0xFF)).toInt(),
+  ((value >> 48) & BigInt.from(0xFF)).toInt(),
+  ((value >> 40) & BigInt.from(0xFF)).toInt(),
+  ((value >> 32) & BigInt.from(0xFF)).toInt(),
+  ((value >> 24) & BigInt.from(0xFF)).toInt(),
+  ((value >> 16) & BigInt.from(0xFF)).toInt(),
+  ((value >> 8) & BigInt.from(0xFF)).toInt(),
+  (value & BigInt.from(0xFF)).toInt(),
 ];

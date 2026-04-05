@@ -5,6 +5,7 @@ library;
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/common/js_safe_numbers.dart';
 import 'package:metadata_audio/src/ebml/ebml_iterator.dart';
 import 'package:metadata_audio/src/ebml/types.dart';
 import 'package:metadata_audio/src/matroska/matroska_dtd.dart';
@@ -32,7 +33,7 @@ class MatroskaParser {
   int _seekHeadOffset = 0;
 
   Future<void> parse() async {
-    final containerSize = tokenizer.fileInfo?.size ?? 0x7FFFFFFFFFFFFFFF;
+    final containerSize = tokenizer.fileInfo?.size ?? maxSafeJsInt;
     final iterator = EbmlIterator(tokenizer);
 
     await iterator.iterate(
@@ -407,11 +408,11 @@ class MatroskaParser {
       return null;
     }
 
-    var value = 0;
+    var value = BigInt.zero;
     for (final byte in bytes) {
-      value = (value << 8) | byte;
+      value = (value << 8) | BigInt.from(byte);
     }
-    return value;
+    return value.toInt();
   }
 
   static String? _idFromUid(Object? uid) {

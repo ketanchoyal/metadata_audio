@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/common/js_safe_numbers.dart';
 import 'package:metadata_audio/src/dsdiff/dsdiff_token.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
 import 'package:metadata_audio/src/model/types.dart';
@@ -257,7 +258,7 @@ class DsdiffParser {
   }
 
   int _safeToInt(BigInt value) {
-    if (value < BigInt.zero || value > BigInt.from(0x7FFFFFFFFFFFFFFF)) {
+    if (value < BigInt.zero || value > maxSignedInt64) {
       throw DsdiffContentError('Chunk size out of supported range: $value');
     }
     return value.toInt();

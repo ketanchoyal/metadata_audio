@@ -2,6 +2,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:metadata_audio/src/common/js_safe_numbers.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 
 class Mp4ContentError extends UnexpectedFileContentError {
@@ -386,7 +387,7 @@ class AtomToken {
 
   static int readUint64Be(List<int> bytes, int offset) {
     final value = _readUint64BeAsBigInt(bytes, offset);
-    if (value > BigInt.from(0x7FFFFFFFFFFFFFFF)) {
+    if (value > maxSignedInt64) {
       throw Mp4ContentError('64-bit integer overflow for parser runtime');
     }
     return value.toInt();

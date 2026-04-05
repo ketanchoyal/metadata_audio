@@ -87,8 +87,8 @@ int _readInt32Le(List<int> bytes, int offset) {
 
 BigInt _readInt64Le(List<int> bytes, int offset) {
   final value = _readUint64Le(bytes, offset);
-  const signBit = 0x8000000000000000;
-  if ((value & BigInt.from(signBit)) != BigInt.zero) {
+  final signBit = BigInt.one << 63;
+  if ((value & signBit) != BigInt.zero) {
     return value - (BigInt.one << 64);
   }
   return value;

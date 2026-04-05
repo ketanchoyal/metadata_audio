@@ -294,9 +294,9 @@ List<int> _encodeUint(int value) {
   }
 
   final bytes = <int>[];
-  var remaining = value;
-  while (remaining > 0) {
-    bytes.insert(0, remaining & 0xFF);
+  var remaining = BigInt.from(value);
+  while (remaining > BigInt.zero) {
+    bytes.insert(0, (remaining & BigInt.from(0xFF)).toInt());
     remaining >>= 8;
   }
   return bytes;
