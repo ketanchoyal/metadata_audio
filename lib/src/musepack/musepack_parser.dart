@@ -70,7 +70,7 @@ class MusepackParser {
   }
 
   Future<void> _parseMatroskaContainer() async {
-    final containerSize = tokenizer.fileInfo?.size ?? 0x7FFFFFFFFFFFFFFF;
+    final containerSize = tokenizer.fileInfo?.size ?? 0x1FFFFFFFFFFFFF;
     final iterator = EbmlIterator(tokenizer);
 
     await iterator.iterate(
