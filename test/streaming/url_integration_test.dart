@@ -46,8 +46,8 @@ const _mp3MediumUrl =
 /// Public **large MP3** file (> 50 MB).
 /// The strategy detector should select `randomAccess`.
 const _mp3LargeUrl =
-    'https://archive.org/download/peter_schlemihl_1711_librivox/'
-    'peter_schlemihl_1711_librivox.mp3';
+    'https://archive.org/download/anyone_s_daughter_live_full_album/'
+    'anyone_s_daughter_live_full_album.mp3';
 
 /// Public **FLAC** file (any size).
 /// The strategy detector should select `headerOnly` for medium files.
