@@ -76,6 +76,15 @@ const _m4bUrl =
     'https://archive.org/download/city_of_fire_2209_librivox/'
     'CityFire_librivox.m4b';
 
+/// Public or user-provided **large M4B** regression URL.
+///
+/// Defaults to the reported failing audiobook URL, but can be overridden at
+/// test runtime with:
+/// `--define=METADATA_AUDIO_M4B_STRESS_URL=<url>`.
+const _m4bStressUrl =
+    'https://archive.org/download/city_of_fire_2209_librivox/'
+    'CityFire_librivox.m4b';
+
 /// Public **very large WAV** file (> 600 MB).
 /// This validates that header-only remote parsing still works for uncompressed
 /// files at multi-GB sizes.
@@ -126,12 +135,21 @@ Future<String?> _probeUrl(String url) async {
         .timeout(const Duration(seconds: 12));
     req.followRedirects = true;
     final res = await req.close().timeout(const Duration(seconds: 12));
-    if (res.statusCode >= 400) return 'HTTP ${res.statusCode}';
-    final ranges = res.headers.value('accept-ranges');
-    if (!(ranges?.toLowerCase().contains('bytes') ?? false)) {
-      return 'Server does not support Range requests';
+    if (res.statusCode < 400) {
+      final ranges = res.headers.value('accept-ranges');
+      if (ranges?.toLowerCase().contains('bytes') ?? false) {
+        return null; // OK
+      }
     }
-    return null; // OK
+
+    final getReq = await client
+        .getUrl(Uri.parse(url))
+        .timeout(const Duration(seconds: 12));
+    getReq.followRedirects = true;
+    final getRes = await getReq.close().timeout(const Duration(seconds: 12));
+    if (getRes.statusCode >= 400) return 'HTTP ${getRes.statusCode}';
+    await getRes.listen((_) {}).cancel();
+    return null;
   } on SocketException catch (e) {
     return 'Network unavailable: ${e.message}';
   } on TimeoutException {
@@ -747,7 +765,6 @@ void main() {
 
           ParseStrategy? gotStrategy;
           ProbeStrategy? gotProbe;
-          String? gotReason;
 
           final info = await detectStrategy(_mp3MediumUrl);
 
@@ -1097,6 +1114,74 @@ void main() {
           expect(metadata.format.chapters!.length, greaterThanOrEqualTo(1));
         },
         timeout: const Timeout(Duration(seconds: 120)),
+      );
+    });
+
+    // -------------------------------------------------------------------------
+    // Specific large M4B co64 chapter regression URL (auto-skipped if unavailable)
+    // -------------------------------------------------------------------------
+    group('M4B co64 chapter regression URL (large file)', () {
+      late String? _skipReason;
+
+      setUpAll(() async {
+        _skipReason = await _probeUrl(_m4bStressUrl);
+        if (_skipReason != null) {
+          // ignore: avoid_print
+          print('[SKIP] M4B stress URL test: $_skipReason');
+        }
+      });
+
+      test(
+        'detects mp4 strategy and parses co64 chapter list from stress URL',
+        () async {
+          if (_skipReason != null) {
+            markTestSkipped(_skipReason!);
+            return;
+          }
+
+          final info = await detectStrategy(_m4bStressUrl);
+          final metadata = await parseUrl(
+            _m4bStressUrl,
+            options: const ParseOptions(includeChapters: true),
+            timeout: const Duration(seconds: 120),
+          );
+
+          // ignore: avoid_print
+          print(
+            'M4B stress detectStrategy: '
+            'size=${info.fileSize != null ? "${info.fileSize! ~/ (1024 * 1024)}MB" : "unknown"} '
+            'strategy=${info.strategy} probe=${info.probeStrategy} format=${info.detectedFormat}',
+          );
+          // ignore: avoid_print
+          print(
+            'M4B stress parseUrl: '
+            'container=${metadata.format.container} '
+            'chapters=${metadata.format.chapters?.length}',
+          );
+
+          expect(info.detectedFormat, equals('mp4'));
+          expect(info.fileSize, isNotNull);
+          expect(info.fileSize!, greaterThan(50 * 1024 * 1024));
+
+          expect(
+            metadata.format.container,
+            anyOf(contains('M4'), contains('MP4')),
+          );
+          expect(metadata.format.chapters, isNotNull);
+          // Co64 regression guard: this URL exercises chapter extraction on a
+          // large MP4/M4B where 64-bit chunk offsets are expected.
+          expect(
+            metadata.format.chapters!.length,
+            greaterThanOrEqualTo(20),
+            reason: 'This stress file is expected to carry a full chapter list',
+          );
+          expect(
+            metadata.format.chapters!.first.title,
+            isNotEmpty,
+            reason: 'First chapter should include a title',
+          );
+        },
+        timeout: const Timeout(Duration(seconds: 180)),
       );
     });
 

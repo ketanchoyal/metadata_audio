@@ -333,6 +333,22 @@ class AtomToken {
     return entries;
   }
 
+  static List<int> parseCo64(List<int> bytes) {
+    if (bytes.length < 8) {
+      throw Mp4ContentError('co64 atom payload too short');
+    }
+
+    final entryCount = readUint32Be(bytes, 4);
+    final entries = <int>[];
+    var offset = 8;
+    for (var i = 0; i < entryCount; i++) {
+      _ensureRange(bytes, offset, 8);
+      entries.add(readUint64Be(bytes, offset));
+      offset += 8;
+    }
+    return entries;
+  }
+
   static String parseChapterText(List<int> bytes) {
     if (bytes.length < 2) {
       return '';
@@ -405,9 +421,8 @@ class AtomToken {
         BigInt.from(bytes[offset + 7]);
   }
 
-  static DateTime _macEpochToDateInt(int secondsSinceMacEpoch) {
-    return _macEpochToDateBigInt(BigInt.from(secondsSinceMacEpoch));
-  }
+  static DateTime _macEpochToDateInt(int secondsSinceMacEpoch) =>
+      _macEpochToDateBigInt(BigInt.from(secondsSinceMacEpoch));
 
   static DateTime _macEpochToDateBigInt(BigInt secondsSinceMacEpoch) {
     const macToUnixEpochSeconds = 2082844800;

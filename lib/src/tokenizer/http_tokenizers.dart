@@ -1286,6 +1286,24 @@ ProbeStrategy _probeStrategyForCategory(_AudioFormatCategory category) =>
       _AudioFormatCategory.unknown => ProbeStrategy.scatter,
     };
 
+StrategyInfo _fallbackStrategyInfoForUrl(String url) {
+  final formatCategory = _detectAudioFormatCategory(url: url);
+  final detectedFormat = switch (formatCategory) {
+    _AudioFormatCategory.mp4 => 'mp4',
+    _AudioFormatCategory.mpeg => 'mpeg',
+    _AudioFormatCategory.headerOnly => 'header-only',
+    _AudioFormatCategory.unknown => 'unknown',
+  };
+
+  return StrategyInfo(
+    strategy: ParseStrategy.fullDownload,
+    fileSize: null,
+    supportsRange: false,
+    probeStrategy: _probeStrategyForCategory(formatCategory),
+    detectedFormat: detectedFormat,
+  );
+}
+
 /// Detect the best parsing strategy for a URL.
 ///
 /// Takes into account the HTTP server capabilities (file size, Range support)
@@ -1385,6 +1403,8 @@ Future<StrategyInfo> detectStrategy(
       probeStrategy: _probeStrategyForCategory(formatCategory),
       detectedFormat: detectedFormat,
     );
+  } on Object {
+    return _fallbackStrategyInfoForUrl(url);
   } finally {
     client.close();
   }
@@ -1425,6 +1445,7 @@ Future<AudioMetadata> parseUrl(
 }) async {
   options ??= const ParseOptions();
   final effectiveTimeout = timeout ?? const Duration(seconds: 30);
+  final autoSelectedStrategy = strategy == null;
 
   // If strategy not specified, detect it
   StrategyInfo? info;
@@ -1455,19 +1476,90 @@ Future<AudioMetadata> parseUrl(
       return _parseWithFullDownload(url, effectiveTimeout, options);
 
     case ParseStrategy.headerOnly:
-      return _parseWithHeaderOnly(url, effectiveTimeout, options);
+      try {
+        return await _parseWithHeaderOnly(url, effectiveTimeout, options);
+      } on Object catch (error) {
+        if (_shouldFallbackToFullDownload(
+          autoSelectedStrategy: autoSelectedStrategy,
+          strategy: strategy,
+          info: info,
+          error: error,
+        )) {
+          return _parseWithFullDownload(url, effectiveTimeout, options);
+        }
+        rethrow;
+      }
 
     case ParseStrategy.probe:
-      return _parseWithProbe(
-        url,
-        effectiveTimeout,
-        options,
-        effectiveProbeStrategy,
-      );
+      try {
+        return await _parseWithProbe(
+          url,
+          effectiveTimeout,
+          options,
+          effectiveProbeStrategy,
+        );
+      } on Object catch (error) {
+        if (_shouldFallbackToFullDownload(
+          autoSelectedStrategy: autoSelectedStrategy,
+          strategy: strategy,
+          info: info,
+          error: error,
+        )) {
+          return _parseWithFullDownload(url, effectiveTimeout, options);
+        }
+        rethrow;
+      }
 
     case ParseStrategy.randomAccess:
-      return _parseWithRandomAccess(url, effectiveTimeout, options);
+      try {
+        return await _parseWithRandomAccess(url, effectiveTimeout, options);
+      } on Object catch (error) {
+        if (_shouldFallbackToFullDownload(
+          autoSelectedStrategy: autoSelectedStrategy,
+          strategy: strategy,
+          info: info,
+          error: error,
+        )) {
+          return _parseWithFullDownload(url, effectiveTimeout, options);
+        }
+        rethrow;
+      }
   }
+}
+
+bool _shouldFallbackToFullDownload({
+  required bool autoSelectedStrategy,
+  required ParseStrategy strategy,
+  required StrategyInfo? info,
+  required Object error,
+}) {
+  if (!autoSelectedStrategy || strategy == ParseStrategy.fullDownload) {
+    return false;
+  }
+
+  if (error is! FileDownloadError && error is! TokenizerException) {
+    return false;
+  }
+
+  final message = error.toString();
+  final isTransportOrPartialDataFailure =
+      message.contains('Range request failed') ||
+      message.contains('Failed to fetch range') ||
+      message.contains('Data not available at position') ||
+      message.contains('Header too small') ||
+      message.contains('End of header data') ||
+      message.contains('HTTP 500');
+
+  if (!isTransportOrPartialDataFailure) {
+    return false;
+  }
+
+  final fileSize = info?.fileSize;
+  if (fileSize != null && fileSize > 350 * 1024 * 1024) {
+    return info?.detectedFormat == 'mp4';
+  }
+
+  return true;
 }
 
 /// Parse using full download.

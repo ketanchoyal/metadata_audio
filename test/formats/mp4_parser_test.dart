@@ -93,6 +93,88 @@ void main() {
       expect(metadata.format.chapters![1].end, 2000);
     });
 
+    test('parses MP4 chapter track when offsets are stored in co64', () async {
+      final bytes = _buildSyntheticMp4WithCo64Chapters();
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(2));
+      expect(metadata.format.chapters![0].title, 'Intro');
+      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].end, 1000);
+      expect(metadata.format.chapters![1].title, 'Outro');
+      expect(metadata.format.chapters![1].start, 1000);
+      expect(metadata.format.chapters![1].end, 2000);
+    });
+
+    test('parses co64 M4B-style chapters with 1/48000 timeline', () async {
+      final bytes = _buildSyntheticM4bLikeMp4WithCo64Chapters();
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(4));
+
+      expect(metadata.format.chapters![0].title, 'Opening Credits');
+      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].end, 64083);
+
+      expect(
+        metadata.format.chapters![1].title,
+        'Chapter One - The Worst Birthday',
+      );
+      expect(metadata.format.chapters![1].start, 64083);
+      expect(metadata.format.chapters![1].end, 1110541);
+
+      expect(
+        metadata.format.chapters![2].title,
+        "Chapter Two - Dobby's Warning",
+      );
+      expect(metadata.format.chapters![2].start, 1110541);
+      expect(metadata.format.chapters![2].end, 2344875);
+
+      expect(metadata.format.chapters![3].title, 'Chapter Three - The Burrow');
+      expect(metadata.format.chapters![3].start, 2344875);
+      expect(metadata.format.chapters![3].end, 3998333);
+    });
+
+    test('parses chapter track when tkhd atoms are version 1', () async {
+      final bytes = _buildSyntheticMp4WithCo64ChaptersTkhdV1();
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(2));
+      expect(metadata.format.chapters![0].title, 'Intro');
+      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].end, 1000);
+      expect(metadata.format.chapters![1].title, 'Outro');
+      expect(metadata.format.chapters![1].start, 1000);
+      expect(metadata.format.chapters![1].end, 2000);
+    });
+
     test('parses version 1 mvhd atoms with large 64-bit durations', () async {
       final ftyp = _atom('ftyp', <int>[
         ...latin1.encode('M4A '),
@@ -345,6 +427,373 @@ List<int> _buildSyntheticMp4WithChapters() {
   return file;
 }
 
+List<int> _buildSyntheticMp4WithCo64Chapters() {
+  final ftyp = _atom('ftyp', <int>[
+    ...latin1.encode('M4A '),
+    ...latin1.encode('isom'),
+    ...latin1.encode('mp42'),
+  ]);
+
+  final mvhd = _atom('mvhd', _mvhdPayload(timeScale: 1000, duration: 2000));
+
+  final audioTkhd = _atom('tkhd', _tkhdPayload(trackId: 1));
+  final audioMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final audioHdlr = _atom('hdlr', _hdlrPayload('soun'));
+  final chapRef = _atom('tref', _atom('chap', _u32(2)));
+  final audioStsd = _atom('stsd', _stsdPayloadMp4a());
+  final audioStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[2, 1000],
+    ]),
+  );
+  final audioStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final audioCo64 = _atom('co64', _co64Payload(<int>[0, 0]));
+  final audioStbl = _atom('stbl', <int>[
+    ...audioStsd,
+    ...audioStts,
+    ...audioStsc,
+    ...audioCo64,
+  ]);
+  final audioMinf = _atom('minf', audioStbl);
+  final audioMdia = _atom('mdia', <int>[
+    ...audioMdhd,
+    ...audioHdlr,
+    ...audioMinf,
+  ]);
+  final audioTrak = _atom('trak', <int>[
+    ...audioTkhd,
+    ...audioMdia,
+    ...chapRef,
+  ]);
+
+  final chapterTkhd = _atom('tkhd', _tkhdPayload(trackId: 2));
+  final chapterMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final chapterHdlr = _atom('hdlr', _hdlrPayload('text'));
+  final chapter1 = _chapterTextSample('Intro');
+  final chapter2 = _chapterTextSample('Outro');
+  final chapterStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final chapterStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[2, 1000],
+    ]),
+  );
+  final chapterStsz = _atom(
+    'stsz',
+    _stszPayload(0, <int>[chapter1.length, chapter2.length]),
+  );
+  final chapterCo64 = _atom('co64', _co64Payload(<int>[0, 0]));
+  final chapterStbl = _atom('stbl', <int>[
+    ...chapterStts,
+    ...chapterStsc,
+    ...chapterStsz,
+    ...chapterCo64,
+  ]);
+  final chapterMinf = _atom('minf', chapterStbl);
+  final chapterMdia = _atom('mdia', <int>[
+    ...chapterMdhd,
+    ...chapterHdlr,
+    ...chapterMinf,
+  ]);
+  final chapterTrak = _atom('trak', <int>[...chapterTkhd, ...chapterMdia]);
+
+  final moov = _atom('moov', <int>[...mvhd, ...audioTrak, ...chapterTrak]);
+
+  final mdatPayload = <int>[
+    ...chapter1,
+    ...List<int>.filled(20, 0x11),
+    ...chapter2,
+    ...List<int>.filled(20, 0x22),
+  ];
+  final mdat = _atom('mdat', mdatPayload);
+
+  final file = <int>[...ftyp, ...moov, ...mdat];
+  final mdatDataOffset = ftyp.length + moov.length + 8;
+  final chapter1Offset = mdatDataOffset;
+  final audio1Offset = mdatDataOffset + chapter1.length;
+  final chapter2Offset = mdatDataOffset + chapter1.length + 20;
+  final audio2Offset = chapter2Offset + chapter2.length;
+
+  final audioCo64Offset = _findSequence(file, audioCo64);
+  final chapterCo64Offset = _findSequence(file, chapterCo64, occurrence: 2);
+  _patchU64(file, audioCo64Offset + 16, audio1Offset);
+  _patchU64(file, audioCo64Offset + 24, audio2Offset);
+  _patchU64(file, chapterCo64Offset + 16, chapter1Offset);
+  _patchU64(file, chapterCo64Offset + 24, chapter2Offset);
+
+  return file;
+}
+
+List<int> _buildSyntheticM4bLikeMp4WithCo64Chapters() {
+  final ftyp = _atom('ftyp', <int>[
+    ...latin1.encode('M4A '),
+    ...latin1.encode('isom'),
+    ...latin1.encode('mp42'),
+  ]);
+
+  const chapterStarts = <int>[0, 3075984, 53305968, 112554000];
+  const chapterEnd = 191919984;
+
+  final chapterDurations = <int>[
+    chapterStarts[1] - chapterStarts[0],
+    chapterStarts[2] - chapterStarts[1],
+    chapterStarts[3] - chapterStarts[2],
+    chapterEnd - chapterStarts[3],
+  ];
+
+  final mvhd = _atom(
+    'mvhd',
+    _mvhdPayload(timeScale: 48000, duration: chapterEnd),
+  );
+
+  final audioTkhd = _atom('tkhd', _tkhdPayload(trackId: 1));
+  final audioMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 48000, duration: chapterEnd),
+  );
+  final audioHdlr = _atom('hdlr', _hdlrPayload('soun'));
+  final chapRef = _atom('tref', _atom('chap', _u32(2)));
+  final audioStsd = _atom('stsd', _stsdPayloadMp4a());
+  final audioStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[1, chapterEnd],
+    ]),
+  );
+  final audioStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final audioCo64 = _atom('co64', _co64Payload(<int>[0]));
+  final audioStbl = _atom('stbl', <int>[
+    ...audioStsd,
+    ...audioStts,
+    ...audioStsc,
+    ...audioCo64,
+  ]);
+  final audioMinf = _atom('minf', audioStbl);
+  final audioMdia = _atom('mdia', <int>[
+    ...audioMdhd,
+    ...audioHdlr,
+    ...audioMinf,
+  ]);
+  final audioTrak = _atom('trak', <int>[
+    ...audioTkhd,
+    ...audioMdia,
+    ...chapRef,
+  ]);
+
+  final chapterTkhd = _atom('tkhd', _tkhdPayload(trackId: 2));
+  final chapterMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 48000, duration: chapterEnd),
+  );
+  final chapterHdlr = _atom('hdlr', _hdlrPayload('text'));
+  final chapterSamples = <List<int>>[
+    _chapterTextSample('Opening Credits'),
+    _chapterTextSample('Chapter One - The Worst Birthday'),
+    _chapterTextSample("Chapter Two - Dobby's Warning"),
+    _chapterTextSample('Chapter Three - The Burrow'),
+  ];
+  final chapterStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final chapterStts = _atom(
+    'stts',
+    _sttsPayload(chapterDurations.map((d) => <int>[1, d]).toList()),
+  );
+  final chapterStsz = _atom(
+    'stsz',
+    _stszPayload(0, chapterSamples.map((s) => s.length).toList()),
+  );
+  final chapterCo64 = _atom(
+    'co64',
+    _co64Payload(List<int>.filled(chapterSamples.length, 0)),
+  );
+  final chapterStbl = _atom('stbl', <int>[
+    ...chapterStts,
+    ...chapterStsc,
+    ...chapterStsz,
+    ...chapterCo64,
+  ]);
+  final chapterMinf = _atom('minf', chapterStbl);
+  final chapterMdia = _atom('mdia', <int>[
+    ...chapterMdhd,
+    ...chapterHdlr,
+    ...chapterMinf,
+  ]);
+  final chapterTrak = _atom('trak', <int>[...chapterTkhd, ...chapterMdia]);
+
+  final moov = _atom('moov', <int>[...mvhd, ...audioTrak, ...chapterTrak]);
+
+  final mdatPayload = <int>[
+    for (var i = 0; i < chapterSamples.length; i++) ...<int>[
+      ...chapterSamples[i],
+      ...List<int>.filled(i == chapterSamples.length - 1 ? 8 : 16, 0x10 + i),
+    ],
+    ...List<int>.filled(64, 0x7F),
+  ];
+  final mdat = _atom('mdat', mdatPayload);
+
+  final file = <int>[...ftyp, ...moov, ...mdat];
+  final mdatDataOffset = ftyp.length + moov.length + 8;
+
+  final chapterOffsets = <int>[];
+  var cursor = mdatDataOffset;
+  for (var i = 0; i < chapterSamples.length; i++) {
+    chapterOffsets.add(cursor);
+    cursor += chapterSamples[i].length;
+    cursor += i == chapterSamples.length - 1 ? 8 : 16;
+  }
+  final audioOffset = cursor;
+
+  final audioCo64Offset = _findSequence(file, audioCo64);
+  final chapterCo64Offset = _findSequence(file, chapterCo64);
+
+  _patchU64(file, audioCo64Offset + 16, audioOffset);
+  for (var i = 0; i < chapterOffsets.length; i++) {
+    _patchU64(file, chapterCo64Offset + 16 + (i * 8), chapterOffsets[i]);
+  }
+
+  return file;
+}
+
+List<int> _buildSyntheticMp4WithCo64ChaptersTkhdV1() {
+  final ftyp = _atom('ftyp', <int>[
+    ...latin1.encode('M4A '),
+    ...latin1.encode('isom'),
+    ...latin1.encode('mp42'),
+  ]);
+
+  final mvhd = _atom('mvhd', _mvhdPayload(timeScale: 1000, duration: 2000));
+
+  final audioTkhd = _atom('tkhd', _tkhdPayloadV1(trackId: 1));
+  final audioMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final audioHdlr = _atom('hdlr', _hdlrPayload('soun'));
+  final chapRef = _atom('tref', _atom('chap', _u32(2)));
+  final audioStsd = _atom('stsd', _stsdPayloadMp4a());
+  final audioStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[2, 1000],
+    ]),
+  );
+  final audioStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final audioCo64 = _atom('co64', _co64Payload(<int>[0, 0]));
+  final audioStbl = _atom('stbl', <int>[
+    ...audioStsd,
+    ...audioStts,
+    ...audioStsc,
+    ...audioCo64,
+  ]);
+  final audioMinf = _atom('minf', audioStbl);
+  final audioMdia = _atom('mdia', <int>[
+    ...audioMdhd,
+    ...audioHdlr,
+    ...audioMinf,
+  ]);
+  final audioTrak = _atom('trak', <int>[
+    ...audioTkhd,
+    ...audioMdia,
+    ...chapRef,
+  ]);
+
+  final chapterTkhd = _atom('tkhd', _tkhdPayloadV1(trackId: 2));
+  final chapterMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final chapterHdlr = _atom('hdlr', _hdlrPayload('text'));
+  final chapter1 = _chapterTextSample('Intro');
+  final chapter2 = _chapterTextSample('Outro');
+  final chapterStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final chapterStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[2, 1000],
+    ]),
+  );
+  final chapterStsz = _atom(
+    'stsz',
+    _stszPayload(0, <int>[chapter1.length, chapter2.length]),
+  );
+  final chapterCo64 = _atom('co64', _co64Payload(<int>[0, 0]));
+  final chapterStbl = _atom('stbl', <int>[
+    ...chapterStts,
+    ...chapterStsc,
+    ...chapterStsz,
+    ...chapterCo64,
+  ]);
+  final chapterMinf = _atom('minf', chapterStbl);
+  final chapterMdia = _atom('mdia', <int>[
+    ...chapterMdhd,
+    ...chapterHdlr,
+    ...chapterMinf,
+  ]);
+  final chapterTrak = _atom('trak', <int>[...chapterTkhd, ...chapterMdia]);
+
+  final moov = _atom('moov', <int>[...mvhd, ...audioTrak, ...chapterTrak]);
+
+  final mdatPayload = <int>[
+    ...chapter1,
+    ...List<int>.filled(20, 0x11),
+    ...chapter2,
+    ...List<int>.filled(20, 0x22),
+  ];
+  final mdat = _atom('mdat', mdatPayload);
+
+  final file = <int>[...ftyp, ...moov, ...mdat];
+  final mdatDataOffset = ftyp.length + moov.length + 8;
+  final chapter1Offset = mdatDataOffset;
+  final audio1Offset = mdatDataOffset + chapter1.length;
+  final chapter2Offset = mdatDataOffset + chapter1.length + 20;
+  final audio2Offset = chapter2Offset + chapter2.length;
+
+  final audioCo64Offset = _findSequence(file, audioCo64);
+  final chapterCo64Offset = _findSequence(file, chapterCo64, occurrence: 2);
+  _patchU64(file, audioCo64Offset + 16, audio1Offset);
+  _patchU64(file, audioCo64Offset + 24, audio2Offset);
+  _patchU64(file, chapterCo64Offset + 16, chapter1Offset);
+  _patchU64(file, chapterCo64Offset + 24, chapter2Offset);
+
+  return file;
+}
+
 List<int> _metadataItem(String key, List<int> children) => _atom(key, children);
 
 List<int> _dataAtom(int type, List<int> value) {
@@ -411,6 +860,15 @@ List<int> _stcoPayload(List<int> offsets) => <int>[
   for (final offset in offsets) ..._u32(offset),
 ];
 
+List<int> _co64Payload(List<int> offsets) => <int>[
+  0,
+  0,
+  0,
+  0,
+  ..._u32(offsets.length),
+  for (final offset in offsets) ..._u64(offset),
+];
+
 List<int> _atom(String name, List<int> payload) {
   final length = 8 + payload.length;
   return <int>[..._u32(length), ...latin1.encode(name), ...payload];
@@ -441,6 +899,17 @@ void _patchU32(List<int> target, int offset, int value) {
   target[offset + 1] = (value >> 16) & 0xFF;
   target[offset + 2] = (value >> 8) & 0xFF;
   target[offset + 3] = value & 0xFF;
+}
+
+void _patchU64(List<int> target, int offset, int value) {
+  target[offset] = (value >> 56) & 0xFF;
+  target[offset + 1] = (value >> 48) & 0xFF;
+  target[offset + 2] = (value >> 40) & 0xFF;
+  target[offset + 3] = (value >> 32) & 0xFF;
+  target[offset + 4] = (value >> 24) & 0xFF;
+  target[offset + 5] = (value >> 16) & 0xFF;
+  target[offset + 6] = (value >> 8) & 0xFF;
+  target[offset + 7] = value & 0xFF;
 }
 
 List<int> _mvhdPayload({required int timeScale, required int duration}) =>
@@ -483,6 +952,19 @@ List<int> _tkhdPayload({required int trackId}) => <int>[
   ..._u32(trackId),
   ..._u32(0),
   ..._u32(88200),
+  ...List<int>.filled(60, 0),
+];
+
+List<int> _tkhdPayloadV1({required int trackId}) => <int>[
+  1,
+  0,
+  0,
+  7,
+  ..._u64(0),
+  ..._u64(0),
+  ..._u32(trackId),
+  ..._u32(0),
+  ..._u64(88200),
   ...List<int>.filled(60, 0),
 ];
 

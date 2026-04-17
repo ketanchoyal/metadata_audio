@@ -1,3 +1,10 @@
+## 0.7.1
+
+- **Fixed**: MP4 chapter extraction now supports `co64` chunk offset tables (64-bit offsets), restoring chapter parsing for large M4B/audiobook files.
+- **Fixed**: MP4 track parsing now correctly reads `tkhd` version-1 track IDs, enabling chapter-track linkage in files that use v1 `tkhd` atoms.
+- **Fixed**: Post-parse chapter fallback now resolves chapter tracks by absolute offsets after atom traversal, improving reliability when chapter tables are finalized later in the file.
+- **Improved**: URL strategy detection and parsing now degrade gracefully to full download when HEAD/range probing is unreliable, reducing false failures on flaky remote hosts.
+
 ## 0.7.0
 
 - **Fixed**: Chrome/web builds now compile and run against the package without JS-incompatible 64-bit integer literals in Matroska, Musepack, MP4, DSF, and DSDIFF parsing paths.

@@ -91,7 +91,7 @@ class Mp4Parser {
       }
     }
 
-    _postProcessTracks();
+    await _postProcessTracks();
   }
 
   Future<void> _handleAtom(Mp4Atom atom, int payloadLength) async {
@@ -157,6 +157,13 @@ class Mp4Parser {
           return;
         }
         _parseStco(tokenizer.readBytes(payloadLength));
+        return;
+      case 'co64':
+        if (!_isTrackScopedAtom(atom)) {
+          tokenizer.skip(payloadLength);
+          return;
+        }
+        _parseCo64(tokenizer.readBytes(payloadLength));
         return;
       case 'chap':
         if (!_isTrackScopedAtom(atom)) {
@@ -227,7 +234,14 @@ class Mp4Parser {
       return;
     }
 
-    final trackId = AtomToken.readUint32Be(payload, 12);
+    final version = payload[0];
+    final trackIdOffset = version == 1 ? 20 : 12;
+    if (payload.length < trackIdOffset + 4) {
+      metadata.addWarning('Ignoring truncated tkhd atom for version=$version');
+      return;
+    }
+
+    final trackId = AtomToken.readUint32Be(payload, trackIdOffset);
     final track = _tracks.putIfAbsent(
       trackId,
       () => _TrackDescription(trackId),
@@ -307,6 +321,14 @@ class Mp4Parser {
     track.chunkOffsetTable.addAll(AtomToken.parseStco(payload));
   }
 
+  void _parseCo64(List<int> payload) {
+    final track = _currentTrack;
+    if (track == null) {
+      return;
+    }
+    track.chunkOffsetTable.addAll(AtomToken.parseCo64(payload));
+  }
+
   void _parseChap(List<int> payload) {
     final track = _currentTrack;
     if (track == null) {
@@ -374,7 +396,7 @@ class Mp4Parser {
       final titleLen = payload[offset++] & 0xFF;
 
       // Title string
-      String title = '';
+      var title = '';
       if (titleLen > 0 && offset + titleLen <= payload.length) {
         title = utf8.decode(
           payload.sublist(offset, offset + titleLen),
@@ -556,7 +578,7 @@ class Mp4Parser {
     return '----:$normalizedMean:$normalizedName';
   }
 
-  void _postProcessTracks() {
+  Future<void> _postProcessTracks() async {
     final audioTracks = _tracks.values.where((t) => t.isAudio).toList();
     final videoTracks = _tracks.values.where((t) => t.isVideo).toList();
 
@@ -602,11 +624,148 @@ class Mp4Parser {
 
     metadata.setFormat(hasAudio: _hasAudioTrack, hasVideo: _hasVideoTrack);
 
+    // Fallback chapter extraction after all atoms are parsed.
+    // This handles files where mdat appears before moov/chapter tables.
+    if (options.includeChapters && metadata.format.chapters == null) {
+      await _tryParseChaptersFromTrackReferences();
+    }
+
     // Process chpl (Nero chapter list) chapters if present.
     // chpl uses a fixed time base of 1/10000000.
-    if (_chplChapters.isNotEmpty) {
+    if (_chplChapters.isNotEmpty && options.includeChapters) {
       _processChplChapters();
     }
+  }
+
+  Future<bool> _tryParseChaptersFromTrackReferences() async {
+    final tracksWithChapters = _tracks.values
+        .where((track) => track.chapterTrackIds.isNotEmpty)
+        .toList();
+    if (tracksWithChapters.length != 1) {
+      return false;
+    }
+
+    final chapterOwnerTrack = tracksWithChapters.single;
+    final chapterTracks = _tracks.values
+        .where(
+          (track) => chapterOwnerTrack.chapterTrackIds.contains(track.trackId),
+        )
+        .toList();
+    if (chapterTracks.length != 1) {
+      return false;
+    }
+
+    final chapterTrack = chapterTracks.single;
+    final chapters = await _parseChapterTrackByAbsoluteOffsets(
+      chapterTrack,
+      chapterOwnerTrack,
+    );
+    if (chapters == null || chapters.isEmpty) {
+      return false;
+    }
+
+    metadata.setFormat(chapters: chapters);
+    return true;
+  }
+
+  Future<List<Chapter>?> _parseChapterTrackByAbsoluteOffsets(
+    _TrackDescription chapterTrack,
+    _TrackDescription referencedTrack,
+  ) async {
+    if (chapterTrack.chunkOffsetTable.isEmpty) {
+      return null;
+    }
+    if (chapterTrack.sampleSize == null) {
+      return null;
+    }
+    if (chapterTrack.sampleSize == 0 &&
+        chapterTrack.chunkOffsetTable.length !=
+            chapterTrack.sampleSizeTable.length) {
+      metadata.addWarning('Invalid MP4 chapter track sample sizing');
+      return null;
+    }
+    if (referencedTrack.timeScale == null || referencedTrack.timeScale! <= 0) {
+      return null;
+    }
+
+    final originalPosition = tokenizer.position;
+    final chapters = <Chapter>[];
+
+    for (var i = 0; i < chapterTrack.chunkOffsetTable.length; i++) {
+      final chunkOffset = chapterTrack.chunkOffsetTable[i];
+      if (chunkOffset < 0) {
+        metadata.addWarning('Invalid MP4 chapter offset/size');
+        return null;
+      }
+
+      final sampleSize = chapterTrack.sampleSize! > 0
+          ? chapterTrack.sampleSize!
+          : chapterTrack.sampleSizeTable[i];
+      if (sampleSize < 0) {
+        metadata.addWarning('Invalid MP4 chapter offset/size');
+        return null;
+      }
+
+      tokenizer.seek(chunkOffset);
+      final title = AtomToken.parseChapterText(tokenizer.readBytes(sampleSize));
+
+      final chapterOffsetFromStts = _getSampleOffsetFromStts(chapterTrack, i);
+
+      int chapterOffset;
+      int startMs;
+      if (chapterOffsetFromStts != null &&
+          chapterTrack.timeScale != null &&
+          chapterTrack.timeScale! > 0) {
+        chapterOffset = chapterOffsetFromStts;
+        startMs = ((chapterOffset * 1000) / chapterTrack.timeScale!).round();
+      } else {
+        chapterOffset = _findSampleOffset(referencedTrack, chunkOffset);
+        startMs = ((chapterOffset * 1000) / referencedTrack.timeScale!).round();
+      }
+
+      chapters.add(
+        Chapter(
+          title: title,
+          start: startMs,
+          sampleOffset: chapterOffset,
+          timeScale: 1000,
+        ),
+      );
+    }
+
+    for (var i = 0; i < chapters.length; i++) {
+      final current = chapters[i];
+      var end = i + 1 < chapters.length
+          ? chapters[i + 1].start
+          : (referencedTrack.durationUnits != null
+                ? ((referencedTrack.durationUnits! * 1000) /
+                          referencedTrack.timeScale!)
+                      .round()
+                : null);
+
+      if (end != null && end < current.start) {
+        final fallbackDurationMs = metadata.format.duration != null
+            ? (metadata.format.duration! * 1000).round()
+            : null;
+        end = fallbackDurationMs != null && fallbackDurationMs >= current.start
+            ? fallbackDurationMs
+            : current.start;
+      }
+
+      chapters[i] = Chapter(
+        id: current.id,
+        title: current.title,
+        url: current.url,
+        sampleOffset: current.sampleOffset,
+        start: current.start,
+        end: end,
+        timeScale: current.timeScale,
+        image: current.image,
+      );
+    }
+
+    tokenizer.seek(originalPosition);
+    return chapters;
   }
 
   /// Converts chpl chapters to the standard Chapter format and sets them in metadata.
