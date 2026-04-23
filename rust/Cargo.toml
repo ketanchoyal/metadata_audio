@@ -7,5 +7,5 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge = "2"
+flutter_rust_bridge = "=2.11.1"
 symphonia = { git = "https://github.com/pdeljanov/Symphonia.git", branch = "dev-0.6", features = ["all"] }
