@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -358179211;
+  int get rustContentHash => 2139081669;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -96,6 +96,8 @@ abstract class RustLibApi extends BaseApi {
   Future<FfiFormat> crateApiPocGetFormat({required String path});
 
   Future<List<FfiNativeTag>> crateApiPocGetNativeTags({required String path});
+
+  Future<List<FfiPicture>> crateApiPocGetPictures({required String path});
 
   Future<FfiBasicMetadata> crateApiPocParseBytes({
     required List<int> bytes,
@@ -395,6 +397,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'poc_get_native_tags', argNames: ['path']);
 
   @override
+  Future<List<FfiPicture>> crateApiPocGetPictures({required String path}) =>
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_String(path, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 12,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_list_ffi_picture,
+            decodeErrorData: sse_decode_String,
+          ),
+          constMeta: kCrateApiPocGetPicturesConstMeta,
+          argValues: [path],
+          apiImpl: this,
+        ),
+      );
+
+  TaskConstMeta get kCrateApiPocGetPicturesConstMeta =>
+      const TaskConstMeta(debugName: 'poc_get_pictures', argNames: ['path']);
+
+  @override
   Future<FfiBasicMetadata> crateApiPocParseBytes({
     required List<int> bytes,
     String? mimeHint,
@@ -407,7 +436,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 12,
+          funcId: 13,
           port: port_,
         );
       },
@@ -436,7 +465,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 13,
+              funcId: 14,
               port: port_,
             );
           },
@@ -720,12 +749,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FfiPicture dco_decode_ffi_picture(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return FfiPicture(
       format: dco_decode_opt_String(arr[0]),
       data: dco_decode_list_prim_u_8_strict(arr[1]),
       description: dco_decode_opt_String(arr[2]),
+      type: dco_decode_opt_String(arr[3]),
+      name: dco_decode_opt_String(arr[4]),
     );
   }
 
@@ -1282,10 +1313,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final var_format = sse_decode_opt_String(deserializer);
     final var_data = sse_decode_list_prim_u_8_strict(deserializer);
     final var_description = sse_decode_opt_String(deserializer);
+    final var_type = sse_decode_opt_String(deserializer);
+    final var_name = sse_decode_opt_String(deserializer);
     return FfiPicture(
       format: var_format,
       data: var_data,
       description: var_description,
+      type: var_type,
+      name: var_name,
     );
   }
 
@@ -1733,6 +1768,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.format, serializer);
     sse_encode_list_prim_u_8_strict(self.data, serializer);
     sse_encode_opt_String(self.description, serializer);
+    sse_encode_opt_String(self.type, serializer);
+    sse_encode_opt_String(self.name, serializer);
   }
 
   @protected

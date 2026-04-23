@@ -6,7 +6,7 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:metadata_audio/src/native/frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `apply_format_raw_values`, `apply_raw_tag_fallbacks`, `apply_standard_tag`, `assign_option_from_value`, `assign_replaygain_value`, `audio_codec_name`, `calculate_duration`, `collect_multi_value_tag`, `collect_native_tags`, `comment_from_tag`, `count_chapter_group_items`, `dedup_strings`, `extension_from_mime`, `extract_basic_metadata`, `extract_bitrate`, `extract_common_tags`, `extract_format_metadata_values`, `extract_format`, `extract_metadata_details`, `extract_standard_tag_value`, `extract_track_details`, `extract_track_format_details`, `is_lossless_codec`, `is_pcm_codec`, `iter_revision_tags`, `lyrics_from_tag`, `mp4_atom_key_from_standard_tag`, `nonzero_u32_from_u64`, `normalize_container_short_name`, `parse_float`, `parse_u32`, `parse_year_from_date`, `push_comment`, `push_lyrics`, `push_multi_value`, `push_rating`, `push_unique`, `rating_from_popm`, `rating_from_ppm`, `raw_sub_field_value`, `select_primary_audio_track`, `set_option_i32_from_str`, `set_option_i32`, `set_option_string`, `some_non_empty`, `split_multi_values`, `standard_tag_key_name`, `summarize_revision`, `tag_to_ffi_native_tag`, `to_ffi_metadata`, `track_no_from_tag`, `u32_from_u64`
+// These functions are ignored because they are not marked as `pub`: `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `summarize_revision`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ExtractedMetadata`, `StandardTagKind`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
@@ -31,6 +31,9 @@ Future<List<FfiNativeTag>> pocGetNativeTags({required String path}) =>
 
 Future<FfiFormat> pocGetFormat({required String path}) =>
     RustLib.instance.api.crateApiPocGetFormat(path: path);
+
+Future<List<FfiPicture>> pocGetPictures({required String path}) =>
+    RustLib.instance.api.crateApiPocGetPictures(path: path);
 
 class FfiBasicMetadata {
   const FfiBasicMetadata({
@@ -720,16 +723,29 @@ class FfiNativeTag {
 }
 
 class FfiPicture {
-  const FfiPicture({required this.data, this.format, this.description});
+  const FfiPicture({
+    required this.data,
+    this.format,
+    this.description,
+    this.type,
+    this.name,
+  });
   final String? format;
   final Uint8List data;
   final String? description;
+  final String? type;
+  final String? name;
 
   static Future<FfiPicture> default_() =>
       RustLib.instance.api.crateApiFfiPictureDefault();
 
   @override
-  int get hashCode => format.hashCode ^ data.hashCode ^ description.hashCode;
+  int get hashCode =>
+      format.hashCode ^
+      data.hashCode ^
+      description.hashCode ^
+      type.hashCode ^
+      name.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -738,7 +754,9 @@ class FfiPicture {
           runtimeType == other.runtimeType &&
           format == other.format &&
           data == other.data &&
-          description == other.description;
+          description == other.description &&
+          type == other.type &&
+          name == other.name;
 }
 
 class FfiRating {

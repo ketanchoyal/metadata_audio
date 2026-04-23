@@ -12,6 +12,7 @@ use symphonia::core::meta::{MetadataRevision, StandardTag};
 use crate::common_tags::{self, extract_common_tags};
 use crate::format_info::{extract_format};
 use crate::native_tags::{collect_native_tags};
+use crate::pictures::extract_pictures;
 use crate::track_details::{extract_track_details};
 use crate::utils::*;
 
@@ -77,6 +78,8 @@ pub struct FfiPicture {
     pub format: Option<String>,
     pub data: Vec<u8>,
     pub description: Option<String>,
+    pub r#type: Option<String>,
+    pub name: Option<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -321,6 +324,23 @@ pub fn poc_get_format(path: String) -> Result<FfiFormat, String> {
         .map_err(|err| format!("failed to probe media source stream: {err}"))?;
 
     Ok(extract_format(&mut *format))
+}
+
+#[flutter_rust_bridge::frb]
+pub fn poc_get_pictures(path: String) -> Result<Vec<FfiPicture>, String> {
+    let file = File::open(&path).map_err(|err| format!("failed to open file '{path}': {err}"))?;
+
+    let mut hint = Hint::new();
+    if let Some(extension) = Path::new(&path).extension().and_then(|value| value.to_str()) {
+        hint.with_extension(extension);
+    }
+
+    let stream = MediaSourceStream::new(Box::new(file), Default::default());
+    let mut format = symphonia::default::get_probe()
+        .probe(&hint, stream, FormatOptions::default(), Default::default())
+        .map_err(|err| format!("failed to probe media source stream: {err}"))?;
+
+    Ok(extract_pictures(&mut *format))
 }
 
 fn extract_basic_metadata(stream: MediaSourceStream, hint: Hint) -> Result<ExtractedMetadata, String> {
