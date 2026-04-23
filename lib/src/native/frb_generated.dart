@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -277496807;
+  int get rustContentHash => -1721315483;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -75,7 +75,21 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<FfiComment> crateApiFfiCommentDefault();
+
+  Future<FfiCommonTags> crateApiFfiCommonTagsDefault();
+
+  Future<FfiLyricsTag> crateApiFfiLyricsTagDefault();
+
+  Future<FfiPicture> crateApiFfiPictureDefault();
+
+  Future<FfiRating> crateApiFfiRatingDefault();
+
+  Future<FfiTrackNo> crateApiFfiTrackNoDefault();
+
   Future<String> crateApiHealthCheck();
+
+  Future<FfiCommonTags> crateApiPocGetCommonTags({required String path});
 
   Future<List<FfiNativeTag>> crateApiPocGetNativeTags({required String path});
 
@@ -96,7 +110,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<String> crateApiHealthCheck() => handler.executeNormal(
+  Future<FfiComment> crateApiFfiCommentDefault() => handler.executeNormal(
     NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -104,6 +118,156 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           generalizedFrbRustBinding,
           serializer,
           funcId: 1,
+          port: port_,
+        );
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_ffi_comment,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiFfiCommentDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ),
+  );
+
+  TaskConstMeta get kCrateApiFfiCommentDefaultConstMeta =>
+      const TaskConstMeta(debugName: 'ffi_comment_default', argNames: []);
+
+  @override
+  Future<FfiCommonTags> crateApiFfiCommonTagsDefault() => handler.executeNormal(
+    NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(
+          generalizedFrbRustBinding,
+          serializer,
+          funcId: 2,
+          port: port_,
+        );
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_ffi_common_tags,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiFfiCommonTagsDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ),
+  );
+
+  TaskConstMeta get kCrateApiFfiCommonTagsDefaultConstMeta =>
+      const TaskConstMeta(debugName: 'ffi_common_tags_default', argNames: []);
+
+  @override
+  Future<FfiLyricsTag> crateApiFfiLyricsTagDefault() => handler.executeNormal(
+    NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(
+          generalizedFrbRustBinding,
+          serializer,
+          funcId: 3,
+          port: port_,
+        );
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_ffi_lyrics_tag,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiFfiLyricsTagDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ),
+  );
+
+  TaskConstMeta get kCrateApiFfiLyricsTagDefaultConstMeta =>
+      const TaskConstMeta(debugName: 'ffi_lyrics_tag_default', argNames: []);
+
+  @override
+  Future<FfiPicture> crateApiFfiPictureDefault() => handler.executeNormal(
+    NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(
+          generalizedFrbRustBinding,
+          serializer,
+          funcId: 4,
+          port: port_,
+        );
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_ffi_picture,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiFfiPictureDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ),
+  );
+
+  TaskConstMeta get kCrateApiFfiPictureDefaultConstMeta =>
+      const TaskConstMeta(debugName: 'ffi_picture_default', argNames: []);
+
+  @override
+  Future<FfiRating> crateApiFfiRatingDefault() => handler.executeNormal(
+    NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(
+          generalizedFrbRustBinding,
+          serializer,
+          funcId: 5,
+          port: port_,
+        );
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_ffi_rating,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiFfiRatingDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ),
+  );
+
+  TaskConstMeta get kCrateApiFfiRatingDefaultConstMeta =>
+      const TaskConstMeta(debugName: 'ffi_rating_default', argNames: []);
+
+  @override
+  Future<FfiTrackNo> crateApiFfiTrackNoDefault() => handler.executeNormal(
+    NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(
+          generalizedFrbRustBinding,
+          serializer,
+          funcId: 6,
+          port: port_,
+        );
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_ffi_track_no,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiFfiTrackNoDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ),
+  );
+
+  TaskConstMeta get kCrateApiFfiTrackNoDefaultConstMeta =>
+      const TaskConstMeta(debugName: 'ffi_track_no_default', argNames: []);
+
+  @override
+  Future<String> crateApiHealthCheck() => handler.executeNormal(
+    NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(
+          generalizedFrbRustBinding,
+          serializer,
+          funcId: 7,
           port: port_,
         );
       },
@@ -121,6 +285,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'health_check', argNames: []);
 
   @override
+  Future<FfiCommonTags> crateApiPocGetCommonTags({required String path}) =>
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_String(path, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 8,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_ffi_common_tags,
+            decodeErrorData: sse_decode_String,
+          ),
+          constMeta: kCrateApiPocGetCommonTagsConstMeta,
+          argValues: [path],
+          apiImpl: this,
+        ),
+      );
+
+  TaskConstMeta get kCrateApiPocGetCommonTagsConstMeta =>
+      const TaskConstMeta(debugName: 'poc_get_common_tags', argNames: ['path']);
+
+  @override
   Future<List<FfiNativeTag>> crateApiPocGetNativeTags({required String path}) =>
       handler.executeNormal(
         NormalTask(
@@ -130,7 +321,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 2,
+              funcId: 9,
               port: port_,
             );
           },
@@ -160,7 +351,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 3,
+          funcId: 10,
           port: port_,
         );
       },
@@ -189,7 +380,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 4,
+              funcId: 11,
               port: port_,
             );
           },
@@ -219,9 +410,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
   double dco_decode_box_autoadd_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
+  }
+
+  @protected
+  int dco_decode_box_autoadd_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
   }
 
   @protected
@@ -260,6 +463,158 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FfiComment dco_decode_ffi_comment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FfiComment(
+      descriptor: dco_decode_opt_String(arr[0]),
+      language: dco_decode_opt_String(arr[1]),
+      text: dco_decode_opt_String(arr[2]),
+    );
+  }
+
+  @protected
+  FfiCommonTags dco_decode_ffi_common_tags(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 114)
+      throw Exception(
+        'unexpected arr length: expect 114 but see ${arr.length}',
+      );
+    return FfiCommonTags(
+      track: dco_decode_ffi_track_no(arr[0]),
+      disk: dco_decode_ffi_track_no(arr[1]),
+      year: dco_decode_opt_box_autoadd_i_32(arr[2]),
+      title: dco_decode_opt_String(arr[3]),
+      artist: dco_decode_opt_String(arr[4]),
+      artists: dco_decode_list_String(arr[5]),
+      albumartist: dco_decode_opt_String(arr[6]),
+      albumartists: dco_decode_list_String(arr[7]),
+      album: dco_decode_opt_String(arr[8]),
+      date: dco_decode_opt_String(arr[9]),
+      originaldate: dco_decode_opt_String(arr[10]),
+      originalyear: dco_decode_opt_box_autoadd_i_32(arr[11]),
+      releasedate: dco_decode_opt_String(arr[12]),
+      comment: dco_decode_list_ffi_comment(arr[13]),
+      genre: dco_decode_list_String(arr[14]),
+      picture: dco_decode_list_ffi_picture(arr[15]),
+      composer: dco_decode_list_String(arr[16]),
+      lyrics: dco_decode_list_ffi_lyrics_tag(arr[17]),
+      albumsort: dco_decode_opt_String(arr[18]),
+      titlesort: dco_decode_opt_String(arr[19]),
+      work: dco_decode_opt_String(arr[20]),
+      artistsort: dco_decode_opt_String(arr[21]),
+      albumartistsort: dco_decode_opt_String(arr[22]),
+      composersort: dco_decode_opt_String(arr[23]),
+      lyricist: dco_decode_list_String(arr[24]),
+      writer: dco_decode_list_String(arr[25]),
+      conductor: dco_decode_list_String(arr[26]),
+      remixer: dco_decode_list_String(arr[27]),
+      arranger: dco_decode_list_String(arr[28]),
+      engineer: dco_decode_list_String(arr[29]),
+      publisher: dco_decode_list_String(arr[30]),
+      producer: dco_decode_list_String(arr[31]),
+      djmixer: dco_decode_list_String(arr[32]),
+      mixer: dco_decode_list_String(arr[33]),
+      technician: dco_decode_list_String(arr[34]),
+      label: dco_decode_list_String(arr[35]),
+      grouping: dco_decode_opt_String(arr[36]),
+      subtitle: dco_decode_list_String(arr[37]),
+      description: dco_decode_list_String(arr[38]),
+      discsubtitle: dco_decode_list_String(arr[39]),
+      longDescription: dco_decode_opt_String(arr[40]),
+      totaltracks: dco_decode_opt_String(arr[41]),
+      totaldiscs: dco_decode_opt_String(arr[42]),
+      movementTotal: dco_decode_opt_box_autoadd_i_32(arr[43]),
+      compilation: dco_decode_opt_box_autoadd_bool(arr[44]),
+      rating: dco_decode_list_ffi_rating(arr[45]),
+      bpm: dco_decode_opt_box_autoadd_i_32(arr[46]),
+      mood: dco_decode_opt_String(arr[47]),
+      media: dco_decode_opt_String(arr[48]),
+      catalognumber: dco_decode_list_String(arr[49]),
+      tvShow: dco_decode_opt_String(arr[50]),
+      tvShowSort: dco_decode_opt_String(arr[51]),
+      tvEpisodeId: dco_decode_opt_String(arr[52]),
+      tvNetwork: dco_decode_opt_String(arr[53]),
+      tvSeason: dco_decode_opt_box_autoadd_i_32(arr[54]),
+      tvEpisode: dco_decode_opt_box_autoadd_i_32(arr[55]),
+      podcast: dco_decode_opt_box_autoadd_bool(arr[56]),
+      podcasturl: dco_decode_opt_String(arr[57]),
+      releasestatus: dco_decode_opt_String(arr[58]),
+      releasecountry: dco_decode_opt_String(arr[59]),
+      script: dco_decode_opt_String(arr[60]),
+      language: dco_decode_opt_String(arr[61]),
+      copyright: dco_decode_opt_String(arr[62]),
+      license: dco_decode_opt_String(arr[63]),
+      encodedby: dco_decode_opt_String(arr[64]),
+      encodersettings: dco_decode_opt_String(arr[65]),
+      gapless: dco_decode_opt_String(arr[66]),
+      barcode: dco_decode_opt_String(arr[67]),
+      isrc: dco_decode_opt_String(arr[68]),
+      asin: dco_decode_opt_String(arr[69]),
+      website: dco_decode_opt_String(arr[70]),
+      notes: dco_decode_opt_String(arr[71]),
+      originalalbum: dco_decode_opt_String(arr[72]),
+      originalartist: dco_decode_opt_String(arr[73]),
+      releasetype: dco_decode_list_String(arr[74]),
+      keywords: dco_decode_list_String(arr[75]),
+      category: dco_decode_list_String(arr[76]),
+      musicbrainzRecordingid: dco_decode_opt_String(arr[77]),
+      musicbrainzTrackid: dco_decode_opt_String(arr[78]),
+      musicbrainzAlbumid: dco_decode_opt_String(arr[79]),
+      musicbrainzArtistid: dco_decode_opt_String(arr[80]),
+      musicbrainzAlbumartistid: dco_decode_opt_String(arr[81]),
+      musicbrainzReleasegroupid: dco_decode_opt_String(arr[82]),
+      musicbrainzWorkid: dco_decode_opt_String(arr[83]),
+      musicbrainzTrmid: dco_decode_opt_String(arr[84]),
+      musicbrainzDiscid: dco_decode_opt_String(arr[85]),
+      acoustidId: dco_decode_opt_String(arr[86]),
+      acoustidFingerprint: dco_decode_opt_String(arr[87]),
+      musicipPuid: dco_decode_opt_String(arr[88]),
+      musicipFingerprint: dco_decode_opt_String(arr[89]),
+      discogsArtistId: dco_decode_opt_String(arr[90]),
+      discogsReleaseId: dco_decode_opt_String(arr[91]),
+      discogsLabelId: dco_decode_opt_String(arr[92]),
+      discogsMasterReleaseId: dco_decode_opt_String(arr[93]),
+      discogsVotes: dco_decode_opt_box_autoadd_f_64(arr[94]),
+      discogsRating: dco_decode_opt_box_autoadd_f_64(arr[95]),
+      replaygainTrackGain: dco_decode_opt_box_autoadd_f_64(arr[96]),
+      replaygainTrackPeak: dco_decode_opt_box_autoadd_f_64(arr[97]),
+      replaygainAlbumGain: dco_decode_opt_box_autoadd_f_64(arr[98]),
+      replaygainAlbumPeak: dco_decode_opt_box_autoadd_f_64(arr[99]),
+      replaygainTrackGainRatio: dco_decode_opt_box_autoadd_f_64(arr[100]),
+      replaygainTrackPeakRatio: dco_decode_opt_box_autoadd_f_64(arr[101]),
+      replaygainAlbumMinmax: dco_decode_opt_box_autoadd_f_64(arr[102]),
+      replaygainTrackMinmax: dco_decode_opt_box_autoadd_f_64(arr[103]),
+      replaygainUndo: dco_decode_opt_box_autoadd_f_64(arr[104]),
+      performerInstrument: dco_decode_opt_String(arr[105]),
+      key: dco_decode_opt_String(arr[106]),
+      movement: dco_decode_opt_String(arr[107]),
+      stik: dco_decode_opt_String(arr[108]),
+      showMovement: dco_decode_opt_String(arr[109]),
+      playCounter: dco_decode_opt_String(arr[110]),
+      hdVideo: dco_decode_opt_String(arr[111]),
+      movementIndex: dco_decode_opt_box_autoadd_i_32(arr[112]),
+      podcastId: dco_decode_opt_String(arr[113]),
+    );
+  }
+
+  @protected
+  FfiLyricsTag dco_decode_ffi_lyrics_tag(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FfiLyricsTag(
+      descriptor: dco_decode_opt_String(arr[0]),
+      language: dco_decode_opt_String(arr[1]),
+      text: dco_decode_opt_String(arr[2]),
+    );
+  }
+
+  @protected
   FfiNativeTag dco_decode_ffi_native_tag(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -273,15 +628,82 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FfiPicture dco_decode_ffi_picture(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FfiPicture(
+      format: dco_decode_opt_String(arr[0]),
+      data: dco_decode_list_prim_u_8_strict(arr[1]),
+      description: dco_decode_opt_String(arr[2]),
+    );
+  }
+
+  @protected
+  FfiRating dco_decode_ffi_rating(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FfiRating(
+      source: dco_decode_opt_String(arr[0]),
+      rating: dco_decode_opt_box_autoadd_f_64(arr[1]),
+    );
+  }
+
+  @protected
+  FfiTrackNo dco_decode_ffi_track_no(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FfiTrackNo(
+      no: dco_decode_opt_box_autoadd_u_32(arr[0]),
+      of: dco_decode_opt_box_autoadd_u_32(arr[1]),
+    );
+  }
+
+  @protected
+  int dco_decode_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
   }
 
   @protected
+  List<FfiComment> dco_decode_list_ffi_comment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_comment).toList();
+  }
+
+  @protected
+  List<FfiLyricsTag> dco_decode_list_ffi_lyrics_tag(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_lyrics_tag).toList();
+  }
+
+  @protected
   List<FfiNativeTag> dco_decode_list_ffi_native_tag(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_ffi_native_tag).toList();
+  }
+
+  @protected
+  List<FfiPicture> dco_decode_list_ffi_picture(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_picture).toList();
+  }
+
+  @protected
+  List<FfiRating> dco_decode_list_ffi_rating(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_rating).toList();
   }
 
   @protected
@@ -303,9 +725,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_bool(raw);
+  }
+
+  @protected
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_f_64(raw);
+  }
+
+  @protected
+  int? dco_decode_opt_box_autoadd_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_i_32(raw);
   }
 
   @protected
@@ -346,9 +780,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return sse_decode_bool(deserializer);
+  }
+
+  @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return sse_decode_f_64(deserializer);
+  }
+
+  @protected
+  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return sse_decode_i_32(deserializer);
   }
 
   @protected
@@ -397,12 +843,324 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FfiComment sse_decode_ffi_comment(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_descriptor = sse_decode_opt_String(deserializer);
+    final var_language = sse_decode_opt_String(deserializer);
+    final var_text = sse_decode_opt_String(deserializer);
+    return FfiComment(
+      descriptor: var_descriptor,
+      language: var_language,
+      text: var_text,
+    );
+  }
+
+  @protected
+  FfiCommonTags sse_decode_ffi_common_tags(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_track = sse_decode_ffi_track_no(deserializer);
+    final var_disk = sse_decode_ffi_track_no(deserializer);
+    final var_year = sse_decode_opt_box_autoadd_i_32(deserializer);
+    final var_title = sse_decode_opt_String(deserializer);
+    final var_artist = sse_decode_opt_String(deserializer);
+    final var_artists = sse_decode_list_String(deserializer);
+    final var_albumartist = sse_decode_opt_String(deserializer);
+    final var_albumartists = sse_decode_list_String(deserializer);
+    final var_album = sse_decode_opt_String(deserializer);
+    final var_date = sse_decode_opt_String(deserializer);
+    final var_originaldate = sse_decode_opt_String(deserializer);
+    final var_originalyear = sse_decode_opt_box_autoadd_i_32(deserializer);
+    final var_releasedate = sse_decode_opt_String(deserializer);
+    final var_comment = sse_decode_list_ffi_comment(deserializer);
+    final var_genre = sse_decode_list_String(deserializer);
+    final var_picture = sse_decode_list_ffi_picture(deserializer);
+    final var_composer = sse_decode_list_String(deserializer);
+    final var_lyrics = sse_decode_list_ffi_lyrics_tag(deserializer);
+    final var_albumsort = sse_decode_opt_String(deserializer);
+    final var_titlesort = sse_decode_opt_String(deserializer);
+    final var_work = sse_decode_opt_String(deserializer);
+    final var_artistsort = sse_decode_opt_String(deserializer);
+    final var_albumartistsort = sse_decode_opt_String(deserializer);
+    final var_composersort = sse_decode_opt_String(deserializer);
+    final var_lyricist = sse_decode_list_String(deserializer);
+    final var_writer = sse_decode_list_String(deserializer);
+    final var_conductor = sse_decode_list_String(deserializer);
+    final var_remixer = sse_decode_list_String(deserializer);
+    final var_arranger = sse_decode_list_String(deserializer);
+    final var_engineer = sse_decode_list_String(deserializer);
+    final var_publisher = sse_decode_list_String(deserializer);
+    final var_producer = sse_decode_list_String(deserializer);
+    final var_djmixer = sse_decode_list_String(deserializer);
+    final var_mixer = sse_decode_list_String(deserializer);
+    final var_technician = sse_decode_list_String(deserializer);
+    final var_label = sse_decode_list_String(deserializer);
+    final var_grouping = sse_decode_opt_String(deserializer);
+    final var_subtitle = sse_decode_list_String(deserializer);
+    final var_description = sse_decode_list_String(deserializer);
+    final var_discsubtitle = sse_decode_list_String(deserializer);
+    final var_longDescription = sse_decode_opt_String(deserializer);
+    final var_totaltracks = sse_decode_opt_String(deserializer);
+    final var_totaldiscs = sse_decode_opt_String(deserializer);
+    final var_movementTotal = sse_decode_opt_box_autoadd_i_32(deserializer);
+    final var_compilation = sse_decode_opt_box_autoadd_bool(deserializer);
+    final var_rating = sse_decode_list_ffi_rating(deserializer);
+    final var_bpm = sse_decode_opt_box_autoadd_i_32(deserializer);
+    final var_mood = sse_decode_opt_String(deserializer);
+    final var_media = sse_decode_opt_String(deserializer);
+    final var_catalognumber = sse_decode_list_String(deserializer);
+    final var_tvShow = sse_decode_opt_String(deserializer);
+    final var_tvShowSort = sse_decode_opt_String(deserializer);
+    final var_tvEpisodeId = sse_decode_opt_String(deserializer);
+    final var_tvNetwork = sse_decode_opt_String(deserializer);
+    final var_tvSeason = sse_decode_opt_box_autoadd_i_32(deserializer);
+    final var_tvEpisode = sse_decode_opt_box_autoadd_i_32(deserializer);
+    final var_podcast = sse_decode_opt_box_autoadd_bool(deserializer);
+    final var_podcasturl = sse_decode_opt_String(deserializer);
+    final var_releasestatus = sse_decode_opt_String(deserializer);
+    final var_releasecountry = sse_decode_opt_String(deserializer);
+    final var_script = sse_decode_opt_String(deserializer);
+    final var_language = sse_decode_opt_String(deserializer);
+    final var_copyright = sse_decode_opt_String(deserializer);
+    final var_license = sse_decode_opt_String(deserializer);
+    final var_encodedby = sse_decode_opt_String(deserializer);
+    final var_encodersettings = sse_decode_opt_String(deserializer);
+    final var_gapless = sse_decode_opt_String(deserializer);
+    final var_barcode = sse_decode_opt_String(deserializer);
+    final var_isrc = sse_decode_opt_String(deserializer);
+    final var_asin = sse_decode_opt_String(deserializer);
+    final var_website = sse_decode_opt_String(deserializer);
+    final var_notes = sse_decode_opt_String(deserializer);
+    final var_originalalbum = sse_decode_opt_String(deserializer);
+    final var_originalartist = sse_decode_opt_String(deserializer);
+    final var_releasetype = sse_decode_list_String(deserializer);
+    final var_keywords = sse_decode_list_String(deserializer);
+    final var_category = sse_decode_list_String(deserializer);
+    final var_musicbrainzRecordingid = sse_decode_opt_String(deserializer);
+    final var_musicbrainzTrackid = sse_decode_opt_String(deserializer);
+    final var_musicbrainzAlbumid = sse_decode_opt_String(deserializer);
+    final var_musicbrainzArtistid = sse_decode_opt_String(deserializer);
+    final var_musicbrainzAlbumartistid = sse_decode_opt_String(deserializer);
+    final var_musicbrainzReleasegroupid = sse_decode_opt_String(deserializer);
+    final var_musicbrainzWorkid = sse_decode_opt_String(deserializer);
+    final var_musicbrainzTrmid = sse_decode_opt_String(deserializer);
+    final var_musicbrainzDiscid = sse_decode_opt_String(deserializer);
+    final var_acoustidId = sse_decode_opt_String(deserializer);
+    final var_acoustidFingerprint = sse_decode_opt_String(deserializer);
+    final var_musicipPuid = sse_decode_opt_String(deserializer);
+    final var_musicipFingerprint = sse_decode_opt_String(deserializer);
+    final var_discogsArtistId = sse_decode_opt_String(deserializer);
+    final var_discogsReleaseId = sse_decode_opt_String(deserializer);
+    final var_discogsLabelId = sse_decode_opt_String(deserializer);
+    final var_discogsMasterReleaseId = sse_decode_opt_String(deserializer);
+    final var_discogsVotes = sse_decode_opt_box_autoadd_f_64(deserializer);
+    final var_discogsRating = sse_decode_opt_box_autoadd_f_64(deserializer);
+    final var_replaygainTrackGain = sse_decode_opt_box_autoadd_f_64(
+      deserializer,
+    );
+    final var_replaygainTrackPeak = sse_decode_opt_box_autoadd_f_64(
+      deserializer,
+    );
+    final var_replaygainAlbumGain = sse_decode_opt_box_autoadd_f_64(
+      deserializer,
+    );
+    final var_replaygainAlbumPeak = sse_decode_opt_box_autoadd_f_64(
+      deserializer,
+    );
+    final var_replaygainTrackGainRatio = sse_decode_opt_box_autoadd_f_64(
+      deserializer,
+    );
+    final var_replaygainTrackPeakRatio = sse_decode_opt_box_autoadd_f_64(
+      deserializer,
+    );
+    final var_replaygainAlbumMinmax = sse_decode_opt_box_autoadd_f_64(
+      deserializer,
+    );
+    final var_replaygainTrackMinmax = sse_decode_opt_box_autoadd_f_64(
+      deserializer,
+    );
+    final var_replaygainUndo = sse_decode_opt_box_autoadd_f_64(deserializer);
+    final var_performerInstrument = sse_decode_opt_String(deserializer);
+    final var_key = sse_decode_opt_String(deserializer);
+    final var_movement = sse_decode_opt_String(deserializer);
+    final var_stik = sse_decode_opt_String(deserializer);
+    final var_showMovement = sse_decode_opt_String(deserializer);
+    final var_playCounter = sse_decode_opt_String(deserializer);
+    final var_hdVideo = sse_decode_opt_String(deserializer);
+    final var_movementIndex = sse_decode_opt_box_autoadd_i_32(deserializer);
+    final var_podcastId = sse_decode_opt_String(deserializer);
+    return FfiCommonTags(
+      track: var_track,
+      disk: var_disk,
+      year: var_year,
+      title: var_title,
+      artist: var_artist,
+      artists: var_artists,
+      albumartist: var_albumartist,
+      albumartists: var_albumartists,
+      album: var_album,
+      date: var_date,
+      originaldate: var_originaldate,
+      originalyear: var_originalyear,
+      releasedate: var_releasedate,
+      comment: var_comment,
+      genre: var_genre,
+      picture: var_picture,
+      composer: var_composer,
+      lyrics: var_lyrics,
+      albumsort: var_albumsort,
+      titlesort: var_titlesort,
+      work: var_work,
+      artistsort: var_artistsort,
+      albumartistsort: var_albumartistsort,
+      composersort: var_composersort,
+      lyricist: var_lyricist,
+      writer: var_writer,
+      conductor: var_conductor,
+      remixer: var_remixer,
+      arranger: var_arranger,
+      engineer: var_engineer,
+      publisher: var_publisher,
+      producer: var_producer,
+      djmixer: var_djmixer,
+      mixer: var_mixer,
+      technician: var_technician,
+      label: var_label,
+      grouping: var_grouping,
+      subtitle: var_subtitle,
+      description: var_description,
+      discsubtitle: var_discsubtitle,
+      longDescription: var_longDescription,
+      totaltracks: var_totaltracks,
+      totaldiscs: var_totaldiscs,
+      movementTotal: var_movementTotal,
+      compilation: var_compilation,
+      rating: var_rating,
+      bpm: var_bpm,
+      mood: var_mood,
+      media: var_media,
+      catalognumber: var_catalognumber,
+      tvShow: var_tvShow,
+      tvShowSort: var_tvShowSort,
+      tvEpisodeId: var_tvEpisodeId,
+      tvNetwork: var_tvNetwork,
+      tvSeason: var_tvSeason,
+      tvEpisode: var_tvEpisode,
+      podcast: var_podcast,
+      podcasturl: var_podcasturl,
+      releasestatus: var_releasestatus,
+      releasecountry: var_releasecountry,
+      script: var_script,
+      language: var_language,
+      copyright: var_copyright,
+      license: var_license,
+      encodedby: var_encodedby,
+      encodersettings: var_encodersettings,
+      gapless: var_gapless,
+      barcode: var_barcode,
+      isrc: var_isrc,
+      asin: var_asin,
+      website: var_website,
+      notes: var_notes,
+      originalalbum: var_originalalbum,
+      originalartist: var_originalartist,
+      releasetype: var_releasetype,
+      keywords: var_keywords,
+      category: var_category,
+      musicbrainzRecordingid: var_musicbrainzRecordingid,
+      musicbrainzTrackid: var_musicbrainzTrackid,
+      musicbrainzAlbumid: var_musicbrainzAlbumid,
+      musicbrainzArtistid: var_musicbrainzArtistid,
+      musicbrainzAlbumartistid: var_musicbrainzAlbumartistid,
+      musicbrainzReleasegroupid: var_musicbrainzReleasegroupid,
+      musicbrainzWorkid: var_musicbrainzWorkid,
+      musicbrainzTrmid: var_musicbrainzTrmid,
+      musicbrainzDiscid: var_musicbrainzDiscid,
+      acoustidId: var_acoustidId,
+      acoustidFingerprint: var_acoustidFingerprint,
+      musicipPuid: var_musicipPuid,
+      musicipFingerprint: var_musicipFingerprint,
+      discogsArtistId: var_discogsArtistId,
+      discogsReleaseId: var_discogsReleaseId,
+      discogsLabelId: var_discogsLabelId,
+      discogsMasterReleaseId: var_discogsMasterReleaseId,
+      discogsVotes: var_discogsVotes,
+      discogsRating: var_discogsRating,
+      replaygainTrackGain: var_replaygainTrackGain,
+      replaygainTrackPeak: var_replaygainTrackPeak,
+      replaygainAlbumGain: var_replaygainAlbumGain,
+      replaygainAlbumPeak: var_replaygainAlbumPeak,
+      replaygainTrackGainRatio: var_replaygainTrackGainRatio,
+      replaygainTrackPeakRatio: var_replaygainTrackPeakRatio,
+      replaygainAlbumMinmax: var_replaygainAlbumMinmax,
+      replaygainTrackMinmax: var_replaygainTrackMinmax,
+      replaygainUndo: var_replaygainUndo,
+      performerInstrument: var_performerInstrument,
+      key: var_key,
+      movement: var_movement,
+      stik: var_stik,
+      showMovement: var_showMovement,
+      playCounter: var_playCounter,
+      hdVideo: var_hdVideo,
+      movementIndex: var_movementIndex,
+      podcastId: var_podcastId,
+    );
+  }
+
+  @protected
+  FfiLyricsTag sse_decode_ffi_lyrics_tag(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_descriptor = sse_decode_opt_String(deserializer);
+    final var_language = sse_decode_opt_String(deserializer);
+    final var_text = sse_decode_opt_String(deserializer);
+    return FfiLyricsTag(
+      descriptor: var_descriptor,
+      language: var_language,
+      text: var_text,
+    );
+  }
+
+  @protected
   FfiNativeTag sse_decode_ffi_native_tag(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final var_key = sse_decode_String(deserializer);
     final var_value = sse_decode_String(deserializer);
     final var_stdKey = sse_decode_opt_String(deserializer);
     return FfiNativeTag(key: var_key, value: var_value, stdKey: var_stdKey);
+  }
+
+  @protected
+  FfiPicture sse_decode_ffi_picture(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_format = sse_decode_opt_String(deserializer);
+    final var_data = sse_decode_list_prim_u_8_strict(deserializer);
+    final var_description = sse_decode_opt_String(deserializer);
+    return FfiPicture(
+      format: var_format,
+      data: var_data,
+      description: var_description,
+    );
+  }
+
+  @protected
+  FfiRating sse_decode_ffi_rating(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_source = sse_decode_opt_String(deserializer);
+    final var_rating = sse_decode_opt_box_autoadd_f_64(deserializer);
+    return FfiRating(source: var_source, rating: var_rating);
+  }
+
+  @protected
+  FfiTrackNo sse_decode_ffi_track_no(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_no = sse_decode_opt_box_autoadd_u_32(deserializer);
+    final var_of = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return FfiTrackNo(no: var_no, of: var_of);
+  }
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
   }
 
   @protected
@@ -418,6 +1176,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FfiComment> sse_decode_list_ffi_comment(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <FfiComment>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_comment(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FfiLyricsTag> sse_decode_list_ffi_lyrics_tag(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <FfiLyricsTag>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_lyrics_tag(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<FfiNativeTag> sse_decode_list_ffi_native_tag(
     SseDeserializer deserializer,
   ) {
@@ -427,6 +1211,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final ans_ = <FfiNativeTag>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_ffi_native_tag(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FfiPicture> sse_decode_list_ffi_picture(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <FfiPicture>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_picture(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FfiRating> sse_decode_list_ffi_rating(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <FfiRating>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_rating(deserializer));
     }
     return ans_;
   }
@@ -457,11 +1265,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_box_autoadd_bool(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
       return sse_decode_box_autoadd_f_64(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_box_autoadd_i_32(deserializer);
     } else {
       return null;
     }
@@ -496,12 +1326,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
-  }
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
@@ -514,9 +1338,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_f_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self, serializer);
   }
 
   @protected
@@ -553,11 +1389,177 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_ffi_comment(FfiComment self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.descriptor, serializer);
+    sse_encode_opt_String(self.language, serializer);
+    sse_encode_opt_String(self.text, serializer);
+  }
+
+  @protected
+  void sse_encode_ffi_common_tags(
+    FfiCommonTags self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ffi_track_no(self.track, serializer);
+    sse_encode_ffi_track_no(self.disk, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.year, serializer);
+    sse_encode_opt_String(self.title, serializer);
+    sse_encode_opt_String(self.artist, serializer);
+    sse_encode_list_String(self.artists, serializer);
+    sse_encode_opt_String(self.albumartist, serializer);
+    sse_encode_list_String(self.albumartists, serializer);
+    sse_encode_opt_String(self.album, serializer);
+    sse_encode_opt_String(self.date, serializer);
+    sse_encode_opt_String(self.originaldate, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.originalyear, serializer);
+    sse_encode_opt_String(self.releasedate, serializer);
+    sse_encode_list_ffi_comment(self.comment, serializer);
+    sse_encode_list_String(self.genre, serializer);
+    sse_encode_list_ffi_picture(self.picture, serializer);
+    sse_encode_list_String(self.composer, serializer);
+    sse_encode_list_ffi_lyrics_tag(self.lyrics, serializer);
+    sse_encode_opt_String(self.albumsort, serializer);
+    sse_encode_opt_String(self.titlesort, serializer);
+    sse_encode_opt_String(self.work, serializer);
+    sse_encode_opt_String(self.artistsort, serializer);
+    sse_encode_opt_String(self.albumartistsort, serializer);
+    sse_encode_opt_String(self.composersort, serializer);
+    sse_encode_list_String(self.lyricist, serializer);
+    sse_encode_list_String(self.writer, serializer);
+    sse_encode_list_String(self.conductor, serializer);
+    sse_encode_list_String(self.remixer, serializer);
+    sse_encode_list_String(self.arranger, serializer);
+    sse_encode_list_String(self.engineer, serializer);
+    sse_encode_list_String(self.publisher, serializer);
+    sse_encode_list_String(self.producer, serializer);
+    sse_encode_list_String(self.djmixer, serializer);
+    sse_encode_list_String(self.mixer, serializer);
+    sse_encode_list_String(self.technician, serializer);
+    sse_encode_list_String(self.label, serializer);
+    sse_encode_opt_String(self.grouping, serializer);
+    sse_encode_list_String(self.subtitle, serializer);
+    sse_encode_list_String(self.description, serializer);
+    sse_encode_list_String(self.discsubtitle, serializer);
+    sse_encode_opt_String(self.longDescription, serializer);
+    sse_encode_opt_String(self.totaltracks, serializer);
+    sse_encode_opt_String(self.totaldiscs, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.movementTotal, serializer);
+    sse_encode_opt_box_autoadd_bool(self.compilation, serializer);
+    sse_encode_list_ffi_rating(self.rating, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.bpm, serializer);
+    sse_encode_opt_String(self.mood, serializer);
+    sse_encode_opt_String(self.media, serializer);
+    sse_encode_list_String(self.catalognumber, serializer);
+    sse_encode_opt_String(self.tvShow, serializer);
+    sse_encode_opt_String(self.tvShowSort, serializer);
+    sse_encode_opt_String(self.tvEpisodeId, serializer);
+    sse_encode_opt_String(self.tvNetwork, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.tvSeason, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.tvEpisode, serializer);
+    sse_encode_opt_box_autoadd_bool(self.podcast, serializer);
+    sse_encode_opt_String(self.podcasturl, serializer);
+    sse_encode_opt_String(self.releasestatus, serializer);
+    sse_encode_opt_String(self.releasecountry, serializer);
+    sse_encode_opt_String(self.script, serializer);
+    sse_encode_opt_String(self.language, serializer);
+    sse_encode_opt_String(self.copyright, serializer);
+    sse_encode_opt_String(self.license, serializer);
+    sse_encode_opt_String(self.encodedby, serializer);
+    sse_encode_opt_String(self.encodersettings, serializer);
+    sse_encode_opt_String(self.gapless, serializer);
+    sse_encode_opt_String(self.barcode, serializer);
+    sse_encode_opt_String(self.isrc, serializer);
+    sse_encode_opt_String(self.asin, serializer);
+    sse_encode_opt_String(self.website, serializer);
+    sse_encode_opt_String(self.notes, serializer);
+    sse_encode_opt_String(self.originalalbum, serializer);
+    sse_encode_opt_String(self.originalartist, serializer);
+    sse_encode_list_String(self.releasetype, serializer);
+    sse_encode_list_String(self.keywords, serializer);
+    sse_encode_list_String(self.category, serializer);
+    sse_encode_opt_String(self.musicbrainzRecordingid, serializer);
+    sse_encode_opt_String(self.musicbrainzTrackid, serializer);
+    sse_encode_opt_String(self.musicbrainzAlbumid, serializer);
+    sse_encode_opt_String(self.musicbrainzArtistid, serializer);
+    sse_encode_opt_String(self.musicbrainzAlbumartistid, serializer);
+    sse_encode_opt_String(self.musicbrainzReleasegroupid, serializer);
+    sse_encode_opt_String(self.musicbrainzWorkid, serializer);
+    sse_encode_opt_String(self.musicbrainzTrmid, serializer);
+    sse_encode_opt_String(self.musicbrainzDiscid, serializer);
+    sse_encode_opt_String(self.acoustidId, serializer);
+    sse_encode_opt_String(self.acoustidFingerprint, serializer);
+    sse_encode_opt_String(self.musicipPuid, serializer);
+    sse_encode_opt_String(self.musicipFingerprint, serializer);
+    sse_encode_opt_String(self.discogsArtistId, serializer);
+    sse_encode_opt_String(self.discogsReleaseId, serializer);
+    sse_encode_opt_String(self.discogsLabelId, serializer);
+    sse_encode_opt_String(self.discogsMasterReleaseId, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.discogsVotes, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.discogsRating, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainTrackGain, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainTrackPeak, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainAlbumGain, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainAlbumPeak, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainTrackGainRatio, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainTrackPeakRatio, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainAlbumMinmax, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainTrackMinmax, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.replaygainUndo, serializer);
+    sse_encode_opt_String(self.performerInstrument, serializer);
+    sse_encode_opt_String(self.key, serializer);
+    sse_encode_opt_String(self.movement, serializer);
+    sse_encode_opt_String(self.stik, serializer);
+    sse_encode_opt_String(self.showMovement, serializer);
+    sse_encode_opt_String(self.playCounter, serializer);
+    sse_encode_opt_String(self.hdVideo, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.movementIndex, serializer);
+    sse_encode_opt_String(self.podcastId, serializer);
+  }
+
+  @protected
+  void sse_encode_ffi_lyrics_tag(FfiLyricsTag self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.descriptor, serializer);
+    sse_encode_opt_String(self.language, serializer);
+    sse_encode_opt_String(self.text, serializer);
+  }
+
+  @protected
   void sse_encode_ffi_native_tag(FfiNativeTag self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.key, serializer);
     sse_encode_String(self.value, serializer);
     sse_encode_opt_String(self.stdKey, serializer);
+  }
+
+  @protected
+  void sse_encode_ffi_picture(FfiPicture self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.format, serializer);
+    sse_encode_list_prim_u_8_strict(self.data, serializer);
+    sse_encode_opt_String(self.description, serializer);
+  }
+
+  @protected
+  void sse_encode_ffi_rating(FfiRating self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.source, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.rating, serializer);
+  }
+
+  @protected
+  void sse_encode_ffi_track_no(FfiTrackNo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_box_autoadd_u_32(self.no, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.of, serializer);
+  }
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
   }
 
   @protected
@@ -570,6 +1572,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_ffi_comment(
+    List<FfiComment> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_comment(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_lyrics_tag(
+    List<FfiLyricsTag> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_lyrics_tag(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_ffi_native_tag(
     List<FfiNativeTag> self,
     SseSerializer serializer,
@@ -578,6 +1604,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_ffi_native_tag(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_picture(
+    List<FfiPicture> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_picture(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_rating(
+    List<FfiRating> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_rating(item, serializer);
     }
   }
 
@@ -614,12 +1664,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_bool(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_f_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_i_32(self, serializer);
     }
   }
 
@@ -648,11 +1718,5 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
   }
 }

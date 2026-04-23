@@ -28,7 +28,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
   double dco_decode_box_autoadd_f_64(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_i_32(dynamic raw);
 
   @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
@@ -40,13 +46,46 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FfiBasicMetadata dco_decode_ffi_basic_metadata(dynamic raw);
 
   @protected
+  FfiComment dco_decode_ffi_comment(dynamic raw);
+
+  @protected
+  FfiCommonTags dco_decode_ffi_common_tags(dynamic raw);
+
+  @protected
+  FfiLyricsTag dco_decode_ffi_lyrics_tag(dynamic raw);
+
+  @protected
   FfiNativeTag dco_decode_ffi_native_tag(dynamic raw);
+
+  @protected
+  FfiPicture dco_decode_ffi_picture(dynamic raw);
+
+  @protected
+  FfiRating dco_decode_ffi_rating(dynamic raw);
+
+  @protected
+  FfiTrackNo dco_decode_ffi_track_no(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<FfiComment> dco_decode_list_ffi_comment(dynamic raw);
+
+  @protected
+  List<FfiLyricsTag> dco_decode_list_ffi_lyrics_tag(dynamic raw);
+
+  @protected
   List<FfiNativeTag> dco_decode_list_ffi_native_tag(dynamic raw);
+
+  @protected
+  List<FfiPicture> dco_decode_list_ffi_picture(dynamic raw);
+
+  @protected
+  List<FfiRating> dco_decode_list_ffi_rating(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -58,7 +97,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
@@ -79,7 +124,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
@@ -91,15 +142,50 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FfiBasicMetadata sse_decode_ffi_basic_metadata(SseDeserializer deserializer);
 
   @protected
+  FfiComment sse_decode_ffi_comment(SseDeserializer deserializer);
+
+  @protected
+  FfiCommonTags sse_decode_ffi_common_tags(SseDeserializer deserializer);
+
+  @protected
+  FfiLyricsTag sse_decode_ffi_lyrics_tag(SseDeserializer deserializer);
+
+  @protected
   FfiNativeTag sse_decode_ffi_native_tag(SseDeserializer deserializer);
+
+  @protected
+  FfiPicture sse_decode_ffi_picture(SseDeserializer deserializer);
+
+  @protected
+  FfiRating sse_decode_ffi_rating(SseDeserializer deserializer);
+
+  @protected
+  FfiTrackNo sse_decode_ffi_track_no(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<FfiComment> sse_decode_list_ffi_comment(SseDeserializer deserializer);
+
+  @protected
+  List<FfiLyricsTag> sse_decode_list_ffi_lyrics_tag(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FfiNativeTag> sse_decode_list_ffi_native_tag(
     SseDeserializer deserializer,
   );
+
+  @protected
+  List<FfiPicture> sse_decode_list_ffi_picture(SseDeserializer deserializer);
+
+  @protected
+  List<FfiRating> sse_decode_list_ffi_rating(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -111,7 +197,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
@@ -126,16 +218,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
@@ -150,14 +245,59 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_ffi_comment(FfiComment self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ffi_common_tags(FfiCommonTags self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ffi_lyrics_tag(FfiLyricsTag self, SseSerializer serializer);
+
+  @protected
   void sse_encode_ffi_native_tag(FfiNativeTag self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ffi_picture(FfiPicture self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ffi_rating(FfiRating self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ffi_track_no(FfiTrackNo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_ffi_comment(
+    List<FfiComment> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ffi_lyrics_tag(
+    List<FfiLyricsTag> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_ffi_native_tag(
     List<FfiNativeTag> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ffi_picture(
+    List<FfiPicture> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ffi_rating(
+    List<FfiRating> self,
     SseSerializer serializer,
   );
 
@@ -174,7 +314,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
@@ -187,9 +333,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 }
 
 // Section: wire_class

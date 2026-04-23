@@ -6,9 +6,9 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:metadata_audio/src/native/frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `audio_codec_name`, `collect_native_tags`, `count_chapter_group_items`, `extension_from_mime`, `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `extract_track_details`, `mp4_atom_key_from_standard_tag`, `standard_tag_key_name`, `summarize_revision`, `tag_to_ffi_native_tag`, `to_ffi_metadata`
+// These functions are ignored because they are not marked as `pub`: `apply_raw_tag_fallbacks`, `apply_standard_tag`, `assign_option_from_value`, `assign_replaygain_value`, `audio_codec_name`, `collect_multi_value_tag`, `collect_native_tags`, `comment_from_tag`, `count_chapter_group_items`, `dedup_strings`, `extension_from_mime`, `extract_basic_metadata`, `extract_common_tags`, `extract_metadata_details`, `extract_standard_tag_value`, `extract_track_details`, `iter_revision_tags`, `lyrics_from_tag`, `mp4_atom_key_from_standard_tag`, `parse_float`, `parse_u32`, `parse_year_from_date`, `push_comment`, `push_lyrics`, `push_multi_value`, `push_rating`, `push_unique`, `rating_from_popm`, `rating_from_ppm`, `raw_sub_field_value`, `set_option_i32_from_str`, `set_option_i32`, `set_option_string`, `some_non_empty`, `split_multi_values`, `standard_tag_key_name`, `summarize_revision`, `tag_to_ffi_native_tag`, `to_ffi_metadata`, `track_no_from_tag`, `u32_from_u64`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ExtractedMetadata`, `StandardTagKind`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 Future<String> healthCheck() => RustLib.instance.api.crateApiHealthCheck();
 
@@ -22,6 +22,9 @@ Future<FfiBasicMetadata> pocParseBytes({
   bytes: bytes,
   mimeHint: mimeHint,
 );
+
+Future<FfiCommonTags> pocGetCommonTags({required String path}) =>
+    RustLib.instance.api.crateApiPocGetCommonTags(path: path);
 
 Future<List<FfiNativeTag>> pocGetNativeTags({required String path}) =>
     RustLib.instance.api.crateApiPocGetNativeTags(path: path);
@@ -92,6 +95,523 @@ class FfiBasicMetadata {
           warnings == other.warnings;
 }
 
+class FfiComment {
+  const FfiComment({this.descriptor, this.language, this.text});
+  final String? descriptor;
+  final String? language;
+  final String? text;
+
+  static Future<FfiComment> default_() =>
+      RustLib.instance.api.crateApiFfiCommentDefault();
+
+  @override
+  int get hashCode => descriptor.hashCode ^ language.hashCode ^ text.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiComment &&
+          runtimeType == other.runtimeType &&
+          descriptor == other.descriptor &&
+          language == other.language &&
+          text == other.text;
+}
+
+class FfiCommonTags {
+  const FfiCommonTags({
+    required this.track,
+    required this.disk,
+    required this.artists,
+    required this.albumartists,
+    required this.comment,
+    required this.genre,
+    required this.picture,
+    required this.composer,
+    required this.lyrics,
+    required this.lyricist,
+    required this.writer,
+    required this.conductor,
+    required this.remixer,
+    required this.arranger,
+    required this.engineer,
+    required this.publisher,
+    required this.producer,
+    required this.djmixer,
+    required this.mixer,
+    required this.technician,
+    required this.label,
+    required this.subtitle,
+    required this.description,
+    required this.discsubtitle,
+    required this.rating,
+    required this.catalognumber,
+    required this.releasetype,
+    required this.keywords,
+    required this.category,
+    this.year,
+    this.title,
+    this.artist,
+    this.albumartist,
+    this.album,
+    this.date,
+    this.originaldate,
+    this.originalyear,
+    this.releasedate,
+    this.albumsort,
+    this.titlesort,
+    this.work,
+    this.artistsort,
+    this.albumartistsort,
+    this.composersort,
+    this.grouping,
+    this.longDescription,
+    this.totaltracks,
+    this.totaldiscs,
+    this.movementTotal,
+    this.compilation,
+    this.bpm,
+    this.mood,
+    this.media,
+    this.tvShow,
+    this.tvShowSort,
+    this.tvEpisodeId,
+    this.tvNetwork,
+    this.tvSeason,
+    this.tvEpisode,
+    this.podcast,
+    this.podcasturl,
+    this.releasestatus,
+    this.releasecountry,
+    this.script,
+    this.language,
+    this.copyright,
+    this.license,
+    this.encodedby,
+    this.encodersettings,
+    this.gapless,
+    this.barcode,
+    this.isrc,
+    this.asin,
+    this.website,
+    this.notes,
+    this.originalalbum,
+    this.originalartist,
+    this.musicbrainzRecordingid,
+    this.musicbrainzTrackid,
+    this.musicbrainzAlbumid,
+    this.musicbrainzArtistid,
+    this.musicbrainzAlbumartistid,
+    this.musicbrainzReleasegroupid,
+    this.musicbrainzWorkid,
+    this.musicbrainzTrmid,
+    this.musicbrainzDiscid,
+    this.acoustidId,
+    this.acoustidFingerprint,
+    this.musicipPuid,
+    this.musicipFingerprint,
+    this.discogsArtistId,
+    this.discogsReleaseId,
+    this.discogsLabelId,
+    this.discogsMasterReleaseId,
+    this.discogsVotes,
+    this.discogsRating,
+    this.replaygainTrackGain,
+    this.replaygainTrackPeak,
+    this.replaygainAlbumGain,
+    this.replaygainAlbumPeak,
+    this.replaygainTrackGainRatio,
+    this.replaygainTrackPeakRatio,
+    this.replaygainAlbumMinmax,
+    this.replaygainTrackMinmax,
+    this.replaygainUndo,
+    this.performerInstrument,
+    this.key,
+    this.movement,
+    this.stik,
+    this.showMovement,
+    this.playCounter,
+    this.hdVideo,
+    this.movementIndex,
+    this.podcastId,
+  });
+  final FfiTrackNo track;
+  final FfiTrackNo disk;
+  final int? year;
+  final String? title;
+  final String? artist;
+  final List<String> artists;
+  final String? albumartist;
+  final List<String> albumartists;
+  final String? album;
+  final String? date;
+  final String? originaldate;
+  final int? originalyear;
+  final String? releasedate;
+  final List<FfiComment> comment;
+  final List<String> genre;
+  final List<FfiPicture> picture;
+  final List<String> composer;
+  final List<FfiLyricsTag> lyrics;
+  final String? albumsort;
+  final String? titlesort;
+  final String? work;
+  final String? artistsort;
+  final String? albumartistsort;
+  final String? composersort;
+  final List<String> lyricist;
+  final List<String> writer;
+  final List<String> conductor;
+  final List<String> remixer;
+  final List<String> arranger;
+  final List<String> engineer;
+  final List<String> publisher;
+  final List<String> producer;
+  final List<String> djmixer;
+  final List<String> mixer;
+  final List<String> technician;
+  final List<String> label;
+  final String? grouping;
+  final List<String> subtitle;
+  final List<String> description;
+  final List<String> discsubtitle;
+  final String? longDescription;
+  final String? totaltracks;
+  final String? totaldiscs;
+  final int? movementTotal;
+  final bool? compilation;
+  final List<FfiRating> rating;
+  final int? bpm;
+  final String? mood;
+  final String? media;
+  final List<String> catalognumber;
+  final String? tvShow;
+  final String? tvShowSort;
+  final String? tvEpisodeId;
+  final String? tvNetwork;
+  final int? tvSeason;
+  final int? tvEpisode;
+  final bool? podcast;
+  final String? podcasturl;
+  final String? releasestatus;
+  final String? releasecountry;
+  final String? script;
+  final String? language;
+  final String? copyright;
+  final String? license;
+  final String? encodedby;
+  final String? encodersettings;
+  final String? gapless;
+  final String? barcode;
+  final String? isrc;
+  final String? asin;
+  final String? website;
+  final String? notes;
+  final String? originalalbum;
+  final String? originalartist;
+  final List<String> releasetype;
+  final List<String> keywords;
+  final List<String> category;
+  final String? musicbrainzRecordingid;
+  final String? musicbrainzTrackid;
+  final String? musicbrainzAlbumid;
+  final String? musicbrainzArtistid;
+  final String? musicbrainzAlbumartistid;
+  final String? musicbrainzReleasegroupid;
+  final String? musicbrainzWorkid;
+  final String? musicbrainzTrmid;
+  final String? musicbrainzDiscid;
+  final String? acoustidId;
+  final String? acoustidFingerprint;
+  final String? musicipPuid;
+  final String? musicipFingerprint;
+  final String? discogsArtistId;
+  final String? discogsReleaseId;
+  final String? discogsLabelId;
+  final String? discogsMasterReleaseId;
+  final double? discogsVotes;
+  final double? discogsRating;
+  final double? replaygainTrackGain;
+  final double? replaygainTrackPeak;
+  final double? replaygainAlbumGain;
+  final double? replaygainAlbumPeak;
+  final double? replaygainTrackGainRatio;
+  final double? replaygainTrackPeakRatio;
+  final double? replaygainAlbumMinmax;
+  final double? replaygainTrackMinmax;
+  final double? replaygainUndo;
+  final String? performerInstrument;
+  final String? key;
+  final String? movement;
+  final String? stik;
+  final String? showMovement;
+  final String? playCounter;
+  final String? hdVideo;
+  final int? movementIndex;
+  final String? podcastId;
+
+  static Future<FfiCommonTags> default_() =>
+      RustLib.instance.api.crateApiFfiCommonTagsDefault();
+
+  @override
+  int get hashCode =>
+      track.hashCode ^
+      disk.hashCode ^
+      year.hashCode ^
+      title.hashCode ^
+      artist.hashCode ^
+      artists.hashCode ^
+      albumartist.hashCode ^
+      albumartists.hashCode ^
+      album.hashCode ^
+      date.hashCode ^
+      originaldate.hashCode ^
+      originalyear.hashCode ^
+      releasedate.hashCode ^
+      comment.hashCode ^
+      genre.hashCode ^
+      picture.hashCode ^
+      composer.hashCode ^
+      lyrics.hashCode ^
+      albumsort.hashCode ^
+      titlesort.hashCode ^
+      work.hashCode ^
+      artistsort.hashCode ^
+      albumartistsort.hashCode ^
+      composersort.hashCode ^
+      lyricist.hashCode ^
+      writer.hashCode ^
+      conductor.hashCode ^
+      remixer.hashCode ^
+      arranger.hashCode ^
+      engineer.hashCode ^
+      publisher.hashCode ^
+      producer.hashCode ^
+      djmixer.hashCode ^
+      mixer.hashCode ^
+      technician.hashCode ^
+      label.hashCode ^
+      grouping.hashCode ^
+      subtitle.hashCode ^
+      description.hashCode ^
+      discsubtitle.hashCode ^
+      longDescription.hashCode ^
+      totaltracks.hashCode ^
+      totaldiscs.hashCode ^
+      movementTotal.hashCode ^
+      compilation.hashCode ^
+      rating.hashCode ^
+      bpm.hashCode ^
+      mood.hashCode ^
+      media.hashCode ^
+      catalognumber.hashCode ^
+      tvShow.hashCode ^
+      tvShowSort.hashCode ^
+      tvEpisodeId.hashCode ^
+      tvNetwork.hashCode ^
+      tvSeason.hashCode ^
+      tvEpisode.hashCode ^
+      podcast.hashCode ^
+      podcasturl.hashCode ^
+      releasestatus.hashCode ^
+      releasecountry.hashCode ^
+      script.hashCode ^
+      language.hashCode ^
+      copyright.hashCode ^
+      license.hashCode ^
+      encodedby.hashCode ^
+      encodersettings.hashCode ^
+      gapless.hashCode ^
+      barcode.hashCode ^
+      isrc.hashCode ^
+      asin.hashCode ^
+      website.hashCode ^
+      notes.hashCode ^
+      originalalbum.hashCode ^
+      originalartist.hashCode ^
+      releasetype.hashCode ^
+      keywords.hashCode ^
+      category.hashCode ^
+      musicbrainzRecordingid.hashCode ^
+      musicbrainzTrackid.hashCode ^
+      musicbrainzAlbumid.hashCode ^
+      musicbrainzArtistid.hashCode ^
+      musicbrainzAlbumartistid.hashCode ^
+      musicbrainzReleasegroupid.hashCode ^
+      musicbrainzWorkid.hashCode ^
+      musicbrainzTrmid.hashCode ^
+      musicbrainzDiscid.hashCode ^
+      acoustidId.hashCode ^
+      acoustidFingerprint.hashCode ^
+      musicipPuid.hashCode ^
+      musicipFingerprint.hashCode ^
+      discogsArtistId.hashCode ^
+      discogsReleaseId.hashCode ^
+      discogsLabelId.hashCode ^
+      discogsMasterReleaseId.hashCode ^
+      discogsVotes.hashCode ^
+      discogsRating.hashCode ^
+      replaygainTrackGain.hashCode ^
+      replaygainTrackPeak.hashCode ^
+      replaygainAlbumGain.hashCode ^
+      replaygainAlbumPeak.hashCode ^
+      replaygainTrackGainRatio.hashCode ^
+      replaygainTrackPeakRatio.hashCode ^
+      replaygainAlbumMinmax.hashCode ^
+      replaygainTrackMinmax.hashCode ^
+      replaygainUndo.hashCode ^
+      performerInstrument.hashCode ^
+      key.hashCode ^
+      movement.hashCode ^
+      stik.hashCode ^
+      showMovement.hashCode ^
+      playCounter.hashCode ^
+      hdVideo.hashCode ^
+      movementIndex.hashCode ^
+      podcastId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiCommonTags &&
+          runtimeType == other.runtimeType &&
+          track == other.track &&
+          disk == other.disk &&
+          year == other.year &&
+          title == other.title &&
+          artist == other.artist &&
+          artists == other.artists &&
+          albumartist == other.albumartist &&
+          albumartists == other.albumartists &&
+          album == other.album &&
+          date == other.date &&
+          originaldate == other.originaldate &&
+          originalyear == other.originalyear &&
+          releasedate == other.releasedate &&
+          comment == other.comment &&
+          genre == other.genre &&
+          picture == other.picture &&
+          composer == other.composer &&
+          lyrics == other.lyrics &&
+          albumsort == other.albumsort &&
+          titlesort == other.titlesort &&
+          work == other.work &&
+          artistsort == other.artistsort &&
+          albumartistsort == other.albumartistsort &&
+          composersort == other.composersort &&
+          lyricist == other.lyricist &&
+          writer == other.writer &&
+          conductor == other.conductor &&
+          remixer == other.remixer &&
+          arranger == other.arranger &&
+          engineer == other.engineer &&
+          publisher == other.publisher &&
+          producer == other.producer &&
+          djmixer == other.djmixer &&
+          mixer == other.mixer &&
+          technician == other.technician &&
+          label == other.label &&
+          grouping == other.grouping &&
+          subtitle == other.subtitle &&
+          description == other.description &&
+          discsubtitle == other.discsubtitle &&
+          longDescription == other.longDescription &&
+          totaltracks == other.totaltracks &&
+          totaldiscs == other.totaldiscs &&
+          movementTotal == other.movementTotal &&
+          compilation == other.compilation &&
+          rating == other.rating &&
+          bpm == other.bpm &&
+          mood == other.mood &&
+          media == other.media &&
+          catalognumber == other.catalognumber &&
+          tvShow == other.tvShow &&
+          tvShowSort == other.tvShowSort &&
+          tvEpisodeId == other.tvEpisodeId &&
+          tvNetwork == other.tvNetwork &&
+          tvSeason == other.tvSeason &&
+          tvEpisode == other.tvEpisode &&
+          podcast == other.podcast &&
+          podcasturl == other.podcasturl &&
+          releasestatus == other.releasestatus &&
+          releasecountry == other.releasecountry &&
+          script == other.script &&
+          language == other.language &&
+          copyright == other.copyright &&
+          license == other.license &&
+          encodedby == other.encodedby &&
+          encodersettings == other.encodersettings &&
+          gapless == other.gapless &&
+          barcode == other.barcode &&
+          isrc == other.isrc &&
+          asin == other.asin &&
+          website == other.website &&
+          notes == other.notes &&
+          originalalbum == other.originalalbum &&
+          originalartist == other.originalartist &&
+          releasetype == other.releasetype &&
+          keywords == other.keywords &&
+          category == other.category &&
+          musicbrainzRecordingid == other.musicbrainzRecordingid &&
+          musicbrainzTrackid == other.musicbrainzTrackid &&
+          musicbrainzAlbumid == other.musicbrainzAlbumid &&
+          musicbrainzArtistid == other.musicbrainzArtistid &&
+          musicbrainzAlbumartistid == other.musicbrainzAlbumartistid &&
+          musicbrainzReleasegroupid == other.musicbrainzReleasegroupid &&
+          musicbrainzWorkid == other.musicbrainzWorkid &&
+          musicbrainzTrmid == other.musicbrainzTrmid &&
+          musicbrainzDiscid == other.musicbrainzDiscid &&
+          acoustidId == other.acoustidId &&
+          acoustidFingerprint == other.acoustidFingerprint &&
+          musicipPuid == other.musicipPuid &&
+          musicipFingerprint == other.musicipFingerprint &&
+          discogsArtistId == other.discogsArtistId &&
+          discogsReleaseId == other.discogsReleaseId &&
+          discogsLabelId == other.discogsLabelId &&
+          discogsMasterReleaseId == other.discogsMasterReleaseId &&
+          discogsVotes == other.discogsVotes &&
+          discogsRating == other.discogsRating &&
+          replaygainTrackGain == other.replaygainTrackGain &&
+          replaygainTrackPeak == other.replaygainTrackPeak &&
+          replaygainAlbumGain == other.replaygainAlbumGain &&
+          replaygainAlbumPeak == other.replaygainAlbumPeak &&
+          replaygainTrackGainRatio == other.replaygainTrackGainRatio &&
+          replaygainTrackPeakRatio == other.replaygainTrackPeakRatio &&
+          replaygainAlbumMinmax == other.replaygainAlbumMinmax &&
+          replaygainTrackMinmax == other.replaygainTrackMinmax &&
+          replaygainUndo == other.replaygainUndo &&
+          performerInstrument == other.performerInstrument &&
+          key == other.key &&
+          movement == other.movement &&
+          stik == other.stik &&
+          showMovement == other.showMovement &&
+          playCounter == other.playCounter &&
+          hdVideo == other.hdVideo &&
+          movementIndex == other.movementIndex &&
+          podcastId == other.podcastId;
+}
+
+class FfiLyricsTag {
+  const FfiLyricsTag({this.descriptor, this.language, this.text});
+  final String? descriptor;
+  final String? language;
+  final String? text;
+
+  static Future<FfiLyricsTag> default_() =>
+      RustLib.instance.api.crateApiFfiLyricsTagDefault();
+
+  @override
+  int get hashCode => descriptor.hashCode ^ language.hashCode ^ text.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiLyricsTag &&
+          runtimeType == other.runtimeType &&
+          descriptor == other.descriptor &&
+          language == other.language &&
+          text == other.text;
+}
+
 class FfiNativeTag {
   const FfiNativeTag({required this.key, required this.value, this.stdKey});
   final String key;
@@ -109,4 +629,66 @@ class FfiNativeTag {
           key == other.key &&
           value == other.value &&
           stdKey == other.stdKey;
+}
+
+class FfiPicture {
+  const FfiPicture({required this.data, this.format, this.description});
+  final String? format;
+  final Uint8List data;
+  final String? description;
+
+  static Future<FfiPicture> default_() =>
+      RustLib.instance.api.crateApiFfiPictureDefault();
+
+  @override
+  int get hashCode => format.hashCode ^ data.hashCode ^ description.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiPicture &&
+          runtimeType == other.runtimeType &&
+          format == other.format &&
+          data == other.data &&
+          description == other.description;
+}
+
+class FfiRating {
+  const FfiRating({this.source, this.rating});
+  final String? source;
+  final double? rating;
+
+  static Future<FfiRating> default_() =>
+      RustLib.instance.api.crateApiFfiRatingDefault();
+
+  @override
+  int get hashCode => source.hashCode ^ rating.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiRating &&
+          runtimeType == other.runtimeType &&
+          source == other.source &&
+          rating == other.rating;
+}
+
+class FfiTrackNo {
+  const FfiTrackNo({this.no, this.of});
+  final int? no;
+  final int? of;
+
+  static Future<FfiTrackNo> default_() =>
+      RustLib.instance.api.crateApiFfiTrackNoDefault();
+
+  @override
+  int get hashCode => no.hashCode ^ of.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiTrackNo &&
+          runtimeType == other.runtimeType &&
+          no == other.no &&
+          of == other.of;
 }
