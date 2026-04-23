@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -1084827486;
+  int get rustContentHash => -277496807;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -76,6 +76,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
 abstract class RustLibApi extends BaseApi {
   Future<String> crateApiHealthCheck();
+
+  Future<List<FfiNativeTag>> crateApiPocGetNativeTags({required String path});
 
   Future<FfiBasicMetadata> crateApiPocParseBytes({
     required List<int> bytes,
@@ -119,6 +121,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'health_check', argNames: []);
 
   @override
+  Future<List<FfiNativeTag>> crateApiPocGetNativeTags({required String path}) =>
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_String(path, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 2,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_list_ffi_native_tag,
+            decodeErrorData: sse_decode_String,
+          ),
+          constMeta: kCrateApiPocGetNativeTagsConstMeta,
+          argValues: [path],
+          apiImpl: this,
+        ),
+      );
+
+  TaskConstMeta get kCrateApiPocGetNativeTagsConstMeta =>
+      const TaskConstMeta(debugName: 'poc_get_native_tags', argNames: ['path']);
+
+  @override
   Future<FfiBasicMetadata> crateApiPocParseBytes({
     required List<int> bytes,
     String? mimeHint,
@@ -131,7 +160,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 2,
+          funcId: 3,
           port: port_,
         );
       },
@@ -160,7 +189,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 3,
+              funcId: 4,
               port: port_,
             );
           },
@@ -231,9 +260,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FfiNativeTag dco_decode_ffi_native_tag(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FfiNativeTag(
+      key: dco_decode_String(arr[0]),
+      value: dco_decode_String(arr[1]),
+      stdKey: dco_decode_opt_String(arr[2]),
+    );
+  }
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<FfiNativeTag> dco_decode_list_ffi_native_tag(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_native_tag).toList();
   }
 
   @protected
@@ -349,6 +397,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FfiNativeTag sse_decode_ffi_native_tag(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_key = sse_decode_String(deserializer);
+    final var_value = sse_decode_String(deserializer);
+    final var_stdKey = sse_decode_opt_String(deserializer);
+    return FfiNativeTag(key: var_key, value: var_value, stdKey: var_stdKey);
+  }
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -356,6 +413,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FfiNativeTag> sse_decode_list_ffi_native_tag(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <FfiNativeTag>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_native_tag(deserializer));
     }
     return ans_;
   }
@@ -482,11 +553,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_ffi_native_tag(FfiNativeTag self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.key, serializer);
+    sse_encode_String(self.value, serializer);
+    sse_encode_opt_String(self.stdKey, serializer);
+  }
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_native_tag(
+    List<FfiNativeTag> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_native_tag(item, serializer);
     }
   }
 

@@ -90,5 +90,50 @@ void main() {
     test('parses OGG metadata from file', () async {
       await expectBasicMetadata('ogg/vorbis.ogg');
     });
+
+    group('returns native tags', () {
+      Future<void> expectNativeTags(
+        String relativePath, {
+        required List<String> expectedKeys,
+        List<String> forbiddenKeys = const [],
+      }) async {
+        final tags = await pocGetNativeTags(path: sample(relativePath));
+
+        expect(tags, isNotEmpty, reason: '$relativePath tags');
+
+        final keys = tags.map((tag) => tag.key).toList();
+        for (final key in expectedKeys) {
+          expect(keys, contains(key), reason: '$relativePath missing $key');
+        }
+
+        for (final key in forbiddenKeys) {
+          expect(keys, isNot(contains(key)), reason: '$relativePath should not contain $key');
+        }
+
+        expect(keys.where((key) => key.isEmpty), isEmpty, reason: '$relativePath empty raw keys');
+      }
+
+      test('mp4 exposes reconstructed atom keys', () async {
+        await expectNativeTags(
+          'mp4/sample.m4a',
+          expectedKeys: ['©nam', '©alb', '©ART'],
+          forbiddenKeys: [''],
+        );
+      });
+
+      test('mp3 exposes raw ID3 frame ids', () async {
+        await expectNativeTags(
+          'mp3/id3v2.3.mp3',
+          expectedKeys: ['TIT2', 'TALB', 'TPE1'],
+        );
+      });
+
+      test('flac exposes vorbis comment keys', () async {
+        await expectNativeTags(
+          'flac/sample.flac',
+          expectedKeys: ['TITLE', 'ARTIST', 'ALBUM'],
+        );
+      });
+    });
   });
 }

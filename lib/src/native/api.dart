@@ -6,7 +6,7 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:metadata_audio/src/native/frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `audio_codec_name`, `count_chapter_group_items`, `extension_from_mime`, `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `extract_track_details`, `summarize_revision`, `to_ffi_metadata`
+// These functions are ignored because they are not marked as `pub`: `audio_codec_name`, `collect_native_tags`, `count_chapter_group_items`, `extension_from_mime`, `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `extract_track_details`, `mp4_atom_key_from_standard_tag`, `standard_tag_key_name`, `summarize_revision`, `tag_to_ffi_native_tag`, `to_ffi_metadata`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ExtractedMetadata`, `StandardTagKind`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
@@ -22,6 +22,9 @@ Future<FfiBasicMetadata> pocParseBytes({
   bytes: bytes,
   mimeHint: mimeHint,
 );
+
+Future<List<FfiNativeTag>> pocGetNativeTags({required String path}) =>
+    RustLib.instance.api.crateApiPocGetNativeTags(path: path);
 
 class FfiBasicMetadata {
   const FfiBasicMetadata({
@@ -87,4 +90,23 @@ class FfiBasicMetadata {
           hasPictures == other.hasPictures &&
           chapterCount == other.chapterCount &&
           warnings == other.warnings;
+}
+
+class FfiNativeTag {
+  const FfiNativeTag({required this.key, required this.value, this.stdKey});
+  final String key;
+  final String value;
+  final String? stdKey;
+
+  @override
+  int get hashCode => key.hashCode ^ value.hashCode ^ stdKey.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiNativeTag &&
+          runtimeType == other.runtimeType &&
+          key == other.key &&
+          value == other.value &&
+          stdKey == other.stdKey;
 }

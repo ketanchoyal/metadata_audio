@@ -40,7 +40,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FfiBasicMetadata dco_decode_ffi_basic_metadata(dynamic raw);
 
   @protected
+  FfiNativeTag dco_decode_ffi_native_tag(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<FfiNativeTag> dco_decode_list_ffi_native_tag(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -85,7 +91,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FfiBasicMetadata sse_decode_ffi_basic_metadata(SseDeserializer deserializer);
 
   @protected
+  FfiNativeTag sse_decode_ffi_native_tag(SseDeserializer deserializer);
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<FfiNativeTag> sse_decode_list_ffi_native_tag(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -136,7 +150,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_ffi_native_tag(FfiNativeTag self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_ffi_native_tag(
+    List<FfiNativeTag> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
