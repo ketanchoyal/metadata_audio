@@ -1,11 +1,13 @@
 #![allow(non_snake_case)]
+#![allow(unexpected_cfgs)]
 
 use std::fs::File;
 use std::path::Path;
 
+use symphonia::core::codecs::audio::AudioCodecId;
 use symphonia::core::codecs::CodecParameters;
 use symphonia::core::formats::probe::Hint;
-use symphonia::core::formats::{FormatOptions, FormatReader};
+use symphonia::core::formats::{FormatOptions, FormatReader, Track};
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::{ChapterGroup, ChapterGroupItem, MetadataRevision, StandardTag, Tag};
 use symphonia::core::units::{TimeBase, Timestamp};
@@ -72,6 +74,28 @@ pub struct FfiPicture {
     pub format: Option<String>,
     pub data: Vec<u8>,
     pub description: Option<String>,
+}
+
+#[derive(Clone, Debug, Default)]
+#[flutter_rust_bridge::frb]
+pub struct FfiFormat {
+    pub container: String,
+    pub tag_types: Vec<String>,
+    pub duration: Option<f64>,
+    pub bitrate: Option<u32>,
+    pub sample_rate: Option<u32>,
+    pub bits_per_sample: Option<u32>,
+    pub tool: Option<String>,
+    pub codec: Option<String>,
+    pub codec_profile: Option<String>,
+    pub lossless: Option<bool>,
+    pub number_of_channels: Option<u32>,
+    pub number_of_samples: Option<u64>,
+    pub has_audio: Option<bool>,
+    pub has_video: Option<bool>,
+    pub track_gain: Option<f64>,
+    pub track_peak_level: Option<f64>,
+    pub album_gain: Option<f64>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -279,6 +303,23 @@ pub fn poc_get_native_tags(path: String) -> Result<Vec<FfiNativeTag>, String> {
     Ok(collect_native_tags(&mut *format))
 }
 
+#[flutter_rust_bridge::frb]
+pub fn poc_get_format(path: String) -> Result<FfiFormat, String> {
+    let file = File::open(&path).map_err(|err| format!("failed to open file '{path}': {err}"))?;
+
+    let mut hint = Hint::new();
+    if let Some(extension) = Path::new(&path).extension().and_then(|value| value.to_str()) {
+        hint.with_extension(extension);
+    }
+
+    let stream = MediaSourceStream::new(Box::new(file), Default::default());
+    let mut format = symphonia::default::get_probe()
+        .probe(&hint, stream, FormatOptions::default(), Default::default())
+        .map_err(|err| format!("failed to probe media source stream: {err}"))?;
+
+    Ok(extract_format(&mut *format))
+}
+
 fn extract_basic_metadata(stream: MediaSourceStream, hint: Hint) -> Result<ExtractedMetadata, String> {
     let mut format = symphonia::default::get_probe()
         .probe(&hint, stream, FormatOptions::default(), Default::default())
@@ -418,6 +459,326 @@ fn extract_metadata_details(
     }
 
     (title, artist, album, native_tag_count, has_pictures, warnings)
+}
+
+fn extract_format(format: &mut dyn FormatReader) -> FfiFormat {
+    let container = normalize_container_short_name(format.format_info().short_name);
+    let has_audio = format.tracks().iter().any(|track| track.codec_params.as_ref().and_then(CodecParameters::audio).is_some());
+    let has_video = format.tracks().iter().any(|track| track.codec_params.as_ref().and_then(|params| params.video()).is_some());
+
+    let primary_track = select_primary_audio_track(format).or_else(|| format.tracks().first());
+
+    let (
+        codec,
+        codec_profile,
+        duration,
+        bitrate,
+        sample_rate,
+        bits_per_sample,
+        lossless,
+        number_of_channels,
+        number_of_samples,
+    ) = primary_track
+        .map(extract_track_format_details)
+        .unwrap_or((None, None, None, None, None, None, None, None, None));
+
+    let (tag_types, tool, track_gain, track_peak_level, album_gain) = extract_format_metadata_values(format);
+
+    FfiFormat {
+        container,
+        tag_types,
+        duration,
+        bitrate,
+        sample_rate,
+        bits_per_sample,
+        tool,
+        codec,
+        codec_profile,
+        lossless,
+        number_of_channels,
+        number_of_samples,
+        has_audio: Some(has_audio),
+        has_video: Some(has_video),
+        track_gain,
+        track_peak_level,
+        album_gain,
+    }
+}
+
+fn normalize_container_short_name(short_name: &str) -> String {
+    match short_name {
+        "isomp4" => "mp4",
+        "wave" => "wav",
+        "mkv" => "matroska",
+        value => value,
+    }
+    .to_string()
+}
+
+fn select_primary_audio_track<'a>(format: &'a dyn FormatReader) -> Option<&'a Track> {
+    format
+        .tracks()
+        .iter()
+        .find(|track| track.codec_params.as_ref().and_then(|params| params.audio()).is_some())
+}
+
+fn extract_track_format_details(
+    track: &Track,
+) -> (
+    Option<String>,
+    Option<String>,
+    Option<f64>,
+    Option<u32>,
+    Option<u32>,
+    Option<u32>,
+    Option<bool>,
+    Option<u32>,
+    Option<u64>,
+) {
+    let Some(codec_params) = track.codec_params.as_ref() else {
+        return (None, None, None, None, None, None, None, None, None);
+    };
+
+    let duration = calculate_duration(track.time_base, track.duration, track.num_frames, codec_params);
+    let number_of_samples = track.num_frames;
+
+    let Some(audio) = codec_params.audio() else {
+        return (None, None, duration, None, None, None, None, None, number_of_samples);
+    };
+
+    let codec = Some(audio_codec_name(audio.codec));
+    let codec_profile = audio.profile.map(|profile| profile.get().to_string());
+    let sample_rate = audio.sample_rate;
+    let bits_per_sample = audio.bits_per_sample.or(audio.bits_per_coded_sample);
+    let number_of_channels = audio
+        .channels
+        .as_ref()
+        .map(|channels| channels.count() as u32)
+        .or_else(|| fallback_channel_count(audio));
+    let lossless = is_lossless_codec(audio.codec);
+    let bitrate = extract_bitrate(audio, duration, number_of_samples);
+
+    (
+        codec,
+        codec_profile,
+        duration,
+        bitrate,
+        sample_rate,
+        bits_per_sample,
+        lossless,
+        number_of_channels,
+        number_of_samples,
+    )
+}
+
+fn fallback_channel_count(audio: &symphonia::core::codecs::audio::AudioCodecParameters) -> Option<u32> {
+    use symphonia::core::codecs::audio::well_known::CODEC_ID_AAC;
+
+    if audio.codec == CODEC_ID_AAC {
+        return parse_aac_channel_count(audio.extra_data.as_deref());
+    }
+
+    None
+}
+
+fn parse_aac_channel_count(extra_data: Option<&[u8]>) -> Option<u32> {
+    let data = extra_data?;
+    if data.len() < 2 {
+        return None;
+    }
+
+    let byte0 = data[0];
+    let byte1 = data[1];
+    let sample_rate_index = ((byte0 & 0x07) << 1) | (byte1 >> 7);
+    let channel_config = (byte1 >> 3) & 0x0f;
+
+    let offset = if sample_rate_index == 0x0f { 5 } else { 2 };
+    if channel_config == 0 || data.len() < offset {
+        return None;
+    }
+
+    Some(u32::from(channel_config))
+}
+
+fn calculate_duration(
+    time_base: Option<TimeBase>,
+    duration: Option<symphonia::core::units::Duration>,
+    num_frames: Option<u64>,
+    codec_params: &CodecParameters,
+) -> Option<f64> {
+    if let (Some(time_base), Some(duration)) = (time_base, duration) {
+        if let Some(value) = duration
+            .timestamp_from(Timestamp::ZERO)
+            .and_then(|value| time_base.calc_time(value))
+            .map(|value| value.as_secs_f64())
+        {
+            return Some(value);
+        }
+    }
+
+    let sample_rate = codec_params.audio().and_then(|audio| audio.sample_rate)?;
+    let num_frames = num_frames?;
+    if sample_rate == 0 {
+        return None;
+    }
+
+    Some(num_frames as f64 / sample_rate as f64)
+}
+
+fn extract_bitrate(
+    audio: &symphonia::core::codecs::audio::AudioCodecParameters,
+    duration: Option<f64>,
+    number_of_samples: Option<u64>,
+) -> Option<u32> {
+    let bits_per_sample = audio.bits_per_coded_sample.or(audio.bits_per_sample);
+    let channels = audio.channels.as_ref().map(|value| value.count() as u32);
+    let sample_rate = audio.sample_rate;
+
+    if is_pcm_codec(audio.codec) {
+        if let (Some(bits_per_sample), Some(channels), Some(sample_rate)) = (bits_per_sample, channels, sample_rate) {
+            return sample_rate.checked_mul(channels)?.checked_mul(bits_per_sample);
+        }
+    }
+
+    if let (Some(duration), Some(number_of_samples), Some(bits_per_sample), Some(channels)) =
+        (duration, number_of_samples, bits_per_sample, channels)
+    {
+        if duration > 0.0 {
+            let bits = number_of_samples as f64 * f64::from(bits_per_sample) * f64::from(channels);
+            let bitrate = (bits / duration).round();
+            if bitrate.is_finite() && bitrate > 0.0 {
+                return u32::try_from(bitrate as u64).ok();
+            }
+        }
+    }
+
+    None
+}
+
+fn is_lossless_codec(codec: AudioCodecId) -> Option<bool> {
+    use symphonia::core::codecs::audio::well_known::*;
+
+    match codec {
+        CODEC_ID_FLAC
+        | CODEC_ID_ALAC
+        | CODEC_ID_PCM_S8
+        | CODEC_ID_PCM_S16LE
+        | CODEC_ID_PCM_S16BE
+        | CODEC_ID_PCM_S24LE
+        | CODEC_ID_PCM_S24BE
+        | CODEC_ID_PCM_S32LE
+        | CODEC_ID_PCM_S32BE
+        | CODEC_ID_PCM_U8
+        | CODEC_ID_PCM_U16LE
+        | CODEC_ID_PCM_U16BE
+        | CODEC_ID_PCM_U24LE
+        | CODEC_ID_PCM_U24BE
+        | CODEC_ID_PCM_U32LE
+        | CODEC_ID_PCM_U32BE
+        | CODEC_ID_PCM_F32LE
+        | CODEC_ID_PCM_F32BE
+        | CODEC_ID_PCM_F64LE
+        | CODEC_ID_PCM_F64BE
+        | CODEC_ID_PCM_ALAW
+        | CODEC_ID_PCM_MULAW => Some(true),
+        CODEC_ID_MP3 | CODEC_ID_AAC | CODEC_ID_VORBIS => Some(false),
+        _ => None,
+    }
+}
+
+fn is_pcm_codec(codec: AudioCodecId) -> bool {
+    use symphonia::core::codecs::audio::well_known::*;
+
+    matches!(
+        codec,
+        CODEC_ID_PCM_S8
+            | CODEC_ID_PCM_S16LE
+            | CODEC_ID_PCM_S16BE
+            | CODEC_ID_PCM_S24LE
+            | CODEC_ID_PCM_S24BE
+            | CODEC_ID_PCM_S32LE
+            | CODEC_ID_PCM_S32BE
+            | CODEC_ID_PCM_U8
+            | CODEC_ID_PCM_U16LE
+            | CODEC_ID_PCM_U16BE
+            | CODEC_ID_PCM_U24LE
+            | CODEC_ID_PCM_U24BE
+            | CODEC_ID_PCM_U32LE
+            | CODEC_ID_PCM_U32BE
+            | CODEC_ID_PCM_F32LE
+            | CODEC_ID_PCM_F32BE
+            | CODEC_ID_PCM_F64LE
+            | CODEC_ID_PCM_F64BE
+            | CODEC_ID_PCM_ALAW
+            | CODEC_ID_PCM_MULAW
+    )
+}
+
+fn extract_format_metadata_values(
+    format: &mut dyn FormatReader,
+) -> (Vec<String>, Option<String>, Option<f64>, Option<f64>, Option<f64>) {
+    let mut metadata = format.metadata();
+    let mut tag_types = Vec::new();
+    let mut tool = None;
+    let mut track_gain = None;
+    let mut track_peak_level = None;
+    let mut album_gain = None;
+
+    while let Some(revision) = metadata.current() {
+        push_unique(&mut tag_types, revision.info.short_name.to_string());
+
+        for tag in iter_revision_tags(revision) {
+            if tool.is_none() {
+                match tag.std.as_ref() {
+                    Some(StandardTag::Encoder(value)) | Some(StandardTag::EncoderSettings(value)) => {
+                        tool = some_non_empty(value);
+                    }
+                    _ => {}
+                }
+            }
+
+            apply_format_raw_values(&mut tool, &mut track_gain, &mut track_peak_level, &mut album_gain, tag);
+
+            match tag.std.as_ref() {
+                Some(StandardTag::ReplayGainTrackGain(value)) => assign_replaygain_value(&mut track_gain, None, value),
+                Some(StandardTag::ReplayGainTrackPeak(value)) => assign_replaygain_value(&mut track_peak_level, None, value),
+                Some(StandardTag::ReplayGainAlbumGain(value)) => assign_replaygain_value(&mut album_gain, None, value),
+                _ => {}
+            }
+        }
+
+        if metadata.pop().is_none() {
+            break;
+        }
+    }
+
+    (tag_types, tool, track_gain, track_peak_level, album_gain)
+}
+
+fn apply_format_raw_values(
+    tool: &mut Option<String>,
+    track_gain: &mut Option<f64>,
+    track_peak_level: &mut Option<f64>,
+    album_gain: &mut Option<f64>,
+    tag: &Tag,
+) {
+    let key = tag.raw.key.trim();
+    if key.is_empty() {
+        return;
+    }
+
+    let value = tag.raw.value.to_string();
+    match key.to_ascii_uppercase().as_str() {
+        "ENCODER" | "ENCODEDBY" | "ENCODERSETTINGS" | "ENCENC" => {
+            if tool.is_none() {
+                *tool = some_non_empty(&value);
+            }
+        }
+        "REPLAYGAIN_TRACK_GAIN" => assign_replaygain_value(track_gain, None, &value),
+        "REPLAYGAIN_TRACK_PEAK" => assign_replaygain_value(track_peak_level, None, &value),
+        "REPLAYGAIN_ALBUM_GAIN" => assign_replaygain_value(album_gain, None, &value),
+        _ => {}
+    }
 }
 
 fn summarize_revision(revision: &MetadataRevision) -> (Option<String>, Option<String>, Option<String>, u32, bool) {
@@ -1279,13 +1640,13 @@ fn audio_codec_name(codec: symphonia::core::codecs::audio::AudioCodecId) -> Stri
     };
 
     if codec == CODEC_ID_MP3 {
-        "MPEG Layer 3".to_string()
+        "MPEG 1 Layer 3".to_string()
     } else if codec == CODEC_ID_FLAC {
         "FLAC".to_string()
     } else if codec == CODEC_ID_VORBIS {
-        "Vorbis".to_string()
+        "Vorbis I".to_string()
     } else if codec == CODEC_ID_AAC {
-        "AAC".to_string()
+        "MPEG-4/AAC".to_string()
     } else if codec == CODEC_ID_ALAC {
         "ALAC".to_string()
     } else {

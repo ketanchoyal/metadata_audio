@@ -6,9 +6,9 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:metadata_audio/src/native/frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `apply_raw_tag_fallbacks`, `apply_standard_tag`, `assign_option_from_value`, `assign_replaygain_value`, `audio_codec_name`, `collect_multi_value_tag`, `collect_native_tags`, `comment_from_tag`, `count_chapter_group_items`, `dedup_strings`, `extension_from_mime`, `extract_basic_metadata`, `extract_common_tags`, `extract_metadata_details`, `extract_standard_tag_value`, `extract_track_details`, `iter_revision_tags`, `lyrics_from_tag`, `mp4_atom_key_from_standard_tag`, `parse_float`, `parse_u32`, `parse_year_from_date`, `push_comment`, `push_lyrics`, `push_multi_value`, `push_rating`, `push_unique`, `rating_from_popm`, `rating_from_ppm`, `raw_sub_field_value`, `set_option_i32_from_str`, `set_option_i32`, `set_option_string`, `some_non_empty`, `split_multi_values`, `standard_tag_key_name`, `summarize_revision`, `tag_to_ffi_native_tag`, `to_ffi_metadata`, `track_no_from_tag`, `u32_from_u64`
+// These functions are ignored because they are not marked as `pub`: `apply_format_raw_values`, `apply_raw_tag_fallbacks`, `apply_standard_tag`, `assign_option_from_value`, `assign_replaygain_value`, `audio_codec_name`, `calculate_duration`, `collect_multi_value_tag`, `collect_native_tags`, `comment_from_tag`, `count_chapter_group_items`, `dedup_strings`, `extension_from_mime`, `extract_basic_metadata`, `extract_bitrate`, `extract_common_tags`, `extract_format_metadata_values`, `extract_format`, `extract_metadata_details`, `extract_standard_tag_value`, `extract_track_details`, `extract_track_format_details`, `is_lossless_codec`, `is_pcm_codec`, `iter_revision_tags`, `lyrics_from_tag`, `mp4_atom_key_from_standard_tag`, `nonzero_u32_from_u64`, `normalize_container_short_name`, `parse_float`, `parse_u32`, `parse_year_from_date`, `push_comment`, `push_lyrics`, `push_multi_value`, `push_rating`, `push_unique`, `rating_from_popm`, `rating_from_ppm`, `raw_sub_field_value`, `select_primary_audio_track`, `set_option_i32_from_str`, `set_option_i32`, `set_option_string`, `some_non_empty`, `split_multi_values`, `standard_tag_key_name`, `summarize_revision`, `tag_to_ffi_native_tag`, `to_ffi_metadata`, `track_no_from_tag`, `u32_from_u64`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ExtractedMetadata`, `StandardTagKind`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 Future<String> healthCheck() => RustLib.instance.api.crateApiHealthCheck();
 
@@ -28,6 +28,9 @@ Future<FfiCommonTags> pocGetCommonTags({required String path}) =>
 
 Future<List<FfiNativeTag>> pocGetNativeTags({required String path}) =>
     RustLib.instance.api.crateApiPocGetNativeTags(path: path);
+
+Future<FfiFormat> pocGetFormat({required String path}) =>
+    RustLib.instance.api.crateApiPocGetFormat(path: path);
 
 class FfiBasicMetadata {
   const FfiBasicMetadata({
@@ -588,6 +591,91 @@ class FfiCommonTags {
           hdVideo == other.hdVideo &&
           movementIndex == other.movementIndex &&
           podcastId == other.podcastId;
+}
+
+class FfiFormat {
+  const FfiFormat({
+    required this.container,
+    required this.tagTypes,
+    this.duration,
+    this.bitrate,
+    this.sampleRate,
+    this.bitsPerSample,
+    this.tool,
+    this.codec,
+    this.codecProfile,
+    this.lossless,
+    this.numberOfChannels,
+    this.numberOfSamples,
+    this.hasAudio,
+    this.hasVideo,
+    this.trackGain,
+    this.trackPeakLevel,
+    this.albumGain,
+  });
+  final String container;
+  final List<String> tagTypes;
+  final double? duration;
+  final int? bitrate;
+  final int? sampleRate;
+  final int? bitsPerSample;
+  final String? tool;
+  final String? codec;
+  final String? codecProfile;
+  final bool? lossless;
+  final int? numberOfChannels;
+  final BigInt? numberOfSamples;
+  final bool? hasAudio;
+  final bool? hasVideo;
+  final double? trackGain;
+  final double? trackPeakLevel;
+  final double? albumGain;
+
+  static Future<FfiFormat> default_() =>
+      RustLib.instance.api.crateApiFfiFormatDefault();
+
+  @override
+  int get hashCode =>
+      container.hashCode ^
+      tagTypes.hashCode ^
+      duration.hashCode ^
+      bitrate.hashCode ^
+      sampleRate.hashCode ^
+      bitsPerSample.hashCode ^
+      tool.hashCode ^
+      codec.hashCode ^
+      codecProfile.hashCode ^
+      lossless.hashCode ^
+      numberOfChannels.hashCode ^
+      numberOfSamples.hashCode ^
+      hasAudio.hashCode ^
+      hasVideo.hashCode ^
+      trackGain.hashCode ^
+      trackPeakLevel.hashCode ^
+      albumGain.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiFormat &&
+          runtimeType == other.runtimeType &&
+          container == other.container &&
+          tagTypes == other.tagTypes &&
+          duration == other.duration &&
+          bitrate == other.bitrate &&
+          sampleRate == other.sampleRate &&
+          bitsPerSample == other.bitsPerSample &&
+          tool == other.tool &&
+          codec == other.codec &&
+          codecProfile == other.codecProfile &&
+          lossless == other.lossless &&
+          numberOfChannels == other.numberOfChannels &&
+          numberOfSamples == other.numberOfSamples &&
+          hasAudio == other.hasAudio &&
+          hasVideo == other.hasVideo &&
+          trackGain == other.trackGain &&
+          trackPeakLevel == other.trackPeakLevel &&
+          albumGain == other.albumGain;
 }
 
 class FfiLyricsTag {
