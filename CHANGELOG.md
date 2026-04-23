@@ -1,3 +1,7 @@
+## 0.7.2
+
+- **Feat**: Enhanced MP4 parsing for large files by adding HTTP prefetching for atom headers and chapter data.
+
 ## 0.7.1
 
 - **Fixed**: MP4 chapter extraction now supports `co64` chunk offset tables (64-bit offsets), restoring chapter parsing for large M4B/audiobook files.
