@@ -44,6 +44,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_f_64(dynamic raw);
 
   @protected
+  FfiAudioMetadata dco_decode_ffi_audio_metadata(dynamic raw);
+
+  @protected
   FfiBasicMetadata dco_decode_ffi_basic_metadata(dynamic raw);
 
   @protected
@@ -150,6 +153,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FfiAudioMetadata sse_decode_ffi_audio_metadata(SseDeserializer deserializer);
 
   @protected
   FfiBasicMetadata sse_decode_ffi_basic_metadata(SseDeserializer deserializer);
@@ -262,6 +268,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ffi_audio_metadata(
+    FfiAudioMetadata self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_ffi_basic_metadata(

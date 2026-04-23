@@ -6,11 +6,14 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:metadata_audio/src/native/frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `summarize_revision`
+// These functions are ignored because they are not marked as `pub`: `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `probe_format_from_path`, `summarize_revision`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ExtractedMetadata`, `StandardTagKind`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 Future<String> healthCheck() => RustLib.instance.api.crateApiHealthCheck();
+
+Future<FfiAudioMetadata> parseFromPath({required String path}) =>
+    RustLib.instance.api.crateApiParseFromPath(path: path);
 
 Future<FfiBasicMetadata> pocParseFile({required String path}) =>
     RustLib.instance.api.crateApiPocParseFile(path: path);
@@ -34,6 +37,43 @@ Future<FfiFormat> pocGetFormat({required String path}) =>
 
 Future<List<FfiPicture>> pocGetPictures({required String path}) =>
     RustLib.instance.api.crateApiPocGetPictures(path: path);
+
+class FfiAudioMetadata {
+  const FfiAudioMetadata({
+    required this.format,
+    required this.common,
+    required this.native,
+    required this.pictures,
+    required this.warnings,
+  });
+  final FfiFormat format;
+  final FfiCommonTags common;
+  final List<FfiNativeTag> native;
+  final List<FfiPicture> pictures;
+  final List<String> warnings;
+
+  static Future<FfiAudioMetadata> default_() =>
+      RustLib.instance.api.crateApiFfiAudioMetadataDefault();
+
+  @override
+  int get hashCode =>
+      format.hashCode ^
+      common.hashCode ^
+      native.hashCode ^
+      pictures.hashCode ^
+      warnings.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiAudioMetadata &&
+          runtimeType == other.runtimeType &&
+          format == other.format &&
+          common == other.common &&
+          native == other.native &&
+          pictures == other.pictures &&
+          warnings == other.warnings;
+}
 
 class FfiBasicMetadata {
   const FfiBasicMetadata({

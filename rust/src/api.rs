@@ -10,8 +10,8 @@ use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::{MetadataRevision, StandardTag};
 
 use crate::common_tags::{self, extract_common_tags};
-use crate::format_info::{extract_format};
-use crate::native_tags::{collect_native_tags};
+use crate::format_info::extract_format;
+use crate::native_tags::collect_native_tags;
 use crate::pictures::extract_pictures;
 use crate::track_details::{extract_track_details};
 use crate::utils::*;
@@ -102,6 +102,16 @@ pub struct FfiFormat {
     pub track_gain: Option<f64>,
     pub track_peak_level: Option<f64>,
     pub album_gain: Option<f64>,
+}
+
+#[derive(Clone, Debug, Default)]
+#[flutter_rust_bridge::frb]
+pub struct FfiAudioMetadata {
+    pub format: FfiFormat,
+    pub common: FfiCommonTags,
+    pub native: Vec<FfiNativeTag>,
+    pub pictures: Vec<FfiPicture>,
+    pub warnings: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -231,7 +241,7 @@ pub struct FfiCommonTags {
     pub podcastId: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[flutter_rust_bridge::frb]
 pub struct FfiNativeTag {
     pub key: String,
@@ -242,6 +252,32 @@ pub struct FfiNativeTag {
 #[flutter_rust_bridge::frb]
 pub fn health_check() -> String {
     "symphonia-native-ok".to_string()
+}
+
+#[flutter_rust_bridge::frb]
+pub fn parse_from_path(path: String) -> Result<FfiAudioMetadata, String> {
+    let mut format = probe_format_from_path(&path)?;
+
+    let format_info = extract_format(&mut *format);
+    let common = extract_common_tags(&mut *format);
+    let native = collect_native_tags(&mut *format);
+    let pictures = extract_pictures(&mut *format);
+
+    let mut warnings = Vec::new();
+    if native.is_empty() {
+        warnings.push("no native tags found in metadata revisions".to_string());
+    }
+    if common.title.is_none() && common.artist.is_none() && common.album.is_none() {
+        warnings.push("common tags did not expose title, artist, or album".to_string());
+    }
+
+    Ok(FfiAudioMetadata {
+        format: format_info,
+        common,
+        native,
+        pictures,
+        warnings,
+    })
 }
 
 #[flutter_rust_bridge::frb]
@@ -277,70 +313,44 @@ pub fn poc_parse_bytes(bytes: Vec<u8>, mime_hint: Option<String>) -> Result<FfiB
 
 #[flutter_rust_bridge::frb]
 pub fn poc_get_common_tags(path: String) -> Result<FfiCommonTags, String> {
-    let file = File::open(&path).map_err(|err| format!("failed to open file '{path}': {err}"))?;
-
-    let mut hint = Hint::new();
-    if let Some(extension) = Path::new(&path).extension().and_then(|value| value.to_str()) {
-        hint.with_extension(extension);
-    }
-
-    let stream = MediaSourceStream::new(Box::new(file), Default::default());
-    let mut format = symphonia::default::get_probe()
-        .probe(&hint, stream, FormatOptions::default(), Default::default())
-        .map_err(|err| format!("failed to probe media source stream: {err}"))?;
+    let mut format = probe_format_from_path(&path)?;
 
     Ok(extract_common_tags(&mut *format))
 }
 
 #[flutter_rust_bridge::frb]
 pub fn poc_get_native_tags(path: String) -> Result<Vec<FfiNativeTag>, String> {
-    let file = File::open(&path).map_err(|err| format!("failed to open file '{path}': {err}"))?;
-
-    let mut hint = Hint::new();
-    if let Some(extension) = Path::new(&path).extension().and_then(|value| value.to_str()) {
-        hint.with_extension(extension);
-    }
-
-    let stream = MediaSourceStream::new(Box::new(file), Default::default());
-    let mut format = symphonia::default::get_probe()
-        .probe(&hint, stream, FormatOptions::default(), Default::default())
-        .map_err(|err| format!("failed to probe media source stream: {err}"))?;
+    let mut format = probe_format_from_path(&path)?;
 
     Ok(collect_native_tags(&mut *format))
 }
 
 #[flutter_rust_bridge::frb]
 pub fn poc_get_format(path: String) -> Result<FfiFormat, String> {
-    let file = File::open(&path).map_err(|err| format!("failed to open file '{path}': {err}"))?;
-
-    let mut hint = Hint::new();
-    if let Some(extension) = Path::new(&path).extension().and_then(|value| value.to_str()) {
-        hint.with_extension(extension);
-    }
-
-    let stream = MediaSourceStream::new(Box::new(file), Default::default());
-    let mut format = symphonia::default::get_probe()
-        .probe(&hint, stream, FormatOptions::default(), Default::default())
-        .map_err(|err| format!("failed to probe media source stream: {err}"))?;
+    let mut format = probe_format_from_path(&path)?;
 
     Ok(extract_format(&mut *format))
 }
 
 #[flutter_rust_bridge::frb]
 pub fn poc_get_pictures(path: String) -> Result<Vec<FfiPicture>, String> {
-    let file = File::open(&path).map_err(|err| format!("failed to open file '{path}': {err}"))?;
+    let mut format = probe_format_from_path(&path)?;
+
+    Ok(extract_pictures(&mut *format))
+}
+
+fn probe_format_from_path(path: &str) -> Result<Box<dyn FormatReader>, String> {
+    let file = File::open(path).map_err(|err| format!("failed to open file '{path}': {err}"))?;
 
     let mut hint = Hint::new();
-    if let Some(extension) = Path::new(&path).extension().and_then(|value| value.to_str()) {
+    if let Some(extension) = Path::new(path).extension().and_then(|value| value.to_str()) {
         hint.with_extension(extension);
     }
 
     let stream = MediaSourceStream::new(Box::new(file), Default::default());
-    let mut format = symphonia::default::get_probe()
+    symphonia::default::get_probe()
         .probe(&hint, stream, FormatOptions::default(), Default::default())
-        .map_err(|err| format!("failed to probe media source stream: {err}"))?;
-
-    Ok(extract_pictures(&mut *format))
+        .map_err(|err| format!("failed to probe media source stream: {err}"))
 }
 
 fn extract_basic_metadata(stream: MediaSourceStream, hint: Hint) -> Result<ExtractedMetadata, String> {
