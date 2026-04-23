@@ -35,6 +35,17 @@ class Mp4Parser {
 
     while (remaining == null || remaining > 0) {
       try {
+        // For HTTP-based tokenizers with on-demand fetching, ensure the
+        // next atom header is available before reading. This is critical
+        // after skipping large atoms (e.g. multi-GB mdat) where the
+        // parser position moves beyond the initially prefetched data.
+        if (tokenizer is HttpBasedTokenizer) {
+          await (tokenizer as HttpBasedTokenizer).prefetchRange(
+            tokenizer.position,
+            tokenizer.position + 16, // 8-byte header + 8-byte extended size
+          );
+        }
+
         final probe = tokenizer.peekBytes(8);
         final probeName = ascii.decode(probe.sublist(4, 8), allowInvalid: true);
         if (probeName == '\x00\x00\x00\x00') {
@@ -690,6 +701,36 @@ class Mp4Parser {
 
     final originalPosition = tokenizer.position;
     final chapters = <Chapter>[];
+
+    // Prefetch chapter data ranges for HTTP-based tokenizers.
+    // Chapter text samples are scattered in mdat (potentially multi-GB),
+    // and only the small title samples need to be fetched.
+    if (tokenizer case final HttpBasedTokenizer httpTokenizer) {
+      try {
+        final ranges = <(int, int)>[];
+        for (var i = 0; i < chapterTrack.chunkOffsetTable.length; i++) {
+          final chunkOffset = chapterTrack.chunkOffsetTable[i];
+          final sampleSize = chapterTrack.sampleSize! > 0
+              ? chapterTrack.sampleSize!
+              : chapterTrack.sampleSizeTable[i];
+          if (chunkOffset >= 0 && sampleSize > 0) {
+            ranges.add((chunkOffset, chunkOffset + sampleSize));
+          }
+        }
+        const batchSize = 4;
+        for (var i = 0; i < ranges.length; i += batchSize) {
+          final batch = ranges.skip(i).take(batchSize);
+          await Future.wait(
+            batch.map(
+              (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
+            ),
+          );
+        }
+      } on Exception catch (e) {
+        metadata.addWarning('Failed to prefetch chapter data: $e');
+        return null;
+      }
+    }
 
     for (var i = 0; i < chapterTrack.chunkOffsetTable.length; i++) {
       final chunkOffset = chapterTrack.chunkOffsetTable[i];

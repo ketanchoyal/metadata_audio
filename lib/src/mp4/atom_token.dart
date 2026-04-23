@@ -120,7 +120,10 @@ class AtomToken {
     }
 
     final extendedLength = _readUint64BeAsBigInt(bytes, 8);
-    if (extendedLength > BigInt.from(0x7FFFFFFF)) {
+    // Dart int is 64-bit on native and 53-bit safe on web (dart2js).
+    // Guard against values that exceed the JS safe integer range so that
+    // both platforms can represent the atom length accurately.
+    if (extendedLength > BigInt.from(maxSafeJsInt)) {
       throw Mp4ContentError('Atom too large for parser: $extendedLength bytes');
     }
 
