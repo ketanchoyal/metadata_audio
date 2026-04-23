@@ -1,14 +1,26 @@
 library;
 
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:http/http.dart' as http;
 import 'package:metadata_audio/src/core.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+
+/// Parse Content-Length from HTTP response headers.
+///
+/// This is necessary because [http.Response.contentLength] returns 0 for
+/// HEAD responses (since the body is empty), but the Content-Length header
+/// still contains the correct file size. This helper always parses from
+/// the header value.
+int? _parseContentLength(http.BaseResponse response) {
+  final headerValue = response.headers['content-length'];
+  if (headerValue == null) return null;
+  return int.tryParse(headerValue);
+}
 
 /// Error thrown when downloading a file from URL fails.
 class FileDownloadError extends ParseError {
@@ -61,15 +73,12 @@ class HttpTokenizer extends HttpBasedTokenizer {
 
   /// Create an HttpTokenizer by downloading the full file.
   static Future<HttpTokenizer> fromUrl(String url, {Duration? timeout}) async {
-    final client = HttpClient();
+    final client = http.Client();
 
     try {
-      final request = await client.getUrl(Uri.parse(url));
-      request.followRedirects = true;
-
-      final response = await request.close().timeout(
-        timeout ?? const Duration(seconds: 30),
-      );
+      final response = await client
+          .get(Uri.parse(url))
+          .timeout(timeout ?? const Duration(seconds: 30));
 
       if (response.statusCode >= 300) {
         throw FileDownloadError(
@@ -77,13 +86,12 @@ class HttpTokenizer extends HttpBasedTokenizer {
         );
       }
 
-      final chunks = await response.toList();
-      final bytes = Uint8List.fromList([for (final chunk in chunks) ...chunk]);
+      final bytes = response.bodyBytes;
 
       final fileInfo = FileInfo(
         path: url,
         url: url,
-        mimeType: response.headers.contentType?.toString(),
+        mimeType: response.headers['content-type'],
         size: bytes.length,
       );
 
@@ -200,15 +208,15 @@ class RangeTokenizer extends HttpBasedTokenizer {
     Duration? timeout,
     int headerSize = 262144, // 256KB default
   }) async {
-    final client = HttpClient();
+    final client = http.Client();
 
     try {
       // First, try HEAD to get file info
-      final headRequest = await client.headUrl(Uri.parse(url));
-      headRequest.followRedirects = true;
-      final headResponse = await headRequest.close().timeout(
-        timeout ?? const Duration(seconds: 30),
-      );
+      final headRequest = http.Request('HEAD', Uri.parse(url));
+      final headResponse = await client
+          .send(headRequest)
+          .then(http.Response.fromStream)
+          .timeout(timeout ?? const Duration(seconds: 30));
 
       if (headResponse.statusCode >= 300) {
         throw FileDownloadError(
@@ -216,33 +224,34 @@ class RangeTokenizer extends HttpBasedTokenizer {
         );
       }
 
-      final totalSize = headResponse.contentLength > 0
-          ? headResponse.contentLength
-          : null;
+      final totalSize = _parseContentLength(headResponse);
+      if (totalSize != null && totalSize > 0) {
+        // keep it
+      }
 
       // Try Range request
-      final request = await client.getUrl(Uri.parse(url));
       final endByte = totalSize != null && totalSize < headerSize
           ? totalSize - 1
           : headerSize - 1;
-      request.headers.add('Range', 'bytes=0-$endByte');
+      final getRequest = http.Request('GET', Uri.parse(url));
+      getRequest.headers['Range'] = 'bytes=0-$endByte';
 
-      final response = await request.close().timeout(
-        timeout ?? const Duration(seconds: 30),
-      );
+      final response = await client
+          .send(getRequest)
+          .then(http.Response.fromStream)
+          .timeout(timeout ?? const Duration(seconds: 30));
 
       if (response.statusCode != 206) {
         // Range not supported, fall back to full
         throw FileDownloadError('Range requests not supported');
       }
 
-      final chunks = await response.toList();
-      final bytes = Uint8List.fromList([for (final chunk in chunks) ...chunk]);
+      final bytes = response.bodyBytes;
 
       final fileInfo = FileInfo(
         path: url,
         url: url,
-        mimeType: response.headers.contentType?.toString(),
+        mimeType: response.headers['content-type'],
         size: totalSize ?? bytes.length,
       );
 
@@ -372,7 +381,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
   ProbingRangeTokenizer({
     required super.url,
     required super.fileInfo,
-    required HttpClient client,
+    required http.Client client,
     required Duration timeout,
     required int totalSize,
     required Map<int, Uint8List> chunks,
@@ -383,7 +392,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
        _chunks = chunks,
        _chunkSize = 65536; // 64KB chunks
 
-  final HttpClient _client;
+  final http.Client _client;
   final Duration _timeout;
   final int _totalSize;
   final int _chunkSize;
@@ -412,14 +421,16 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
     Duration? timeout,
     ProbeStrategy probeStrategy = ProbeStrategy.scatter,
   }) async {
-    final client = HttpClient();
+    final client = http.Client();
     final effectiveTimeout = timeout ?? const Duration(seconds: 30);
 
     try {
       // HEAD request to get file size
-      final headRequest = await client.headUrl(Uri.parse(url));
-      headRequest.followRedirects = true;
-      final headResponse = await headRequest.close().timeout(effectiveTimeout);
+      final headRequest = http.Request('HEAD', Uri.parse(url));
+      final headResponse = await client
+          .send(headRequest)
+          .then(http.Response.fromStream)
+          .timeout(effectiveTimeout);
 
       if (headResponse.statusCode >= 300) {
         throw FileDownloadError(
@@ -427,12 +438,12 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
         );
       }
 
-      final totalSize = headResponse.contentLength;
-      if (totalSize <= 0) {
+      final totalSize = _parseContentLength(headResponse);
+      if (totalSize == null || totalSize <= 0) {
         throw FileDownloadError('Could not determine file size');
       }
 
-      final acceptRanges = headResponse.headers.value('accept-ranges');
+      final acceptRanges = headResponse.headers['accept-ranges'];
       final supportsRange =
           acceptRanges?.toLowerCase().contains('bytes') ?? false;
 
@@ -469,7 +480,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
       final fileInfo = FileInfo(
         path: url,
         url: url,
-        mimeType: headResponse.headers.contentType?.toString(),
+        mimeType: headResponse.headers['content-type'],
         size: totalSize,
       );
 
@@ -609,17 +620,20 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
   /// Fetch a specific byte range from the server with retry logic.
   static Future<Uint8List> _fetchRange(
     String url,
-    HttpClient client,
+    http.Client client,
     Duration timeout,
     _ByteRange range,
   ) async {
     const maxRetries = 3;
     for (var attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        final request = await client.getUrl(Uri.parse(url));
-        request.headers.add('Range', 'bytes=${range.start}-${range.end - 1}');
+        final request = http.Request('GET', Uri.parse(url));
+        request.headers['Range'] = 'bytes=${range.start}-${range.end - 1}';
 
-        final response = await request.close().timeout(timeout);
+        final response = await client
+            .send(request)
+            .then(http.Response.fromStream)
+            .timeout(timeout);
 
         if (response.statusCode != 206 && response.statusCode != 200) {
           throw FileDownloadError(
@@ -627,8 +641,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
           );
         }
 
-        final chunks = await response.toList();
-        return Uint8List.fromList([for (final chunk in chunks) ...chunk]);
+        return response.bodyBytes;
       } on FileDownloadError {
         rethrow;
       } catch (e) {
@@ -838,7 +851,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
   RandomAccessTokenizer({
     required super.url,
     required super.fileInfo,
-    required HttpClient client,
+    required http.Client client,
     required Duration timeout,
     required int chunkSize,
     int? totalSize,
@@ -847,7 +860,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
        _chunkSize = chunkSize,
        _totalSize = totalSize;
 
-  final HttpClient _client;
+  final http.Client _client;
   final Duration _timeout;
   final int? _totalSize;
   final int _chunkSize;
@@ -877,14 +890,14 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     Duration? timeout,
     int chunkSize = 65536, // 64KB chunks
   }) async {
-    final client = HttpClient();
+    final client = http.Client();
 
     try {
-      final headRequest = await client.headUrl(Uri.parse(url));
-      headRequest.followRedirects = true;
-      final headResponse = await headRequest.close().timeout(
-        timeout ?? const Duration(seconds: 30),
-      );
+      final headRequest = http.Request('HEAD', Uri.parse(url));
+      final headResponse = await client
+          .send(headRequest)
+          .then(http.Response.fromStream)
+          .timeout(timeout ?? const Duration(seconds: 30));
 
       if (headResponse.statusCode >= 300) {
         throw FileDownloadError(
@@ -892,14 +905,12 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
         );
       }
 
-      final totalSize = headResponse.contentLength > 0
-          ? headResponse.contentLength
-          : null;
+      final totalSize = _parseContentLength(headResponse);
 
       final fileInfo = FileInfo(
         path: url,
         url: url,
-        mimeType: headResponse.headers.contentType?.toString(),
+        mimeType: headResponse.headers['content-type'],
         size: totalSize,
       );
 
@@ -1064,10 +1075,13 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     const maxRetries = 3;
     for (var attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        final request = await _client.getUrl(Uri.parse(url));
-        request.headers.add('Range', 'bytes=$startByte-${endByte - 1}');
+        final request = http.Request('GET', Uri.parse(url));
+        request.headers['Range'] = 'bytes=$startByte-${endByte - 1}';
 
-        final response = await request.close().timeout(_timeout);
+        final response = await _client
+            .send(request)
+            .then(http.Response.fromStream)
+            .timeout(_timeout);
 
         if (response.statusCode != 206 && response.statusCode != 200) {
           throw FileDownloadError(
@@ -1075,10 +1089,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
           );
         }
 
-        final responseChunks = await response.toList();
-        final data = Uint8List.fromList([
-          for (final chunk in responseChunks) ...chunk,
-        ]);
+        final data = response.bodyBytes;
 
         // Split into chunk-sized pieces for the cache
         var offset = 0;
@@ -1324,29 +1335,27 @@ Future<StrategyInfo> detectStrategy(
   Duration? timeout,
   int largeFileThreshold = 5 * 1024 * 1024, // 5MB
 }) async {
-  final client = HttpClient();
+  final client = http.Client();
 
   try {
-    final headRequest = await client.headUrl(Uri.parse(url));
-    headRequest.followRedirects = true;
-    final headResponse = await headRequest.close().timeout(
-      timeout ?? const Duration(seconds: 10),
-    );
+    final headRequest = http.Request('HEAD', Uri.parse(url));
+    final headResponse = await client
+        .send(headRequest)
+        .then(http.Response.fromStream)
+        .timeout(timeout ?? const Duration(seconds: 10));
 
     if (headResponse.statusCode >= 300) {
       throw FileDownloadError('HTTP ${headResponse.statusCode} error');
     }
 
-    final fileSize = headResponse.contentLength > 0
-        ? headResponse.contentLength
-        : null;
+    final fileSize = _parseContentLength(headResponse);
 
-    final acceptRanges = headResponse.headers.value('accept-ranges');
+    final acceptRanges = headResponse.headers['accept-ranges'];
     final supportsRange =
         acceptRanges?.toLowerCase().contains('bytes') ?? false;
 
     // Detect audio format from Content-Type and URL extension.
-    final mimeType = headResponse.headers.contentType?.mimeType;
+    final mimeType = headResponse.headers['content-type'];
     final formatCategory = _detectAudioFormatCategory(
       mimeType: mimeType,
       url: url,

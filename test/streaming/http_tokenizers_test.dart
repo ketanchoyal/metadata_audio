@@ -3,12 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/aiff/aiff_loader.dart';
-import 'package:metadata_audio/src/flac/flac_loader.dart';
-import 'package:metadata_audio/src/mp4/mp4_loader.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
-import 'package:metadata_audio/src/ogg/ogg_loader.dart';
-import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

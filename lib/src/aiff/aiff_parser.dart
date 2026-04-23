@@ -7,7 +7,7 @@ import 'package:metadata_audio/src/aiff/aiff_token.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
 import 'package:metadata_audio/src/model/types.dart';
-import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
+import 'package:metadata_audio/src/tokenizer/bytes_tokenizer.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class AiffParser {

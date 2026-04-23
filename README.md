@@ -14,6 +14,7 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 - **Streaming support**: Parse metadata without loading entire files into memory
 - **Type-safe**: Full Dart type safety with comprehensive error handling
 - **Well-tested**: Extensive test suite with TDD principles
+- **Web platform support**: Works in browsers via `parseWebFile()`, `parseBytes()`, and `parseUrl()`
 - **TypeScript parity**: Ported from [music-metadata](https://github.com/Borewit/music-metadata) with exact output compatibility
 
 ## Getting started
@@ -112,6 +113,49 @@ final metadata = await parseBytes(
   fileInfo: FileInfo(mimeType: 'audio/flac'),
 );
 ```
+
+### Web Platform (Flutter Web / dart2js)
+
+On the web, `parseFile()` throws `UnsupportedError` because browsers cannot access files by path. Use `parseWebFile()`, `parseBytes()`, or `parseUrl()` instead.
+
+#### Using `parseWebFile()` (recommended — accepts `web.File` directly)
+
+```dart
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
+import 'package:metadata_audio/metadata_audio.dart';
+
+// With <input type="file"> or drag-and-drop:
+final file = input.files!.item(0)!;  // web.File from browser
+final metadata = await parseWebFile(file);
+print('Title: ${metadata.common.title}');
+```
+
+#### Using a file picker (Flutter Web)
+
+```dart
+import 'package:file_picker/file_picker.dart';
+import 'package:metadata_audio/metadata_audio.dart';
+
+final result = await FilePicker.platform.pickFiles(type: FileType.audio);
+if (result != null) {
+  final bytes = result.files.single.bytes!;
+  final metadata = await parseBytes(
+    bytes,
+    fileInfo: FileInfo(path: result.files.single.name),
+  );
+  print('Title: ${metadata.common.title}');
+}
+```
+
+#### Parsing remote audio on the web
+
+```dart
+// parseUrl() works on web — uses the browser's fetch API with Range headers
+final metadata = await parseUrl('https://example.com/audio.mp3');
+```
+
+> **Note:** On web, `parseUrl()` uses `package:http` which delegates to the browser's `fetch()` API. Range requests require the server to support CORS and `Accept-Ranges`. `parseWebFile()` works offline since it reads from a local browser file.
 
 ### Chapter Extraction
 
