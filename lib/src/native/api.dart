@@ -6,4 +6,85 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:metadata_audio/src/native/frb_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `audio_codec_name`, `count_chapter_group_items`, `extension_from_mime`, `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `extract_track_details`, `summarize_revision`, `to_ffi_metadata`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ExtractedMetadata`, `StandardTagKind`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+
 Future<String> healthCheck() => RustLib.instance.api.crateApiHealthCheck();
+
+Future<FfiBasicMetadata> pocParseFile({required String path}) =>
+    RustLib.instance.api.crateApiPocParseFile(path: path);
+
+Future<FfiBasicMetadata> pocParseBytes({
+  required List<int> bytes,
+  String? mimeHint,
+}) => RustLib.instance.api.crateApiPocParseBytes(
+  bytes: bytes,
+  mimeHint: mimeHint,
+);
+
+class FfiBasicMetadata {
+  const FfiBasicMetadata({
+    required this.nativeTagCount,
+    required this.hasPictures,
+    required this.chapterCount,
+    required this.warnings,
+    this.container,
+    this.codec,
+    this.durationSecs,
+    this.sampleRate,
+    this.channels,
+    this.bitsPerSample,
+    this.title,
+    this.artist,
+    this.album,
+  });
+  final String? container;
+  final String? codec;
+  final double? durationSecs;
+  final int? sampleRate;
+  final int? channels;
+  final int? bitsPerSample;
+  final String? title;
+  final String? artist;
+  final String? album;
+  final int nativeTagCount;
+  final bool hasPictures;
+  final int chapterCount;
+  final List<String> warnings;
+
+  @override
+  int get hashCode =>
+      container.hashCode ^
+      codec.hashCode ^
+      durationSecs.hashCode ^
+      sampleRate.hashCode ^
+      channels.hashCode ^
+      bitsPerSample.hashCode ^
+      title.hashCode ^
+      artist.hashCode ^
+      album.hashCode ^
+      nativeTagCount.hashCode ^
+      hasPictures.hashCode ^
+      chapterCount.hashCode ^
+      warnings.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiBasicMetadata &&
+          runtimeType == other.runtimeType &&
+          container == other.container &&
+          codec == other.codec &&
+          durationSecs == other.durationSecs &&
+          sampleRate == other.sampleRate &&
+          channels == other.channels &&
+          bitsPerSample == other.bitsPerSample &&
+          title == other.title &&
+          artist == other.artist &&
+          album == other.album &&
+          nativeTagCount == other.nativeTagCount &&
+          hasPictures == other.hasPictures &&
+          chapterCount == other.chapterCount &&
+          warnings == other.warnings;
+}
