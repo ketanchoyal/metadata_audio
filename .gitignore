@@ -21,3 +21,9 @@ comparison/node_modules/
 # Debug tools
 tool/debug_*.dart
 The Dark Forest.m4a
+
+# Rust build artifacts
+rust/target/
+
+# Flutter/Dart build artifacts
+build/

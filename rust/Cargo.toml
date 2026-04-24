@@ -1,0 +1,12 @@
+[package]
+name = "metadata_audio_native"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.11.1"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+symphonia = { git = "https://github.com/pdeljanov/Symphonia.git", branch = "dev-0.6", features = ["all"] }
