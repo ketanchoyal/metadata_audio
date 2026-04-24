@@ -50,6 +50,54 @@ import 'package:metadata_audio/metadata_audio.dart';
 final metadata = await parseFile('/path/to/audio.mp3');
 ```
 
+### Use in a Flutter app
+
+This package is currently distributed as a Flutter FFI plugin, so a Flutter app
+can use the Rust-backed fast path without manual bridge setup.
+
+1. Add the dependency:
+
+```yaml
+dependencies:
+  metadata_audio: any
+```
+
+2. Run:
+
+```bash
+flutter pub get
+```
+
+3. Import and call it from your app code:
+
+```dart
+import 'package:metadata_audio/metadata_audio.dart';
+
+Future<void> loadMetadata() async {
+  final metadata = await parseFile(
+    '/path/to/audiobook.m4b',
+    options: const ParseOptions(includeChapters: true),
+  );
+
+  print('Title: ${metadata.common.title}');
+  print('Duration: ${metadata.format.duration}');
+  print('Chapters: ${metadata.format.chapters?.length ?? 0}');
+}
+```
+
+4. For remote audiobook URLs, use `parseUrl()` the same way:
+
+```dart
+final metadata = await parseUrl(
+  'https://example.com/book.m4b',
+  options: const ParseOptions(includeChapters: true),
+  timeout: const Duration(seconds: 120),
+);
+```
+
+For range-capable MP4/M4A/M4B URLs, the package keeps the Dart URL pipeline but
+can augment chapter extraction with the Rust backend automatically.
+
 #### Custom Initialization (Optional)
 
 For custom configurations, you can initialize manually:
@@ -328,6 +376,71 @@ The remote benchmark compares:
 - direct Rust URL chapter extraction via FFI
 
 and reports timings plus chapter counts for each backend.
+
+### Benchmark snapshot
+
+These numbers were captured from the current repository state and are useful as
+an order-of-magnitude reference, not as a strict SLA.
+
+#### Simple comparison
+
+##### Local files (`tool/benchmark_rust_vs_dart.dart`)
+
+- MP3 small: Rust **~6.9x–7.5x faster**
+- FLAC small: Rust **~1.5x–1.6x faster**
+- OGG small: Rust **~3.4x–3.6x faster**
+- MP4 small: Rust **~1.8x–4.7x faster**
+- MP4 large local sample: Rust **~10.5x–10.7x faster**
+- Aggregate local benchmark: Rust **~9.3x–9.6x faster**
+
+##### Large M4B chapter extraction
+
+- Remote URL benchmark (`tool/benchmark_remote_url_rust_vs_dart.dart`): Rust is
+  currently **near Dart**, but still a bit slower on the original large remote
+  audiobook URLs.
+- Localhost rerun on downloaded copies:
+  - File A: `parseUrl` **772 ms** vs Rust direct URL chapters **57 ms**
+  - File B: `parseUrl` **776 ms** vs Rust direct URL chapters **53 ms**
+
+This means the Rust URL chapter path is much faster once network/CDN variance is
+removed, while the public remote benchmark still reflects real-world network
+overhead.
+
+### How to run the benchmarks
+
+Build the native library first:
+
+```bash
+cargo build --manifest-path rust/Cargo.toml --release
+```
+
+Run the local file benchmark:
+
+```bash
+dart run tool/benchmark_rust_vs_dart.dart
+```
+
+Run the remote URL benchmark with runtime-only URLs:
+
+```bash
+dart run tool/benchmark_remote_url_rust_vs_dart.dart \
+  --url "https://example.com/book-1.m4b" \
+  --url "https://example.com/book-2.m4b" \
+  --iterations 3 \
+  --warmup 1 \
+  --timeout-seconds 120
+```
+
+Or with environment variables:
+
+```bash
+METADATA_AUDIO_BENCH_URL_1="https://example.com/book-1.m4b" \
+METADATA_AUDIO_BENCH_URL_2="https://example.com/book-2.m4b" \
+dart run tool/benchmark_remote_url_rust_vs_dart.dart
+```
+
+Use CLI args or environment variables for signed/private audiobook URLs so they
+do not end up committed into the repository.
 
 ## License
 
