@@ -259,16 +259,31 @@ Future<AudioMetadata> parseFromTokenizer(
   Tokenizer tokenizer, {
   ParseOptions? options,
 }) async {
-  // Ensure parser factory is initialized (auto-initialize if needed)
   _ensureInitialized();
+  return parseFromTokenizerWithFactory(
+    tokenizer,
+    _parserFactory!,
+    options: options,
+  );
+}
 
+/// Parse audio metadata from a tokenizer using the provided parser factory.
+///
+/// This behaves the same as [parseFromTokenizer], but allows callers to
+/// override parser selection without changing the global factory.
+Future<AudioMetadata> parseFromTokenizerWithFactory(
+  Tokenizer tokenizer,
+  ParserFactory factory, {
+  ParseOptions? options,
+}) async {
+  // Ensure parser factory is initialized (auto-initialize if needed)
   options ??= const ParseOptions();
 
   // Get file info from tokenizer, or create minimal info if not available
   final fileInfo = tokenizer.fileInfo ?? const FileInfo();
 
   // Select appropriate parser based on file info and tokenizer
-  final parser = _parserFactory!.selectParser(fileInfo, tokenizer);
+  final parser = factory.selectParser(fileInfo, tokenizer);
 
   // Verify parser supports tokenizer capabilities
   if (!parser.supports(tokenizer)) {

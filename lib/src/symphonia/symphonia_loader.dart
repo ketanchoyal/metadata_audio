@@ -69,8 +69,8 @@ class SymphoniaLoader extends ParserLoader {
     }
 
     throw UnsupportedError(
-      'SymphoniaLoader requires either a file path or a complete seekable '
-      'tokenizer, got ${tokenizer.runtimeType}.',
+      'SymphoniaLoader requires a file path, BytesTokenizer, or a complete '
+      'seekable tokenizer (got ${tokenizer.runtimeType}).',
     );
   }
 

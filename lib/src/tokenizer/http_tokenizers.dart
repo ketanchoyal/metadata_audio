@@ -5,10 +5,45 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:metadata_audio/src/aiff/aiff_loader.dart';
+import 'package:metadata_audio/src/apev2/apev2_loader.dart';
+import 'package:metadata_audio/src/asf/asf_loader.dart';
 import 'package:metadata_audio/src/core.dart';
+import 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
+import 'package:metadata_audio/src/dsf/dsf_loader.dart';
+import 'package:metadata_audio/src/flac/flac_loader.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_loader.dart';
+import 'package:metadata_audio/src/matroska/matroska_loader.dart';
 import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
+import 'package:metadata_audio/src/mp4/mp4_loader.dart';
+import 'package:metadata_audio/src/musepack/musepack_loader.dart';
+import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/parser_factory.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/wav/wave_loader.dart';
+import 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
+
+ParserFactory _createDartOnlyParserFactory() => ParserFactory(
+  ParserRegistry()
+    ..register(FlacLoader())
+    ..register(Mp4Loader())
+    ..register(OggLoader())
+    ..register(WaveLoader())
+    ..register(AiffLoader())
+    ..register(AsfLoader())
+    ..register(Apev2Loader())
+    ..register(MatroskaLoader())
+    ..register(MusepackLoader())
+    ..register(WavPackLoader())
+    ..register(DsfLoader())
+    ..register(DsdiffLoader())
+    ..register(Id3v2Loader())
+    ..register(MpegLoader()),
+);
+
+final ParserFactory _dartOnlyParserFactory = _createDartOnlyParserFactory();
 
 /// Error thrown when downloading a file from URL fails.
 class FileDownloadError extends ParseError {
@@ -1570,7 +1605,11 @@ Future<AudioMetadata> _parseWithFullDownload(
 ) async {
   final tokenizer = await HttpTokenizer.fromUrl(url, timeout: timeout);
   try {
-    return await parseFromTokenizer(tokenizer, options: options);
+    return await parseFromTokenizerWithFactory(
+      tokenizer,
+      _dartOnlyParserFactory,
+      options: options,
+    );
   } finally {
     tokenizer.close();
   }
@@ -1585,7 +1624,11 @@ Future<AudioMetadata> _parseWithHeaderOnly(
   try {
     final tokenizer = await RangeTokenizer.fromUrl(url, timeout: timeout);
     try {
-      return await parseFromTokenizer(tokenizer, options: options);
+      return await parseFromTokenizerWithFactory(
+        tokenizer,
+        _dartOnlyParserFactory,
+        options: options,
+      );
     } finally {
       tokenizer.close();
     }
@@ -1609,7 +1652,11 @@ Future<AudioMetadata> _parseWithProbe(
   );
 
   try {
-    final metadata = await parseFromTokenizer(tokenizer, options: options);
+    final metadata = await parseFromTokenizerWithFactory(
+      tokenizer,
+      _dartOnlyParserFactory,
+      options: options,
+    );
     if (_shouldRetryWithFullDownload(metadata)) {
       return _parseWithFullDownload(url, timeout, options);
     }
@@ -1659,7 +1706,11 @@ Future<AudioMetadata> _parseWithRandomAccess(
       await tokenizer.prefetchRange(tailStart, totalSize);
     }
 
-    return await parseFromTokenizer(tokenizer, options: options);
+    return await parseFromTokenizerWithFactory(
+      tokenizer,
+      _dartOnlyParserFactory,
+      options: options,
+    );
   } finally {
     tokenizer.close();
   }
