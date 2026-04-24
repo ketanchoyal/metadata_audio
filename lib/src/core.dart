@@ -18,6 +18,7 @@ import 'package:metadata_audio/src/musepack/musepack_loader.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/symphonia/hybrid_mp4_loader.dart';
 import 'package:metadata_audio/src/symphonia/symphonia_loader.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
@@ -120,6 +121,7 @@ ParserFactory createDefaultParserFactory() {
     ..register(Id3v2Loader())
     ..register(MpegLoader())
     ..register(SymphoniaLoader())
+    ..register(HybridMp4Loader())
     ..register(Apev2Loader());
 
   return ParserFactory(registry);
