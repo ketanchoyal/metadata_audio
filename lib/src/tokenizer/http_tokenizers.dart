@@ -5,25 +5,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:metadata_audio/src/aiff/aiff_loader.dart';
-import 'package:metadata_audio/src/apev2/apev2_loader.dart';
-import 'package:metadata_audio/src/asf/asf_loader.dart';
 import 'package:metadata_audio/src/core.dart';
-import 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
-import 'package:metadata_audio/src/dsf/dsf_loader.dart';
-import 'package:metadata_audio/src/flac/flac_loader.dart';
-import 'package:metadata_audio/src/id3v2/id3v2_loader.dart';
-import 'package:metadata_audio/src/matroska/matroska_loader.dart';
-import 'package:metadata_audio/src/model/types.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
-import 'package:metadata_audio/src/mp4/mp4_loader.dart';
-import 'package:metadata_audio/src/musepack/musepack_loader.dart';
-import 'package:metadata_audio/src/ogg/ogg_loader.dart';
-import 'package:metadata_audio/src/parse_error.dart';
-import 'package:metadata_audio/src/parser_factory.dart';
-import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
-import 'package:metadata_audio/src/wav/wave_loader.dart';
-import 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
 
 ParserFactory _createDartOnlyParserFactory() => ParserFactory(
   ParserRegistry()
