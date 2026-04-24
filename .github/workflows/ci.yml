@@ -9,26 +9,49 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        sdk: ["stable"]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          sdk: ${{ matrix.sdk }}
+          toolchain: stable
+
+      - name: Cache Rust artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            rust/target/
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust/Cargo.lock') }}-${{ hashFiles('rust/src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-${{ hashFiles('rust/Cargo.lock') }}-
+            ${{ runner.os }}-rust-
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
 
       - name: Cache pub cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pubcache-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-pubcache-
 
       - name: Get dependencies
-        run: dart pub get
+        run: flutter pub get
+
+      - name: Build Rust crate
+        run: cargo build --manifest-path rust/Cargo.toml --release --locked
+
+      - name: Analyze package
+        run: flutter analyze
 
       - name: Run tests
-        run: dart test
+        run: flutter test
