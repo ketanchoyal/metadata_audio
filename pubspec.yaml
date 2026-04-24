@@ -26,10 +26,15 @@ flutter:
         ffiPlugin: true
       windows:
         ffiPlugin: true
+      web:
+        pluginClass: MetadataAudioWeb
+        fileName: metadata_audio_web.dart
 
 dependencies:
   collection: ^1.19.1
   flutter:
+    sdk: flutter
+  flutter_web_plugins:
     sdk: flutter
   flutter_rust_bridge: 2.11.1
   meta: ^1.16.0
