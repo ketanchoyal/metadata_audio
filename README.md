@@ -103,6 +103,8 @@ final metadata = await parseUrl(
 );
 ```
 
+For range-capable MP4/M4A/M4B URLs, `parseUrl()` can augment chapter extraction with the Rust backend after the main Dart metadata pass. This keeps the existing URL parsing behavior intact while letting the Rust side handle remote MP4 chapter reads for audiobook-style files.
+
 ### Parse Bytes
 
 ```dart
@@ -207,6 +209,8 @@ When parsing from URLs, the library automatically selects the most efficient str
 | `headerOnly` | 5-50MB | Download first 256KB | Medium files with Range support |
 | `randomAccess` | > 50MB | On-demand chunk fetching | Large files with Range support |
 
+For chaptered MP4/M4A/M4B URLs, the library may still use Rust-backed chapter augmentation after any of the strategies above complete. That augmentation respects the `parseUrl()` timeout budget and also works when you force a strategy explicitly.
+
 ### Manual Strategy Selection
 
 ```dart
@@ -289,6 +293,39 @@ dart analyze
 # Format code
 dart format lib/ test/
 ```
+
+### Remote URL Benchmarks
+
+The repository includes two benchmark tools:
+
+- `tool/benchmark_rust_vs_dart.dart` for local sample files
+- `tool/benchmark_remote_url_rust_vs_dart.dart` for large remote URLs
+
+The remote benchmark tool is intentionally runtime-only: pass URLs via CLI args or environment variables so signed/private URLs do not end up in source files.
+
+```bash
+dart run tool/benchmark_remote_url_rust_vs_dart.dart \
+  --url "https://example.com/book-1.m4b" \
+  --url "https://example.com/book-2.m4b" \
+  --iterations 3 \
+  --warmup 1 \
+  --timeout-seconds 120
+```
+
+Environment-variable form:
+
+```bash
+METADATA_AUDIO_BENCH_URL_1="https://example.com/book-1.m4b" \
+METADATA_AUDIO_BENCH_URL_2="https://example.com/book-2.m4b" \
+dart run tool/benchmark_remote_url_rust_vs_dart.dart
+```
+
+The remote benchmark compares:
+
+- pure Dart URL parsing with chapters enabled
+- direct Rust URL chapter extraction via FFI
+
+and reports timings plus chapter counts for each backend.
 
 ## License
 

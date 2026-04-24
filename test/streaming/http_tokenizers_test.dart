@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/native/api.dart';
+import 'package:metadata_audio/src/native/frb_generated.dart';
 import 'package:metadata_audio/src/aiff/aiff_loader.dart';
 import 'package:metadata_audio/src/flac/flac_loader.dart';
 import 'package:metadata_audio/src/mp4/mp4_loader.dart';
@@ -52,6 +54,38 @@ Future<HttpServer> _startBytesServer(
 
   return server;
 }
+
+class _FakeRustApi implements RustLibApi {
+  _FakeRustApi(this.onParseChaptersFromUrl);
+
+  final Future<List<FfiChapter>> Function({
+    required String url,
+    required BigInt? timeoutMs,
+    required BigInt? fileSizeHint,
+  }) onParseChaptersFromUrl;
+
+  @override
+  Future<List<FfiChapter>> crateApiParseChaptersFromUrl({
+    required String url,
+    BigInt? timeoutMs,
+    BigInt? fileSizeHint,
+  }) => onParseChaptersFromUrl(
+    url: url,
+    timeoutMs: timeoutMs,
+    fileSizeHint: fileSizeHint,
+  );
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+typedef _RustChapterHandler = Future<List<FfiChapter>> Function({
+  required String url,
+  required BigInt? timeoutMs,
+  required BigInt? fileSizeHint,
+});
+
+_RustChapterHandler? _currentRustChapterHandler;
 
 Future<HttpServer> _startSampleServer(
   String relPath, {
@@ -460,6 +494,113 @@ void main() {
       skip: testUrl.isEmpty ? 'No test URL configured' : false,
       timeout: const Timeout(Duration(seconds: 15)),
     );
+  });
+
+  group('Rust URL augmentation', () {
+    setUpAll(() {
+      RustLib.initMock(
+        api: _FakeRustApi(({
+          required url,
+          required timeoutMs,
+          required fileSizeHint,
+        }) async {
+          final handler = _currentRustChapterHandler;
+          if (handler == null) {
+            throw StateError('Rust chapter handler not configured for test');
+          }
+          return handler(
+            url: url,
+            timeoutMs: timeoutMs,
+            fileSizeHint: fileSizeHint,
+          );
+        }),
+      );
+    });
+
+    tearDown(() {
+      _currentRustChapterHandler = null;
+    });
+
+    test('applies Rust chapters for explicit strategy calls', () async {
+      final server = await _startSampleServer('mp4/sample.m4a');
+      final capturedTimeouts = <BigInt?>[];
+
+      _currentRustChapterHandler = ({
+        required url,
+        required timeoutMs,
+        required fileSizeHint,
+      }) async {
+        capturedTimeouts.add(timeoutMs);
+        expect(fileSizeHint, isNotNull);
+        return [
+          FfiChapter(
+            title: 'Rust explicit strategy chapter',
+            start: BigInt.zero,
+            end: BigInt.from(1000),
+            timeScale: 1000,
+          ),
+        ];
+      };
+
+      try {
+        final metadata = await parseUrl(
+          'http://localhost:${server.port}/sample.m4a',
+          strategy: ParseStrategy.fullDownload,
+          timeout: const Duration(seconds: 7),
+          options: const ParseOptions(includeChapters: true),
+        );
+
+        expect(metadata.format.chapters, isNotNull);
+        expect(metadata.format.chapters, hasLength(1));
+        expect(
+          metadata.format.chapters!.single.title,
+          equals('Rust explicit strategy chapter'),
+        );
+        expect(capturedTimeouts, equals([BigInt.from(7000)]));
+      } finally {
+        await server.close(force: true);
+      }
+    });
+
+    test('applies Rust chapters for MIME-detected MP4 URLs without extension', () async {
+      final server = await _startSampleServer(
+        'mp4/sample.m4a',
+        contentType: 'audio/mp4',
+      );
+      var called = false;
+
+      _currentRustChapterHandler = ({
+        required url,
+        required timeoutMs,
+        required fileSizeHint,
+      }) async {
+        called = true;
+        expect(fileSizeHint, isNotNull);
+        return [
+          FfiChapter(
+            title: 'Rust MIME-only chapter',
+            start: BigInt.zero,
+            end: BigInt.from(500),
+            timeScale: 1000,
+          ),
+        ];
+      };
+
+      try {
+        final metadata = await parseUrl(
+          'http://localhost:${server.port}/stream',
+          strategy: ParseStrategy.fullDownload,
+          timeout: const Duration(seconds: 5),
+          options: const ParseOptions(includeChapters: true),
+        );
+
+        expect(called, isTrue);
+        expect(metadata.format.chapters, isNotNull);
+        expect(metadata.format.chapters!.single.title, 'Rust MIME-only chapter');
+      } finally {
+        await server.close(force: true);
+      }
+    });
   });
 
   group('Smart parseUrl with auto-selection', () {

@@ -6,6 +6,9 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/core.dart';
+import 'package:metadata_audio/src/native/api.dart' as native;
+import 'package:metadata_audio/src/native/frb_generated.dart' show RustLib;
+import 'package:metadata_audio/src/symphonia/symphonia_converter.dart';
 
 ParserFactory _createDartOnlyParserFactory() => ParserFactory(
   ParserRegistry()
@@ -26,6 +29,98 @@ ParserFactory _createDartOnlyParserFactory() => ParserFactory(
 );
 
 final ParserFactory _dartOnlyParserFactory = _createDartOnlyParserFactory();
+
+bool _isRustRemoteMp4Candidate(StrategyInfo? info, String url) {
+  if (info == null || !info.supportsRange) {
+    return false;
+  }
+
+  final detectedFormat = info.detectedFormat;
+  if (detectedFormat == 'mp4') {
+    return true;
+  }
+
+  final extension = _extractUrlExtension(url);
+  return extension == 'm4a' || extension == 'm4b' || extension == 'mp4';
+}
+
+Future<AudioMetadata> _maybeAugmentMp4ChaptersWithRust(
+  AudioMetadata metadata,
+  String url,
+  Duration timeout,
+  ParseOptions options,
+  StrategyInfo? info,
+) async {
+  if (!options.includeChapters || !_isRustRemoteMp4Candidate(info, url)) {
+    return metadata;
+  }
+
+  if (!RustLib.instance.initialized) {
+    await RustLib.init();
+  }
+
+  final ffiChapters = await native.parseChaptersFromUrl(
+    url: url,
+    timeoutMs: BigInt.from(timeout.inMilliseconds),
+    fileSizeHint: info?.fileSize != null ? BigInt.from(info!.fileSize!) : null,
+  );
+  if (ffiChapters.isEmpty) {
+    return metadata;
+  }
+
+  final rustChapters = convertFfiChapters(ffiChapters);
+
+  return AudioMetadata(
+    format: Format(
+      container: metadata.format.container,
+      tagTypes: metadata.format.tagTypes,
+      duration: metadata.format.duration,
+      bitrate: metadata.format.bitrate,
+      sampleRate: metadata.format.sampleRate,
+      bitsPerSample: metadata.format.bitsPerSample,
+      tool: metadata.format.tool,
+      codec: metadata.format.codec,
+      codecProfile: metadata.format.codecProfile,
+      lossless: metadata.format.lossless,
+      numberOfChannels: metadata.format.numberOfChannels,
+      numberOfSamples: metadata.format.numberOfSamples,
+      audioMD5: metadata.format.audioMD5,
+      chapters: rustChapters,
+      creationTime: metadata.format.creationTime,
+      modificationTime: metadata.format.modificationTime,
+      trackGain: metadata.format.trackGain,
+      trackPeakLevel: metadata.format.trackPeakLevel,
+      albumGain: metadata.format.albumGain,
+      hasAudio: metadata.format.hasAudio,
+      hasVideo: metadata.format.hasVideo,
+      trackInfo: metadata.format.trackInfo,
+    ),
+    native: metadata.native,
+    common: metadata.common,
+    quality: metadata.quality,
+  );
+}
+
+Future<AudioMetadata> _parseThenMaybeAugmentWithRust(
+  String url,
+  Duration timeout,
+  ParseOptions options,
+  StrategyInfo? info,
+  Future<AudioMetadata> Function(String, Duration, ParseOptions) parser,
+) async {
+  final metadata = await parser(url, timeout, options);
+  try {
+    return await _maybeAugmentMp4ChaptersWithRust(
+      metadata,
+      url,
+      timeout,
+      options,
+      info,
+    );
+  } on Object {
+    return metadata;
+  }
+}
 
 /// Error thrown when downloading a file from URL fails.
 class FileDownloadError extends ParseError {
@@ -1463,12 +1558,16 @@ Future<AudioMetadata> parseUrl(
   options ??= const ParseOptions();
   final effectiveTimeout = timeout ?? const Duration(seconds: 30);
   final autoSelectedStrategy = strategy == null;
+  final requiresStrategyInfo =
+      strategy == null ||
+      options.includeChapters ||
+      (strategy == ParseStrategy.probe && probeStrategy == null);
 
   // If strategy not specified, detect it
   StrategyInfo? info;
-  if (strategy == null) {
+  if (requiresStrategyInfo) {
     info = await detectStrategy(url, timeout: effectiveTimeout);
-    strategy = info.strategy;
+    strategy ??= info.strategy;
   }
 
   // Resolve effective probe strategy: explicit override → auto-detected → scatter.
@@ -1482,38 +1581,36 @@ Future<AudioMetadata> parseUrl(
         'Format: ${info.detectedFormat ?? "unknown"}, '
         'File size: ${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}, '
         'Range support: ${info.supportsRange}';
-  } else {
+  } else if (autoSelectedStrategy) {
     reason = 'User-specified';
+  } else {
+    reason =
+        'User-specified, '
+        'Format: ${info?.detectedFormat ?? "unknown"}, '
+        'File size: ${info?.fileSize != null ? "${info!.fileSize! ~/ 1024}KB" : "unknown"}, '
+        'Range support: ${info?.supportsRange ?? false}';
   }
   onStrategySelected?.call(strategy, reason);
 
   // Execute the selected strategy
   switch (strategy) {
     case ParseStrategy.fullDownload:
-      return _parseWithFullDownload(url, effectiveTimeout, options);
+      return _parseThenMaybeAugmentWithRust(
+        url,
+        effectiveTimeout,
+        options,
+        info,
+        _parseWithFullDownload,
+      );
 
     case ParseStrategy.headerOnly:
       try {
-        return await _parseWithHeaderOnly(url, effectiveTimeout, options);
-      } on Object catch (error) {
-        if (_shouldFallbackToFullDownload(
-          autoSelectedStrategy: autoSelectedStrategy,
-          strategy: strategy,
-          info: info,
-          error: error,
-        )) {
-          return _parseWithFullDownload(url, effectiveTimeout, options);
-        }
-        rethrow;
-      }
-
-    case ParseStrategy.probe:
-      try {
-        return await _parseWithProbe(
+        return await _parseThenMaybeAugmentWithRust(
           url,
           effectiveTimeout,
           options,
-          effectiveProbeStrategy,
+          info,
+          _parseWithHeaderOnly,
         );
       } on Object catch (error) {
         if (_shouldFallbackToFullDownload(
@@ -1522,14 +1619,27 @@ Future<AudioMetadata> parseUrl(
           info: info,
           error: error,
         )) {
-          return _parseWithFullDownload(url, effectiveTimeout, options);
+          return _parseThenMaybeAugmentWithRust(
+            url,
+            effectiveTimeout,
+            options,
+            info,
+            _parseWithFullDownload,
+          );
         }
         rethrow;
       }
 
-    case ParseStrategy.randomAccess:
+    case ParseStrategy.probe:
       try {
-        return await _parseWithRandomAccess(url, effectiveTimeout, options);
+        return await _parseThenMaybeAugmentWithRust(
+          url,
+          effectiveTimeout,
+          options,
+          info,
+          (url, timeout, options) =>
+              _parseWithProbe(url, timeout, options, effectiveProbeStrategy),
+        );
       } on Object catch (error) {
         if (_shouldFallbackToFullDownload(
           autoSelectedStrategy: autoSelectedStrategy,
@@ -1537,7 +1647,40 @@ Future<AudioMetadata> parseUrl(
           info: info,
           error: error,
         )) {
-          return _parseWithFullDownload(url, effectiveTimeout, options);
+          return _parseThenMaybeAugmentWithRust(
+            url,
+            effectiveTimeout,
+            options,
+            info,
+            _parseWithFullDownload,
+          );
+        }
+        rethrow;
+      }
+
+    case ParseStrategy.randomAccess:
+      try {
+        return await _parseThenMaybeAugmentWithRust(
+          url,
+          effectiveTimeout,
+          options,
+          info,
+          _parseWithRandomAccess,
+        );
+      } on Object catch (error) {
+        if (_shouldFallbackToFullDownload(
+          autoSelectedStrategy: autoSelectedStrategy,
+          strategy: strategy,
+          info: info,
+          error: error,
+        )) {
+          return _parseThenMaybeAugmentWithRust(
+            url,
+            effectiveTimeout,
+            options,
+            info,
+            _parseWithFullDownload,
+          );
         }
         rethrow;
       }
