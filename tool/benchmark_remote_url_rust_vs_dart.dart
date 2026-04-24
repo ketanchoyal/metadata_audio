@@ -145,8 +145,11 @@ Future<AudioMetadata> _parseUrlWithDartOnly(
   }
 }
 
-Future<int> _parseWithRust(String url, Duration timeout) async {
-  final info = await detectStrategy(url, timeout: timeout);
+Future<int> _parseWithRust(
+  String url,
+  StrategyInfo info,
+  Duration timeout,
+) async {
   final chapters = await native.parseChaptersFromUrl(
     url: url,
     timeoutMs: BigInt.from(timeout.inMilliseconds),
@@ -170,9 +173,9 @@ Future<ComparativeResult> _runComparativeCase(
     final dartFirst = i.isEven;
     if (dartFirst) {
       await _parseUrlWithDartOnly(benchmark.url, strategyInfo, pureFactory, timeout);
-      await _parseWithRust(benchmark.url, timeout);
+      await _parseWithRust(benchmark.url, strategyInfo, timeout);
     } else {
-      await _parseWithRust(benchmark.url, timeout);
+      await _parseWithRust(benchmark.url, strategyInfo, timeout);
       await _parseUrlWithDartOnly(benchmark.url, strategyInfo, pureFactory, timeout);
     }
   }
@@ -195,7 +198,11 @@ Future<ComparativeResult> _runComparativeCase(
       dartDurationsUs.add(dartSw.elapsedMicroseconds);
 
       final rustSw = Stopwatch()..start();
-      final rustCount = await _parseWithRust(benchmark.url, timeout);
+      final rustCount = await _parseWithRust(
+        benchmark.url,
+        strategyInfo,
+        timeout,
+      );
       rustSw.stop();
       rustDurationsUs.add(rustSw.elapsedMicroseconds);
 
@@ -205,7 +212,11 @@ Future<ComparativeResult> _runComparativeCase(
       }
     } else {
       final rustSw = Stopwatch()..start();
-      final rustCount = await _parseWithRust(benchmark.url, timeout);
+      final rustCount = await _parseWithRust(
+        benchmark.url,
+        strategyInfo,
+        timeout,
+      );
       rustSw.stop();
       rustDurationsUs.add(rustSw.elapsedMicroseconds);
 

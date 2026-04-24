@@ -85,11 +85,12 @@ print('Duration: ${metadata.format.duration}');
 
 ### Parse from URL (Smart)
 
-The `parseUrl()` function automatically selects the best strategy based on file size and server capabilities:
+The `parseUrl()` function automatically selects the best strategy based on file size, server capabilities, and the detected audio format:
 
 ```dart
 // Small files (< 5MB): Full download
-// Medium files (5-50MB): Header-only download (~256KB)
+// Medium MP4/MP3/unknown files: format-aware probe requests
+// Medium FLAC/OGG/WAV/AIFF-style files: header-only download
 // Large files (> 50MB): Random access with on-demand fetching
 
 final metadata = await parseUrl('https://example.com/audio.m4a');
@@ -203,11 +204,12 @@ print(customId.path); // my-custom-tag
 
 When parsing from URLs, the library automatically selects the most efficient strategy:
 
-| Strategy | File Size | Method | Use Case |
-|----------|-----------|--------|----------|
-| `fullDownload` | ≤ 5MB | Download entire file | Small files, any server |
-| `headerOnly` | 5-50MB | Download first 256KB | Medium files with Range support |
-| `randomAccess` | > 50MB | On-demand chunk fetching | Large files with Range support |
+| Strategy | Typical Use | Method | Use Case |
+|----------|-------------|--------|----------|
+| `fullDownload` | Small files or servers without Range | Download entire file | Any format when probing is not worthwhile |
+| `headerOnly` | Medium-sized header-oriented formats | Download first 256KB | FLAC, OGG, WAV, AIFF, and similar |
+| `probe` | Medium-sized position-sensitive formats | Fetch targeted ranges | MP4/M4A/M4B, MP3/MPEG/AAC, and unknown formats |
+| `randomAccess` | Very large range-capable files | On-demand chunk fetching | Large remote files with sparse metadata access |
 
 For chaptered MP4/M4A/M4B URLs, the library may still use Rust-backed chapter augmentation after any of the strategies above complete. That augmentation respects the `parseUrl()` timeout budget and also works when you force a strategy explicitly.
 
@@ -219,7 +221,7 @@ import 'package:metadata_audio/metadata_audio.dart';
 // Force specific strategy
 final metadata = await parseUrl(
   url,
-  strategy: ParseStrategy.headerOnly, // or fullDownload, randomAccess
+  strategy: ParseStrategy.headerOnly, // or fullDownload, probe, randomAccess
 );
 
 // Detect strategy without parsing
