@@ -2,6 +2,7 @@
 #![allow(unexpected_cfgs)]
 
 use std::fs::File;
+use std::io::Cursor;
 use std::path::Path;
 
 use symphonia::core::formats::probe::Hint;
@@ -263,13 +264,27 @@ pub fn parse_from_path(path: String) -> Result<FfiAudioMetadata, String> {
     let native = collect_native_tags(&mut *format);
     let pictures = extract_pictures(&mut *format);
 
-    let mut warnings = Vec::new();
-    if native.is_empty() {
-        warnings.push("no native tags found in metadata revisions".to_string());
-    }
-    if common.title.is_none() && common.artist.is_none() && common.album.is_none() {
-        warnings.push("common tags did not expose title, artist, or album".to_string());
-    }
+    let warnings = collect_audio_warnings(&native, &common);
+
+    Ok(FfiAudioMetadata {
+        format: format_info,
+        common,
+        native,
+        pictures,
+        warnings,
+    })
+}
+
+#[flutter_rust_bridge::frb]
+pub fn parse_from_bytes(bytes: Vec<u8>, mime_hint: Option<String>) -> Result<FfiAudioMetadata, String> {
+    let mut format = probe_format_from_bytes(bytes, mime_hint)?;
+
+    let format_info = extract_format(&mut *format);
+    let common = extract_common_tags(&mut *format);
+    let native = collect_native_tags(&mut *format);
+    let pictures = extract_pictures(&mut *format);
+
+    let warnings = collect_audio_warnings(&native, &common);
 
     Ok(FfiAudioMetadata {
         format: format_info,
@@ -351,6 +366,34 @@ fn probe_format_from_path(path: &str) -> Result<Box<dyn FormatReader>, String> {
     symphonia::default::get_probe()
         .probe(&hint, stream, FormatOptions::default(), Default::default())
         .map_err(|err| format!("failed to probe media source stream: {err}"))
+}
+
+fn probe_format_from_bytes(bytes: Vec<u8>, mime_hint: Option<String>) -> Result<Box<dyn FormatReader>, String> {
+    let cursor = Cursor::new(bytes);
+
+    let mut hint = Hint::new();
+    if let Some(mime_hint) = mime_hint.as_deref() {
+        hint.mime_type(mime_hint);
+        if let Some(extension) = extension_from_mime(mime_hint) {
+            hint.with_extension(extension);
+        }
+    }
+
+    let stream = MediaSourceStream::new(Box::new(cursor), Default::default());
+    symphonia::default::get_probe()
+        .probe(&hint, stream, FormatOptions::default(), Default::default())
+        .map_err(|err| format!("failed to probe media source stream: {err}"))
+}
+
+fn collect_audio_warnings(native: &[FfiNativeTag], common: &FfiCommonTags) -> Vec<String> {
+    let mut warnings = Vec::new();
+    if native.is_empty() {
+        warnings.push("no native tags found in metadata revisions".to_string());
+    }
+    if common.title.is_none() && common.artist.is_none() && common.album.is_none() {
+        warnings.push("common tags did not expose title, artist, or album".to_string());
+    }
+    warnings
 }
 
 fn extract_basic_metadata(stream: MediaSourceStream, hint: Hint) -> Result<ExtractedMetadata, String> {

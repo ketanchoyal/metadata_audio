@@ -6,7 +6,7 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:metadata_audio/src/native/frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `probe_format_from_path`, `summarize_revision`
+// These functions are ignored because they are not marked as `pub`: `collect_audio_warnings`, `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `probe_format_from_bytes`, `probe_format_from_path`, `summarize_revision`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ExtractedMetadata`, `StandardTagKind`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
@@ -14,6 +14,14 @@ Future<String> healthCheck() => RustLib.instance.api.crateApiHealthCheck();
 
 Future<FfiAudioMetadata> parseFromPath({required String path}) =>
     RustLib.instance.api.crateApiParseFromPath(path: path);
+
+Future<FfiAudioMetadata> parseFromBytes({
+  required List<int> bytes,
+  String? mimeHint,
+}) => RustLib.instance.api.crateApiParseFromBytes(
+  bytes: bytes,
+  mimeHint: mimeHint,
+);
 
 Future<FfiBasicMetadata> pocParseFile({required String path}) =>
     RustLib.instance.api.crateApiPocParseFile(path: path);
