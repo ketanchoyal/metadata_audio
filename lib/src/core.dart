@@ -18,6 +18,7 @@ import 'package:metadata_audio/src/musepack/musepack_loader.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/symphonia/symphonia_loader.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:metadata_audio/src/wav/wave_loader.dart';
@@ -41,6 +42,7 @@ export 'package:metadata_audio/src/musepack/musepack_loader.dart';
 export 'package:metadata_audio/src/ogg/ogg_loader.dart';
 export 'package:metadata_audio/src/parse_error.dart';
 export 'package:metadata_audio/src/parser_factory.dart';
+export 'package:metadata_audio/src/symphonia/symphonia_loader.dart';
 export 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 export 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 export 'package:metadata_audio/src/wav/wave_loader.dart';
@@ -116,7 +118,9 @@ ParserFactory createDefaultParserFactory() {
     ..register(DsfLoader())
     ..register(DsdiffLoader())
     ..register(Id3v2Loader())
-    ..register(MpegLoader());
+    ..register(MpegLoader())
+    ..register(SymphoniaLoader())
+    ..register(Apev2Loader());
 
   return ParserFactory(registry);
 }
