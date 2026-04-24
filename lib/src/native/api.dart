@@ -8,7 +8,7 @@ import 'package:metadata_audio/src/native/frb_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `collect_audio_warnings`, `extract_basic_metadata`, `extract_metadata_details`, `extract_standard_tag_value`, `probe_format_from_bytes`, `probe_format_from_path`, `summarize_revision`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ExtractedMetadata`, `StandardTagKind`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 Future<String> healthCheck() => RustLib.instance.api.crateApiHealthCheck();
 
@@ -21,6 +21,16 @@ Future<FfiAudioMetadata> parseFromBytes({
 }) => RustLib.instance.api.crateApiParseFromBytes(
   bytes: bytes,
   mimeHint: mimeHint,
+);
+
+Future<List<FfiChapter>> parseChaptersFromUrl({
+  required String url,
+  BigInt? timeoutMs,
+  BigInt? fileSizeHint,
+}) => RustLib.instance.api.crateApiParseChaptersFromUrl(
+  url: url,
+  timeoutMs: timeoutMs,
+  fileSizeHint: fileSizeHint,
 );
 
 Future<FfiBasicMetadata> pocParseFile({required String path}) =>
@@ -147,6 +157,47 @@ class FfiBasicMetadata {
           hasPictures == other.hasPictures &&
           chapterCount == other.chapterCount &&
           warnings == other.warnings;
+}
+
+class FfiChapter {
+  const FfiChapter({
+    required this.title,
+    required this.start,
+    this.id,
+    this.end,
+    this.sampleOffset,
+    this.timeScale,
+  });
+  final String? id;
+  final String title;
+  final BigInt start;
+  final BigInt? end;
+  final BigInt? sampleOffset;
+  final int? timeScale;
+
+  static Future<FfiChapter> default_() =>
+      RustLib.instance.api.crateApiFfiChapterDefault();
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      title.hashCode ^
+      start.hashCode ^
+      end.hashCode ^
+      sampleOffset.hashCode ^
+      timeScale.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiChapter &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          title == other.title &&
+          start == other.start &&
+          end == other.end &&
+          sampleOffset == other.sampleOffset &&
+          timeScale == other.timeScale;
 }
 
 class FfiComment {
@@ -648,6 +699,7 @@ class FfiFormat {
   const FfiFormat({
     required this.container,
     required this.tagTypes,
+    required this.chapters,
     this.duration,
     this.bitrate,
     this.sampleRate,
@@ -681,6 +733,7 @@ class FfiFormat {
   final double? trackGain;
   final double? trackPeakLevel;
   final double? albumGain;
+  final List<FfiChapter> chapters;
 
   static Future<FfiFormat> default_() =>
       RustLib.instance.api.crateApiFfiFormatDefault();
@@ -703,7 +756,8 @@ class FfiFormat {
       hasVideo.hashCode ^
       trackGain.hashCode ^
       trackPeakLevel.hashCode ^
-      albumGain.hashCode;
+      albumGain.hashCode ^
+      chapters.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -726,7 +780,8 @@ class FfiFormat {
           hasVideo == other.hasVideo &&
           trackGain == other.trackGain &&
           trackPeakLevel == other.trackPeakLevel &&
-          albumGain == other.albumGain;
+          albumGain == other.albumGain &&
+          chapters == other.chapters;
 }
 
 class FfiLyricsTag {

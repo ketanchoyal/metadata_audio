@@ -50,6 +50,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FfiBasicMetadata dco_decode_ffi_basic_metadata(dynamic raw);
 
   @protected
+  FfiChapter dco_decode_ffi_chapter(dynamic raw);
+
+  @protected
   FfiComment dco_decode_ffi_comment(dynamic raw);
 
   @protected
@@ -78,6 +81,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<FfiChapter> dco_decode_list_ffi_chapter(dynamic raw);
 
   @protected
   List<FfiComment> dco_decode_list_ffi_comment(dynamic raw);
@@ -161,6 +167,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FfiBasicMetadata sse_decode_ffi_basic_metadata(SseDeserializer deserializer);
 
   @protected
+  FfiChapter sse_decode_ffi_chapter(SseDeserializer deserializer);
+
+  @protected
   FfiComment sse_decode_ffi_comment(SseDeserializer deserializer);
 
   @protected
@@ -189,6 +198,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<FfiChapter> sse_decode_list_ffi_chapter(SseDeserializer deserializer);
 
   @protected
   List<FfiComment> sse_decode_list_ffi_comment(SseDeserializer deserializer);
@@ -282,6 +294,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_ffi_chapter(FfiChapter self, SseSerializer serializer);
+
+  @protected
   void sse_encode_ffi_comment(FfiComment self, SseSerializer serializer);
 
   @protected
@@ -310,6 +325,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_ffi_chapter(
+    List<FfiChapter> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_ffi_comment(

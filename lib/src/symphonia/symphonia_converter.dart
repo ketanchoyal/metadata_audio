@@ -35,6 +35,7 @@ Format convertFfiFormat(FfiFormat ffi) => Format(
   albumGain: ffi.albumGain,
   hasAudio: ffi.hasAudio,
   hasVideo: ffi.hasVideo,
+  chapters: ffi.chapters.isEmpty ? null : convertFfiChapters(ffi.chapters),
 );
 
 CommonTags convertFfiCommonTags(FfiCommonTags ffi) =>
@@ -69,6 +70,18 @@ QualityInformation convertWarnings(List<String> warnings) => QualityInformation(
     for (final warning in warnings) ParserWarning(message: warning),
   ],
 );
+
+List<Chapter> convertFfiChapters(List<FfiChapter> ffi) => [
+  for (final chapter in ffi)
+    Chapter(
+      id: chapter.id,
+      title: chapter.title,
+      sampleOffset: chapter.sampleOffset?.toInt(),
+      start: chapter.start.toInt(),
+      end: chapter.end?.toInt(),
+      timeScale: chapter.timeScale,
+    ),
+];
 
 CommonTags _convertFfiCommonTags(
   FfiCommonTags ffi, {

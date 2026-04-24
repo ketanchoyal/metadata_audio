@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -1482309696;
+  int get rustContentHash => -912113314;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -76,6 +76,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
 abstract class RustLibApi extends BaseApi {
   Future<FfiAudioMetadata> crateApiFfiAudioMetadataDefault();
+
+  Future<FfiChapter> crateApiFfiChapterDefault();
 
   Future<FfiComment> crateApiFfiCommentDefault();
 
@@ -92,6 +94,12 @@ abstract class RustLibApi extends BaseApi {
   Future<FfiTrackNo> crateApiFfiTrackNoDefault();
 
   Future<String> crateApiHealthCheck();
+
+  Future<List<FfiChapter>> crateApiParseChaptersFromUrl({
+    required String url,
+    BigInt? timeoutMs,
+    BigInt? fileSizeHint,
+  });
 
   Future<FfiAudioMetadata> crateApiParseFromBytes({
     required List<int> bytes,
@@ -154,7 +162,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<FfiComment> crateApiFfiCommentDefault() => handler.executeNormal(
+  Future<FfiChapter> crateApiFfiChapterDefault() => handler.executeNormal(
     NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -162,6 +170,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           generalizedFrbRustBinding,
           serializer,
           funcId: 2,
+          port: port_,
+        );
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_ffi_chapter,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiFfiChapterDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ),
+  );
+
+  TaskConstMeta get kCrateApiFfiChapterDefaultConstMeta =>
+      const TaskConstMeta(debugName: 'ffi_chapter_default', argNames: []);
+
+  @override
+  Future<FfiComment> crateApiFfiCommentDefault() => handler.executeNormal(
+    NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(
+          generalizedFrbRustBinding,
+          serializer,
+          funcId: 3,
           port: port_,
         );
       },
@@ -186,7 +219,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 3,
+          funcId: 4,
           port: port_,
         );
       },
@@ -211,7 +244,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 4,
+          funcId: 5,
           port: port_,
         );
       },
@@ -236,7 +269,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 5,
+          funcId: 6,
           port: port_,
         );
       },
@@ -261,7 +294,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 6,
+          funcId: 7,
           port: port_,
         );
       },
@@ -286,7 +319,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 7,
+          funcId: 8,
           port: port_,
         );
       },
@@ -311,7 +344,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 8,
+          funcId: 9,
           port: port_,
         );
       },
@@ -336,7 +369,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 9,
+          funcId: 10,
           port: port_,
         );
       },
@@ -354,6 +387,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'health_check', argNames: []);
 
   @override
+  Future<List<FfiChapter>> crateApiParseChaptersFromUrl({
+    required String url,
+    BigInt? timeoutMs,
+    BigInt? fileSizeHint,
+  }) => handler.executeNormal(
+    NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(url, serializer);
+        sse_encode_opt_box_autoadd_u_64(timeoutMs, serializer);
+        sse_encode_opt_box_autoadd_u_64(fileSizeHint, serializer);
+        pdeCallFfi(
+          generalizedFrbRustBinding,
+          serializer,
+          funcId: 11,
+          port: port_,
+        );
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_ffi_chapter,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiParseChaptersFromUrlConstMeta,
+      argValues: [url, timeoutMs, fileSizeHint],
+      apiImpl: this,
+    ),
+  );
+
+  TaskConstMeta get kCrateApiParseChaptersFromUrlConstMeta =>
+      const TaskConstMeta(
+        debugName: 'parse_chapters_from_url',
+        argNames: ['url', 'timeoutMs', 'fileSizeHint'],
+      );
+
+  @override
   Future<FfiAudioMetadata> crateApiParseFromBytes({
     required List<int> bytes,
     String? mimeHint,
@@ -366,7 +434,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 10,
+          funcId: 12,
           port: port_,
         );
       },
@@ -395,7 +463,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 11,
+              funcId: 13,
               port: port_,
             );
           },
@@ -422,7 +490,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 12,
+              funcId: 14,
               port: port_,
             );
           },
@@ -449,7 +517,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 13,
+              funcId: 15,
               port: port_,
             );
           },
@@ -476,7 +544,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 14,
+              funcId: 16,
               port: port_,
             );
           },
@@ -503,7 +571,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 15,
+              funcId: 17,
               port: port_,
             );
           },
@@ -533,7 +601,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         pdeCallFfi(
           generalizedFrbRustBinding,
           serializer,
-          funcId: 16,
+          funcId: 18,
           port: port_,
         );
       },
@@ -562,7 +630,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 17,
+              funcId: 19,
               port: port_,
             );
           },
@@ -662,6 +730,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       hasPictures: dco_decode_bool(arr[10]),
       chapterCount: dco_decode_u_32(arr[11]),
       warnings: dco_decode_list_String(arr[12]),
+    );
+  }
+
+  @protected
+  FfiChapter dco_decode_ffi_chapter(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return FfiChapter(
+      id: dco_decode_opt_String(arr[0]),
+      title: dco_decode_String(arr[1]),
+      start: dco_decode_u_64(arr[2]),
+      end: dco_decode_opt_box_autoadd_u_64(arr[3]),
+      sampleOffset: dco_decode_opt_box_autoadd_u_64(arr[4]),
+      timeScale: dco_decode_opt_box_autoadd_u_32(arr[5]),
     );
   }
 
@@ -808,8 +892,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FfiFormat dco_decode_ffi_format(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 17)
-      throw Exception('unexpected arr length: expect 17 but see ${arr.length}');
+    if (arr.length != 18)
+      throw Exception('unexpected arr length: expect 18 but see ${arr.length}');
     return FfiFormat(
       container: dco_decode_String(arr[0]),
       tagTypes: dco_decode_list_String(arr[1]),
@@ -828,6 +912,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       trackGain: dco_decode_opt_box_autoadd_f_64(arr[14]),
       trackPeakLevel: dco_decode_opt_box_autoadd_f_64(arr[15]),
       albumGain: dco_decode_opt_box_autoadd_f_64(arr[16]),
+      chapters: dco_decode_list_ffi_chapter(arr[17]),
     );
   }
 
@@ -906,6 +991,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<FfiChapter> dco_decode_list_ffi_chapter(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_chapter).toList();
   }
 
   @protected
@@ -1106,6 +1197,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       hasPictures: var_hasPictures,
       chapterCount: var_chapterCount,
       warnings: var_warnings,
+    );
+  }
+
+  @protected
+  FfiChapter sse_decode_ffi_chapter(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_id = sse_decode_opt_String(deserializer);
+    final var_title = sse_decode_String(deserializer);
+    final var_start = sse_decode_u_64(deserializer);
+    final var_end = sse_decode_opt_box_autoadd_u_64(deserializer);
+    final var_sampleOffset = sse_decode_opt_box_autoadd_u_64(deserializer);
+    final var_timeScale = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return FfiChapter(
+      id: var_id,
+      title: var_title,
+      start: var_start,
+      end: var_end,
+      sampleOffset: var_sampleOffset,
+      timeScale: var_timeScale,
     );
   }
 
@@ -1393,6 +1503,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final var_trackGain = sse_decode_opt_box_autoadd_f_64(deserializer);
     final var_trackPeakLevel = sse_decode_opt_box_autoadd_f_64(deserializer);
     final var_albumGain = sse_decode_opt_box_autoadd_f_64(deserializer);
+    final var_chapters = sse_decode_list_ffi_chapter(deserializer);
     return FfiFormat(
       container: var_container,
       tagTypes: var_tagTypes,
@@ -1411,6 +1522,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       trackGain: var_trackGain,
       trackPeakLevel: var_trackPeakLevel,
       albumGain: var_albumGain,
+      chapters: var_chapters,
     );
   }
 
@@ -1483,6 +1595,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FfiChapter> sse_decode_list_ffi_chapter(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <FfiChapter>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_chapter(deserializer));
     }
     return ans_;
   }
@@ -1737,6 +1861,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_ffi_chapter(FfiChapter self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.id, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_u_64(self.start, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.end, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.sampleOffset, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.timeScale, serializer);
+  }
+
+  @protected
   void sse_encode_ffi_comment(FfiComment self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_String(self.descriptor, serializer);
@@ -1886,6 +2021,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_f_64(self.trackGain, serializer);
     sse_encode_opt_box_autoadd_f_64(self.trackPeakLevel, serializer);
     sse_encode_opt_box_autoadd_f_64(self.albumGain, serializer);
+    sse_encode_list_ffi_chapter(self.chapters, serializer);
   }
 
   @protected
@@ -1940,6 +2076,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_chapter(
+    List<FfiChapter> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_chapter(item, serializer);
     }
   }
 
