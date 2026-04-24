@@ -4,6 +4,7 @@
 use std::fs::File;
 use std::io::Cursor;
 use std::path::Path;
+use std::time::Duration;
 
 use symphonia::core::formats::probe::Hint;
 use symphonia::core::formats::{FormatOptions, FormatReader};
@@ -14,6 +15,7 @@ use crate::common_tags::{self, extract_common_tags};
 use crate::format_info::extract_format;
 use crate::native_tags::collect_native_tags;
 use crate::pictures::extract_pictures;
+use crate::remote_mp4::parse_mp4_from_url;
 use crate::track_details::{extract_track_details};
 use crate::utils::*;
 
@@ -85,6 +87,17 @@ pub struct FfiPicture {
 
 #[derive(Clone, Debug, Default)]
 #[flutter_rust_bridge::frb]
+pub struct FfiChapter {
+    pub id: Option<String>,
+    pub title: String,
+    pub start: u64,
+    pub end: Option<u64>,
+    pub sample_offset: Option<u64>,
+    pub time_scale: Option<u32>,
+}
+
+#[derive(Clone, Debug, Default)]
+#[flutter_rust_bridge::frb]
 pub struct FfiFormat {
     pub container: String,
     pub tag_types: Vec<String>,
@@ -103,6 +116,7 @@ pub struct FfiFormat {
     pub track_gain: Option<f64>,
     pub track_peak_level: Option<f64>,
     pub album_gain: Option<f64>,
+    pub chapters: Vec<FfiChapter>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -293,6 +307,17 @@ pub fn parse_from_bytes(bytes: Vec<u8>, mime_hint: Option<String>) -> Result<Ffi
         pictures,
         warnings,
     })
+}
+
+#[flutter_rust_bridge::frb]
+pub fn parse_chapters_from_url(
+    url: String,
+    timeout_ms: Option<u64>,
+    file_size_hint: Option<u64>,
+) -> Result<Vec<FfiChapter>, String> {
+    let timeout = timeout_ms.map(Duration::from_millis);
+    let metadata = parse_mp4_from_url(&url, true, timeout, file_size_hint)?;
+    Ok(metadata.format.chapters)
 }
 
 #[flutter_rust_bridge::frb]

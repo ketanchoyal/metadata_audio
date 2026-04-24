@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1482309696;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -912113314;
 
 // Section: executor
 
@@ -71,6 +71,38 @@ fn wire__crate__api__ffi_audio_metadata_default_impl(
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::api::FfiAudioMetadata::default())?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__ffi_chapter_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "ffi_chapter_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::api::FfiChapter::default())?;
                     Ok(output_ok)
                 })())
             }
@@ -327,6 +359,45 @@ fn wire__crate__api__health_check_impl(
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::api::health_check())?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__parse_chapters_from_url_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "parse_chapters_from_url",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_url = <String>::sse_decode(&mut deserializer);
+            let api_timeout_ms = <Option<u64>>::sse_decode(&mut deserializer);
+            let api_file_size_hint = <Option<u64>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::api::parse_chapters_from_url(
+                        api_url,
+                        api_timeout_ms,
+                        api_file_size_hint,
+                    )?;
                     Ok(output_ok)
                 })())
             }
@@ -676,6 +747,26 @@ impl SseDecode for crate::api::FfiBasicMetadata {
     }
 }
 
+impl SseDecode for crate::api::FfiChapter {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <Option<String>>::sse_decode(deserializer);
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_start = <u64>::sse_decode(deserializer);
+        let mut var_end = <Option<u64>>::sse_decode(deserializer);
+        let mut var_sampleOffset = <Option<u64>>::sse_decode(deserializer);
+        let mut var_timeScale = <Option<u32>>::sse_decode(deserializer);
+        return crate::api::FfiChapter {
+            id: var_id,
+            title: var_title,
+            start: var_start,
+            end: var_end,
+            sample_offset: var_sampleOffset,
+            time_scale: var_timeScale,
+        };
+    }
+}
+
 impl SseDecode for crate::api::FfiComment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -946,6 +1037,7 @@ impl SseDecode for crate::api::FfiFormat {
         let mut var_trackGain = <Option<f64>>::sse_decode(deserializer);
         let mut var_trackPeakLevel = <Option<f64>>::sse_decode(deserializer);
         let mut var_albumGain = <Option<f64>>::sse_decode(deserializer);
+        let mut var_chapters = <Vec<crate::api::FfiChapter>>::sse_decode(deserializer);
         return crate::api::FfiFormat {
             container: var_container,
             tag_types: var_tagTypes,
@@ -964,6 +1056,7 @@ impl SseDecode for crate::api::FfiFormat {
             track_gain: var_trackGain,
             track_peak_level: var_trackPeakLevel,
             album_gain: var_albumGain,
+            chapters: var_chapters,
         };
     }
 }
@@ -1052,6 +1145,18 @@ impl SseDecode for Vec<String> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<String>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::FfiChapter> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::FfiChapter>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -1231,22 +1336,24 @@ fn pde_ffi_dispatcher_primary_impl(
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
         1 => wire__crate__api__ffi_audio_metadata_default_impl(port, ptr, rust_vec_len, data_len),
-        2 => wire__crate__api__ffi_comment_default_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__ffi_common_tags_default_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__ffi_format_default_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__ffi_lyrics_tag_default_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__ffi_picture_default_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__ffi_rating_default_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__ffi_track_no_default_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__health_check_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__parse_from_bytes_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__parse_from_path_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__poc_get_common_tags_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__poc_get_format_impl(port, ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__poc_get_native_tags_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__poc_get_pictures_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__poc_parse_bytes_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__poc_parse_file_impl(port, ptr, rust_vec_len, data_len),
+        2 => wire__crate__api__ffi_chapter_default_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__ffi_comment_default_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__ffi_common_tags_default_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__ffi_format_default_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__ffi_lyrics_tag_default_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__ffi_picture_default_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__ffi_rating_default_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__ffi_track_no_default_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__health_check_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__parse_chapters_from_url_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__parse_from_bytes_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crate__api__parse_from_path_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__poc_get_common_tags_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__poc_get_format_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__poc_get_native_tags_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__poc_get_pictures_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__poc_parse_bytes_impl(port, ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__poc_parse_file_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1312,6 +1419,26 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::FfiBasicMetadata>
     for crate::api::FfiBasicMetadata
 {
     fn into_into_dart(self) -> crate::api::FfiBasicMetadata {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::FfiChapter {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.start.into_into_dart().into_dart(),
+            self.end.into_into_dart().into_dart(),
+            self.sample_offset.into_into_dart().into_dart(),
+            self.time_scale.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::FfiChapter {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::FfiChapter> for crate::api::FfiChapter {
+    fn into_into_dart(self) -> crate::api::FfiChapter {
         self
     }
 }
@@ -1485,6 +1612,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::FfiFormat {
             self.track_gain.into_into_dart().into_dart(),
             self.track_peak_level.into_into_dart().into_dart(),
             self.album_gain.into_into_dart().into_dart(),
+            self.chapters.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1629,6 +1757,18 @@ impl SseEncode for crate::api::FfiBasicMetadata {
         <bool>::sse_encode(self.has_pictures, serializer);
         <u32>::sse_encode(self.chapter_count, serializer);
         <Vec<String>>::sse_encode(self.warnings, serializer);
+    }
+}
+
+impl SseEncode for crate::api::FfiChapter {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.title, serializer);
+        <u64>::sse_encode(self.start, serializer);
+        <Option<u64>>::sse_encode(self.end, serializer);
+        <Option<u64>>::sse_encode(self.sample_offset, serializer);
+        <Option<u32>>::sse_encode(self.time_scale, serializer);
     }
 }
 
@@ -1781,6 +1921,7 @@ impl SseEncode for crate::api::FfiFormat {
         <Option<f64>>::sse_encode(self.track_gain, serializer);
         <Option<f64>>::sse_encode(self.track_peak_level, serializer);
         <Option<f64>>::sse_encode(self.album_gain, serializer);
+        <Vec<crate::api::FfiChapter>>::sse_encode(self.chapters, serializer);
     }
 }
 
@@ -1842,6 +1983,16 @@ impl SseEncode for Vec<String> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <String>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::FfiChapter> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::FfiChapter>::sse_encode(item, serializer);
         }
     }
 }

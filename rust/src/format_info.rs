@@ -48,6 +48,7 @@ pub(crate) fn extract_format(format: &mut dyn FormatReader) -> FfiFormat {
         track_gain,
         track_peak_level,
         album_gain,
+        chapters: vec![],
     }
 }
 
