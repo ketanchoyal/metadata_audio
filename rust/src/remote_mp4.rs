@@ -975,6 +975,8 @@ fn redact_url(url: &str) -> String {
     let Ok(mut parsed) = reqwest::Url::parse(url) else {
         return url.split('?').next().unwrap_or(url).to_string();
     };
+    let _ = parsed.set_username("");
+    let _ = parsed.set_password(None);
     parsed.set_query(None);
     parsed.set_fragment(None);
     parsed.to_string()

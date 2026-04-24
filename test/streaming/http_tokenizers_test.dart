@@ -17,11 +17,24 @@ import 'package:test/test.dart';
 Future<HttpServer> _startBytesServer(
   List<int> bytes, {
   String contentType = 'application/octet-stream',
+  Duration? responseDelay,
+  bool rejectHead = false,
+  void Function(HttpRequest request)? onRequest,
 }) async {
   final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   final data = Uint8List.fromList(bytes);
 
   server.listen((request) async {
+    onRequest?.call(request);
+    if (responseDelay != null) {
+      await Future<void>.delayed(responseDelay);
+    }
+    if (rejectHead && request.method == 'HEAD') {
+      request.response.statusCode = HttpStatus.methodNotAllowed;
+      await request.response.close();
+      return;
+    }
+
     request.response.headers
       ..set('Accept-Ranges', 'bytes')
       ..set('Content-Type', contentType);
@@ -90,6 +103,9 @@ _RustChapterHandler? _currentRustChapterHandler;
 Future<HttpServer> _startSampleServer(
   String relPath, {
   String? contentType,
+  Duration? responseDelay,
+  bool rejectHead = false,
+  void Function(HttpRequest request)? onRequest,
 }) async {
   final bytes = await File(
     p.join(Directory.current.path, 'test', 'samples', relPath),
@@ -97,6 +113,9 @@ Future<HttpServer> _startSampleServer(
   return _startBytesServer(
     bytes,
     contentType: contentType ?? _mimeForFilename(relPath),
+    responseDelay: responseDelay,
+    rejectHead: rejectHead,
+    onRequest: onRequest,
   );
 }
 
@@ -556,7 +575,10 @@ void main() {
           metadata.format.chapters!.single.title,
           equals('Rust explicit strategy chapter'),
         );
-        expect(capturedTimeouts, equals([BigInt.from(7000)]));
+        expect(capturedTimeouts, hasLength(1));
+        expect(capturedTimeouts.single, isNotNull);
+        expect(capturedTimeouts.single!, greaterThan(BigInt.zero));
+        expect(capturedTimeouts.single!, lessThan(BigInt.from(7000)));
       } finally {
         await server.close(force: true);
       }
@@ -597,6 +619,47 @@ void main() {
         expect(called, isTrue);
         expect(metadata.format.chapters, isNotNull);
         expect(metadata.format.chapters!.single.title, 'Rust MIME-only chapter');
+      } finally {
+        await server.close(force: true);
+      }
+    });
+
+    test('passes only the remaining timeout budget to Rust augmentation', () async {
+      final server = await _startSampleServer(
+        'mp4/sample.m4a',
+        responseDelay: const Duration(milliseconds: 100),
+      );
+      final capturedTimeouts = <BigInt?>[];
+
+      _currentRustChapterHandler = ({
+        required url,
+        required timeoutMs,
+        required fileSizeHint,
+      }) async {
+        capturedTimeouts.add(timeoutMs);
+        return [
+          FfiChapter(
+            title: 'Rust timeout budget chapter',
+            start: BigInt.zero,
+            end: BigInt.from(1000),
+            timeScale: 1000,
+          ),
+        ];
+      };
+
+      try {
+        final metadata = await parseUrl(
+          'http://localhost:${server.port}/sample.m4a',
+          strategy: ParseStrategy.fullDownload,
+          timeout: const Duration(milliseconds: 450),
+          options: const ParseOptions(includeChapters: true),
+        );
+
+        expect(metadata.format.chapters, isNotNull);
+        expect(capturedTimeouts, hasLength(1));
+        expect(capturedTimeouts.single, isNotNull);
+        expect(capturedTimeouts.single!, greaterThan(BigInt.zero));
+        expect(capturedTimeouts.single!, lessThan(BigInt.from(450)));
       } finally {
         await server.close(force: true);
       }

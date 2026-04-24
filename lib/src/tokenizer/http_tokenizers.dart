@@ -101,19 +101,55 @@ Future<AudioMetadata> _maybeAugmentMp4ChaptersWithRust(
   );
 }
 
+Duration _remainingParseUrlTimeout(
+  Duration totalTimeout,
+  Stopwatch stopwatch,
+) {
+  final remaining = totalTimeout - stopwatch.elapsed;
+  if (remaining <= Duration.zero) {
+    throw TimeoutException('parseUrl exceeded timeout budget');
+  }
+  return remaining;
+}
+
+Duration? _remainingAugmentationTimeout(
+  Duration totalTimeout,
+  Stopwatch stopwatch,
+) {
+  final remaining = totalTimeout - stopwatch.elapsed;
+  if (remaining <= Duration.zero) {
+    return null;
+  }
+  return remaining;
+}
+
 Future<AudioMetadata> _parseThenMaybeAugmentWithRust(
   String url,
-  Duration timeout,
+  Duration totalTimeout,
+  Stopwatch stopwatch,
   ParseOptions options,
   StrategyInfo? info,
   Future<AudioMetadata> Function(String, Duration, ParseOptions) parser,
 ) async {
-  final metadata = await parser(url, timeout, options);
+  final metadata = await parser(
+    url,
+    _remainingParseUrlTimeout(totalTimeout, stopwatch),
+    options,
+  );
+
+  final augmentationTimeout = _remainingAugmentationTimeout(
+    totalTimeout,
+    stopwatch,
+  );
+  if (augmentationTimeout == null) {
+    return metadata;
+  }
+
   try {
     return await _maybeAugmentMp4ChaptersWithRust(
       metadata,
       url,
-      timeout,
+      augmentationTimeout,
       options,
       info,
     );
@@ -1557,6 +1593,7 @@ Future<AudioMetadata> parseUrl(
 }) async {
   options ??= const ParseOptions();
   final effectiveTimeout = timeout ?? const Duration(seconds: 30);
+  final parseStopwatch = Stopwatch()..start();
   final autoSelectedStrategy = strategy == null;
   final requiresStrategyInfo =
       strategy == null ||
@@ -1566,7 +1603,10 @@ Future<AudioMetadata> parseUrl(
   // If strategy not specified, detect it
   StrategyInfo? info;
   if (requiresStrategyInfo) {
-    info = await detectStrategy(url, timeout: effectiveTimeout);
+    info = await detectStrategy(
+      url,
+      timeout: _remainingParseUrlTimeout(effectiveTimeout, parseStopwatch),
+    );
     strategy ??= info.strategy;
   }
 
@@ -1598,6 +1638,7 @@ Future<AudioMetadata> parseUrl(
       return _parseThenMaybeAugmentWithRust(
         url,
         effectiveTimeout,
+        parseStopwatch,
         options,
         info,
         _parseWithFullDownload,
@@ -1608,6 +1649,7 @@ Future<AudioMetadata> parseUrl(
         return await _parseThenMaybeAugmentWithRust(
           url,
           effectiveTimeout,
+          parseStopwatch,
           options,
           info,
           _parseWithHeaderOnly,
@@ -1622,6 +1664,7 @@ Future<AudioMetadata> parseUrl(
           return _parseThenMaybeAugmentWithRust(
             url,
             effectiveTimeout,
+            parseStopwatch,
             options,
             info,
             _parseWithFullDownload,
@@ -1635,6 +1678,7 @@ Future<AudioMetadata> parseUrl(
         return await _parseThenMaybeAugmentWithRust(
           url,
           effectiveTimeout,
+          parseStopwatch,
           options,
           info,
           (url, timeout, options) =>
@@ -1650,6 +1694,7 @@ Future<AudioMetadata> parseUrl(
           return _parseThenMaybeAugmentWithRust(
             url,
             effectiveTimeout,
+            parseStopwatch,
             options,
             info,
             _parseWithFullDownload,
@@ -1663,6 +1708,7 @@ Future<AudioMetadata> parseUrl(
         return await _parseThenMaybeAugmentWithRust(
           url,
           effectiveTimeout,
+          parseStopwatch,
           options,
           info,
           _parseWithRandomAccess,
@@ -1677,6 +1723,7 @@ Future<AudioMetadata> parseUrl(
           return _parseThenMaybeAugmentWithRust(
             url,
             effectiveTimeout,
+            parseStopwatch,
             options,
             info,
             _parseWithFullDownload,
