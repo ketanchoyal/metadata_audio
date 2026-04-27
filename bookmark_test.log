@@ -1,0 +1,9 @@
+00:00 +0: loading /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:01 +0: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +1: MP4/M4B bookmarkable+afpk atom chapter extraction chapter metadata is accessible for bookmarkable+afpk atoms
+00:32 +2: MP4/M4B bookmarkable+afpk atom chapter extraction validates file format detection for bookmarkable+afpk-based M4B
+00:33 +3: MP4/M4B bookmarkable+afpk atom chapter extraction (tearDownAll)
+00:33 +3: (tearDownAll)
+00:33 +3: All tests passed!

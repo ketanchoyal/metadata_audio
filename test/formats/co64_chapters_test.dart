@@ -8,8 +8,8 @@
 library;
 
 import 'dart:async';
-import 'dart:io';
 
+import 'package:http/http.dart' as http;
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:test/test.dart';
 
@@ -21,30 +21,26 @@ const _co64ChapterUrl =
 Future<String?> _probeUrl(String url) async {
   if (url.isEmpty) return 'URL not configured';
 
-  final client = HttpClient();
   try {
-    final req = await client
-        .headUrl(Uri.parse(url))
+    final res = await http
+        .head(Uri.parse(url))
         .timeout(const Duration(seconds: 12));
-    req.followRedirects = true;
-    final res = await req.close().timeout(const Duration(seconds: 12));
 
     if (res.statusCode >= 400) return 'HTTP ${res.statusCode}';
 
-    final ranges = res.headers.value('accept-ranges');
+    final ranges = res.headers['accept-ranges'];
     if (!(ranges?.toLowerCase().contains('bytes') ?? false)) {
       return 'Server does not support Range requests';
     }
 
     return null;
-  } on SocketException catch (e) {
-    return 'Network unavailable: ${e.message}';
   } on TimeoutException {
     return 'Timed out connecting to $url';
   } catch (e) {
+    if (e.toString().contains('SocketException') || e.toString().contains('ClientException')) {
+      return 'Network unavailable: $e';
+    }
     return 'Probe failed: $e';
-  } finally {
-    client.close();
   }
 }
 

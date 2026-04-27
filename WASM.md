@@ -12,7 +12,8 @@ cargo build --manifest-path rust/Cargo.toml --target wasm32-unknown-unknown
 
 - No filesystem access in WASM
 - `parse_from_path` does not work on web
-- `parse_from_bytes` is the only supported parsing path for now
+- `parse_from_bytes` works through the generated WASM bindings
+- `parseUrl()` is available on web via the Dart HTTP tokenizers (subject to CORS / range support)
 
 ## Future work
 

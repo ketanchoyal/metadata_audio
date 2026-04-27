@@ -2,7 +2,7 @@
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/ketanchoyal)
 
-A Dart-native audio metadata parser library that provides comprehensive metadata extraction for various audio formats. This package is a port of the TypeScript [music-metadata](https://github.com/Borewit/music-metadata) library, maintaining architecture parity with a Dart-first TDD approach.
+A Dart-native audio metadata parser library that provides comprehensive metadata extraction for various audio formats. This package is a port of the TypeScript [music-metadata](https://github.com/Borewit/music-metadata) library, maintaining architecture parity with a Dart-first TDD approach. Native builds can use the Rust backend powered by [Symphonia](https://github.com/pdeljanov/Symphonia) for fast local parsing, while the Dart parsers remain the compatibility layer for formats and chapter flows that need custom behavior.
 
 ## Features
 
@@ -14,6 +14,7 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 - **Streaming support**: Parse metadata without loading entire files into memory
 - **Type-safe**: Full Dart type safety with comprehensive error handling
 - **Well-tested**: Extensive test suite with TDD principles
+- **Web URL support**: `parseUrl()` works on web with browser-compatible HTTP fetching
 - **TypeScript parity**: Ported from [music-metadata](https://github.com/Borewit/music-metadata) with exact output compatibility
 
 ## Getting started
@@ -152,7 +153,7 @@ final metadata = await parseUrl(
 );
 ```
 
-For range-capable MP4/M4A/M4B URLs, `parseUrl()` can augment chapter extraction with the Rust backend after the main Dart metadata pass. This keeps the existing URL parsing behavior intact while letting the Rust side handle remote MP4 chapter reads for audiobook-style files.
+For range-capable MP4/M4A/M4B URLs on native platforms, `parseUrl()` can augment chapter extraction with the Rust backend after the main Dart metadata pass. On web, the Rust/WASM integration is currently byte-based (`parseBytes()` / `parseWebFile()`), while `parseUrl()` uses the browser-safe Dart HTTP path.
 
 ### Parse Bytes
 
@@ -163,6 +164,28 @@ final metadata = await parseBytes(
   fileInfo: FileInfo(mimeType: 'audio/flac'),
 );
 ```
+
+### Parse browser files on web
+
+```dart
+import 'package:metadata_audio/metadata_audio.dart';
+import 'package:web/web.dart' as web;
+
+final web.File file = input.files!.item(0)!;
+final metadata = await parseWebFile(
+  file,
+  options: const ParseOptions(includeChapters: true),
+);
+```
+
+### Web notes
+
+- `parseFile()` is not supported on web because browsers do not expose filesystem paths.
+- `parseWebFile()` reads a browser `File` into bytes and then uses the existing parsing pipeline.
+- On web, byte-based parsing (`parseBytes()` / `parseWebFile()`) can still reach the Rust/WASM backend through the generated bindings.
+- `parseUrl()` is supported on web through a browser-safe Dart HTTP implementation.
+- Native-only Rust URL chapter augmentation is not used on web; web URL parsing stays on the Dart HTTP path.
+- Remote web parsing still depends on CORS and, for range-based strategies, `Accept-Ranges` support from the server.
 
 ### Chapter Extraction
 

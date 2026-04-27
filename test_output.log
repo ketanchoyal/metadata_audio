@@ -1,0 +1,807 @@
+00:00 +0: loading /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/options/options_test.dart
+00:00 +0: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/options/options_test.dart: ParseOptions behavior parity duration duration=false estimates duration from bitrate for MPEG VBR
+00:00 +1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v24_test.dart: ID3v2.4 parser parses CHAP + CTOC into format.chapters
+00:00 +2: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/options/options_test.dart: ParseOptions behavior parity duration duration=true calculates EOF duration for MPEG VBR
+00:00 +3: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v24_test.dart: ID3v2.4 parser loader registers mp3 extension and mpeg mime type
+00:00 +4: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/options/options_test.dart: ParseOptions behavior parity skipCovers skipCovers=false keeps MP4 cover tag and common picture
+00:00 +5: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/options/options_test.dart: ParseOptions behavior parity skipCovers skipCovers=true drops MP4 cover tag and common picture
+00:00 +6: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/options/options_test.dart: ParseOptions behavior parity includeChapters includeChapters=false omits Matroska chapters
+00:00 +7: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/options/options_test.dart: ParseOptions behavior parity includeChapters includeChapters=true parses Matroska chapters
+00:00 +8: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/options/options_test.dart: ParseOptions behavior parity skipPostHeaders skipPostHeaders=false reads MPEG ID3v1 post-header tags
+00:00 +9: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameHeader parses ID3v2.2 frame header
+00:00 +10: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameHeader parses ID3v2.2 frame header
+00:00 +11: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameHeader parses ID3v2.2 frame header
+00:00 +12: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameHeader parses ID3v2.2 frame header
+00:00 +13: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameHeader parses ID3v2.3 frame header with flags
+00:00 +14: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameHeader parses ID3v2.4 frame header with synchsafe length
+00:00 +15: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameHeader reports warning on invalid frame id
+00:00 +16: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: ID3v2Token parses ID3v2 header with synchsafe size
+00:00 +17: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: ID3v2Token maps text encoding byte
+00:00 +18: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameParser parses common text frame (TIT2)
+00:00 +19: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameParser parses multi-value text frame (TPE1) in ID3v2.3
+00:00 +20: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameParser parses user text frame (TXXX)
+00:00 +21: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameParser parses comment frame (COMM) with UTF-16 text
+00:00 +22: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameParser parses APIC attached picture frame
+00:00 +23: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v2_frames_test.dart: FrameParser parses ID3v2.2 PIC frame
+00:00 +24: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v22_test.dart: ID3v2.2 parser parses TT2 title and maps to common title
+00:00 +25: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v23_test.dart: ID3v2.3 parser handles extended header and parses TIT2
+00:00 +26: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v23_test.dart: ID3v2.3 parser applies tag-level unsynchronisation when frame flag is set
+00:01 +27: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser parse should detect valid ID3v1 tag
+00:01 +28: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser parse should parse ID3v1.1 with track number
+00:01 +29: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser parse should ignore non-ID3v1 blocks
+00:01 +30: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser parse should handle empty tags gracefully
+00:01 +31: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser parse should return false if file too small
+00:01 +32: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser parse should return false if file size unknown
+00:01 +33: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser genre mapping should map valid genre indices
+00:01 +34: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser genre mapping should handle out-of-range genre indices
+00:01 +35: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser string field parsing should parse and trim strings correctly
+00:01 +36: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser string field parsing should handle all-null fields
+00:01 +37: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser string field parsing should trim whitespace from fields
+00:01 +38: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser ID3v1TagMapper should map ID3v1 tags to common tags
+00:01 +39: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser ID3v1TagMapper should be case-insensitive for tag keys
+00:01 +40: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/id3/id3v1_test.dart: ID3v1Parser ID3v1TagMapper should ignore unmapped tags
+00:01 +41: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_e2e_test.dart: Symphonia e2e via public API (setUpAll)
+00:01 +41: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_e2e_test.dart: Symphonia e2e via public API parseFile parses MP3 sample with normalized metadata
+00:01 +42: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API (setUpAll)
+00:01 +43: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API (setUpAll)
+00:01 +44: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API (setUpAll)
+00:01 +44: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_e2e_test.dart: Symphonia e2e via public API parseFile includes MP4 chapters when requested
+00:01 +45: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API empty file throws a file-type or format recognition error
+00:01 +46: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_e2e_test.dart: Symphonia e2e via public API parseFile parses OGG sample with normalized metadata
+00:01 +47: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_e2e_test.dart: Symphonia e2e via public API parseFile parses OGG sample with normalized metadata
+00:01 +48: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API truncated MP3 either parses partially or throws a reasonable error
+00:01 +49: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_e2e_test.dart: Symphonia e2e via public API parseFile parses WAV sample with normalized metadata
+00:01 +50: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API no-tags MP3 keeps title, artist, and album null
+00:01 +51: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API no-tags MP3 keeps title, artist, and album null
+00:01 +52: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_e2e_test.dart: Symphonia e2e via public API parseBytes parses MP3 sample with default factory
+00:01 +53: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:01 +54: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:01 +55: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +56: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +57: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +58: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +59: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +60: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +61: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +62: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +63: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +64: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +65: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +66: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +67: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +68: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +69: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +70: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API MP4 audiobook fixture exposes cover art with default factory
+00:02 +71: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/symphonia/symphonia_edge_cases_test.dart: Symphonia edge cases via public API (tearDownAll)
+00:02 +71: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan skipPostHeaders behavior skips scan when skipPostHeaders=true (seekable tokenizer)
+00:02 +72: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan skipPostHeaders behavior skips scan when skipPostHeaders=true (non-seekable tokenizer)
+00:02 +73: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan skipPostHeaders behavior performs scan when skipPostHeaders=false and tokenizer supports seek
+00:02 +74: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan skipPostHeaders behavior skips scan when skipPostHeaders=false but tokenizer does not support seek
+00:02 +75: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan tokenizer capability handling respects canSeek=true capability
+00:02 +76: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan tokenizer capability handling respects canSeek=false capability
+00:02 +77: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan ParseOptions combinations skipPostHeaders=true always disables scan (regardless of canSeek)
+00:02 +78: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan ParseOptions combinations skipPostHeaders=false respects canSeek capability
+00:02 +79: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan default ParseOptions default ParseOptions has skipPostHeaders=false
+00:02 +80: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan default ParseOptions ParseOptions.minimal() has skipPostHeaders=true
+00:02 +81: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan default ParseOptions ParseOptions.metadataOnly() has skipPostHeaders=true
+00:02 +82: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan default ParseOptions ParseOptions.all() has skipPostHeaders=false
+00:02 +83: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan edge cases handles tokenizer with no fileInfo
+00:02 +84: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan edge cases handles empty fileInfo
+00:02 +85: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan edge cases handles large files
+00:02 +86: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/post_header_scan_test.dart: Post-Header Scan function execution completes successfully with all valid parameter combinations
+00:02 +87: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Construction creates from file path
+00:02 +88: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Construction creates from File object
+00:02 +89: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Construction throws FileSystemException for non-existent file
+00:02 +90: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Construction sets fileInfo with size from existing file
+00:02 +91: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Construction detects MIME type from file extension
+00:02 +92: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Basic Reading readUint8 returns single byte
+00:02 +93: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Basic Reading readUint16 returns big-endian 2-byte value
+00:02 +94: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Basic Reading readUint32 returns big-endian 4-byte value
+00:02 +95: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Basic Reading readBytes returns exact number of bytes
+00:02 +96: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Basic Reading readBytes(0) returns empty list
+00:02 +97: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Basic Reading throws when reading past EOF
+00:02 +98: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Basic Reading throws when reading insufficient bytes
+00:02 +99: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Peeking peekUint8 does not advance position
+00:02 +100: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Peeking peekBytes does not advance position
+00:02 +101: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Peeking peekUint8 returns same byte as readUint8
+00:02 +102: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Peeking peekBytes(0) returns empty list
+00:02 +103: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Peeking throws when peeking past EOF
+00:02 +104: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Peeking throws when peeking insufficient bytes
+00:02 +105: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Skipping skip advances position without reading
+00:02 +106: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Skipping skip(0) does not change position
+00:02 +107: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Skipping throws when skipping past EOF
+00:02 +108: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Skipping skip works with peeked byte
+00:02 +109: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Seeking seek changes position
+00:02 +110: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Seeking seek to 0 resets position
+00:02 +111: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Seeking seek to end of file is valid
+00:02 +112: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Seeking throws when seeking to negative position
+00:02 +113: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Seeking throws when seeking beyond EOF
+00:02 +114: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Seeking clears peeked byte on seek
+00:02 +115: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Seeking supports seeking forward and backward
+00:02 +116: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Integration complex read/peek/seek sequence
+00:02 +117: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Integration maintains state across multiple operations
+00:02 +118: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Integration can read entire file sequentially
+00:02 +119: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Error Handling readBytes with negative length throws
+00:02 +120: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Error Handling peekBytes with negative length throws
+00:02 +121: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Error Handling skip with negative length throws
+00:02 +122: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer FileInfo contains correct path
+00:02 +123: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer FileInfo contains correct size
+00:02 +124: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer FileInfo detects various MIME types
+00:02 +125: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Compatibility implements Tokenizer interface
+00:02 +126: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Compatibility canSeek is always true
+00:02 +127: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: FileTokenizer Compatibility fileInfo is not null
+00:02 +128: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Construction creates tokenizer with Uint8List
+00:02 +129: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Construction auto-creates FileInfo when not provided
+00:02 +130: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Construction uses provided FileInfo
+00:02 +131: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Construction canSeek is always true for in-memory buffer
+00:02 +132: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Construction position starts at 0
+00:02 +133: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Construction handles empty Uint8List
+00:02 +134: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint8 reads single byte and advances position
+00:02 +135: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint8 reads all bytes sequentially
+00:02 +136: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint8 throws when reading past end
+00:02 +137: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint8 throws with descriptive message at end
+00:02 +138: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint16 reads 2 bytes as big-endian uint16
+00:02 +139: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint16 reads multiple uint16 values
+00:02 +140: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint16 throws with insufficient data
+00:02 +141: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint16 throws when reading uint16 at end boundary
+00:02 +142: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint32 reads 4 bytes as big-endian uint32
+00:02 +143: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint32 reads multiple uint32 values
+00:02 +144: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint32 throws with insufficient data
+00:02 +145: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readUint32 throws with only 1 byte available
+00:02 +146: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readBytes reads N bytes and advances position
+00:02 +147: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readBytes reads remaining bytes
+00:02 +148: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readBytes throws with insufficient data
+00:02 +149: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readBytes reads 0 bytes successfully
+00:02 +150: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Basic Reading - readBytes reads all bytes at once
+00:02 +151: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekUint8 reads without advancing position
+00:02 +152: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekUint8 peek followed by read returns same value
+00:02 +153: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekUint8 throws at end of data
+00:02 +154: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekUint8 throws on empty buffer
+00:02 +155: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekBytes reads without advancing position
+00:02 +156: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekBytes peek followed by read returns same data
+00:02 +157: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekBytes throws with insufficient data
+00:02 +158: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekBytes peeks 0 bytes successfully
+00:02 +159: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Peeking - peekBytes peeks all bytes
+00:02 +160: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Skip Operations skip advances position without reading
+00:03 +161: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Skip Operations skip multiple times
+00:03 +162: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Skip Operations throws with insufficient data
+00:03 +163: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Skip Operations skip 0 bytes does nothing
+00:03 +164: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Skip Operations skip to end then read throws
+00:03 +165: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Seek Operations seek changes position
+00:03 +166: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Seek Operations seek(0) resets to beginning
+00:03 +167: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Seek Operations seek to end
+00:03 +168: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Seek Operations seek backward
+00:03 +169: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Seek Operations throws with negative position
+00:03 +170: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Seek Operations throws with position beyond data
+00:03 +171: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +172: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +173: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +174: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +175: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +176: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +177: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +178: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +179: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (setUpAll)
+00:03 +179: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Edge Cases single byte buffer
+00:03 +180: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFromTokenizer throws CouldNotDetermineFileTypeError when no parser registered
+00:03 +181: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFromTokenizer throws CouldNotDetermineFileTypeError when no parser registered
+00:03 +182: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFromTokenizer throws CouldNotDetermineFileTypeError when no parser registered
+00:03 +183: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFromTokenizer throws CouldNotDetermineFileTypeError when no parser registered
+00:03 +184: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Edge Cases peek at boundary
+00:03 +185: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFromTokenizer calls parser with tokenizer and options
+00:03 +186: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFromTokenizer calls parser with tokenizer and options
+00:03 +187: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer FileInfo Behavior fileInfo with custom path
+00:03 +188: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFromTokenizer verifies parser supports tokenizer capabilities
+00:03 +189: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer FileInfo Behavior fileInfo size matches buffer length
+00:03 +190: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseBytes parses Uint8List with optional FileInfo
+00:03 +191: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Compatibility with Tokenizer Contract implements all Tokenizer interface methods
+00:03 +192: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseBytes uses BytesTokenizer with provided FileInfo
+00:03 +193: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/io_adapters_test.dart: BytesTokenizer Compatibility with Tokenizer Contract matches FileTokenizer behavior
+00:03 +194: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseBytes respects ParseOptions
+00:03 +195: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFile opens file and delegates to parseFromTokenizer
+00:03 +196: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFile throws FileSystemException when file not found
+00:03 +197: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFile closes file tokenizer after parsing
+00:03 +198: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseFile creates FileInfo from file path
+00:03 +199: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseStream collects stream chunks and delegates to parseBytes
+00:03 +200: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseStream handles empty stream gracefully
+00:03 +201: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseStream combines multiple stream chunks correctly
+00:03 +202: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes parseStream passes through FileInfo to parseBytes
+00:03 +203: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes scanPostHeaders skips scan when skipPostHeaders is true
+00:03 +204: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes scanPostHeaders skips scan when tokenizer cannot seek
+00:03 +205: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes scanPostHeaders allows scan when tokenizer supports seek
+00:03 +206: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes integration tests parseFile -> parseFromTokenizer chain works
+00:03 +207: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes integration tests parseBytes -> parseFromTokenizer chain works
+00:03 +208: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes integration tests parseStream -> parseBytes chain works
+00:03 +209: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parse_input_modes_test.dart: Parse input modes (tearDownAll)
+00:03 +209: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry registers a parser by extension
+00:03 +210: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry extension lookup is case-insensitive
+00:03 +211: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry registers a parser by MIME type
+00:03 +212: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry returns null when no loader found for extension
+00:03 +213: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry returns null when no loader found for MIME type
+00:03 +214: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry getRegisteredExtensions returns sorted list
+00:03 +215: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry getRegisteredMimeTypes returns sorted list
+00:03 +216: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry overwrites existing extension mapping when registering twice
+00:03 +217: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry registers multiple loaders with different extensions
+00:03 +218: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry lists all registered extensions
+00:03 +219: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry lists all registered MIME types
+00:03 +220: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry handles empty registry gracefully
+00:03 +221: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_registry_test.dart: ParserRegistry supports multiple MIME types per loader
+00:03 +222: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_loader_contract_test.dart: ParserLoader Contract extension and mimeType are list properties
+00:03 +223: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_loader_contract_test.dart: ParserLoader Contract supports() returns true when random access is not required
+00:03 +224: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_loader_contract_test.dart: ParserLoader Contract supports() returns false when random access is required but unavailable
+00:03 +225: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_loader_contract_test.dart: ParserLoader Contract supports() returns true when random access is required and available
+00:03 +226: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_loader_contract_test.dart: ParserLoader Contract parse() can be implemented and invoked
+00:03 +227: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Priority 1: MIME type selection (audio/mpeg)
+00:03 +228: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Priority 1: MIME type selection (audio/flac)
+00:03 +229: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Priority 1: MIME type overrides extension
+00:03 +230: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Priority 2: Extension selection when MIME type is missing
+00:03 +231: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Priority 2: Extension selection with .mp3 extension
+00:03 +232: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Priority 2: Extension selection with alternative extension
+00:03 +233: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Priority 2: Extension selection is case-insensitive
+00:03 +234: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Priority 2: Handle multiple MIME types for same loader
+00:03 +235: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Error: No parser found when MIME and path are missing
+00:03 +236: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Error: No parser found for unknown MIME type
+00:03 +237: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Error: No parser found for unknown extension
+00:03 +238: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Error: No parser found for file with no extension
+00:03 +239: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Error: No parser found for file ending with dot
+00:03 +240: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Error message indicates what information was checked
+00:03 +241: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Extension extraction handles paths with multiple dots
+00:03 +242: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Empty MIME type string is treated as missing
+00:03 +243: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/parser_factory_precedence_test.dart: ParserFactory - Selection Precedence Empty path string is treated as missing
+00:04 +244: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Basic Properties fileInfo is accessible
+00:04 +245: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Basic Properties position starts at 0
+00:04 +246: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Basic Properties canSeek indicates random access capability
+00:04 +247: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Read Operations readUint8() reads single byte and advances position
+00:04 +248: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Read Operations readUint16() reads 2 bytes as big-endian uint16
+00:04 +249: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Read Operations readUint32() reads 4 bytes as big-endian uint32
+00:04 +250: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Read Operations readBytes() reads N bytes and advances position
+00:04 +251: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Read Operations readUint8() throws at end of data
+00:04 +252: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Read Operations readUint16() throws with insufficient data
+00:04 +253: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Read Operations readUint32() throws with insufficient data
+00:04 +254: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Read Operations readBytes() throws with insufficient data
+00:04 +255: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Peek Operations peekUint8() reads without advancing position
+00:04 +256: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Peek Operations peekBytes() reads without advancing position
+00:04 +257: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Peek Operations peekUint8() throws at end of data
+00:04 +258: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Peek Operations peekBytes() throws with insufficient data
+00:04 +259: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Peek Operations peek followed by read returns same data
+00:04 +260: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Skip and Seek Operations skip() advances position without reading
+00:04 +261: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Skip and Seek Operations skip() throws with insufficient data
+00:04 +262: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Skip and Seek Operations seek() changes position on seekable tokenizer
+00:04 +263: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Skip and Seek Operations seek() throws on non-seekable tokenizer
+00:04 +264: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Skip and Seek Operations seek() throws with negative position
+00:04 +265: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Skip and Seek Operations seek() throws with position beyond data
+00:04 +266: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Skip and Seek Operations seek(0) resets to beginning
+00:04 +267: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Integration Scenarios read, peek, skip sequence
+00:04 +268: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Integration Scenarios seek and read on seekable tokenizer
+00:04 +269: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Integration Scenarios peek does not affect subsequent seek
+00:04 +270: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Integration Scenarios fileInfo accessible throughout stream
+00:04 +271: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Edge Cases empty tokenizer
+00:04 +272: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Edge Cases seek to end then read throws
+00:04 +273: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/core/tokenizer_contract_test.dart: Tokenizer Contract Edge Cases large data read in chunks
+00:04 +274: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/mpeg_parser_test.dart: MpegParser / MpegLoader parses MPEG frame, Xing/LAME headers, and ID3v1 tail
+00:05 +275: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/mpeg_parser_test.dart: MpegParser / MpegLoader calculates CBR duration from file size
+00:05 +276: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/mpeg_parser_test.dart: MpegParser / MpegLoader calculates VBR duration at EOF when enabled
+00:05 +277: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/mpeg_parser_test.dart: MpegParser / MpegLoader registers mp3 extension and audio/mpeg mime type
+00:05 +278: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/mpeg_parser_test.dart: MpegParser / MpegLoader parses ADTS AAC frames
+00:05 +279: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/mpeg_parser_test.dart: MpegParser / MpegLoader calculates ADTS duration at EOF when enabled
+00:05 +280: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/flac_parser_test.dart: FlacParser / FlacLoader detects FLAC preamble when ID3v2 header is prefixed
+00:05 +281: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/flac_parser_test.dart: FlacParser / FlacLoader parses STREAMINFO values
+00:05 +282: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/flac_parser_test.dart: FlacParser / FlacLoader extracts Vorbis comments and maps to common tags
+00:05 +283: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/flac_parser_test.dart: FlacParser / FlacLoader extracts PICTURE block into native and common picture tags
+00:05 +284: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/flac_parser_test.dart: FlacParser / FlacLoader parses CUESHEET into format.chapters when enabled
+00:05 +285: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: (setUpAll)
+00:05 +286: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: (setUpAll)
+00:05 +286: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/flac_parser_test.dart: FlacParser / FlacLoader throws on invalid FLAC preamble
+00:05 +287: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:05 +288: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +289: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +290: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +291: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +292: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +293: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +294: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +295: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +296: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +297: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +298: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:06 +299: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:07 +300: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction (setUpAll)
+00:07 +300: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/asf_parser_test.dart: AsfParser / AsfLoader throws AsfContentParseError on invalid top-level object GUID
+00:07 +301: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:07 +302: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:08 +303: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:08 +304: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:08 +305: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +306: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +307: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +308: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +309: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +310: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +311: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +312: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +313: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +314: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +315: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +316: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +317: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +318: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +319: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +320: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +321: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:09 +322: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +323: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +324: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +325: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +326: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +327: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +328: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +329: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +330: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +331: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +332: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +333: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +334: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +335: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:10 +336: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +337: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +338: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +339: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +340: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +341: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +342: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +343: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +344: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +345: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +346: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +347: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +348: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +349: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +350: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:11 +351: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +352: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +353: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +354: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +355: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +356: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +357: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +358: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +359: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +360: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +361: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +362: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +363: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:12 +364: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +365: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +366: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +367: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +368: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +369: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +370: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +371: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +372: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +373: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +374: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +375: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +376: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +377: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +378: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +379: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:13 +380: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +381: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +382: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +383: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +384: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +385: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +386: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +387: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +388: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +389: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:14 +390: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +391: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +392: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +393: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +394: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +395: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +396: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +397: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +398: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +399: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +400: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +401: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +402: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +403: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +404: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +405: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +406: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +407: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +408: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +409: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +410: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +411: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +412: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +413: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +414: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +415: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +416: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +417: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +418: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +419: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +420: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +421: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +422: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +423: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +424: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +425: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +426: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +427: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +428: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:15 +429: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:16 +430: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+test/streaming/http_tokenizers_test.dart:1176:13: Error: This expression has type 'void' and can't be used.
+        if (prefetched == null) return;
+            ^
+00:16 +430 -1: loading /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/http_tokenizers_test.dart [E]
+  Failed to load "/Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/http_tokenizers_test.dart":
+  Compilation failed for testPath=/Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/http_tokenizers_test.dart: test/streaming/http_tokenizers_test.dart:1176:13: Error: This expression has type 'void' and can't be used.
+          if (prefetched == null) return;
+              ^
+  .
+00:18 +431 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:18 +432 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:18 +433 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:18 +434 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +435 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +436 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +437 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +438 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +439 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +440 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +441 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +442 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +443 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +444 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +445 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +446 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +447 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +448 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:19 +449 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:22 +449 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Medium MP3 (~5-50 MB) strategy=probe, probe=headerAndTail, format=mpeg
+Medium MP3 detectStrategy:
+  size=17242KB  rangeSupport=true  strategy=ParseStrategy.probe  probe=ProbeStrategy.headerAndTail  format=mpeg
+00:22 +450 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/bookmarkable_chapters_test.dart: MP4/M4B bookmarkable+afpk atom chapter extraction parses chapter list from M4B with bookmarkable+afpk atoms
+00:22 +451 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/alternate_chapters_test.dart: MP4/M4B alternate-layout atom chapter extraction parses chapter list from M4B with alternate-layout atoms
+00:28 +451 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Medium MP3 (~5-50 MB) parseUrl extracts MP3 metadata
+Medium MP3 parseUrl:
+  strategy=ParseStrategy.probe
+  container=MPEG
+  codec=MPEG 1 Layer 3
+  title=01 - I
+  artist=Grace Livingston Hill
+  album=The City of Fire
+00:28 +452 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/alternate_chapters_test.dart: MP4/M4B alternate-layout atom chapter extraction parses chapter list from M4B with alternate-layout atoms
+00:30 +452 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Large MP3 (> 50 MB) strategy=randomAccess, format=mpeg
+Large MP3 detectStrategy:
+  size=79MB  rangeSupport=true  strategy=ParseStrategy.randomAccess  format=mpeg
+00:30 +453 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/alternate_chapters_test.dart: MP4/M4B alternate-layout atom chapter extraction parses chapter list from M4B with alternate-layout atoms
+00:39 +454 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+00:46 +454 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Large MP3 (> 50 MB) parseUrl extracts MP3 metadata from large file
+Large MP3 parseUrl: strategy=ParseStrategy.randomAccess  title=anyone s daughter live tempus fugit full album -3316329990145241346
+00:46 +455 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+00:48 +455 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) FLAC (> 5 MB) strategy=headerOnly, format=header-only
+FLAC detectStrategy: size=50658KB  strategy=ParseStrategy.headerOnly  format=header-only
+00:48 +456 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+00:51 +456 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) FLAC (> 5 MB) parseUrl parses FLAC metadata
+FLAC parseUrl: container=FLAC  title=null
+00:51 +457 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+00:53 +457 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) OGG (> 5 MB) strategy=headerOnly for large OGG, format=header-only
+OGG detectStrategy: size=11482KB  strategy=ParseStrategy.headerOnly  format=header-only
+00:53 +458 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+00:57 +458 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) OGG (> 5 MB) parseUrl parses OGG metadata
+OGG parseUrl: container=Ogg
+00:57 +459 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+00:58 +459 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) M4B / M4A / MP4 (> 5 MB) strategy uses mp4Optimized probe strategy for audiobook container
+M4B detectStrategy: size=262572KB  strategy=ParseStrategy.randomAccess  probe=ProbeStrategy.mp4Optimized  format=mp4
+00:58 +460 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:00 +461 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:01 +462 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +463 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +464 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +465 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +466 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +467 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +468 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +469 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +470 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +471 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +472 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +473 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +474 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +475 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +476 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +477 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:02 +478 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +479 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +480 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +481 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +482 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +483 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +484 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +485 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +486 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +487 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +488 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +489 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +490 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +491 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +492 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +493 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +494 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +495 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +496 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +497 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +498 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +499 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +500 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +501 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +502 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +503 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +504 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +505 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +506 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +507 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +508 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +509 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +510 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +511 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +512 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +513 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +514 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +515 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +516 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +517 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:03 +518 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +519 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +520 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +521 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +522 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +523 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +524 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +525 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +526 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +527 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +528 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +529 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +530 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +531 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +532 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +533 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +534 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +535 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +536 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +537 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +538 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +539 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +540 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +541 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +542 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +543 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +544 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +545 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:04 +546 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +547 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +548 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +549 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +550 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +551 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +552 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +553 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +554 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +555 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +556 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +557 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +558 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +559 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +560 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +561 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +562 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +563 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +564 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +565 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +566 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +567 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +568 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +569 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +570 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +571 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +572 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +573 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +574 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +575 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +576 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +577 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +578 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +579 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +580 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +581 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +582 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +583 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +584 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +585 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +586 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +587 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +588 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +589 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +590 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +591 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +592 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +593 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +594 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +595 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +596 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +597 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +598 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +599 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +600 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +601 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +602 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +603 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +604 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +605 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +606 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +607 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +608 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +609 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +610 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +611 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +612 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +613 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +614 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +615 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +616 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +617 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +618 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +619 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +620 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +621 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +622 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +623 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +624 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +625 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +626 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +627 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +628 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +629 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +630 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:05 +631 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:06 +632 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:06 +633 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:06 +634 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:06 +635 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:06 +636 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:06 +637 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:06 +638 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:06 +639 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +640 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +641 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +642 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +643 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +644 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +645 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +646 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +647 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +648 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +649 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +650 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +651 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +652 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +653 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +654 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +655 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +656 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +657 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +658 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +659 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +660 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +661 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +662 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +663 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +664 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +665 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +666 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +667 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +668 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +669 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +670 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +671 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +672 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +673 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +674 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +675 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +676 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +677 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +678 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +679 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +680 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +681 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +682 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +683 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +684 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +685 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +686 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +687 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +688 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +689 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +690 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +691 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +692 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +693 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +694 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +695 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +696 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:07 +697 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:08 +698 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:08 +699 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:08 +700 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:08 +701 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:08 +702 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:08 +703 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:09 +704 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:09 +705 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:09 +706 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:09 +707 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:09 +708 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:09 +709 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:09 +710 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:09 +711 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +712 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +713 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +714 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +715 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +716 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +717 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +718 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +719 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +720 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +721 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +722 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +723 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +724 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +725 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +726 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +727 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +728 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:10 +729 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:11 +730 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:11 +731 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:11 +732 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:12 +733 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:12 +734 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:12 +735 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:12 +736 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:12 +737 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:13 +738 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:13 +739 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:14 +740 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:14 +741 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:17 +742 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction parses rich chapter list from large M4B with co64 atoms
+01:22 +743 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) M4B / M4A / MP4 (> 5 MB) parseUrl parses M4B metadata with chapters
+M4B parseUrl: container=M4A/3gp5/isom  chapters=30
+01:35 +744 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/librivox_collection_url_test.dart: MP4/M4B chapter extraction type tracking (archive URLs) type=alternate-layout: parses chapters from Librivox_22 URL
+01:42 +745 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/formats/co64_chapters_test.dart: MP4/M4B co64 atom chapter extraction chapter metadata is accessible and complete for co64 atoms
+01:56 +746 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) M4B co64 chapter regression URL (large file) detects mp4 strategy and parses co64 chapter list from stress URL
+01:57 +747 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) M4B co64 chapter regression URL (large file) detects mp4 strategy and parses co64 chapter list from stress URL
+M4B stress detectStrategy: size=256MB strategy=ParseStrategy.randomAccess probe=ProbeStrategy.mp4Optimized format=mp4
+M4B stress parseUrl: container=M4A/3gp5/isom chapters=30
+02:12 +748 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) M4B co64 chapter regression URL (large file) (tearDownAll)
+02:12 +748 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Very large files (> 600 MB) (setUpAll)
+02:14 +748 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Very large files (> 600 MB) very large FLAC uses headerOnly strategy
+Huge FLAC detectStrategy: size=1155MB  strategy=ParseStrategy.headerOnly  probe=ProbeStrategy.headerOnly  format=header-only
+02:15 +749 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Very large files (> 600 MB) parseUrl parses very large FLAC metadata
+Huge FLAC parseUrl: container=FLAC  title=null
+02:18 +750 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Very large files (> 600 MB) very large WAV uses headerOnly strategy
+Huge WAV detectStrategy: size=1872MB  strategy=ParseStrategy.headerOnly  probe=ProbeStrategy.headerOnly  format=header-only
+02:19 +751 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Very large files (> 600 MB) parseUrl parses very large WAV metadata
+Huge WAV parseUrl: container=WAVE  codec=PCM
+02:22 +752 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: parseUrl – real network (large files) Very large files (> 600 MB) (tearDownAll)
+02:22 +752 -1: /Users/ketanchoyal/CascadeProjects/audio-metadata-dart/test/streaming/url_integration_test.dart: (tearDownAll)
+02:22 +752 -1: Some tests failed.

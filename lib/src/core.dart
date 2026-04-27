@@ -49,6 +49,9 @@ export 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 export 'package:metadata_audio/src/wav/wave_loader.dart';
 export 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
 
+export 'parse_web_file_io.dart'
+    if (dart.library.js_interop) 'parse_web_file_web.dart';
+
 export 'tokenizer/http_tokenizers.dart'
     show
         FileDownloadError,

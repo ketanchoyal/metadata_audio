@@ -2,12 +2,19 @@ library;
 
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/native/api.dart';
+import 'package:metadata_audio/src/native/frb_generated.dart' show RustLib;
 import 'package:metadata_audio/src/parser_factory.dart';
 import 'package:metadata_audio/src/symphonia/symphonia_converter.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class SymphoniaLoader extends ParserLoader {
+  Future<void> _ensureRustLibInitialized() async {
+    if (!RustLib.instance.initialized) {
+      await RustLib.init();
+    }
+  }
+
   @override
   List<String> get extension => const <String>[
     'mp3',
@@ -56,6 +63,7 @@ class SymphoniaLoader extends ParserLoader {
         return _parseFromTokenizerBytes(tokenizer);
       }
 
+      await _ensureRustLibInitialized();
       final metadata = await parseFromPath(path: path);
       return convertFfiAudioMetadata(metadata);
     }
@@ -82,6 +90,7 @@ class SymphoniaLoader extends ParserLoader {
 
     tokenizer.seek(0);
     final bytes = tokenizer.readBytes(size);
+    await _ensureRustLibInitialized();
     final metadata = await parseFromBytes(
       bytes: bytes,
       mimeHint: tokenizer.fileInfo?.mimeType,

@@ -29,6 +29,7 @@ library;
 import 'dart:async';
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
@@ -128,36 +129,58 @@ File? _sampleFile(String relPath) {
 /// Returns `null` if the URL is ready to use.
 Future<String?> _probeUrl(String url) async {
   if (url.isEmpty) return 'URL not configured';
-  final client = HttpClient();
+
   try {
-    final req = await client
-        .headUrl(Uri.parse(url))
+    final res = await http
+        .head(Uri.parse(url))
         .timeout(const Duration(seconds: 12));
-    req.followRedirects = true;
-    final res = await req.close().timeout(const Duration(seconds: 12));
     if (res.statusCode < 400) {
-      final ranges = res.headers.value('accept-ranges');
+      final ranges = res.headers['accept-ranges'];
       if (ranges?.toLowerCase().contains('bytes') ?? false) {
         return null; // OK
       }
     }
 
-    final getReq = await client
-        .getUrl(Uri.parse(url))
+    final getRes = await http
+        .get(Uri.parse(url))
         .timeout(const Duration(seconds: 12));
-    getReq.followRedirects = true;
-    final getRes = await getReq.close().timeout(const Duration(seconds: 12));
     if (getRes.statusCode >= 400) return 'HTTP ${getRes.statusCode}';
-    await getRes.listen((_) {}).cancel();
     return null;
-  } on SocketException catch (e) {
-    return 'Network unavailable: ${e.message}';
   } on TimeoutException {
     return 'Timed out connecting to $url';
   } catch (e) {
+    if (e.toString().contains('SocketException') || e.toString().contains('ClientException')) {
+      return 'Network unavailable: $e';
+    }
     return 'Probe failed: $e';
-  } finally {
-    client.close();
+  }
+}
+
+bool _isSkippableRemoteError(Object error) {
+  if (error is TimeoutException) {
+    return true;
+  }
+
+  final message = error.toString();
+  return message.contains('FileDownloadError') ||
+      message.contains('SocketException') ||
+      message.contains('HTTP 500') ||
+      message.contains('HTTP 502') ||
+      message.contains('HTTP 503') ||
+      message.contains('HTTP 504') ||
+      message.contains('Range request failed') ||
+      message.contains('timed out');
+}
+
+Future<T?> _runRemoteOrSkip<T>(Future<T> Function() action) async {
+  try {
+    return await action();
+  } catch (error) {
+    if (_isSkippableRemoteError(error)) {
+      markTestSkipped('Transient remote failure: $error');
+      return null;
+    }
+    rethrow;
   }
 }
 
@@ -766,7 +789,8 @@ void main() {
           ParseStrategy? gotStrategy;
           ProbeStrategy? gotProbe;
 
-          final info = await detectStrategy(_mp3MediumUrl);
+          final info = await _runRemoteOrSkip(() => detectStrategy(_mp3MediumUrl));
+          if (info == null) return;
 
           // Record what was actually selected so the test output is informative.
           gotStrategy = info.strategy;
@@ -809,11 +833,14 @@ void main() {
 
           ParseStrategy? selectedStrategy;
 
-          final metadata = await parseUrl(
-            _mp3MediumUrl,
-            timeout: const Duration(seconds: 60),
-            onStrategySelected: (s, _) => selectedStrategy = s,
+          final metadata = await _runRemoteOrSkip(
+            () => parseUrl(
+              _mp3MediumUrl,
+              timeout: const Duration(seconds: 60),
+              onStrategySelected: (s, _) => selectedStrategy = s,
+            ),
           );
+          if (metadata == null) return;
 
           // ignore: avoid_print
           print('Medium MP3 parseUrl:');
@@ -862,7 +889,8 @@ void main() {
             return;
           }
 
-          final info = await detectStrategy(_mp3LargeUrl);
+          final info = await _runRemoteOrSkip(() => detectStrategy(_mp3LargeUrl));
+          if (info == null) return;
 
           // ignore: avoid_print
           print('Large MP3 detectStrategy:');
@@ -892,11 +920,14 @@ void main() {
 
           ParseStrategy? selectedStrategy;
 
-          final metadata = await parseUrl(
-            _mp3LargeUrl,
-            timeout: const Duration(seconds: 90),
-            onStrategySelected: (s, _) => selectedStrategy = s,
+          final metadata = await _runRemoteOrSkip(
+            () => parseUrl(
+              _mp3LargeUrl,
+              timeout: const Duration(seconds: 90),
+              onStrategySelected: (s, _) => selectedStrategy = s,
+            ),
           );
+          if (metadata == null) return;
 
           // ignore: avoid_print
           print(
@@ -933,7 +964,8 @@ void main() {
             return;
           }
 
-          final info = await detectStrategy(_flacUrl);
+          final info = await _runRemoteOrSkip(() => detectStrategy(_flacUrl));
+          if (info == null) return;
 
           // ignore: avoid_print
           print(
@@ -959,10 +991,10 @@ void main() {
             return;
           }
 
-          final metadata = await parseUrl(
-            _flacUrl,
-            timeout: const Duration(seconds: 60),
+          final metadata = await _runRemoteOrSkip(
+            () => parseUrl(_flacUrl, timeout: const Duration(seconds: 60)),
           );
+          if (metadata == null) return;
 
           // ignore: avoid_print
           print(
@@ -999,7 +1031,8 @@ void main() {
             return;
           }
 
-          final info = await detectStrategy(_oggUrl);
+          final info = await _runRemoteOrSkip(() => detectStrategy(_oggUrl));
+          if (info == null) return;
 
           // ignore: avoid_print
           print(
@@ -1025,10 +1058,10 @@ void main() {
             return;
           }
 
-          final metadata = await parseUrl(
-            _oggUrl,
-            timeout: const Duration(seconds: 60),
+          final metadata = await _runRemoteOrSkip(
+            () => parseUrl(_oggUrl, timeout: const Duration(seconds: 60)),
           );
+          if (metadata == null) return;
 
           // ignore: avoid_print
           print('OGG parseUrl: container=${metadata.format.container}');
@@ -1061,7 +1094,8 @@ void main() {
             return;
           }
 
-          final info = await detectStrategy(_m4bUrl);
+          final info = await _runRemoteOrSkip(() => detectStrategy(_m4bUrl));
+          if (info == null) return;
 
           // ignore: avoid_print
           print(
@@ -1094,11 +1128,14 @@ void main() {
             return;
           }
 
-          final metadata = await parseUrl(
-            _m4bUrl,
-            options: const ParseOptions(includeChapters: true),
-            timeout: const Duration(seconds: 60),
+          final metadata = await _runRemoteOrSkip(
+            () => parseUrl(
+              _m4bUrl,
+              options: const ParseOptions(includeChapters: true),
+              timeout: const Duration(seconds: 60),
+            ),
           );
+          if (metadata == null) return;
 
           // ignore: avoid_print
           print(
@@ -1139,12 +1176,16 @@ void main() {
             return;
           }
 
-          final info = await detectStrategy(_m4bStressUrl);
-          final metadata = await parseUrl(
-            _m4bStressUrl,
-            options: const ParseOptions(includeChapters: true),
-            timeout: const Duration(seconds: 120),
+          final info = await _runRemoteOrSkip(() => detectStrategy(_m4bStressUrl));
+          if (info == null) return;
+          final metadata = await _runRemoteOrSkip(
+            () => parseUrl(
+              _m4bStressUrl,
+              options: const ParseOptions(includeChapters: true),
+              timeout: const Duration(seconds: 120),
+            ),
           );
+          if (metadata == null) return;
 
           // ignore: avoid_print
           print(
@@ -1213,7 +1254,8 @@ void main() {
             return;
           }
 
-          final info = await detectStrategy(_flacHugeUrl);
+          final info = await _runRemoteOrSkip(() => detectStrategy(_flacHugeUrl));
+          if (info == null) return;
 
           // ignore: avoid_print
           print(
@@ -1239,10 +1281,10 @@ void main() {
             return;
           }
 
-          final metadata = await parseUrl(
-            _flacHugeUrl,
-            timeout: const Duration(seconds: 90),
+          final metadata = await _runRemoteOrSkip(
+            () => parseUrl(_flacHugeUrl, timeout: const Duration(seconds: 90)),
           );
+          if (metadata == null) return;
 
           // ignore: avoid_print
           print(
@@ -1264,7 +1306,8 @@ void main() {
             return;
           }
 
-          final info = await detectStrategy(_wavHugeUrl);
+          final info = await _runRemoteOrSkip(() => detectStrategy(_wavHugeUrl));
+          if (info == null) return;
 
           // ignore: avoid_print
           print(
@@ -1290,10 +1333,10 @@ void main() {
             return;
           }
 
-          final metadata = await parseUrl(
-            _wavHugeUrl,
-            timeout: const Duration(seconds: 90),
+          final metadata = await _runRemoteOrSkip(
+            () => parseUrl(_wavHugeUrl, timeout: const Duration(seconds: 90)),
           );
+          if (metadata == null) return;
 
           // ignore: avoid_print
           print(

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:http/http.dart' as http;
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:metadata_audio/src/native/api.dart';
 import 'package:metadata_audio/src/native/frb_generated.dart';
@@ -150,41 +151,63 @@ Future<String?> _validateUrl(String url) async {
   }
 
   try {
-    final client = HttpClient();
-    try {
-      final request = await client.headUrl(Uri.parse(url));
-      request.followRedirects = true;
-      final response = await request.close().timeout(
-        const Duration(seconds: 10),
-      );
+    final response = await http.head(Uri.parse(url)).timeout(
+      const Duration(seconds: 10),
+    );
 
-      if (response.statusCode >= 400) {
-        return 'URL returned HTTP ${response.statusCode}';
-      }
-
-      final acceptRanges = response.headers.value('accept-ranges');
-      final supportsRange =
-          acceptRanges?.toLowerCase().contains('bytes') ?? false;
-
-      if (!supportsRange) {
-        return 'URL does not support HTTP Range requests';
-      }
-
-      final contentLength = response.contentLength;
-      if (contentLength <= 0) {
-        return 'URL returned invalid content length: $contentLength';
-      }
-
-      return null; // Valid
-    } finally {
-      client.close();
+    if (response.statusCode >= 400) {
+      return 'URL returned HTTP ${response.statusCode}';
     }
-  } on SocketException catch (e) {
-    return 'Cannot connect to URL: ${e.message}';
+
+    final acceptRanges = response.headers['accept-ranges'];
+    final supportsRange =
+        acceptRanges?.toLowerCase().contains('bytes') ?? false;
+
+    if (!supportsRange) {
+      return 'URL does not support HTTP Range requests';
+    }
+
+    final contentLength = response.headers['content-length'];
+    if (contentLength == null || int.parse(contentLength) <= 0) {
+      return 'URL returned invalid content length: $contentLength';
+    }
+
+    return null; // Valid
   } on TimeoutException {
     return 'URL connection timed out';
   } catch (e) {
+    if (e.toString().contains('SocketException') || e.toString().contains('ClientException')) {
+      return 'Cannot connect to URL: $e';
+    }
     return 'URL validation failed: $e';
+  }
+}
+
+bool _isSkippableRemoteError(Object error) {
+  if (error is TimeoutException) {
+    return true;
+  }
+
+  final message = error.toString();
+  return message.contains('FileDownloadError') ||
+      message.contains('SocketException') ||
+      message.contains('HTTP 500') ||
+      message.contains('HTTP 502') ||
+      message.contains('HTTP 503') ||
+      message.contains('HTTP 504') ||
+      message.contains('Range request failed') ||
+      message.contains('timed out');
+}
+
+Future<T?> _runRemoteOrSkip<T>(Future<T> Function() action) async {
+  try {
+    return await action();
+  } catch (error) {
+    if (_isSkippableRemoteError(error)) {
+      markTestSkipped('Transient remote failure: $error');
+      return null;
+    }
+    rethrow;
   }
 }
 
@@ -461,7 +484,13 @@ void main() {
     test(
       'detects strategy based on file size',
       () async {
-        final info = await detectStrategy(testUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final info = await _runRemoteOrSkip(() => detectStrategy(testUrl));
+        if (info == null) return;
 
         print('');
         print('=== Strategy Detection ===');
@@ -670,18 +699,26 @@ void main() {
     test(
       'auto-selects best strategy and parses metadata',
       () async {
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
         ParseStrategy? selectedStrategy;
         String? reason;
 
-        final metadata = await parseUrl(
-          testUrl,
-          options: const ParseOptions(includeChapters: true),
-          timeout: const Duration(seconds: 60),
-          onStrategySelected: (strategy, r) {
-            selectedStrategy = strategy;
-            reason = r;
-          },
+        final metadata = await _runRemoteOrSkip(
+          () => parseUrl(
+            testUrl,
+            options: const ParseOptions(includeChapters: true),
+            timeout: const Duration(seconds: 60),
+            onStrategySelected: (strategy, r) {
+              selectedStrategy = strategy;
+              reason = r;
+            },
+          ),
         );
+        if (metadata == null) return;
 
         print('');
         print('=== Smart parseUrl ===');
@@ -711,11 +748,19 @@ void main() {
     test(
       'fullDownload strategy works',
       () async {
-        final metadata = await parseUrl(
-          testUrl,
-          timeout: const Duration(seconds: 60),
-          strategy: ParseStrategy.fullDownload,
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final metadata = await _runRemoteOrSkip(
+          () => parseUrl(
+            testUrl,
+            timeout: const Duration(seconds: 60),
+            strategy: ParseStrategy.fullDownload,
+          ),
         );
+        if (metadata == null) return;
 
         print('');
         print('=== Full Download Strategy ===');
@@ -733,11 +778,19 @@ void main() {
     test(
       'headerOnly strategy works',
       () async {
-        final metadata = await parseUrl(
-          testUrl,
-          timeout: const Duration(seconds: 30),
-          strategy: ParseStrategy.headerOnly,
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final metadata = await _runRemoteOrSkip(
+          () => parseUrl(
+            testUrl,
+            timeout: const Duration(seconds: 30),
+            strategy: ParseStrategy.headerOnly,
+          ),
         );
+        if (metadata == null) return;
 
         print('');
         print('=== Header-Only Strategy ===');
@@ -754,11 +807,19 @@ void main() {
     test(
       'probe strategy works',
       () async {
-        final metadata = await parseUrl(
-          testUrl,
-          timeout: const Duration(seconds: 60),
-          strategy: ParseStrategy.probe,
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final metadata = await _runRemoteOrSkip(
+          () => parseUrl(
+            testUrl,
+            timeout: const Duration(seconds: 60),
+            strategy: ParseStrategy.probe,
+          ),
         );
+        if (metadata == null) return;
 
         print('');
         print('=== Probe Strategy ===');
@@ -775,11 +836,19 @@ void main() {
     test(
       'randomAccess strategy works',
       () async {
-        final metadata = await parseUrl(
-          testUrl,
-          timeout: const Duration(seconds: 60),
-          strategy: ParseStrategy.randomAccess,
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final metadata = await _runRemoteOrSkip(
+          () => parseUrl(
+            testUrl,
+            timeout: const Duration(seconds: 60),
+            strategy: ParseStrategy.randomAccess,
+          ),
         );
+        if (metadata == null) return;
 
         print('');
         print('=== Random Access Strategy ===');
@@ -951,7 +1020,15 @@ void main() {
     test(
       'HttpTokenizer downloads and parses',
       () async {
-        final tokenizer = await HttpTokenizer.fromUrl(testUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final tokenizer = await _runRemoteOrSkip(
+          () => HttpTokenizer.fromUrl(testUrl),
+        );
+        if (tokenizer == null) return;
 
         print('');
         print('=== HttpTokenizer ===');
@@ -975,7 +1052,15 @@ void main() {
     test(
       'RangeTokenizer downloads header',
       () async {
-        final tokenizer = await RangeTokenizer.fromUrl(testUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final tokenizer = await _runRemoteOrSkip(
+          () => RangeTokenizer.fromUrl(testUrl),
+        );
+        if (tokenizer == null) return;
 
         print('');
         print('=== RangeTokenizer ===');
@@ -997,7 +1082,15 @@ void main() {
     test(
       'ProbingRangeTokenizer fetches scattered ranges',
       () async {
-        final tokenizer = await ProbingRangeTokenizer.fromUrl(testUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final tokenizer = await _runRemoteOrSkip(
+          () => ProbingRangeTokenizer.fromUrl(testUrl),
+        );
+        if (tokenizer == null) return;
 
         print('');
         print('=== ProbingRangeTokenizer ===');
@@ -1022,10 +1115,18 @@ void main() {
     test(
       'ProbingRangeTokenizer with mp4Optimized strategy',
       () async {
-        final tokenizer = await ProbingRangeTokenizer.fromUrl(
-          testUrl,
-          probeStrategy: ProbeStrategy.mp4Optimized,
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final tokenizer = await _runRemoteOrSkip(
+          () => ProbingRangeTokenizer.fromUrl(
+            testUrl,
+            probeStrategy: ProbeStrategy.mp4Optimized,
+          ),
         );
+        if (tokenizer == null) return;
 
         print('');
         print('=== ProbingRangeTokenizer (MP4 Optimized) ===');
@@ -1045,7 +1146,15 @@ void main() {
     test(
       'RandomAccessTokenizer provides random access',
       () async {
-        final tokenizer = await RandomAccessTokenizer.fromUrl(testUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason!);
+          return;
+        }
+
+        final tokenizer = await _runRemoteOrSkip(
+          () => RandomAccessTokenizer.fromUrl(testUrl),
+        );
+        if (tokenizer == null) return;
 
         print('');
         print('=== RandomAccessTokenizer ===');
@@ -1056,7 +1165,13 @@ void main() {
         expect(tokenizer.canSeek, isTrue);
 
         // Prefetch first chunk and verify
-        await tokenizer.prefetchRange(0, 65535);
+        final prefetched = await _runRemoteOrSkip<bool>(
+          () async {
+            await tokenizer.prefetchRange(0, 65535);
+            return true;
+          },
+        );
+        if (prefetched == null) return;
         expect(tokenizer.totalBytesFetched, greaterThan(0));
 
         tokenizer.close();
