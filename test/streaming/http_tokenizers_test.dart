@@ -367,8 +367,7 @@ void main() {
   // real public file so the HTTP range and strategy paths are exercised.
   // =========================================================================
   const testUrl =
-      'https://archive.org/download/anyone_s_daughter_live_full_album/'
-      'anyone_s_daughter_live_full_album.mp3';
+      'https://archive.org/download/anyone_s_daughter_live_full_album/anyone_s_daughter_live_full_album.mp3';
 
   // Minimum file size for strategy tests (5MB)
   const minFileSize = 5 * 1024 * 1024;

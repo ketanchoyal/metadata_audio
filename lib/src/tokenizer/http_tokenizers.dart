@@ -76,8 +76,10 @@ class HttpTokenizer extends HttpBasedTokenizer {
     final client = http.Client();
 
     try {
+      final request = http.Request('GET', Uri.parse(url));
       final response = await client
-          .get(Uri.parse(url))
+          .send(request)
+          .then(http.Response.fromStream)
           .timeout(timeout ?? const Duration(seconds: 30));
 
       if (response.statusCode >= 300) {
