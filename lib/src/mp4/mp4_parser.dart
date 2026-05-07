@@ -689,9 +689,8 @@ class Mp4Parser {
     if (chapterTrack.sampleSize == null) {
       return null;
     }
-    if (chapterTrack.sampleSize == 0 &&
-        chapterTrack.chunkOffsetTable.length !=
-            chapterTrack.sampleSizeTable.length) {
+    final chapterSamples = _buildChapterSampleEntries(chapterTrack);
+    if (chapterSamples == null || chapterSamples.isEmpty) {
       metadata.addWarning('Invalid MP4 chapter track sample sizing');
       return null;
     }
@@ -708,13 +707,11 @@ class Mp4Parser {
     if (tokenizer case final HttpBasedTokenizer httpTokenizer) {
       try {
         final ranges = <(int, int)>[];
-        for (var i = 0; i < chapterTrack.chunkOffsetTable.length; i++) {
-          final chunkOffset = chapterTrack.chunkOffsetTable[i];
-          final sampleSize = chapterTrack.sampleSize! > 0
-              ? chapterTrack.sampleSize!
-              : chapterTrack.sampleSizeTable[i];
-          if (chunkOffset >= 0 && sampleSize > 0) {
-            ranges.add((chunkOffset, chunkOffset + sampleSize));
+        for (final sample in chapterSamples) {
+          if (sample.absoluteOffset >= 0 && sample.sampleSize > 0) {
+            ranges.add(
+              (sample.absoluteOffset, sample.absoluteOffset + sample.sampleSize),
+            );
           }
         }
         const batchSize = 4;
@@ -732,35 +729,34 @@ class Mp4Parser {
       }
     }
 
-    for (var i = 0; i < chapterTrack.chunkOffsetTable.length; i++) {
-      final chunkOffset = chapterTrack.chunkOffsetTable[i];
-      if (chunkOffset < 0) {
+    for (final sample in chapterSamples) {
+      if (sample.absoluteOffset < 0 || sample.sampleSize < 0) {
         metadata.addWarning('Invalid MP4 chapter offset/size');
         return null;
       }
 
-      final sampleSize = chapterTrack.sampleSize! > 0
-          ? chapterTrack.sampleSize!
-          : chapterTrack.sampleSizeTable[i];
-      if (sampleSize < 0) {
-        metadata.addWarning('Invalid MP4 chapter offset/size');
-        return null;
-      }
+      tokenizer.seek(sample.absoluteOffset);
+      final title = AtomToken.parseChapterText(
+        tokenizer.readBytes(sample.sampleSize),
+      );
 
-      tokenizer.seek(chunkOffset);
-      final title = AtomToken.parseChapterText(tokenizer.readBytes(sampleSize));
-
-      final chapterOffsetFromStts = _getSampleOffsetFromStts(chapterTrack, i);
+      final chapterOffsetFromStts = _getSampleOffsetFromStts(
+        chapterTrack,
+        sample.sampleIndex,
+      );
 
       int chapterOffset;
       int startMs;
       if (chapterOffsetFromStts != null &&
           chapterTrack.timeScale != null &&
-          chapterTrack.timeScale! > 0) {
+           chapterTrack.timeScale! > 0) {
         chapterOffset = chapterOffsetFromStts;
         startMs = ((chapterOffset * 1000) / chapterTrack.timeScale!).round();
       } else {
-        chapterOffset = _findSampleOffset(referencedTrack, chunkOffset);
+        chapterOffset = _findSampleOffset(
+          referencedTrack,
+          sample.absoluteOffset,
+        );
         startMs = ((chapterOffset * 1000) / referencedTrack.timeScale!).round();
       }
 
@@ -969,9 +965,8 @@ class Mp4Parser {
     if (chapterTrack.sampleSize == null) {
       return null;
     }
-    if (chapterTrack.sampleSize == 0 &&
-        chapterTrack.chunkOffsetTable.length !=
-            chapterTrack.sampleSizeTable.length) {
+    final chapterSamples = _buildChapterSampleEntries(chapterTrack);
+    if (chapterSamples == null || chapterSamples.isEmpty) {
       metadata.addWarning('Invalid MP4 chapter track sample sizing');
       return null;
     }
@@ -983,22 +978,16 @@ class Mp4Parser {
     final chapterRanges = <(int, int)>[];
     var tempRemaining = payloadLength;
     var virtualPosition = tokenizer.position;
-    for (
-      var i = 0;
-      i < chapterTrack.chunkOffsetTable.length && tempRemaining > 0;
-      i++
-    ) {
-      final chunkOffset = chapterTrack.chunkOffsetTable[i];
-      final skipLength = chunkOffset - virtualPosition;
-      final sampleSize = chapterTrack.sampleSize! > 0
-          ? chapterTrack.sampleSize!
-          : chapterTrack.sampleSizeTable[i];
+    for (final sample in chapterSamples) {
+      final skipLength = sample.absoluteOffset - virtualPosition;
       if (skipLength >= 0 &&
-          sampleSize >= 0 &&
-          tempRemaining >= skipLength + sampleSize) {
-        chapterRanges.add((chunkOffset, chunkOffset + sampleSize));
-        tempRemaining -= skipLength + sampleSize;
-        virtualPosition = chunkOffset + sampleSize;
+          sample.sampleSize >= 0 &&
+          tempRemaining >= skipLength + sample.sampleSize) {
+        chapterRanges.add(
+          (sample.absoluteOffset, sample.absoluteOffset + sample.sampleSize),
+        );
+        tempRemaining -= skipLength + sample.sampleSize;
+        virtualPosition = sample.absoluteOffset + sample.sampleSize;
       }
     }
 
@@ -1028,43 +1017,47 @@ class Mp4Parser {
 
     var remaining = payloadLength;
     final chapters = <Chapter>[];
-    for (
-      var i = 0;
-      i < chapterTrack.chunkOffsetTable.length && remaining > 0;
-      i++
-    ) {
-      final chunkOffset = chapterTrack.chunkOffsetTable[i];
-      final skipLength = chunkOffset - tokenizer.position;
-      final sampleSize = chapterTrack.sampleSize! > 0
-          ? chapterTrack.sampleSize!
-          : chapterTrack.sampleSizeTable[i];
-      if (skipLength < 0 || sampleSize < 0) {
+    for (final sample in chapterSamples) {
+      if (remaining <= 0) {
+        break;
+      }
+
+      final skipLength = sample.absoluteOffset - tokenizer.position;
+      if (skipLength < 0 || sample.sampleSize < 0) {
         metadata.addWarning('Invalid MP4 chapter offset/size');
         return null;
       }
-      remaining -= skipLength + sampleSize;
+      remaining -= skipLength + sample.sampleSize;
       if (remaining < 0) {
         metadata.addWarning('MP4 chapter chunk exceeds mdat payload');
         return null;
       }
 
       tokenizer.skip(skipLength);
-      final title = AtomToken.parseChapterText(tokenizer.readBytes(sampleSize));
+      final title = AtomToken.parseChapterText(
+        tokenizer.readBytes(sample.sampleSize),
+      );
 
       // Prefer chapter track STTS timing when available. This is the canonical
       // source for chapter sample timestamps in QuickTime chapter tracks.
-      final chapterOffsetFromStts = _getSampleOffsetFromStts(chapterTrack, i);
+      final chapterOffsetFromStts = _getSampleOffsetFromStts(
+        chapterTrack,
+        sample.sampleIndex,
+      );
 
       int chapterOffset;
       int startMs;
       if (chapterOffsetFromStts != null &&
           chapterTrack.timeScale != null &&
-          chapterTrack.timeScale! > 0) {
+           chapterTrack.timeScale! > 0) {
         chapterOffset = chapterOffsetFromStts;
         startMs = ((chapterOffset * 1000) / chapterTrack.timeScale!).round();
       } else {
         // Fallback for files without chapter track timing tables.
-        chapterOffset = _findSampleOffset(referencedTrack, chunkOffset);
+        chapterOffset = _findSampleOffset(
+          referencedTrack,
+          sample.absoluteOffset,
+        );
         startMs = ((chapterOffset * 1000) / referencedTrack.timeScale!).round();
       }
 
@@ -1197,6 +1190,67 @@ class Mp4Parser {
     return table.last.samplesPerChunk;
   }
 
+  List<_ChapterSampleEntry>? _buildChapterSampleEntries(
+    _TrackDescription track,
+  ) {
+    final sampleSize = track.sampleSize;
+    if (sampleSize == null || track.chunkOffsetTable.isEmpty) {
+      return null;
+    }
+
+    if (sampleSize > 0) {
+      return <_ChapterSampleEntry>[
+        for (var i = 0; i < track.chunkOffsetTable.length; i++)
+          _ChapterSampleEntry(
+            sampleIndex: i,
+            absoluteOffset: track.chunkOffsetTable[i],
+            sampleSize: sampleSize,
+          ),
+      ];
+    }
+
+    if (track.sampleToChunkTable.isEmpty || track.sampleSizeTable.isEmpty) {
+      return null;
+    }
+
+    final samples = <_ChapterSampleEntry>[];
+    var sampleIndex = 0;
+    for (var chunkIndex = 0; chunkIndex < track.chunkOffsetTable.length; chunkIndex++) {
+      var absoluteOffset = track.chunkOffsetTable[chunkIndex];
+      final samplesPerChunk = _getSamplesPerChunk(chunkIndex + 1, track);
+      if (absoluteOffset < 0 || samplesPerChunk <= 0) {
+        return null;
+      }
+
+      for (var i = 0; i < samplesPerChunk; i++) {
+        if (sampleIndex >= track.sampleSizeTable.length) {
+          return null;
+        }
+
+        final currentSampleSize = track.sampleSizeTable[sampleIndex];
+        if (currentSampleSize < 0) {
+          return null;
+        }
+
+        samples.add(
+          _ChapterSampleEntry(
+            sampleIndex: sampleIndex,
+            absoluteOffset: absoluteOffset,
+            sampleSize: currentSampleSize,
+          ),
+        );
+        absoluteOffset += currentSampleSize;
+        sampleIndex++;
+      }
+    }
+
+    if (sampleIndex != track.sampleSizeTable.length) {
+      return null;
+    }
+
+    return samples;
+  }
+
   String _formatCodec(String dataFormat) {
     switch (dataFormat) {
       case 'mp4a':
@@ -1238,6 +1292,18 @@ class _TrackDescription {
 
   bool get isAudio => handlerType == 'soun' || handlerType == 'audi';
   bool get isVideo => handlerType == 'vide';
+}
+
+class _ChapterSampleEntry {
+  const _ChapterSampleEntry({
+    required this.sampleIndex,
+    required this.absoluteOffset,
+    required this.sampleSize,
+  });
+
+  final int sampleIndex;
+  final int absoluteOffset;
+  final int sampleSize;
 }
 
 /// Internal representation of a chapter from a chpl (Nero Chapter List) atom.

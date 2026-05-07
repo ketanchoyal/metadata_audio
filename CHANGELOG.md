@@ -1,3 +1,8 @@
+## 0.8.0
+
+- **Fixed**: MP4 `stsz` parsing now correctly handles uniform sample sizes without reading a non-existent per-sample table.
+- **Fixed**: MP4 chapter extraction now expands per-sample chapter offsets from `stsc` + `stco`/`co64` + `stsz`, restoring chapter parsing for audiobook files where multiple chapter samples share a single chunk.
+
 ## 0.7.2
 
 - **Feat**: Enhanced MP4 parsing for large files by adding HTTP prefetching for atom headers and chapter data.

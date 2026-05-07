@@ -310,6 +310,17 @@ class AtomToken {
 
     final sampleSize = readUint32Be(bytes, 4);
     final entryCount = readUint32Be(bytes, 8);
+    if (sampleSize != 0) {
+      return (sampleSize, const <int>[]);
+    }
+
+    final requiredLength = 12 + (entryCount * 4);
+    if (requiredLength > bytes.length) {
+      throw Mp4ContentError(
+        'stsz atom sample table truncated: expected $entryCount entries',
+      );
+    }
+
     final entries = <int>[];
     var offset = 12;
     for (var i = 0; i < entryCount; i++) {
