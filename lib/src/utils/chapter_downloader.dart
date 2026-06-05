@@ -163,24 +163,31 @@ class ChapterDownloader {
           );
         }
 
-        // Calculate sample sizes and total chapter payload size
-        final sampleSizes = <int>[];
-        var totalPayloadSize = 0;
-        for (var i = startSampleIndex; i < endSampleIndex; i++) {
-          int size;
-          if (audioTrack.sampleSize != null &&
-              audioTrack.sampleSize! > 0) {
-            size = audioTrack.sampleSize!;
-          } else if (i < audioTrack.sampleSizeTable.length) {
-            size = audioTrack.sampleSizeTable[i];
-          } else {
-            break;
-          }
-          sampleSizes.add(size);
-          totalPayloadSize += size;
+        final rangeStart = startByteOffset;
+        final lastSampleIndex = endSampleIndex - 1;
+        final lastSampleByteOffset = parser.getByteOffsetForSample(
+          audioTrack.trackId,
+          lastSampleIndex,
+        );
+        if (lastSampleByteOffset == null) {
+          return const ChapterDownloadResult.failure(
+            'Could not resolve ending byte offset for chapter.',
+          );
         }
+        int lastSampleSize;
+        if (audioTrack.sampleSize != null && audioTrack.sampleSize! > 0) {
+          lastSampleSize = audioTrack.sampleSize!;
+        } else if (lastSampleIndex < audioTrack.sampleSizeTable.length) {
+          lastSampleSize = audioTrack.sampleSizeTable[lastSampleIndex];
+        } else {
+          return const ChapterDownloadResult.failure(
+            'Could not resolve ending sample size.',
+          );
+        }
+        final rangeEnd = lastSampleByteOffset + lastSampleSize;
+        final downloadSize = rangeEnd - rangeStart;
 
-        if (sampleSizes.isEmpty) {
+        if (downloadSize <= 0) {
           return const ChapterDownloadResult.failure(
             'Chapter does not contain any audio samples.',
           );
@@ -191,14 +198,14 @@ class ChapterDownloader {
         final samplingFreqIndex =
             _getSamplingFrequencyIndex(sampleRate);
 
-        // Fetch the raw payload bytes
+        // Fetch the raw payload bytes (including any interleaved gaps/non-audio bytes)
         final Uint8List payloadBytes;
         if (isRemote) {
           onPhase?.call(ChapterDownloadPhase.downloading);
           payloadBytes = await _downloadRangeParallel(
             url: originalUrl,
-            rangeStart: startByteOffset,
-            totalSize: totalPayloadSize,
+            rangeStart: rangeStart,
+            totalSize: downloadSize,
             parallelChunks: parallelChunks,
             httpClient: httpClient,
             onProgress: onProgress,
@@ -209,14 +216,14 @@ class ChapterDownloader {
           final builder = BytesBuilder(copy: false);
           var readBytes = 0;
           await for (final chunk in localFile.openRead(
-            startByteOffset,
-            startByteOffset + totalPayloadSize,
+            rangeStart,
+            rangeEnd,
           )) {
             builder.add(chunk);
             readBytes += chunk.length;
-            if (onProgress != null && totalPayloadSize > 0) {
+            if (onProgress != null && downloadSize > 0) {
               onProgress(
-                (readBytes / totalPayloadSize).clamp(0.0, 1.0),
+                (readBytes / downloadSize).clamp(0.0, 1.0),
               );
             }
           }
@@ -226,10 +233,25 @@ class ChapterDownloader {
         // Build ADTS-wrapped output in memory, write in one shot
         onPhase?.call(ChapterDownloadPhase.writing);
         final outputBuilder = BytesBuilder();
-        var offset = 0;
-        for (var i = 0; i < sampleSizes.length; i++) {
-          final size = sampleSizes[i];
-          if (offset + size > payloadBytes.length) break;
+        for (var i = startSampleIndex; i < endSampleIndex; i++) {
+          final sampleOffset = parser.getByteOffsetForSample(
+            audioTrack.trackId,
+            i,
+          );
+          if (sampleOffset == null) break;
+          final relativeOffset = sampleOffset - rangeStart;
+
+          int size;
+          if (audioTrack.sampleSize != null &&
+              audioTrack.sampleSize! > 0) {
+            size = audioTrack.sampleSize!;
+          } else if (i < audioTrack.sampleSizeTable.length) {
+            size = audioTrack.sampleSizeTable[i];
+          } else {
+            break;
+          }
+
+          if (relativeOffset + size > payloadBytes.length) break;
 
           outputBuilder.add(_buildAdtsHeader(
             profile: 1, // AAC-LC
@@ -238,9 +260,8 @@ class ChapterDownloader {
             frameLength: size + 7,
           ));
           outputBuilder.add(
-            payloadBytes.sublist(offset, offset + size),
+            payloadBytes.sublist(relativeOffset, relativeOffset + size),
           );
-          offset += size;
         }
 
         await File(finalPath).writeAsBytes(

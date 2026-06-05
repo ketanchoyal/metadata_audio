@@ -1,3 +1,8 @@
+## 0.9.1
+
+- **Fixed**: MP4 parsing now reads the `esds` (Elementary Stream Descriptor) box to extract the correct channel configuration (e.g. mono vs stereo) and sample rate from the raw `AudioSpecificConfig`, overriding legacy `stsd` defaults.
+- **Fixed**: `ChapterDownloader.downloadChapter` now correctly downloads the entire byte range (including interleaved non-audio track data/gaps) and extracts raw audio frames using relative offsets, resolving playback/decoding issues on audiobooks with interleaved metadata (like QuickTime text chapter tracks).
+
 ## 0.9.0
 
 - **Breaking Change**: Removed `sampleOffset` property from `Chapter` class.

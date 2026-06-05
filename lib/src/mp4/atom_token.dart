@@ -246,6 +246,32 @@ class AtomToken {
         sampleRate = readUint32Be(bytes, sampleEntryOffset + 24) >> 16;
       }
 
+      if (format == 'mp4a') {
+        var subOffset = sampleEntryOffset + 28;
+        while (subOffset + 8 <= offset + entrySize) {
+          final subSize = readUint32Be(bytes, subOffset);
+          if (subSize < 8 || subOffset + subSize > offset + entrySize) {
+            break;
+          }
+          final subName = ascii.decode(
+            bytes.sublist(subOffset + 4, subOffset + 8),
+            allowInvalid: true,
+          );
+          if (subName == 'esds') {
+            final asc = _parseEsds(bytes, subOffset, subOffset + subSize);
+            if (asc != null) {
+              if (asc.channelConfig > 0 && asc.channelConfig < 8) {
+                channels = asc.channelConfig;
+              }
+              if (asc.sampleRate > 0) {
+                sampleRate = asc.sampleRate;
+              }
+            }
+          }
+          subOffset += subSize;
+        }
+      }
+
       descriptions.add(
         SampleDescription(
           dataFormat: format,
@@ -259,6 +285,128 @@ class AtomToken {
     }
 
     return descriptions;
+  }
+
+  static _AudioSpecificConfig? _parseEsds(List<int> bytes, int startOffset, int limitOffset) {
+    var offset = startOffset + 8;
+    if (offset + 4 > limitOffset) return null;
+    offset += 4; // Skip version and flags
+
+    int readLength() {
+      var length = 0;
+      while (offset < limitOffset) {
+        final b = bytes[offset++];
+        length = (length << 7) | (b & 0x7F);
+        if ((b & 0x80) == 0) {
+          break;
+        }
+      }
+      return length;
+    }
+
+    // Tag 3: ES Descriptor
+    if (offset >= limitOffset || bytes[offset++] != 0x03) return null;
+    final len3 = readLength();
+    final end3 = offset + len3;
+    if (end3 > limitOffset) return null;
+
+    offset += 2; // Skip ES ID
+    final flags = bytes[offset++];
+    final streamDependenceFlag = (flags & 0x80) != 0;
+    final urlFlag = (flags & 0x40) != 0;
+    final ocrStreamFlag = (flags & 0x20) != 0;
+
+    if (streamDependenceFlag) {
+      offset += 2;
+    }
+    if (urlFlag) {
+      if (offset < limitOffset) {
+        final urlLength = bytes[offset++];
+        offset += urlLength;
+      }
+    }
+    if (ocrStreamFlag) {
+      offset += 2;
+    }
+
+    // Tag 4: Decoder Config Descriptor
+    if (offset >= end3 || bytes[offset++] != 0x04) return null;
+    final len4 = readLength();
+    final end4 = offset + len4;
+    if (end4 > end3) return null;
+
+    offset += 13; // Skip standard decoder configuration fields
+
+    // Tag 5: Decoder Specific Info Descriptor
+    if (offset >= end4 || bytes[offset++] != 0x05) return null;
+    final len5 = readLength();
+    final end5 = offset + len5;
+    if (end5 > end4) return null;
+
+    final ascBytes = bytes.sublist(offset, end5);
+    return _parseAudioSpecificConfig(ascBytes);
+  }
+
+  static _AudioSpecificConfig? _parseAudioSpecificConfig(List<int> bytes) {
+    if (bytes.length < 2) return null;
+
+    var bitBuffer = 0;
+    var bitCount = 0;
+    var byteOffset = 0;
+
+    int readBits(int n) {
+      while (bitCount < n) {
+        if (byteOffset >= bytes.length) {
+          bitBuffer = (bitBuffer << 8);
+        } else {
+          bitBuffer = (bitBuffer << 8) | (bytes[byteOffset++] & 0xFF);
+        }
+        bitCount += 8;
+      }
+      final val = (bitBuffer >> (bitCount - n)) & ((1 << n) - 1);
+      bitCount -= n;
+      return val;
+    }
+
+    var audioObjectType = readBits(5);
+    if (audioObjectType == 31) {
+      audioObjectType = 32 + readBits(6);
+    }
+
+    final samplingFrequencyIndex = readBits(4);
+    var sampleRate = 0;
+    if (samplingFrequencyIndex == 0x0F) {
+      sampleRate = readBits(24);
+    } else {
+      sampleRate = _getSampleRateFromIndex(samplingFrequencyIndex);
+    }
+
+    final channelConfig = readBits(4);
+
+    return _AudioSpecificConfig(
+      audioObjectType: audioObjectType,
+      sampleRate: sampleRate,
+      channelConfig: channelConfig,
+    );
+  }
+
+  static int _getSampleRateFromIndex(int index) {
+    switch (index) {
+      case 0: return 96000;
+      case 1: return 88200;
+      case 2: return 64000;
+      case 3: return 48000;
+      case 4: return 44100;
+      case 5: return 32000;
+      case 6: return 24000;
+      case 7: return 22050;
+      case 8: return 16000;
+      case 9: return 12000;
+      case 10: return 11025;
+      case 11: return 8000;
+      case 12: return 7350;
+      default: return 0;
+    }
   }
 
   static List<SttsEntry> parseStts(List<int> bytes) {
@@ -471,4 +619,16 @@ class AtomToken {
       throw Mp4ContentError('Requested token range is out of bounds');
     }
   }
+}
+
+class _AudioSpecificConfig {
+  final int audioObjectType;
+  final int sampleRate;
+  final int channelConfig;
+
+  _AudioSpecificConfig({
+    required this.audioObjectType,
+    required this.sampleRate,
+    required this.channelConfig,
+  });
 }
