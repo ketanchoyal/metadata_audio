@@ -21,7 +21,7 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 
 | Local File Parsing | Remote URL Parsing |
 |---|---|
-| ![Local file parsing with chapter byte offsets](screenshots/screenshot_1.png) | ![Remote URL parsing with chapter downloads](screenshots/screenshot_2.png) |
+| ![Local file parsing with chapter byte offsets](https://raw.githubusercontent.com/ketanchoyal/metadata_audio/main/screenshots/screenshot_1.png) | ![Remote URL parsing with chapter downloads](https://raw.githubusercontent.com/ketanchoyal/metadata_audio/main/screenshots/screenshot_2.png) |
 
 ## Getting started
 

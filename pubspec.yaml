@@ -21,12 +21,15 @@ dev_dependencies:
   path: ^1.9.0
   test: ^1.25.6
 
+screenshots:
+  - description: 'Local file parsing with chapter byte offsets'
+    path: screenshots/screenshot_1.png
+  - description: 'Remote URL parsing with chapter downloads'
+    path: screenshots/screenshot_2.png
+
 topics:
   - audio
   - metadata
-  - id3
-  - music
+  - cross-platform
   - parser
-  - audiobook
   - chapter-downloader
-  - chapter-extractor
