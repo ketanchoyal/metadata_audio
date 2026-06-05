@@ -299,7 +299,8 @@ class Chapter {
     required this.start,
     this.id,
     this.url,
-    this.sampleOffset,
+    this.byteOffset,
+    this.endByteOffset,
     this.end,
     this.timeScale,
     this.image,
@@ -314,8 +315,11 @@ class Chapter {
   /// URL reference
   final Url? url;
 
-  /// Audio offset in samples
-  final int? sampleOffset;
+  /// Chapter start byte offset in file
+  final int? byteOffset;
+
+  /// Chapter end byte offset in file
+  final int? endByteOffset;
 
   /// Chapter start timestamp
   final int start;
@@ -330,7 +334,8 @@ class Chapter {
   final Picture? image;
 
   @override
-  String toString() => 'Chapter(title: $title, start: $start, end: $end)';
+  String toString() =>
+      'Chapter(title: $title, start: $start, end: $end, byteOffset: $byteOffset, endByteOffset: $endByteOffset)';
 }
 
 /// Ratio with dB value

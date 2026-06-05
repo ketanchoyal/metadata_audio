@@ -230,14 +230,16 @@ void main() {
       expect(chapter.url, isNotNull);
     });
 
-    test('Chapter with sample offset', () {
+    test('Chapter with byte offsets', () {
       const chapter = Chapter(
         title: 'Bridge',
         start: 60,
-        sampleOffset: 2646000,
+        byteOffset: 2646000,
+        endByteOffset: 3000000,
         timeScale: 44100,
       );
-      expect(chapter.sampleOffset, 2646000);
+      expect(chapter.byteOffset, 2646000);
+      expect(chapter.endByteOffset, 3000000);
     });
   });
 

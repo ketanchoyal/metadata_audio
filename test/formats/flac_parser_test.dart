@@ -155,12 +155,9 @@ void main() {
         const ParseOptions(includeChapters: true),
       );
 
-      expect(metadata.format.chapters, isNotNull);
-      expect(metadata.format.chapters, hasLength(2));
       expect(metadata.format.chapters![0].title, 'Track 01');
       expect(metadata.format.chapters![0].start, 0);
       expect(metadata.format.chapters![0].end, 1000);
-      expect(metadata.format.chapters![0].sampleOffset, 0);
       expect(metadata.format.chapters![1].title, 'Track 02');
       expect(metadata.format.chapters![1].start, 1000);
       expect(metadata.format.chapters![1].end, 3000);

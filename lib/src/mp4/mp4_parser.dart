@@ -760,11 +760,13 @@ class Mp4Parser {
         startMs = ((chapterOffset * 1000) / referencedTrack.timeScale!).round();
       }
 
+      final byteOffset = _getByteOffsetForTime(referencedTrack, chapterOffset);
+
       chapters.add(
         Chapter(
           title: title,
           start: startMs,
-          sampleOffset: chapterOffset,
+          byteOffset: byteOffset,
           timeScale: 1000,
         ),
       );
@@ -789,11 +791,16 @@ class Mp4Parser {
             : current.start;
       }
 
+      final endByteOffset = i + 1 < chapters.length
+          ? chapters[i + 1].byteOffset
+          : tokenizer.fileInfo?.size;
+
       chapters[i] = Chapter(
         id: current.id,
         title: current.title,
         url: current.url,
-        sampleOffset: current.sampleOffset,
+        byteOffset: current.byteOffset,
+        endByteOffset: endByteOffset,
         start: current.start,
         end: end,
         timeScale: current.timeScale,
@@ -814,6 +821,7 @@ class Mp4Parser {
     if (inferredTimeBase == null || inferredTimeBase <= 0) return;
 
     final chapters = <Chapter>[];
+    final audioTrack = _tracks.values.where((t) => t.isAudio).firstOrNull;
 
     for (final chplChapter in _chplChapters) {
       // Convert timestamp to milliseconds
@@ -827,12 +835,19 @@ class Mp4Parser {
         continue;
       }
 
+      int? byteOffset;
+      if (audioTrack != null && audioTrack.timeScale != null) {
+        final audioTimeOffset = (timestampMs * BigInt.from(audioTrack.timeScale!)) ~/ BigInt.from(1000);
+        byteOffset = _getByteOffsetForTime(audioTrack, audioTimeOffset.toInt());
+      }
+
       chapters.add(
         Chapter(
           title: chplChapter.title.isEmpty
               ? 'Chapter ${chapters.length + 1}'
               : chplChapter.title,
           start: timestampMs.toInt(),
+          byteOffset: byteOffset,
           timeScale: 1000,
         ),
       );
@@ -846,11 +861,17 @@ class Mp4Parser {
       final end = i + 1 < chapters.length
           ? chapters[i + 1].start
           : (fileDuration * 1000).round();
+
+      final endByteOffset = i + 1 < chapters.length
+          ? chapters[i + 1].byteOffset
+          : tokenizer.fileInfo?.size;
+
       chapters[i] = Chapter(
         id: chapters[i].id,
         title: chapters[i].title,
         url: chapters[i].url,
-        sampleOffset: chapters[i].sampleOffset,
+        byteOffset: chapters[i].byteOffset,
+        endByteOffset: endByteOffset,
         start: chapters[i].start,
         end: end,
         timeScale: chapters[i].timeScale,
@@ -1061,11 +1082,13 @@ class Mp4Parser {
         startMs = ((chapterOffset * 1000) / referencedTrack.timeScale!).round();
       }
 
+      final byteOffset = _getByteOffsetForTime(referencedTrack, chapterOffset);
+
       chapters.add(
         Chapter(
           title: title,
           start: startMs,
-          sampleOffset: chapterOffset,
+          byteOffset: byteOffset,
           timeScale: 1000,
         ),
       );
@@ -1090,11 +1113,16 @@ class Mp4Parser {
             : current.start;
       }
 
+      final endByteOffset = i + 1 < chapters.length
+          ? chapters[i + 1].byteOffset
+          : tokenizer.fileInfo?.size;
+
       chapters[i] = Chapter(
         id: current.id,
         title: current.title,
         url: current.url,
-        sampleOffset: current.sampleOffset,
+        byteOffset: current.byteOffset,
+        endByteOffset: endByteOffset,
         start: current.start,
         end: end,
         timeScale: current.timeScale,
@@ -1272,6 +1300,95 @@ class Mp4Parser {
       default:
         return false;
     }
+  }
+
+  int? _getSampleIndexForTime(_TrackDescription track, int timeOffset) {
+    if (track.timeToSampleTable.isEmpty) {
+      return null;
+    }
+
+    var remainingTime = timeOffset;
+    var sampleIndex = 0;
+
+    for (final entry in track.timeToSampleTable) {
+      if (remainingTime <= 0) {
+        return sampleIndex;
+      }
+
+      final sampleDuration = entry.duration;
+      if (sampleDuration <= 0) {
+        return null;
+      }
+
+      final maxSamplesToConsume = entry.count;
+      final samplesNeeded = remainingTime ~/ sampleDuration;
+
+      if (samplesNeeded < maxSamplesToConsume) {
+        sampleIndex += samplesNeeded;
+        return sampleIndex;
+      }
+
+      sampleIndex += maxSamplesToConsume;
+      remainingTime -= maxSamplesToConsume * sampleDuration;
+    }
+
+    return sampleIndex;
+  }
+
+  int? _getByteOffsetForSample(_TrackDescription track, int targetSampleIndex) {
+    if (track.chunkOffsetTable.isEmpty || track.sampleToChunkTable.isEmpty) {
+      return null;
+    }
+
+    var currentSampleIndex = 0;
+    var currentChunkId = 1;
+    var chunkIndexInTable = 0;
+    int samplesPerChunk = track.sampleToChunkTable[0].samplesPerChunk;
+
+    while (true) {
+      final nextRunFirstChunk = (chunkIndexInTable + 1 < track.sampleToChunkTable.length)
+          ? track.sampleToChunkTable[chunkIndexInTable + 1].firstChunk
+          : track.chunkOffsetTable.length + 1;
+
+      final chunksInRun = nextRunFirstChunk - currentChunkId;
+      final totalSamplesInRun = chunksInRun * samplesPerChunk;
+
+      if (targetSampleIndex < currentSampleIndex + totalSamplesInRun) {
+        final relativeSampleIndex = targetSampleIndex - currentSampleIndex;
+        final chunkOffsetInRun = relativeSampleIndex ~/ samplesPerChunk;
+        final sampleOffsetInChunk = relativeSampleIndex % samplesPerChunk;
+
+        final targetChunkId = currentChunkId + chunkOffsetInRun;
+        if (targetChunkId - 1 >= track.chunkOffsetTable.length) return null;
+
+        final chunkByteOffset = track.chunkOffsetTable[targetChunkId - 1];
+        var sampleByteOffset = 0;
+        final firstSampleInChunkIndex = currentSampleIndex + chunkOffsetInRun * samplesPerChunk;
+
+        for (var i = 0; i < sampleOffsetInChunk; i++) {
+          final idx = firstSampleInChunkIndex + i;
+          if (track.sampleSize != null && track.sampleSize! > 0) {
+            sampleByteOffset += track.sampleSize!;
+          } else if (idx < track.sampleSizeTable.length) {
+            sampleByteOffset += track.sampleSizeTable[idx];
+          }
+        }
+        return chunkByteOffset + sampleByteOffset;
+      }
+
+      currentSampleIndex += totalSamplesInRun;
+      currentChunkId = nextRunFirstChunk;
+      chunkIndexInTable++;
+      if (chunkIndexInTable >= track.sampleToChunkTable.length) break;
+      samplesPerChunk = track.sampleToChunkTable[chunkIndexInTable].samplesPerChunk;
+    }
+    return null;
+  }
+
+  int? _getByteOffsetForTime(_TrackDescription track, int timeOffset) {
+    final sampleIndex = _getSampleIndexForTime(track, timeOffset);
+    if (sampleIndex == null) return null;
+    return _getByteOffsetForSample(track, sampleIndex);
   }
 }
 

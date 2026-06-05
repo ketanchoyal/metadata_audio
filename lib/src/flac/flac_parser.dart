@@ -164,7 +164,6 @@ class FlacParser {
         Chapter(
           id: 'track-${track.number}',
           title: 'Track ${track.number.toString().padLeft(2, '0')}',
-          sampleOffset: startOffset,
           start: ((startOffset * 1000) / sampleRate).round(),
           end: nextStart == null
               ? null

@@ -93,6 +93,50 @@ void main() {
       expect(metadata.format.chapters![1].end, 2000);
     });
 
+    test('parses MP4 chapter track with byte offsets', () async {
+      final bytes = _buildSyntheticMp4WithChapters();
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(2));
+
+      final mdatPattern = latin1.encode('mdat');
+      var mdatIndex = -1;
+      for (var i = 0; i <= bytes.length - 4; i++) {
+        if (bytes[i] == mdatPattern[0] &&
+            bytes[i + 1] == mdatPattern[1] &&
+            bytes[i + 2] == mdatPattern[2] &&
+            bytes[i + 3] == mdatPattern[3]) {
+          mdatIndex = i;
+          break;
+        }
+      }
+      expect(mdatIndex, greaterThan(0));
+      final mdatDataOffset = mdatIndex + 4; // payload starts at index + 4 (after 4-byte length and 4-byte type)
+
+      // Chapter 1 text sample: prefix (2 bytes) + 'Intro' (5 bytes) = 7 bytes.
+      final expectedAudio1Offset = mdatDataOffset + 7; 
+      // Chapter 1 (7) + audio sample 1 (20) + Chapter 2 text prefix (2) + 'Outro' (5) = 34 bytes payload before audio sample 2.
+      final expectedAudio2Offset = mdatDataOffset + 34;
+
+      final ch1 = metadata.format.chapters![0];
+      final ch2 = metadata.format.chapters![1];
+
+      expect(ch1.byteOffset, equals(expectedAudio1Offset));
+      expect(ch1.endByteOffset, equals(expectedAudio2Offset));
+
+      expect(ch2.byteOffset, equals(expectedAudio2Offset));
+      expect(ch2.endByteOffset, equals(bytes.length));
+    });
+
     test('parses MP4 chapter track when offsets are stored in co64', () async {
       final bytes = _buildSyntheticMp4WithCo64Chapters();
 

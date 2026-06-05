@@ -295,7 +295,6 @@ class OggParser {
         Chapter(
           id: 'cue-${track.number}',
           title: 'Track ${track.number}',
-          sampleOffset: trackOffset,
           start: ((trackOffset * 1000) / sampleRate).round(),
           end: endOffset == null
               ? null

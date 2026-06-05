@@ -95,6 +95,75 @@ void main() {
       expect(metadata.format.chapters!.single.end, equals(5000));
     });
 
+    test('parses CHAP with byte offsets', () async {
+      final chapterTitleFrame = buildId3v24Frame('TIT2', [
+        0x03,
+        ...utf8.encode('Intro'),
+      ]);
+
+      final chapterData = <int>[
+        ...ascii.encode('ch1'),
+        0x00,
+        // startTime = 0
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        // endTime = 5000
+        0x00,
+        0x00,
+        0x13,
+        0x88,
+        // startOffset = 1000
+        0x00,
+        0x00,
+        0x03,
+        0xE8,
+        // endOffset = 6000
+        0x00,
+        0x00,
+        0x17,
+        0x70,
+        ...chapterTitleFrame,
+      ];
+
+      final chapFrame = buildId3v24Frame('CHAP', chapterData);
+
+      final tocData = <int>[
+        ...ascii.encode('toc'),
+        0x00,
+        0x03,
+        0x01,
+        ...ascii.encode('ch1'),
+        0x00,
+      ];
+
+      final tocFrame = buildId3v24Frame('CTOC', tocData);
+
+      final tag = buildId3Tag(
+        majorVersion: 4,
+        revision: 0,
+        flags: 0x00,
+        payload: [...chapFrame, ...tocFrame],
+      );
+
+      final loader = Id3v2Loader();
+      final tokenizer = MockTokenizer(
+        data: tag,
+        fileInfo: const FileInfo(path: 'chapters.mp3', size: 4096),
+      );
+
+      final metadata = await loader.parse(
+        tokenizer,
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters!.length, equals(1));
+      expect(metadata.format.chapters!.single.byteOffset, equals(1000));
+      expect(metadata.format.chapters!.single.endByteOffset, equals(6000));
+    });
+
     test('loader registers mp3 extension and mpeg mime type', () {
       final loader = Id3v2Loader();
 

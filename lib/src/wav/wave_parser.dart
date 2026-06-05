@@ -337,7 +337,6 @@ class WaveParser {
         Chapter(
           id: 'cue-${point.id}',
           title: _cueLabels[point.id] ?? 'Cue ${i + 1}',
-          sampleOffset: point.sampleOffset,
           start: ((point.sampleOffset * 1000) / sampleRate).round(),
           end: endOffset == null
               ? null

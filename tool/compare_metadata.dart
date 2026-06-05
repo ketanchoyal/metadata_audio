@@ -75,7 +75,7 @@ Future<Map<String, dynamic>> parseAndExtract(
             'title': chapter.title,
             'start': chapter.start,
             'end': chapter.end,
-            'sampleOffset': chapter.sampleOffset,
+            'sampleOffset': chapter.byteOffset,
             'timeScale': chapter.timeScale,
           }..removeWhere((_, value) => value == null),
         )

@@ -1,3 +1,10 @@
+## 0.9.0
+
+- **Breaking Change**: Removed `sampleOffset` property from `Chapter` class.
+- **Feat**: Added `byteOffset` and `endByteOffset` properties to `Chapter` class.
+- **Feat**: Implemented MP4 sample-to-byte offset mapping so that MP4/M4B chapters expose their exact start and end byte positions in the file.
+- **Feat**: Updated ID3v2, FLAC, Ogg, and Wave parsers to align with the new unified chapter byte offset properties.
+
 ## 0.8.0
 
 - **Fixed**: MP4 `stsz` parsing now correctly handles uniform sample sizes without reading a non-existent per-sample table.
