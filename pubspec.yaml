@@ -27,3 +27,6 @@ topics:
   - id3
   - music
   - parser
+  - audiobook
+  - chapter-downloader
+  - chapter-extractor

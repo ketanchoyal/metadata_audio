@@ -15,6 +15,13 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 - **Type-safe**: Full Dart type safety with comprehensive error handling
 - **Well-tested**: Extensive test suite with TDD principles
 - **TypeScript parity**: Ported from [music-metadata](https://github.com/Borewit/music-metadata) with exact output compatibility
+- **Chapter downloading**: Extract individual audiobook chapters as standalone playable AAC files with parallel HTTP downloads
+
+## Screenshots
+
+| Local File Parsing | Remote URL Parsing |
+|---|---|
+| ![Local file parsing with chapter byte offsets](screenshots/screenshot_1.png) | ![Remote URL parsing with chapter downloads](screenshots/screenshot_2.png) |
 
 ## Getting started
 
@@ -263,12 +270,51 @@ The library supports extracting embedded track/disk boundaries and chapter marke
 class Chapter {
   final String? id;
   final String title;
-  final int start;        // Start time in milliseconds
-  final int? end;         // End time in milliseconds
-  final int? sampleOffset;// Sample-accurate position
-  final int timeScale;    // Time scale (typically 1000 for ms)
+  final int start;          // Start time in milliseconds
+  final int? end;           // End time in milliseconds
+  final int? byteOffset;    // Start byte offset in file
+  final int? endByteOffset; // End byte offset in file
+  final int? timeScale;     // Time scale (units per second)
 }
 ```
+
+### Chapter Download
+
+Extract individual chapters from audiobooks as standalone playable AAC files. Supports both local files and remote URLs with parallel HTTP downloads for maximum throughput.
+
+```dart
+import 'package:metadata_audio/metadata_audio.dart';
+
+final result = await ChapterDownloader.downloadChapter(
+  originalUrl: 'https://example.com/audiobook.m4b',
+  chapterStartMs: chapter.start,
+  chapterEndMs: chapter.end!,
+  outputPath: '/path/to/chapter_1.aac',
+  parallelChunks: 4, // Number of parallel HTTP connections
+  onPhase: (phase) {
+    // ChapterDownloadPhase: connecting, analyzing,
+    // resolvingSamples, downloading, writing
+    print('Phase: $phase');
+  },
+  onProgress: (progress) {
+    print('Download: ${(progress * 100).toStringAsFixed(1)}%');
+  },
+);
+
+if (result.isSuccess) {
+  print('Saved to: ${result.outputPath}');
+} else {
+  print('Failed: ${result.error}');
+}
+```
+
+The `ChapterDownloadResult` provides structured success/failure information:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `isSuccess` | `bool` | Whether the download completed successfully |
+| `outputPath` | `String?` | Output file path on success |
+| `error` | `String?` | Error message on failure |
 
 ## Development
 

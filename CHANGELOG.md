@@ -4,6 +4,7 @@
 - **Feat**: Added `byteOffset` and `endByteOffset` properties to `Chapter` class.
 - **Feat**: Implemented MP4 sample-to-byte offset mapping so that MP4/M4B chapters expose their exact start and end byte positions in the file.
 - **Feat**: Updated ID3v2, FLAC, Ogg, and Wave parsers to align with the new unified chapter byte offset properties.
+- **Feat**: Added `ChapterDownloader` utility class (`lib/src/utils/chapter_downloader.dart`) for extracting individual audiobook chapters as standalone playable ADTS AAC files.
 
 ## 0.8.0
 

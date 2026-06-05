@@ -16,6 +16,35 @@ class Mp4Parser {
     required this.options,
   });
 
+  List<Mp4TrackInfo> getTrackInfos() => _tracks.values.map((track) {
+    final desc = track.sampleDescriptions.isEmpty
+        ? null
+        : track.sampleDescriptions.first;
+    return Mp4TrackInfo(
+      trackId: track.trackId,
+      handlerType: track.handlerType,
+      timeScale: track.timeScale,
+      sampleSize: track.sampleSize,
+      sampleSizeTable: track.sampleSizeTable,
+      timeToSampleTable: track.timeToSampleTable,
+      isAudio: track.isAudio,
+      sampleRate: desc?.sampleRate,
+      numberOfChannels: desc?.numberOfChannels,
+    );
+  }).toList();
+
+  int? getByteOffsetForSample(int trackId, int targetSampleIndex) {
+    final track = _tracks[trackId];
+    if (track == null) return null;
+    return _getByteOffsetForSample(track, targetSampleIndex);
+  }
+
+  int? getSampleIndexForTime(int trackId, int timeOffset) {
+    final track = _tracks[trackId];
+    if (track == null) return null;
+    return _getSampleIndexForTime(track, timeOffset);
+  }
+
   final MetadataCollector metadata;
   final Tokenizer tokenizer;
   final ParseOptions options;
@@ -709,9 +738,10 @@ class Mp4Parser {
         final ranges = <(int, int)>[];
         for (final sample in chapterSamples) {
           if (sample.absoluteOffset >= 0 && sample.sampleSize > 0) {
-            ranges.add(
-              (sample.absoluteOffset, sample.absoluteOffset + sample.sampleSize),
-            );
+            ranges.add((
+              sample.absoluteOffset,
+              sample.absoluteOffset + sample.sampleSize,
+            ));
           }
         }
         const batchSize = 4;
@@ -749,7 +779,7 @@ class Mp4Parser {
       int startMs;
       if (chapterOffsetFromStts != null &&
           chapterTrack.timeScale != null &&
-           chapterTrack.timeScale! > 0) {
+          chapterTrack.timeScale! > 0) {
         chapterOffset = chapterOffsetFromStts;
         startMs = ((chapterOffset * 1000) / chapterTrack.timeScale!).round();
       } else {
@@ -837,7 +867,9 @@ class Mp4Parser {
 
       int? byteOffset;
       if (audioTrack != null && audioTrack.timeScale != null) {
-        final audioTimeOffset = (timestampMs * BigInt.from(audioTrack.timeScale!)) ~/ BigInt.from(1000);
+        final audioTimeOffset =
+            (timestampMs * BigInt.from(audioTrack.timeScale!)) ~/
+            BigInt.from(1000);
         byteOffset = _getByteOffsetForTime(audioTrack, audioTimeOffset.toInt());
       }
 
@@ -1004,9 +1036,10 @@ class Mp4Parser {
       if (skipLength >= 0 &&
           sample.sampleSize >= 0 &&
           tempRemaining >= skipLength + sample.sampleSize) {
-        chapterRanges.add(
-          (sample.absoluteOffset, sample.absoluteOffset + sample.sampleSize),
-        );
+        chapterRanges.add((
+          sample.absoluteOffset,
+          sample.absoluteOffset + sample.sampleSize,
+        ));
         tempRemaining -= skipLength + sample.sampleSize;
         virtualPosition = sample.absoluteOffset + sample.sampleSize;
       }
@@ -1070,7 +1103,7 @@ class Mp4Parser {
       int startMs;
       if (chapterOffsetFromStts != null &&
           chapterTrack.timeScale != null &&
-           chapterTrack.timeScale! > 0) {
+          chapterTrack.timeScale! > 0) {
         chapterOffset = chapterOffsetFromStts;
         startMs = ((chapterOffset * 1000) / chapterTrack.timeScale!).round();
       } else {
@@ -1243,7 +1276,11 @@ class Mp4Parser {
 
     final samples = <_ChapterSampleEntry>[];
     var sampleIndex = 0;
-    for (var chunkIndex = 0; chunkIndex < track.chunkOffsetTable.length; chunkIndex++) {
+    for (
+      var chunkIndex = 0;
+      chunkIndex < track.chunkOffsetTable.length;
+      chunkIndex++
+    ) {
       var absoluteOffset = track.chunkOffsetTable[chunkIndex];
       final samplesPerChunk = _getSamplesPerChunk(chunkIndex + 1, track);
       if (absoluteOffset < 0 || samplesPerChunk <= 0) {
@@ -1343,10 +1380,11 @@ class Mp4Parser {
     var currentSampleIndex = 0;
     var currentChunkId = 1;
     var chunkIndexInTable = 0;
-    int samplesPerChunk = track.sampleToChunkTable[0].samplesPerChunk;
+    var samplesPerChunk = track.sampleToChunkTable[0].samplesPerChunk;
 
     while (true) {
-      final nextRunFirstChunk = (chunkIndexInTable + 1 < track.sampleToChunkTable.length)
+      final nextRunFirstChunk =
+          (chunkIndexInTable + 1 < track.sampleToChunkTable.length)
           ? track.sampleToChunkTable[chunkIndexInTable + 1].firstChunk
           : track.chunkOffsetTable.length + 1;
 
@@ -1363,7 +1401,8 @@ class Mp4Parser {
 
         final chunkByteOffset = track.chunkOffsetTable[targetChunkId - 1];
         var sampleByteOffset = 0;
-        final firstSampleInChunkIndex = currentSampleIndex + chunkOffsetInRun * samplesPerChunk;
+        final firstSampleInChunkIndex =
+            currentSampleIndex + chunkOffsetInRun * samplesPerChunk;
 
         for (var i = 0; i < sampleOffsetInChunk; i++) {
           final idx = firstSampleInChunkIndex + i;
@@ -1380,7 +1419,8 @@ class Mp4Parser {
       currentChunkId = nextRunFirstChunk;
       chunkIndexInTable++;
       if (chunkIndexInTable >= track.sampleToChunkTable.length) break;
-      samplesPerChunk = track.sampleToChunkTable[chunkIndexInTable].samplesPerChunk;
+      samplesPerChunk =
+          track.sampleToChunkTable[chunkIndexInTable].samplesPerChunk;
     }
     return null;
   }
@@ -1432,4 +1472,28 @@ class _ChplChapter {
 
   /// Chapter title.
   final String title;
+}
+
+class Mp4TrackInfo {
+  Mp4TrackInfo({
+    required this.trackId,
+    required this.handlerType,
+    required this.timeScale,
+    required this.sampleSize,
+    required this.sampleSizeTable,
+    required this.timeToSampleTable,
+    required this.isAudio,
+    required this.sampleRate,
+    required this.numberOfChannels,
+  });
+
+  final int trackId;
+  final String? handlerType;
+  final int? timeScale;
+  final int? sampleSize;
+  final List<int> sampleSizeTable;
+  final List<SttsEntry> timeToSampleTable;
+  final bool isAudio;
+  final int? sampleRate;
+  final int? numberOfChannels;
 }
