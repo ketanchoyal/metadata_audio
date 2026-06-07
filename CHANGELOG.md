@@ -1,3 +1,11 @@
+## 0.9.2
+
+- **Feat**: Extended `ChapterDownloader.downloadChapter` to support downloading and extracting specific time ranges (chapters) from MP3/MPEG files, allowing partial downloading/slicing of files without embedded chapters using external timestamps.
+- **Fixed**: Skips the VBR Xing/Info header frame when downloading MP3 slices starting at the beginning of the file, preventing player decoders from incorrectly reading the original total duration and stream size.
+- **Fixed**: Added asynchronous `prefetchRange` calls inside MP3 parser offset and frame synchronization loops, resolving `TokenizerException` ("Use prefetchRange() before reading") when downloading MP3 ranges over remote URLs.
+- **Fixed**: Resolved a race condition where a single-chunk download (`numChunks <= 1`) returned the download future without awaiting it, causing the client to close prematurely in the `finally` block and throwing `Bad state: Client is closed`.
+- **Example App**: Updated the example Flutter app to enable chapter downloading for all remote files (regardless of embedded chapter metadata) and added a new **Custom Range Downloader** sidebar widget to quickly download any timestamp region from MP3 or M4A/AAC URLs with preset buttons.
+
 ## 0.9.1
 
 - **Fixed**: MP4 parsing now reads the `esds` (Elementary Stream Descriptor) box to extract the correct channel configuration (e.g. mono vs stereo) and sample rate from the raw `AudioSpecificConfig`, overriding legacy `stsd` defaults.

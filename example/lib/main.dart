@@ -74,6 +74,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   final TextEditingController _urlController = TextEditingController(
     text: 'https://archive.org/download/city_of_fire_2209_librivox/CityFire_librivox.m4b',
   );
+  final TextEditingController _startMsController = TextEditingController(text: '0');
+  final TextEditingController _endMsController = TextEditingController(text: '5000');
 
   // Parse Options
   bool _includeChapters = true;
@@ -106,6 +108,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   void dispose() {
     _tabController.dispose();
     _urlController.dispose();
+    _startMsController.dispose();
+    _endMsController.dispose();
     super.dispose();
   }
 
@@ -228,14 +232,29 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       return;
     }
 
-    final cleanTitle = chapter.title.replaceAll(RegExp(r'[^\w\-\.]'), '_');
-    final defaultFileName = 'chapter_${cleanTitle}_${chapter.start}.aac';
+    final endMs = chapter.end ?? 
+        (_metadata?.format.duration != null 
+            ? (_metadata!.format.duration! * 1000).toInt() 
+            : (chapter.start + 180000));
+
+    await _testCustomRangeDownload(url, chapter.start, endMs, title: chapter.title);
+  }
+
+  Future<void> _testCustomRangeDownload(String url, int startMs, int endMs, {String? title}) async {
+    final isMp3 = url.toLowerCase().contains('.mp3') ||
+        url.toLowerCase().contains('/mp3/');
+    final ext = isMp3 ? 'mp3' : 'aac';
+    
+    final cleanTitle = title != null 
+        ? title.replaceAll(RegExp(r'[^\w\-\.]'), '_')
+        : 'range_${startMs}_$endMs';
+    final defaultFileName = 'chapter_${cleanTitle}.$ext';
 
     final savePath = await FilePicker.platform.saveFile(
       dialogTitle: 'Save partial chapter download to:',
       fileName: defaultFileName,
       type: FileType.custom,
-      allowedExtensions: ['aac'],
+      allowedExtensions: [ext],
     );
 
     if (savePath == null) {
@@ -249,7 +268,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       ChapterDownloadPhase.connecting,
     );
 
-    String _phaseLabel(ChapterDownloadPhase phase) {
+    String phaseLabel(ChapterDownloadPhase phase) {
       switch (phase) {
         case ChapterDownloadPhase.connecting:
           return 'Connecting to source...';
@@ -260,7 +279,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         case ChapterDownloadPhase.downloading:
           return 'Downloading chapter audio...';
         case ChapterDownloadPhase.writing:
-          return 'Writing playable AAC file...';
+          return isMp3 ? 'Writing playable MP3 file...' : 'Writing playable AAC file...';
       }
     }
 
@@ -270,7 +289,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('Extracting AAC Chapter: ${chapter.title}'),
+          title: Text(title != null ? 'Extracting Chapter: $title' : 'Extracting Range: $startMs to $endMs ms'),
           content: SizedBox(
             width: 320,
             child: ValueListenableBuilder<double>(
@@ -298,7 +317,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                       valueListenable: phaseNotifier,
                       builder: (context, phase, _) {
                         return Text(
-                          _phaseLabel(phase),
+                          phaseLabel(phase),
                           style: const TextStyle(fontSize: 13, color: Colors.grey),
                           textAlign: TextAlign.center,
                         );
@@ -313,14 +332,9 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       },
     );
 
-    final endMs = chapter.end ?? 
-        (_metadata?.format.duration != null 
-            ? (_metadata!.format.duration! * 1000).toInt() 
-            : (chapter.start + 180000));
-
     final result = await ChapterDownloader.downloadChapter(
       originalUrl: url,
-      chapterStartMs: chapter.start,
+      chapterStartMs: startMs,
       chapterEndMs: endMs,
       outputPath: savePath,
       onProgress: (progress) {
@@ -473,8 +487,37 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                     alignLabelWithHint: true,
                                   ),
                                 ),
-                                const SizedBox(height: 16),
-                                // Force strategy selector
+                                 const SizedBox(height: 8),
+                                 Row(
+                                   children: [
+                                     const Text('Presets: ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                     TextButton(
+                                       onPressed: () {
+                                         _urlController.text = 'https://archive.org/download/city_of_fire_2209_librivox/CityFire_librivox.m4b';
+                                       },
+                                       style: TextButton.styleFrom(
+                                         padding: EdgeInsets.zero,
+                                         minimumSize: const Size(60, 30),
+                                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                       ),
+                                       child: const Text('M4B (Chapters)', style: TextStyle(fontSize: 12)),
+                                     ),
+                                     const SizedBox(width: 8),
+                                     TextButton(
+                                       onPressed: () {
+                                         _urlController.text = 'https://archive.org/download/city_of_fire_2209_librivox/cityoffire_01_hill_128kb.mp3';
+                                       },
+                                       style: TextButton.styleFrom(
+                                         padding: EdgeInsets.zero,
+                                         minimumSize: const Size(60, 30),
+                                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                       ),
+                                       child: const Text('MP3 (No Chapters)', style: TextStyle(fontSize: 12)),
+                                     ),
+                                   ],
+                                 ),
+                                 const SizedBox(height: 16),
+                                 // Force strategy selector
                                 const Text(
                                   'HTTP Parse Strategy',
                                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.indigoAccent),
@@ -549,6 +592,67 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                     _buildSwitchTile('Calculate Duration', _duration, (val) => setState(() => _duration = val)),
                     _buildSwitchTile('Skip Cover Images', _skipCovers, (val) => setState(() => _skipCovers = val)),
                     _buildSwitchTile('Skip Post Headers', _skipPostHeaders, (val) => setState(() => _skipPostHeaders = val)),
+
+                    const Divider(color: Color(0xFF1E293B), height: 32),
+                    const Text(
+                      'Custom Range Downloader',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _startMsController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Start (ms)',
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _endMsController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'End (ms)',
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1E293B),
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Color(0xFF334155)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          final url = _urlController.text.trim();
+                          if (url.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please enter a remote URL first.')),
+                            );
+                            return;
+                          }
+                          final start = int.tryParse(_startMsController.text) ?? 0;
+                          final end = int.tryParse(_endMsController.text) ?? 5000;
+                          _testCustomRangeDownload(url, start, end);
+                        },
+                        icon: const Icon(Icons.cut_rounded, size: 16),
+                        label: const Text('Download Custom Range', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1190,7 +1294,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                         children: [
                           if (isRemote) ...[
                             ElevatedButton.icon(
-                              onPressed: ch.byteOffset == null ? null : () => _testPartialDownload(ch),
+                              onPressed: () => _testPartialDownload(ch),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF1E293B),
                                 foregroundColor: Colors.white,
