@@ -5,27 +5,67 @@ import 'package:test/test.dart';
 void main() {
   group('ChapterDownloader', () {
     late String originalFilePath;
+    late String tempM4aPath;
     late String tempAacPath;
 
     setUpAll(() {
-      originalFilePath = '${Directory.current.path}/test/samples/mp4/The Dark Forest.m4a';
+      originalFilePath = '${Directory.current.path}/test/samples/mp4/video_chapters.mp4';
+      tempM4aPath = '${Directory.current.path}/test/common/playable_chapter_1_temp.m4a';
       tempAacPath = '${Directory.current.path}/test/common/playable_chapter_1_temp.aac';
     });
 
     tearDown(() async {
-      final aacFile = File(tempAacPath);
-      if (await aacFile.exists()) {
-        await aacFile.delete();
+      for (final path in [tempM4aPath, tempAacPath]) {
+        final f = File(path);
+        if (await f.exists()) {
+          await f.delete();
+        }
       }
     });
 
-    test('extracts a chapter directly to a playable standalone ADTS AAC file', () async {
+    test('extracts a chapter directly to a playable standalone M4A container file', () async {
       final originalFile = File(originalFilePath);
       expect(await originalFile.exists(), isTrue);
 
-      // Chapter 1 of The Dark Forest: 52036ms to 1943017ms
-      const startMs = 52036;
-      const endMs = 1943017;
+      // Chapter 1 of video_chapters.mp4: 0ms to 2000ms
+      const startMs = 0;
+      const endMs = 2000;
+
+      final result = await ChapterDownloader.downloadChapter(
+        originalUrl: originalFilePath,
+        chapterStartMs: startMs,
+        chapterEndMs: endMs,
+        outputPath: tempM4aPath,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.outputPath, equals(tempM4aPath));
+      expect(result.error, isNull);
+
+      final m4aFile = File(result.outputPath!);
+      expect(await m4aFile.exists(), isTrue);
+
+      // Verify the generated M4A file starts with ftyp and M4A brand
+      final bytes = await m4aFile.readAsBytes();
+      expect(bytes.length, greaterThan(100));
+      // ftyp box
+      expect(bytes.sublist(4, 8), equals([0x66, 0x74, 0x79, 0x70])); // 'ftyp'
+      expect(bytes.sublist(8, 12), equals([0x4D, 0x34, 0x41, 0x20])); // 'M4A '
+
+      // Verify metadata parser can parse the generated M4A file
+      final parsed = await parseFile(tempM4aPath);
+      expect(parsed.format.container, startsWith('M4A'));
+      expect(parsed.format.hasAudio, isTrue);
+      expect(parsed.format.duration, closeTo(2.0, 0.1));
+    });
+
+    test('extracts a chapter directly to a playable standalone ADTS AAC file when .aac requested', () async {
+      final originalFile = File(originalFilePath);
+      expect(await originalFile.exists(), isTrue);
+
+      // Chapter 1 of sample.m4a: 0ms to 2000ms
+      const startMs = 0;
+      const endMs = 2000;
 
       final result = await ChapterDownloader.downloadChapter(
         originalUrl: originalFilePath,
@@ -41,7 +81,6 @@ void main() {
       final aacFile = File(result.outputPath!);
       expect(await aacFile.exists(), isTrue);
 
-      // The file size should be equal to sum of chapter sample sizes + 7 bytes header per sample
       // Let's read first few bytes to verify it starts with a valid ADTS syncword (0xFFF)
       final raf = await aacFile.open(mode: FileMode.read);
       try {

@@ -7,6 +7,7 @@ import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/mp4/mp4_parser.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_parser.dart';
 import 'package:metadata_audio/src/mpeg/xing_tag.dart';
+import 'package:metadata_audio/src/utils/m4a_muxer.dart';
 
 /// The current phase of the chapter download process.
 enum ChapterDownloadPhase {
@@ -58,19 +59,23 @@ class ChapterDownloader {
   ChapterDownloader._();
 
   /// Downloads or extracts a specific MP4/M4B audiobook chapter
-  /// directly to [outputPath] as a playable standalone ADTS AAC file.
+  /// directly to [outputPath] as a playable standalone M4A (or AAC) file.
   ///
   /// This extracts the audio track sample boundaries using
   /// [Mp4Parser], downloads or reads only the specific sample range
-  /// for the chapter, and adds ADTS headers to each frame.
-  /// The resulting file is extremely lightweight, starts playing
-  /// immediately at 0:00, and shows the correct playback progress.
+  /// for the chapter, and packages the raw AAC samples into a standard
+  /// standalone `.m4a` container (compatible with Chromecast, ExoPlayer,
+  /// AVPlayer, and standard media players). If [outputPath] explicitly
+  /// ends with `.aac`, legacy ADTS framing is used instead.
+  ///
+  /// For MP3 files, extracts the exact MPEG frame range without re-encoding.
   ///
   /// Returns a [ChapterDownloadResult] indicating success or failure.
   ///
   /// [originalUrl] can be a remote URL or a local file path.
   /// [chapterStartMs] / [chapterEndMs] are chapter boundaries in ms.
-  /// [outputPath] is the destination (`.aac` appended if missing).
+  /// [outputPath] is the destination (`.m4a` appended if extension omitted
+  /// for MP4 sources).
   /// [httpClient] is an optional custom [HttpClient] for remote URLs.
   /// [onProgress] is called with 0.0–1.0 during the download phase.
   /// [onPhase] is called with a [ChapterDownloadPhase] enum value
@@ -129,13 +134,16 @@ class ChapterDownloader {
       }
 
       var finalPath = outputPath;
+      final bool wantsAac = finalPath.toLowerCase().endsWith('.aac');
       if (isMp3) {
         if (!finalPath.toLowerCase().endsWith('.mp3')) {
           finalPath += '.mp3';
         }
       } else {
-        if (!finalPath.toLowerCase().endsWith('.aac')) {
-          finalPath += '.aac';
+        if (!wantsAac &&
+            !finalPath.toLowerCase().endsWith('.m4a') &&
+            !finalPath.toLowerCase().endsWith('.mp4')) {
+          finalPath += '.m4a';
         }
       }
 
@@ -281,8 +289,55 @@ class ChapterDownloader {
           payloadBytes = builder.takeBytes();
         }
 
-        // Build ADTS-wrapped output in memory, write in one shot
         onPhase?.call(ChapterDownloadPhase.writing);
+
+        if (!wantsAac && audioTrack.rawStsdBox != null) {
+          // Build standalone Chromecast-ready M4A file
+          final sampleSizes = <int>[];
+          final rawAudioBuilder = BytesBuilder(copy: false);
+
+          for (var i = startSampleIndex; i < endSampleIndex; i++) {
+            final sampleOffset = parser.getByteOffsetForSample(
+              audioTrack.trackId,
+              i,
+            );
+            if (sampleOffset == null) break;
+            final relativeOffset = sampleOffset - rangeStart;
+
+            int size;
+            if (audioTrack.sampleSize != null && audioTrack.sampleSize! > 0) {
+              size = audioTrack.sampleSize!;
+            } else if (i < audioTrack.sampleSizeTable.length) {
+              size = audioTrack.sampleSizeTable[i];
+            } else {
+              break;
+            }
+
+            if (relativeOffset + size > payloadBytes.length) break;
+
+            sampleSizes.add(size);
+            rawAudioBuilder.add(
+              payloadBytes.sublist(relativeOffset, relativeOffset + size),
+            );
+          }
+
+          final sampleDuration = audioTrack.timeToSampleTable.isNotEmpty
+              ? audioTrack.timeToSampleTable.first.duration
+              : 1024;
+
+          final m4aBytes = M4aMuxer.buildM4a(
+            rawStsdBox: audioTrack.rawStsdBox!,
+            sampleSizes: sampleSizes,
+            timeScale: timeScale,
+            sampleDuration: sampleDuration > 0 ? sampleDuration : 1024,
+            rawAudioData: rawAudioBuilder.takeBytes(),
+          );
+
+          await File(finalPath).writeAsBytes(m4aBytes);
+          return ChapterDownloadResult.success(finalPath);
+        }
+
+        // Build ADTS-wrapped output in memory, write in one shot (legacy / fallback)
         final outputBuilder = BytesBuilder();
         for (var i = startSampleIndex; i < endSampleIndex; i++) {
           final sampleOffset = parser.getByteOffsetForSample(

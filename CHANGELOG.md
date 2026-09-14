@@ -1,3 +1,7 @@
+## 0.9.4-beta.1
+
+- **Feat**: `ChapterDownloader.downloadChapter` now packages extracted MP4/M4B chapters directly into standard standalone `.m4a` containers (`audio/mp4`) by default, enabling playback and seeking on Chromecast, ExoPlayer, AVPlayer, and web audio receivers (legacy raw `.aac` ADTS format remains available when `.aac` extension is explicitly specified).
+
 ## 0.9.3
 
 - **Feat**: Added MOV container support (`.mov`, `video/quicktime`) and QuickTime chapter extraction from video and audio tracks (`tref/chap`).

@@ -280,7 +280,7 @@ class Chapter {
 
 ### Chapter Download
 
-Extract individual chapters from audiobooks as standalone playable AAC files. Supports both local files and remote URLs with parallel HTTP downloads for maximum throughput.
+Extract individual chapters from audiobooks as standalone playable M4A or MP3 files (with native Chromecast, ExoPlayer, and AVPlayer support). Supports both local files and remote URLs with parallel HTTP downloads for maximum throughput.
 
 ```dart
 import 'package:metadata_audio/metadata_audio.dart';
@@ -289,7 +289,7 @@ final result = await ChapterDownloader.downloadChapter(
   originalUrl: 'https://example.com/audiobook.m4b',
   chapterStartMs: chapter.start,
   chapterEndMs: chapter.end!,
-  outputPath: '/path/to/chapter_1.aac',
+  outputPath: '/path/to/chapter_1.m4a',
   parallelChunks: 4, // Number of parallel HTTP connections
   onPhase: (phase) {
     // ChapterDownloadPhase: connecting, analyzing,

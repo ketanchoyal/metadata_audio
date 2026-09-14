@@ -243,7 +243,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   Future<void> _testCustomRangeDownload(String url, int startMs, int endMs, {String? title}) async {
     final isMp3 = url.toLowerCase().contains('.mp3') ||
         url.toLowerCase().contains('/mp3/');
-    final ext = isMp3 ? 'mp3' : 'aac';
+    final ext = isMp3 ? 'mp3' : 'm4a';
     
     final cleanTitle = title != null 
         ? title.replaceAll(RegExp(r'[^\w\-\.]'), '_')
@@ -279,7 +279,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         case ChapterDownloadPhase.downloading:
           return 'Downloading chapter audio...';
         case ChapterDownloadPhase.writing:
-          return isMp3 ? 'Writing playable MP3 file...' : 'Writing playable AAC file...';
+          return isMp3 ? 'Writing playable MP3 file...' : 'Writing playable M4A file...';
       }
     }
 

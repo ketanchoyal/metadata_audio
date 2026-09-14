@@ -1,6 +1,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/model/types.dart';
@@ -30,6 +31,7 @@ class Mp4Parser {
       isAudio: track.isAudio,
       sampleRate: desc?.sampleRate,
       numberOfChannels: desc?.numberOfChannels,
+      rawStsdBox: track.rawStsdBox,
     );
   }).toList();
 
@@ -322,6 +324,19 @@ class Mp4Parser {
     if (track == null) {
       return;
     }
+
+    final boxLength = payload.length + 8;
+    final stsdBox = Uint8List(boxLength);
+    stsdBox[0] = (boxLength >> 24) & 0xFF;
+    stsdBox[1] = (boxLength >> 16) & 0xFF;
+    stsdBox[2] = (boxLength >> 8) & 0xFF;
+    stsdBox[3] = boxLength & 0xFF;
+    stsdBox[4] = 0x73; // 's'
+    stsdBox[5] = 0x74; // 't'
+    stsdBox[6] = 0x73; // 's'
+    stsdBox[7] = 0x64; // 'd'
+    stsdBox.setRange(8, boxLength, payload);
+    track.rawStsdBox = stsdBox;
 
     final descriptions = AtomToken.parseStsd(payload);
     track.sampleDescriptions.addAll(descriptions);
@@ -1024,7 +1039,8 @@ class Mp4Parser {
       return false;
     }
 
-    // Prefer an audio track as referenced track; fallback to video or any owner.
+    // Prefer an audio track as referenced track; fallback to video or
+    // any owner.
     final chapterOwnerTrack = tracksWithChapters.firstWhere(
       (track) => track.isAudio,
       orElse: () => tracksWithChapters.firstWhere(
@@ -1489,6 +1505,7 @@ class _TrackDescription {
   final List<int> sampleSizeTable = <int>[];
   final List<int> chunkOffsetTable = <int>[];
   final List<int> chapterTrackIds = <int>[];
+  List<int>? rawStsdBox;
 
   bool get isAudio => handlerType == 'soun' || handlerType == 'audi';
   bool get isVideo => handlerType == 'vide';
@@ -1528,6 +1545,7 @@ class Mp4TrackInfo {
     required this.isAudio,
     required this.sampleRate,
     required this.numberOfChannels,
+    this.rawStsdBox,
   });
 
   final int trackId;
@@ -1539,4 +1557,5 @@ class Mp4TrackInfo {
   final bool isAudio;
   final int? sampleRate;
   final int? numberOfChannels;
+  final List<int>? rawStsdBox;
 }
