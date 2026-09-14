@@ -1611,7 +1611,7 @@ Future<AudioMetadata> _parseWithProbe(
   try {
     final metadata = await parseFromTokenizer(tokenizer, options: options);
     if (_shouldRetryWithFullDownload(metadata)) {
-      return _parseWithFullDownload(url, timeout, options);
+      return await _parseWithFullDownload(url, timeout, options);
     }
     return metadata;
   } finally {

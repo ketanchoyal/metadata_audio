@@ -1,5 +1,10 @@
-## 0.9.2
+## 0.9.3
 
+- **Feat**: Added MOV container support (`.mov`, `video/quicktime`) and QuickTime chapter extraction from video and audio tracks (`tref/chap`).
+- **Fixed**: Ensure QuickTime track reference chapters are preserved without being overwritten by Nero `chpl` atoms, and support multiple media tracks referencing the chapter track simultaneously.
+- **Improved**: Chapter end-time calculations respect the chapter track's own timescale and duration when available.
+
+## 0.9.2
 - **Feat**: Extended `ChapterDownloader.downloadChapter` to support downloading and extracting specific time ranges (chapters) from MP3/MPEG files, allowing partial downloading/slicing of files without embedded chapters using external timestamps.
 - **Fixed**: Skips the VBR Xing/Info header frame when downloading MP3 slices starting at the beginning of the file, preventing player decoders from incorrectly reading the original total duration and stream size.
 - **Fixed**: Added asynchronous `prefetchRange` calls inside MP3 parser offset and frame synchronization loops, resolving `TokenizerException` ("Use prefetchRange() before reading") when downloading MP3 ranges over remote URLs.

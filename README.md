@@ -6,9 +6,9 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 
 ## Features
 
-- **Multi-format support**: MP3, FLAC, Ogg Vorbis, MP4, WAV, AIFF, APE, ASF, Matroska, and more
+- **Multi-format support**: MP3, FLAC, Ogg Vorbis, MP4, MOV, WAV, AIFF, APE, ASF, Matroska, and more
 - **Comprehensive metadata**: ID3, Vorbis comments, iTunes tags, and other metadata standards
-- **Chapter/Track boundaries**: Extract embedded chapter markers, cue points, and track boundaries (MP4, FLAC, Ogg, WAV, Matroska)
+- **Chapter/Track boundaries**: Extract embedded chapter markers, cue points, and track boundaries (MP4, MOV, FLAC, Ogg, WAV, Matroska)
 - **Live metadata observation**: Receive incremental `format`, `common`, and chapter updates while parsing is still in progress
 - **Smart URL parsing**: Automatically selects optimal download strategy for remote files
 - **Streaming support**: Parse metadata without loading entire files into memory
@@ -194,7 +194,7 @@ print(customId.path); // my-custom-tag
 | MP3    | ✅ Complete | ID3v1, ID3v2.2/2.3/2.4, MPEG audio, Lyrics3, ID3v2 chapters (CHAP/CTOC) |
 | FLAC   | ✅ Complete | Vorbis comments, picture metadata, CUESHEET block → chapters |
 | OGG    | ✅ Complete | Vorbis, Opus, Speex, FLAC-in-Ogg, Vorbis chapter tags (CHAPTER###) |
-| MP4/M4A| ✅ Complete | iTunes atoms, chapter tracks (chap/tref), QuickTime chapters |
+| MP4/M4A/MOV| ✅ Complete | iTunes atoms, chapter tracks (chap/tref), QuickTime chapters |
 | WAV    | ✅ Complete | RIFF, LIST-INFO, BWF, cue points + adtl labels, ltxt chunks |
 | AIFF   | ✅ Complete | AIFF-C, ID3, chunks |
 | APE    | ✅ Complete | APEv2 tags, Monkey's Audio header |
@@ -256,8 +256,8 @@ The library supports extracting embedded track/disk boundaries and chapter marke
 | Format | Source | Description |
 |--------|--------|-------------|
 | **MP3** | ID3v2 CHAP/CTOC | ID3v2.3/2.4 chapter frames |
-| **MP4/M4A** | Chapter track | QuickTime `chap` track reference with sample tables |
-| **MP4/M4A** | iTunes chapters | Text track chapters in M4B audiobooks |
+| **MP4/M4A/MOV** | Chapter track | QuickTime `chap` track reference from video or audio tracks |
+| **MP4/M4A/MOV** | iTunes / Nero chapters | Text track chapters in M4B audiobooks, Nero `chpl` atoms |
 | **FLAC** | CUESHEET | FLAC native CUESHEET metadata block |
 | **FLAC** | Vorbis comments | `CHAPTER###` and `CHAPTER###NAME` tags |
 | **Ogg** | Vorbis comments | `CHAPTER###` timestamp tags |

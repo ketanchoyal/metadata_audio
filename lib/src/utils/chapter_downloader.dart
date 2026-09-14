@@ -140,7 +140,7 @@ class ChapterDownloader {
       }
 
       if (isMp3) {
-        return _downloadMp3Chapter(
+        return await _downloadMp3Chapter(
           originalUrl: originalUrl,
           chapterStartMs: chapterStartMs,
           chapterEndMs: chapterEndMs,

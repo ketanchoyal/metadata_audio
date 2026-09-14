@@ -17,6 +17,7 @@ class Mp4Loader extends ParserLoader {
     'm4p',
     'm4r',
     'm4v',
+    'mov',
   ];
 
   @override
@@ -24,6 +25,7 @@ class Mp4Loader extends ParserLoader {
     'audio/mp4',
     'video/mp4',
     'audio/x-m4a',
+    'video/quicktime',
   ];
 
   @override

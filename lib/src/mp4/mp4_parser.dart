@@ -672,7 +672,9 @@ class Mp4Parser {
 
     // Process chpl (Nero chapter list) chapters if present.
     // chpl uses a fixed time base of 1/10000000.
-    if (_chplChapters.isNotEmpty && options.includeChapters) {
+    if (_chplChapters.isNotEmpty &&
+        options.includeChapters &&
+        metadata.format.chapters == null) {
       _processChplChapters();
     }
   }
@@ -681,21 +683,38 @@ class Mp4Parser {
     final tracksWithChapters = _tracks.values
         .where((track) => track.chapterTrackIds.isNotEmpty)
         .toList();
-    if (tracksWithChapters.length != 1) {
+    if (tracksWithChapters.isEmpty) {
       return false;
     }
 
-    final chapterOwnerTrack = tracksWithChapters.single;
-    final chapterTracks = _tracks.values
-        .where(
-          (track) => chapterOwnerTrack.chapterTrackIds.contains(track.trackId),
-        )
-        .toList();
-    if (chapterTracks.length != 1) {
+    final chapterTrackIds =
+        tracksWithChapters.expand((track) => track.chapterTrackIds).toSet();
+    if (chapterTrackIds.isEmpty) {
       return false;
     }
 
-    final chapterTrack = chapterTracks.single;
+    // Resolve the referenced chapter track.
+    _TrackDescription? chapterTrack;
+    for (final id in chapterTrackIds) {
+      chapterTrack = _tracks[id];
+      if (chapterTrack != null) {
+        break;
+      }
+    }
+    if (chapterTrack == null) {
+      return false;
+    }
+
+    // Prefer an audio track as referenced track;
+    // fallback to video or any owner.
+    final chapterOwnerTrack = tracksWithChapters.firstWhere(
+      (track) => track.isAudio,
+      orElse: () => tracksWithChapters.firstWhere(
+        (track) => track.isVideo,
+        orElse: () => tracksWithChapters.first,
+      ),
+    );
+
     final chapters = await _parseChapterTrackByAbsoluteOffsets(
       chapterTrack,
       chapterOwnerTrack,
@@ -802,14 +821,18 @@ class Mp4Parser {
       );
     }
 
+    final durationUnits =
+        chapterTrack.durationUnits ?? referencedTrack.durationUnits;
+    final timeScale =
+        (chapterTrack.durationUnits != null ? chapterTrack.timeScale : null) ??
+            referencedTrack.timeScale;
+
     for (var i = 0; i < chapters.length; i++) {
       final current = chapters[i];
       var end = i + 1 < chapters.length
           ? chapters[i + 1].start
-          : (referencedTrack.durationUnits != null
-                ? ((referencedTrack.durationUnits! * 1000) /
-                          referencedTrack.timeScale!)
-                      .round()
+          : (durationUnits != null && timeScale != null && timeScale > 0
+                ? ((durationUnits * 1000) / timeScale).round()
                 : null);
 
       if (end != null && end < current.start) {
@@ -979,21 +1002,37 @@ class Mp4Parser {
     final tracksWithChapters = _tracks.values
         .where((track) => track.chapterTrackIds.isNotEmpty)
         .toList();
-    if (tracksWithChapters.length != 1) {
+    if (tracksWithChapters.isEmpty) {
       return false;
     }
 
-    final chapterOwnerTrack = tracksWithChapters.single;
-    final chapterTracks = _tracks.values
-        .where(
-          (track) => chapterOwnerTrack.chapterTrackIds.contains(track.trackId),
-        )
-        .toList();
-    if (chapterTracks.length != 1) {
+    final chapterTrackIds =
+        tracksWithChapters.expand((track) => track.chapterTrackIds).toSet();
+    if (chapterTrackIds.isEmpty) {
       return false;
     }
 
-    final chapterTrack = chapterTracks.single;
+    // Resolve the referenced chapter track.
+    _TrackDescription? chapterTrack;
+    for (final id in chapterTrackIds) {
+      chapterTrack = _tracks[id];
+      if (chapterTrack != null) {
+        break;
+      }
+    }
+    if (chapterTrack == null) {
+      return false;
+    }
+
+    // Prefer an audio track as referenced track; fallback to video or any owner.
+    final chapterOwnerTrack = tracksWithChapters.firstWhere(
+      (track) => track.isAudio,
+      orElse: () => tracksWithChapters.firstWhere(
+        (track) => track.isVideo,
+        orElse: () => tracksWithChapters.first,
+      ),
+    );
+
     final chapters = await _parseChapterTrack(
       chapterTrack,
       chapterOwnerTrack,
@@ -1127,14 +1166,18 @@ class Mp4Parser {
       );
     }
 
+    final durationUnits =
+        chapterTrack.durationUnits ?? referencedTrack.durationUnits;
+    final timeScale =
+        (chapterTrack.durationUnits != null ? chapterTrack.timeScale : null) ??
+            referencedTrack.timeScale;
+
     for (var i = 0; i < chapters.length; i++) {
       final current = chapters[i];
       var end = i + 1 < chapters.length
           ? chapters[i + 1].start
-          : (referencedTrack.durationUnits != null
-                ? ((referencedTrack.durationUnits! * 1000) /
-                          referencedTrack.timeScale!)
-                      .round()
+          : (durationUnits != null && timeScale != null && timeScale > 0
+                ? ((durationUnits * 1000) / timeScale).round()
                 : null);
 
       if (end != null && end < current.start) {
