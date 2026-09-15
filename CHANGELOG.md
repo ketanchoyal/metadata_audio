@@ -1,3 +1,9 @@
+## 0.9.4-beta.2
+
+- **Feat**: Added `AudioMetadataCache` to store parsed MP4/M4B audio track structures and sample tables in the OS temporary directory (`Directory.systemTemp`), preventing duplicate container parsing and network calls on subsequent chapter downloads.
+- **Feat**: Added manual cache management methods: `ChapterDownloader.clearCache()`, `ChapterDownloader.getCacheSize()`, `AudioMetadataCache.clearCache()`, and `AudioMetadataCache.evict(url)`.
+- **Fixed**: Added HTTP 429 (Too Many Requests) resilience with exponential backoff, `Retry-After` header support, staggered parallel chunk starts, and automatic sequential download fallback across `ChapterDownloader` and HTTP tokenizers.
+
 ## 0.9.4-beta.1
 
 - **Feat**: `ChapterDownloader.downloadChapter` now packages extracted MP4/M4B chapters directly into standard standalone `.m4a` containers (`audio/mp4`) by default, enabling playback and seeking on Chromecast, ExoPlayer, AVPlayer, and web audio receivers (legacy raw `.aac` ADTS format remains available when `.aac` extension is explicitly specified).

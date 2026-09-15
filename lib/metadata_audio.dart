@@ -8,4 +8,5 @@ export 'src/parser_factory.dart';
 export 'src/tokenizer/http_tokenizers.dart';
 export 'src/tokenizer/io_tokenizers.dart';
 export 'src/tokenizer/tokenizer.dart';
+export 'src/utils/audio_metadata_cache.dart';
 export 'src/utils/chapter_downloader.dart';

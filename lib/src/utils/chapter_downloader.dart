@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -60,6 +61,11 @@ class ChapterDownloader {
 
   /// Downloads or extracts a specific MP4/M4B audiobook chapter
   /// directly to [outputPath] as a playable standalone M4A (or AAC) file.
+  ///
+  /// On the **first call** for a given URL the MP4 container is parsed in
+  /// full and the audio-track metadata is stored to the OS temp directory
+  /// (`AudioMetadataCache`). Subsequent calls reuse that cache, skipping
+  /// the parse step entirely – even across app restarts.
   ///
   /// This extracts the audio track sample boundaries using
   /// [Mp4Parser], downloads or reads only the specific sample range
@@ -161,14 +167,59 @@ class ChapterDownloader {
         );
       }
 
-      final Tokenizer tokenizer;
+      return await _downloadMp4Chapter(
+        originalUrl: originalUrl,
+        chapterStartMs: chapterStartMs,
+        chapterEndMs: chapterEndMs,
+        finalPath: finalPath,
+        wantsAac: wantsAac,
+        isRemote: isRemote,
+        httpClient: httpClient,
+        onProgress: onProgress,
+        onPhase: onPhase,
+        parallelChunks: parallelChunks,
+      );
+    } catch (e) {
+      return ChapterDownloadResult.failure(e.toString());
+    }
+  }
 
-      onPhase?.call(ChapterDownloadPhase.connecting);
+  /// Clears all cached audiobook metadata written to the OS temp directory.
+  ///
+  /// Call this when the user explicitly triggers "Clear Cache" in the UI.
+  /// The OS may also evict the cache at any time on its own.
+  static Future<void> clearCache() => AudioMetadataCache.clearCache();
+
+  /// Returns the total size of cached metadata files on disk in bytes.
+  static int getCacheSize() => AudioMetadataCache.getCacheSize();
+
+  // ── MP4/M4B chapter extraction ─────────────────────────────────────────────
+
+  static Future<ChapterDownloadResult> _downloadMp4Chapter({
+    required String originalUrl,
+    required int chapterStartMs,
+    required int chapterEndMs,
+    required String finalPath,
+    required bool wantsAac,
+    required bool isRemote,
+    required int parallelChunks,
+    HttpClient? httpClient,
+    void Function(double progress)? onProgress,
+    void Function(ChapterDownloadPhase phase)? onPhase,
+  }) async {
+    onPhase?.call(ChapterDownloadPhase.connecting);
+
+    // ── 1. Resolve audio-track metadata (cache-first) ─────────────────────
+    var cached = await AudioMetadataCache.get(originalUrl);
+
+    if (cached == null) {
+      // Slow path: parse the container and populate the cache.
+      final Tokenizer tokenizer;
       if (isRemote) {
         tokenizer = await RandomAccessTokenizer.fromUrl(originalUrl);
       } else {
         final file = File(originalUrl);
-        if (!await file.exists()) {
+        if (!file.existsSync()) {
           return ChapterDownloadResult.failure(
             'Original local file not found at $originalUrl',
           );
@@ -176,20 +227,20 @@ class ChapterDownloader {
         tokenizer = FileTokenizer.fromFile(file);
       }
 
-      final mapper = CombinedTagMapper();
-      final collector = MetadataCollector(
-        mapper,
-        const ParseOptions(includeChapters: true),
-      );
-      final parser = Mp4Parser(
-        metadata: collector,
-        tokenizer: tokenizer,
-        options: const ParseOptions(includeChapters: true),
-      );
-
       try {
         onPhase?.call(ChapterDownloadPhase.analyzing);
+        final mapper = CombinedTagMapper();
+        final collector = MetadataCollector(
+          mapper,
+          const ParseOptions(includeChapters: true),
+        );
+        final parser = Mp4Parser(
+          metadata: collector,
+          tokenizer: tokenizer,
+          options: const ParseOptions(includeChapters: true),
+        );
         await parser.parse();
+
         final tracks = parser.getTrackInfos();
         final audioTrack = tracks.where((t) => t.isAudio).firstOrNull;
         if (audioTrack == null) {
@@ -198,181 +249,19 @@ class ChapterDownloader {
           );
         }
 
-        onPhase?.call(ChapterDownloadPhase.resolvingSamples);
-        final timeScale = audioTrack.timeScale ?? 1000;
-        final startOffsetUnits = (chapterStartMs * timeScale) ~/ 1000;
-        final endOffsetUnits = (chapterEndMs * timeScale) ~/ 1000;
+        final stsc =
+            parser.getSampleToChunkTable(audioTrack.trackId) ?? [];
+        final stco =
+            parser.getChunkOffsetTable(audioTrack.trackId) ?? [];
 
-        final startSampleIndex = parser.getSampleIndexForTime(
-          audioTrack.trackId,
-          startOffsetUnits,
-        );
-        final endSampleIndex = parser.getSampleIndexForTime(
-          audioTrack.trackId,
-          endOffsetUnits,
+        cached = CachedAudioTrack.fromParser(
+          trackInfo: audioTrack,
+          sampleToChunkTable: stsc,
+          chunkOffsetTable: stco,
         );
 
-        if (startSampleIndex == null || endSampleIndex == null) {
-          return const ChapterDownloadResult.failure(
-            'Could not map chapter timestamps to audio samples.',
-          );
-        }
-
-        final startByteOffset = parser.getByteOffsetForSample(
-          audioTrack.trackId,
-          startSampleIndex,
-        );
-        if (startByteOffset == null) {
-          return const ChapterDownloadResult.failure(
-            'Could not resolve starting byte offset for chapter.',
-          );
-        }
-
-        final rangeStart = startByteOffset;
-        final lastSampleIndex = endSampleIndex - 1;
-        final lastSampleByteOffset = parser.getByteOffsetForSample(
-          audioTrack.trackId,
-          lastSampleIndex,
-        );
-        if (lastSampleByteOffset == null) {
-          return const ChapterDownloadResult.failure(
-            'Could not resolve ending byte offset for chapter.',
-          );
-        }
-        int lastSampleSize;
-        if (audioTrack.sampleSize != null && audioTrack.sampleSize! > 0) {
-          lastSampleSize = audioTrack.sampleSize!;
-        } else if (lastSampleIndex < audioTrack.sampleSizeTable.length) {
-          lastSampleSize = audioTrack.sampleSizeTable[lastSampleIndex];
-        } else {
-          return const ChapterDownloadResult.failure(
-            'Could not resolve ending sample size.',
-          );
-        }
-        final rangeEnd = lastSampleByteOffset + lastSampleSize;
-        final downloadSize = rangeEnd - rangeStart;
-
-        if (downloadSize <= 0) {
-          return const ChapterDownloadResult.failure(
-            'Chapter does not contain any audio samples.',
-          );
-        }
-
-        final sampleRate = audioTrack.sampleRate ?? 44100;
-        final channels = audioTrack.numberOfChannels ?? 2;
-        final samplingFreqIndex = _getSamplingFrequencyIndex(sampleRate);
-
-        // Fetch the raw payload bytes (including any interleaved gaps/non-audio bytes)
-        final Uint8List payloadBytes;
-        if (isRemote) {
-          onPhase?.call(ChapterDownloadPhase.downloading);
-          payloadBytes = await _downloadRangeParallel(
-            url: originalUrl,
-            rangeStart: rangeStart,
-            totalSize: downloadSize,
-            parallelChunks: parallelChunks,
-            httpClient: httpClient,
-            onProgress: onProgress,
-          );
-        } else {
-          onPhase?.call(ChapterDownloadPhase.downloading);
-          final localFile = File(originalUrl);
-          final builder = BytesBuilder(copy: false);
-          var readBytes = 0;
-          await for (final chunk in localFile.openRead(rangeStart, rangeEnd)) {
-            builder.add(chunk);
-            readBytes += chunk.length;
-            if (onProgress != null && downloadSize > 0) {
-              onProgress((readBytes / downloadSize).clamp(0.0, 1.0));
-            }
-          }
-          payloadBytes = builder.takeBytes();
-        }
-
-        onPhase?.call(ChapterDownloadPhase.writing);
-
-        if (!wantsAac && audioTrack.rawStsdBox != null) {
-          // Build standalone Chromecast-ready M4A file
-          final sampleSizes = <int>[];
-          final rawAudioBuilder = BytesBuilder(copy: false);
-
-          for (var i = startSampleIndex; i < endSampleIndex; i++) {
-            final sampleOffset = parser.getByteOffsetForSample(
-              audioTrack.trackId,
-              i,
-            );
-            if (sampleOffset == null) break;
-            final relativeOffset = sampleOffset - rangeStart;
-
-            int size;
-            if (audioTrack.sampleSize != null && audioTrack.sampleSize! > 0) {
-              size = audioTrack.sampleSize!;
-            } else if (i < audioTrack.sampleSizeTable.length) {
-              size = audioTrack.sampleSizeTable[i];
-            } else {
-              break;
-            }
-
-            if (relativeOffset + size > payloadBytes.length) break;
-
-            sampleSizes.add(size);
-            rawAudioBuilder.add(
-              payloadBytes.sublist(relativeOffset, relativeOffset + size),
-            );
-          }
-
-          final sampleDuration = audioTrack.timeToSampleTable.isNotEmpty
-              ? audioTrack.timeToSampleTable.first.duration
-              : 1024;
-
-          final m4aBytes = M4aMuxer.buildM4a(
-            rawStsdBox: audioTrack.rawStsdBox!,
-            sampleSizes: sampleSizes,
-            timeScale: timeScale,
-            sampleDuration: sampleDuration > 0 ? sampleDuration : 1024,
-            rawAudioData: rawAudioBuilder.takeBytes(),
-          );
-
-          await File(finalPath).writeAsBytes(m4aBytes);
-          return ChapterDownloadResult.success(finalPath);
-        }
-
-        // Build ADTS-wrapped output in memory, write in one shot (legacy / fallback)
-        final outputBuilder = BytesBuilder();
-        for (var i = startSampleIndex; i < endSampleIndex; i++) {
-          final sampleOffset = parser.getByteOffsetForSample(
-            audioTrack.trackId,
-            i,
-          );
-          if (sampleOffset == null) break;
-          final relativeOffset = sampleOffset - rangeStart;
-
-          int size;
-          if (audioTrack.sampleSize != null && audioTrack.sampleSize! > 0) {
-            size = audioTrack.sampleSize!;
-          } else if (i < audioTrack.sampleSizeTable.length) {
-            size = audioTrack.sampleSizeTable[i];
-          } else {
-            break;
-          }
-
-          if (relativeOffset + size > payloadBytes.length) break;
-
-          outputBuilder.add(
-            _buildAdtsHeader(
-              profile: 1, // AAC-LC
-              samplingFrequencyIndex: samplingFreqIndex,
-              channelConfig: channels,
-              frameLength: size + 7,
-            ),
-          );
-          outputBuilder.add(
-            payloadBytes.sublist(relativeOffset, relativeOffset + size),
-          );
-        }
-
-        await File(finalPath).writeAsBytes(outputBuilder.takeBytes());
-        return ChapterDownloadResult.success(finalPath);
+        // Persist to disk asynchronously (non-blocking).
+        unawaited(AudioMetadataCache.put(originalUrl, cached));
       } finally {
         if (isRemote) {
           (tokenizer as RandomAccessTokenizer).close();
@@ -380,16 +269,185 @@ class ChapterDownloader {
           (tokenizer as FileTokenizer).close();
         }
       }
-    } catch (e) {
-      return ChapterDownloadResult.failure(e.toString());
     }
+
+    // ── 2. Map chapter timestamps → sample indices & byte offsets ─────────
+    onPhase?.call(ChapterDownloadPhase.resolvingSamples);
+
+    final timeScale = cached.timeScale ?? 1000;
+    final startOffsetUnits = (chapterStartMs * timeScale) ~/ 1000;
+    final endOffsetUnits = (chapterEndMs * timeScale) ~/ 1000;
+
+    final startSampleIndex = cached.getSampleIndexForTime(startOffsetUnits);
+    final endSampleIndex = cached.getSampleIndexForTime(endOffsetUnits);
+
+    if (startSampleIndex == null || endSampleIndex == null) {
+      return const ChapterDownloadResult.failure(
+        'Could not map chapter timestamps to audio samples.',
+      );
+    }
+
+    final startByteOffset = cached.getByteOffsetForSample(startSampleIndex);
+    if (startByteOffset == null) {
+      return const ChapterDownloadResult.failure(
+        'Could not resolve starting byte offset for chapter.',
+      );
+    }
+
+    final lastSampleIndex = endSampleIndex - 1;
+    final lastSampleByteOffset =
+        cached.getByteOffsetForSample(lastSampleIndex);
+    if (lastSampleByteOffset == null) {
+      return const ChapterDownloadResult.failure(
+        'Could not resolve ending byte offset for chapter.',
+      );
+    }
+
+    int lastSampleSize;
+    if (cached.sampleSize != null && cached.sampleSize! > 0) {
+      lastSampleSize = cached.sampleSize!;
+    } else if (lastSampleIndex < cached.sampleSizeTable.length) {
+      lastSampleSize = cached.sampleSizeTable[lastSampleIndex];
+    } else {
+      return const ChapterDownloadResult.failure(
+        'Could not resolve ending sample size.',
+      );
+    }
+
+    final rangeStart = startByteOffset;
+    final rangeEnd = lastSampleByteOffset + lastSampleSize;
+    final downloadSize = rangeEnd - rangeStart;
+
+    if (downloadSize <= 0) {
+      return const ChapterDownloadResult.failure(
+        'Chapter does not contain any audio samples.',
+      );
+    }
+
+    // ── 3. Fetch raw payload bytes ────────────────────────────────────────
+    onPhase?.call(ChapterDownloadPhase.downloading);
+
+    final Uint8List payloadBytes;
+    if (isRemote) {
+      payloadBytes = await _downloadRangeParallel(
+        url: originalUrl,
+        rangeStart: rangeStart,
+        totalSize: downloadSize,
+        parallelChunks: parallelChunks,
+        httpClient: httpClient,
+        onProgress: onProgress,
+      );
+    } else {
+      final localFile = File(originalUrl);
+      final builder = BytesBuilder(copy: false);
+      var readBytes = 0;
+      await for (final chunk in localFile.openRead(rangeStart, rangeEnd)) {
+        builder.add(chunk);
+        readBytes += chunk.length;
+        if (onProgress != null && downloadSize > 0) {
+          onProgress((readBytes / downloadSize).clamp(0.0, 1.0));
+        }
+      }
+      payloadBytes = builder.takeBytes();
+    }
+
+    // ── 4. Write output file ──────────────────────────────────────────────
+    onPhase?.call(ChapterDownloadPhase.writing);
+
+    final sampleRate = cached.sampleRate ?? 44100;
+    final channels = cached.numberOfChannels ?? 2;
+    final samplingFreqIndex = _getSamplingFrequencyIndex(sampleRate);
+
+    if (!wantsAac && cached.rawStsdBox != null) {
+      // Build standalone Chromecast-ready M4A file
+      final sampleSizes = <int>[];
+      final rawAudioBuilder = BytesBuilder(copy: false);
+
+      for (var i = startSampleIndex; i < endSampleIndex; i++) {
+        final sampleOffset = cached.getByteOffsetForSample(i);
+        if (sampleOffset == null) break;
+        final relativeOffset = sampleOffset - rangeStart;
+
+        int size;
+        if (cached.sampleSize != null && cached.sampleSize! > 0) {
+          size = cached.sampleSize!;
+        } else if (i < cached.sampleSizeTable.length) {
+          size = cached.sampleSizeTable[i];
+        } else {
+          break;
+        }
+
+        if (relativeOffset + size > payloadBytes.length) break;
+
+        sampleSizes.add(size);
+        rawAudioBuilder.add(
+          payloadBytes.sublist(relativeOffset, relativeOffset + size),
+        );
+      }
+
+      final sampleDuration = cached.timeToSampleTable.isNotEmpty
+          ? cached.timeToSampleTable.first.duration
+          : 1024;
+
+      final m4aBytes = M4aMuxer.buildM4a(
+        rawStsdBox: cached.rawStsdBox!,
+        sampleSizes: sampleSizes,
+        timeScale: timeScale,
+        sampleDuration: sampleDuration > 0 ? sampleDuration : 1024,
+        rawAudioData: rawAudioBuilder.takeBytes(),
+      );
+
+      await File(finalPath).writeAsBytes(m4aBytes);
+      return ChapterDownloadResult.success(finalPath);
+    }
+
+    // Legacy ADTS-wrapped output
+    final outputBuilder = BytesBuilder();
+    for (var i = startSampleIndex; i < endSampleIndex; i++) {
+      final sampleOffset = cached.getByteOffsetForSample(i);
+      if (sampleOffset == null) break;
+      final relativeOffset = sampleOffset - rangeStart;
+
+      int size;
+      if (cached.sampleSize != null && cached.sampleSize! > 0) {
+        size = cached.sampleSize!;
+      } else if (i < cached.sampleSizeTable.length) {
+        size = cached.sampleSizeTable[i];
+      } else {
+        break;
+      }
+
+      if (relativeOffset + size > payloadBytes.length) break;
+
+      outputBuilder.add(
+        _buildAdtsHeader(
+          profile: 1, // AAC-LC
+          samplingFrequencyIndex: samplingFreqIndex,
+          channelConfig: channels,
+          frameLength: size + 7,
+        ),
+      );
+      outputBuilder.add(
+        payloadBytes.sublist(relativeOffset, relativeOffset + size),
+      );
+    }
+
+    await File(finalPath).writeAsBytes(outputBuilder.takeBytes());
+    return ChapterDownloadResult.success(finalPath);
   }
+
+  static const int _maxRetries = 5;
 
   /// Downloads a byte range using parallel HTTP connections.
   ///
-  /// Splits the total range into [parallelChunks] segments and
-  /// downloads them concurrently via [Future.wait]. Falls back to
-  /// a single request for payloads smaller than 512 KB.
+  /// Splits the total range into [parallelChunks] segments and downloads
+  /// them concurrently. Staggers chunk start requests slightly to reduce
+  /// the risk of triggering CDN / Cloudflare 429 rate limits.
+  ///
+  /// If the server responds with HTTP 429 (Too Many Requests), automatically
+  /// retries with exponential backoff (respecting `Retry-After`). If parallel
+  /// chunking triggers persistent rate limiting, automatically falls back to
+  /// a sequential single-range request.
   static Future<Uint8List> _downloadRangeParallel({
     required String url,
     required int rangeStart,
@@ -413,7 +471,7 @@ class ChapterDownloader {
 
     try {
       if (numChunks <= 1) {
-        return await _downloadSingleRange(
+        return await _downloadSingleRangeWithRetry(
           client: client,
           url: url,
           rangeStart: rangeStart,
@@ -425,57 +483,114 @@ class ChapterDownloader {
       final chunkSize = totalSize ~/ numChunks;
       final downloadedPerChunk = List<int>.filled(numChunks, 0);
 
-      final futures = List<Future<Uint8List>>.generate(numChunks, (i) {
-        final start = rangeStart + (i * chunkSize);
-        final end = (i == numChunks - 1)
-            ? rangeStart + totalSize - 1
-            : start + chunkSize - 1;
-        final expectedChunkSize = end - start + 1;
+      try {
+        final futures = List<Future<Uint8List>>.generate(numChunks, (i) async {
+          // Stagger chunk starts slightly (100ms) to avoid simultaneous bursts
+          if (i > 0) {
+            await Future<void>.delayed(Duration(milliseconds: 100 * i));
+          }
+          final start = rangeStart + (i * chunkSize);
+          final end = (i == numChunks - 1)
+              ? rangeStart + totalSize - 1
+              : start + chunkSize - 1;
+          final expectedChunkSize = end - start + 1;
 
-        return _downloadSingleRange(
-          client: client,
-          url: url,
-          rangeStart: start,
-          rangeEnd: end,
-          onProgress: (chunkProgress) {
-            downloadedPerChunk[i] = (expectedChunkSize * chunkProgress).round();
-            if (onProgress != null) {
-              final totalDownloaded = downloadedPerChunk.fold<int>(
-                0,
-                (a, b) => a + b,
-              );
-              onProgress((totalDownloaded / totalSize).clamp(0.0, 1.0));
-            }
-          },
-        );
-      });
+          return _downloadSingleRangeWithRetry(
+            client: client,
+            url: url,
+            rangeStart: start,
+            rangeEnd: end,
+            onProgress: (chunkProgress) {
+              downloadedPerChunk[i] =
+                  (expectedChunkSize * chunkProgress).round();
+              if (onProgress != null) {
+                final totalDownloaded = downloadedPerChunk.fold<int>(
+                  0,
+                  (a, b) => a + b,
+                );
+                onProgress((totalDownloaded / totalSize).clamp(0.0, 1.0));
+              }
+            },
+          );
+        });
 
-      final results = await Future.wait(futures);
-      final combined = BytesBuilder(copy: false);
-      for (final chunk in results) {
-        combined.add(chunk);
+        final results = await Future.wait(futures);
+        final combined = BytesBuilder(copy: false);
+        for (final chunk in results) {
+          combined.add(chunk);
+        }
+        return combined.takeBytes();
+      } on Object catch (e) {
+        // If parallel downloading triggered rate limiting (HTTP 429) or
+        // connection resets, fall back to a single sequential download.
+        final msg = e.toString().toLowerCase();
+        if (msg.contains('429') || msg.contains('too many requests')) {
+          onProgress?.call(0);
+          return await _downloadSingleRangeWithRetry(
+            client: client,
+            url: url,
+            rangeStart: rangeStart,
+            rangeEnd: rangeStart + totalSize - 1,
+            onProgress: onProgress,
+          );
+        }
+        rethrow;
       }
-      return combined.takeBytes();
     } finally {
       if (shouldCloseClient) client.close();
     }
   }
 
-  /// Downloads a single byte range via an HTTP Range request.
-  static Future<Uint8List> _downloadSingleRange({
+  /// Downloads a single byte range with automatic retry on HTTP 429
+  /// (Too Many Requests) using exponential backoff.
+  static Future<Uint8List> _downloadSingleRangeWithRetry({
     required HttpClient client,
     required String url,
     required int rangeStart,
     required int rangeEnd,
     void Function(double progress)? onProgress,
+    int attempt = 0,
   }) async {
     final request = await client.getUrl(Uri.parse(url));
-    request.headers.add('Range', 'bytes=$rangeStart-$rangeEnd');
+    request.headers.set('User-Agent', 'metadata_audio/0.9.4');
+    request.headers.set('Range', 'bytes=$rangeStart-$rangeEnd');
     final response = await request.close();
 
+    if (response.statusCode == 429) {
+      await response.drain<void>();
+
+      if (attempt >= _maxRetries) {
+        throw HttpException(
+          'Server returned HTTP 429 (Too Many Requests) after '
+          '$_maxRetries retries for bytes=$rangeStart-$rangeEnd',
+        );
+      }
+
+      var delaySec = 1 << attempt; // 1, 2, 4, 8, 16 seconds
+      final retryAfter = response.headers.value('retry-after');
+      if (retryAfter != null) {
+        final parsed = int.tryParse(retryAfter.trim());
+        if (parsed != null && parsed > 0) {
+          delaySec = parsed;
+        }
+      }
+
+      await Future<void>.delayed(Duration(seconds: delaySec));
+      return _downloadSingleRangeWithRetry(
+        client: client,
+        url: url,
+        rangeStart: rangeStart,
+        rangeEnd: rangeEnd,
+        onProgress: onProgress,
+        attempt: attempt + 1,
+      );
+    }
+
     if (response.statusCode >= 400) {
+      await response.drain<void>();
       throw HttpException(
-        'Failed to download chunk: HTTP ${response.statusCode}',
+        'Failed to download chunk: HTTP ${response.statusCode} '
+        'for bytes=$rangeStart-$rangeEnd',
       );
     }
 

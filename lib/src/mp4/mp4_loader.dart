@@ -1,4 +1,4 @@
-library;
+import 'dart:async';
 
 import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
@@ -7,6 +7,7 @@ import 'package:metadata_audio/src/mp4/mp4_parser.dart';
 import 'package:metadata_audio/src/mp4/mp4_tag_mapper.dart';
 import 'package:metadata_audio/src/parser_factory.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 
 class Mp4Loader extends ParserLoader {
   @override
@@ -45,6 +46,22 @@ class Mp4Loader extends ParserLoader {
       options: options,
     );
     await parser.parse();
+
+    final source = tokenizer.fileInfo?.url ?? tokenizer.fileInfo?.path;
+    if (source != null && source.isNotEmpty) {
+      final audioTrack =
+          parser.getTrackInfos().where((t) => t.isAudio).firstOrNull;
+      if (audioTrack != null) {
+        final stsc = parser.getSampleToChunkTable(audioTrack.trackId) ?? [];
+        final stco = parser.getChunkOffsetTable(audioTrack.trackId) ?? [];
+        final cached = CachedAudioTrack.fromParser(
+          trackInfo: audioTrack,
+          sampleToChunkTable: stsc,
+          chunkOffsetTable: stco,
+        );
+        unawaited(AudioMetadataCache.put(source, cached));
+      }
+    }
 
     return metadata.toAudioMetadata();
   }

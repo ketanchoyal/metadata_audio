@@ -416,14 +416,36 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
     final effectiveTimeout = timeout ?? const Duration(seconds: 30);
 
     try {
-      // HEAD request to get file size
-      final headRequest = await client.headUrl(Uri.parse(url));
-      headRequest.followRedirects = true;
-      final headResponse = await headRequest.close().timeout(effectiveTimeout);
+      // HEAD request to get file size with 429 retry
+      const maxRetries = 4;
+      HttpClientResponse? headResponse;
+      for (var attempt = 0; attempt < maxRetries; attempt++) {
+        final headRequest = await client.headUrl(Uri.parse(url));
+        headRequest.headers.set('User-Agent', 'metadata_audio/0.9.4');
+        headRequest.followRedirects = true;
+        final response =
+            await headRequest.close().timeout(effectiveTimeout);
+        if (response.statusCode == 429) {
+          await response.drain<void>();
+          if (attempt < maxRetries - 1) {
+            var delaySec = 1 << attempt;
+            final retryAfter = response.headers.value('retry-after');
+            if (retryAfter != null) {
+              final parsed = int.tryParse(retryAfter.trim());
+              if (parsed != null && parsed > 0) delaySec = parsed;
+            }
+            await Future<void>.delayed(Duration(seconds: delaySec));
+            continue;
+          }
+        }
+        headResponse = response;
+        break;
+      }
 
-      if (headResponse.statusCode >= 300) {
+      if (headResponse == null || headResponse.statusCode >= 300) {
+        final code = headResponse?.statusCode ?? 0;
         throw FileDownloadError(
-          'HTTP ${headResponse.statusCode} error accessing URL: $url',
+          'HTTP $code error accessing URL: $url',
         );
       }
 
@@ -620,6 +642,21 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
         request.headers.add('Range', 'bytes=${range.start}-${range.end - 1}');
 
         final response = await request.close().timeout(timeout);
+
+        if (response.statusCode == 429) {
+          await response.drain<void>();
+          if (attempt < maxRetries - 1) {
+            var delaySec = 1 << attempt;
+            final retryAfter = response.headers.value('retry-after');
+            if (retryAfter != null) {
+              final parsed = int.tryParse(retryAfter.trim());
+              if (parsed != null && parsed > 0) delaySec = parsed;
+            }
+            await Future<void>.delayed(Duration(seconds: delaySec));
+            continue;
+          }
+          throw FileDownloadError('Range request failed with HTTP 429');
+        }
 
         if (response.statusCode != 206 && response.statusCode != 200) {
           throw FileDownloadError(
@@ -880,15 +917,36 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     final client = HttpClient();
 
     try {
-      final headRequest = await client.headUrl(Uri.parse(url));
-      headRequest.followRedirects = true;
-      final headResponse = await headRequest.close().timeout(
-        timeout ?? const Duration(seconds: 30),
-      );
+      const maxRetries = 4;
+      HttpClientResponse? headResponse;
+      for (var attempt = 0; attempt < maxRetries; attempt++) {
+        final headRequest = await client.headUrl(Uri.parse(url));
+        headRequest.headers.set('User-Agent', 'metadata_audio/0.9.4');
+        headRequest.followRedirects = true;
+        final response = await headRequest.close().timeout(
+          timeout ?? const Duration(seconds: 30),
+        );
+        if (response.statusCode == 429) {
+          await response.drain<void>();
+          if (attempt < maxRetries - 1) {
+            var delaySec = 1 << attempt;
+            final retryAfter = response.headers.value('retry-after');
+            if (retryAfter != null) {
+              final parsed = int.tryParse(retryAfter.trim());
+              if (parsed != null && parsed > 0) delaySec = parsed;
+            }
+            await Future<void>.delayed(Duration(seconds: delaySec));
+            continue;
+          }
+        }
+        headResponse = response;
+        break;
+      }
 
-      if (headResponse.statusCode >= 300) {
+      if (headResponse == null || headResponse.statusCode >= 300) {
+        final code = headResponse?.statusCode ?? 0;
         throw FileDownloadError(
-          'HTTP ${headResponse.statusCode} error accessing URL: $url',
+          'HTTP $code error accessing URL: $url',
         );
       }
 
@@ -1065,9 +1123,25 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
     for (var attempt = 0; attempt < maxRetries; attempt++) {
       try {
         final request = await _client.getUrl(Uri.parse(url));
+        request.headers.set('User-Agent', 'metadata_audio/0.9.4');
         request.headers.add('Range', 'bytes=$startByte-${endByte - 1}');
 
         final response = await request.close().timeout(_timeout);
+
+        if (response.statusCode == 429) {
+          await response.drain<void>();
+          if (attempt < maxRetries - 1) {
+            var delaySec = 1 << attempt;
+            final retryAfter = response.headers.value('retry-after');
+            if (retryAfter != null) {
+              final parsed = int.tryParse(retryAfter.trim());
+              if (parsed != null && parsed > 0) delaySec = parsed;
+            }
+            await Future<void>.delayed(Duration(seconds: delaySec));
+            continue;
+          }
+          throw FileDownloadError('Range request failed with HTTP 429');
+        }
 
         if (response.statusCode != 206 && response.statusCode != 200) {
           throw FileDownloadError(

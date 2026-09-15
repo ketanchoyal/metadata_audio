@@ -35,6 +35,20 @@ class Mp4Parser {
     );
   }).toList();
 
+  /// Returns the raw `stsc` (sample-to-chunk) table for [trackId].
+  ///
+  /// Exposed so callers can persist it as part of a metadata cache entry
+  /// without having to re-parse the container on future access.
+  List<StscEntry>? getSampleToChunkTable(int trackId) =>
+      _tracks[trackId]?.sampleToChunkTable;
+
+  /// Returns the raw `stco`/`co64` (chunk-offset) table for [trackId].
+  ///
+  /// Exposed so callers can persist it as part of a metadata cache entry
+  /// without having to re-parse the container on future access.
+  List<int>? getChunkOffsetTable(int trackId) =>
+      _tracks[trackId]?.chunkOffsetTable;
+
   int? getByteOffsetForSample(int trackId, int targetSampleIndex) {
     final track = _tracks[trackId];
     if (track == null) return null;

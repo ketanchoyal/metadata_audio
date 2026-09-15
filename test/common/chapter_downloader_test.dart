@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/mp4/atom_token.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -162,6 +163,78 @@ void main() {
       expect(result.isSuccess, isFalse);
       expect(result.error, isNotNull);
       expect(result.outputPath, isNull);
+    });
+
+    test('AudioMetadataCache saves, retrieves, and clears cached track metadata', () async {
+      await AudioMetadataCache.clearCache();
+      expect(AudioMetadataCache.getCacheSize(), equals(0));
+
+      const testUrl = 'https://example.com/audiobook_cache_test.m4b';
+      expect(await AudioMetadataCache.get(testUrl), isNull);
+
+      final track = CachedAudioTrack(
+        trackId: 1,
+        timeScale: 44100,
+        sampleRate: 44100,
+        numberOfChannels: 2,
+        sampleSize: 1024,
+        sampleSizeTable: [1024, 1024],
+        timeToSampleTable: const [SttsEntry(count: 2, duration: 1024)],
+        sampleToChunkTable: const [StscEntry(firstChunk: 1, samplesPerChunk: 2)],
+        chunkOffsetTable: const [1000],
+        rawStsdBox: const [0, 0, 0, 8, 115, 116, 115, 100],
+      );
+
+      await AudioMetadataCache.put(testUrl, track);
+
+      final retrieved = await AudioMetadataCache.get(testUrl);
+      expect(retrieved, isNotNull);
+      expect(retrieved!.trackId, equals(1));
+      expect(retrieved.timeScale, equals(44100));
+      expect(retrieved.sampleRate, equals(44100));
+      expect(retrieved.numberOfChannels, equals(2));
+      expect(retrieved.getSampleIndexForTime(1024), equals(1));
+      expect(retrieved.getByteOffsetForSample(0), equals(1000));
+      expect(retrieved.getByteOffsetForSample(1), equals(2024));
+
+      expect(AudioMetadataCache.getCacheSize(), greaterThan(0));
+
+      await AudioMetadataCache.clearCache();
+      expect(await AudioMetadataCache.get(testUrl), isNull);
+      expect(AudioMetadataCache.getCacheSize(), equals(0));
+    });
+
+    test('ChapterDownloader caches metadata and reuses it on subsequent chapter downloads', () async {
+      await ChapterDownloader.clearCache();
+
+      // First chapter download parses file and populates cache
+      final result1 = await ChapterDownloader.downloadChapter(
+        originalUrl: originalFilePath,
+        chapterStartMs: 0,
+        chapterEndMs: 2000,
+        outputPath: tempM4aPath,
+      );
+      expect(result1.isSuccess, isTrue);
+
+      // Verify cache now holds metadata for this file
+      final cachedTrack = await AudioMetadataCache.get(originalFilePath);
+      expect(cachedTrack, isNotNull);
+      expect(cachedTrack!.timeScale, isNotNull);
+
+      // Second chapter download reuses cache directly
+      final tempM4aPath2 = '${Directory.current.path}/test/common/playable_chapter_2_temp.m4a';
+      final result2 = await ChapterDownloader.downloadChapter(
+        originalUrl: originalFilePath,
+        chapterStartMs: 2000,
+        chapterEndMs: 4000,
+        outputPath: tempM4aPath2,
+      );
+      expect(result2.isSuccess, isTrue);
+
+      final f2 = File(tempM4aPath2);
+      expect(await f2.exists(), isTrue);
+      await f2.delete();
+      await ChapterDownloader.clearCache();
     });
   });
 }
