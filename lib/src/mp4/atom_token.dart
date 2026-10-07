@@ -451,7 +451,7 @@ class AtomToken {
     return entries;
   }
 
-  static (int, List<int>) parseStsz(List<int> bytes) {
+  static (int, int, List<int>) parseStsz(List<int> bytes) {
     if (bytes.length < 12) {
       throw Mp4ContentError('stsz atom payload too short');
     }
@@ -459,7 +459,7 @@ class AtomToken {
     final sampleSize = readUint32Be(bytes, 4);
     final entryCount = readUint32Be(bytes, 8);
     if (sampleSize != 0) {
-      return (sampleSize, const <int>[]);
+      return (sampleSize, entryCount, const <int>[]);
     }
 
     final requiredLength = 12 + (entryCount * 4);
@@ -476,7 +476,7 @@ class AtomToken {
       entries.add(readUint32Be(bytes, offset));
       offset += 4;
     }
-    return (sampleSize, entries);
+    return (sampleSize, entryCount, entries);
   }
 
   static List<int> parseStco(List<int> bytes) {

@@ -205,6 +205,31 @@ void main() {
       expect(metadata.format.chapters![1].end, 2000);
     });
 
+    test(
+        'parses MP4 chapter track when stsz uses uniform sample size and multiple samples share one chunk',
+        () async {
+      final bytes =
+          _buildSyntheticMp4WithUniformSampleSizeMultiSampleChunk();
+
+      final loader = Mp4Loader();
+      final metadata = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(bytes),
+          fileInfo: FileInfo(size: bytes.length),
+        ),
+        const ParseOptions(includeChapters: true),
+      );
+
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters, hasLength(2));
+      expect(metadata.format.chapters![0].title, 'Intro');
+      expect(metadata.format.chapters![0].start, 0);
+      expect(metadata.format.chapters![0].end, 1000);
+      expect(metadata.format.chapters![1].title, 'Outro');
+      expect(metadata.format.chapters![1].start, 1000);
+      expect(metadata.format.chapters![1].end, 2000);
+    });
+
     test('parses co64 M4B-style chapters with 1/48000 timeline', () async {
       final bytes = _buildSyntheticM4bLikeMp4WithCo64Chapters();
 
@@ -818,6 +843,114 @@ List<int> _buildSyntheticMp4WithMultiSampleChapterChunk() {
   final chapterStsz = _atom(
     'stsz',
     _stszPayload(0, <int>[chapter1.length, chapter2.length]),
+  );
+  final chapterStco = _atom('stco', _stcoPayload(<int>[0]));
+  final chapterStbl = _atom('stbl', <int>[
+    ...chapterStts,
+    ...chapterStsc,
+    ...chapterStsz,
+    ...chapterStco,
+  ]);
+  final chapterMinf = _atom('minf', chapterStbl);
+  final chapterMdia = _atom('mdia', <int>[
+    ...chapterMdhd,
+    ...chapterHdlr,
+    ...chapterMinf,
+  ]);
+  final chapterTrak = _atom('trak', <int>[...chapterTkhd, ...chapterMdia]);
+
+  final moov = _atom('moov', <int>[...mvhd, ...audioTrak, ...chapterTrak]);
+
+  final mdatPayload = <int>[
+    ...chapter1,
+    ...chapter2,
+    ...List<int>.filled(20, 0x11),
+  ];
+  final mdat = _atom('mdat', mdatPayload);
+
+  final file = <int>[...ftyp, ...moov, ...mdat];
+  final mdatDataOffset = ftyp.length + moov.length + 8;
+  final audioOffset = mdatDataOffset + chapter1.length + chapter2.length;
+
+  final audioStcoOffset = _findSequence(file, audioStco);
+  final chapterStcoOffset = _findSequence(file, chapterStco, occurrence: 2);
+  _patchU32(file, audioStcoOffset + 16, audioOffset);
+  _patchU32(file, chapterStcoOffset + 16, mdatDataOffset);
+
+  return file;
+}
+
+List<int> _buildSyntheticMp4WithUniformSampleSizeMultiSampleChunk() {
+  final ftyp = _atom('ftyp', <int>[
+    ...latin1.encode('M4A '),
+    ...latin1.encode('isom'),
+    ...latin1.encode('mp42'),
+  ]);
+
+  final mvhd = _atom('mvhd', _mvhdPayload(timeScale: 1000, duration: 2000));
+
+  final audioTkhd = _atom('tkhd', _tkhdPayload(trackId: 1));
+  final audioMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final audioHdlr = _atom('hdlr', _hdlrPayload('soun'));
+  final chapRef = _atom('tref', _atom('chap', _u32(2)));
+  final audioStsd = _atom('stsd', _stsdPayloadMp4a());
+  final audioStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[1, 2000],
+    ]),
+  );
+  final audioStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final audioStco = _atom('stco', _stcoPayload(<int>[0]));
+  final audioStbl = _atom('stbl', <int>[
+    ...audioStsd,
+    ...audioStts,
+    ...audioStsc,
+    ...audioStco,
+  ]);
+  final audioMinf = _atom('minf', audioStbl);
+  final audioMdia = _atom('mdia', <int>[
+    ...audioMdhd,
+    ...audioHdlr,
+    ...audioMinf,
+  ]);
+  final audioTrak = _atom('trak', <int>[
+    ...audioTkhd,
+    ...audioMdia,
+    ...chapRef,
+  ]);
+
+  final chapterTkhd = _atom('tkhd', _tkhdPayload(trackId: 2));
+  final chapterMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final chapterHdlr = _atom('hdlr', _hdlrPayload('text'));
+  final chapter1 = _chapterTextSample('Intro');
+  final chapter2 = _chapterTextSample('Outro');
+  final chapterStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 2],
+    ]),
+  );
+  final chapterStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[2, 1000],
+    ]),
+  );
+  final chapterStsz = _atom(
+    'stsz',
+    _stszPayloadWithEntryCount(chapter1.length, 2),
   );
   final chapterStco = _atom('stco', _stcoPayload(<int>[0]));
   final chapterStbl = _atom('stbl', <int>[

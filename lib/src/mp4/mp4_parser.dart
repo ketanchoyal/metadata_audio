@@ -378,8 +378,10 @@ class Mp4Parser {
       return;
     }
     final stsz = AtomToken.parseStsz(payload);
-    track.sampleSize = stsz.$1;
-    track.sampleSizeTable.addAll(stsz.$2);
+    track
+      ..sampleSize = stsz.$1
+      ..sampleCount = stsz.$2
+      ..sampleSizeTable.addAll(stsz.$3);
   }
 
   void _parseStco(List<int> payload) {
@@ -716,8 +718,9 @@ class Mp4Parser {
       return false;
     }
 
-    final chapterTrackIds =
-        tracksWithChapters.expand((track) => track.chapterTrackIds).toSet();
+    final chapterTrackIds = tracksWithChapters
+        .expand((track) => track.chapterTrackIds)
+        .toSet();
     if (chapterTrackIds.isEmpty) {
       return false;
     }
@@ -854,7 +857,7 @@ class Mp4Parser {
         chapterTrack.durationUnits ?? referencedTrack.durationUnits;
     final timeScale =
         (chapterTrack.durationUnits != null ? chapterTrack.timeScale : null) ??
-            referencedTrack.timeScale;
+        referencedTrack.timeScale;
 
     for (var i = 0; i < chapters.length; i++) {
       final current = chapters[i];
@@ -864,7 +867,7 @@ class Mp4Parser {
                 ? ((durationUnits * 1000) / timeScale).round()
                 : null);
 
-      if (end != null && end < current.start) {
+      if (end != null && end <= current.start) {
         final fallbackDurationMs = metadata.format.duration != null
             ? (metadata.format.duration! * 1000).round()
             : null;
@@ -1035,8 +1038,9 @@ class Mp4Parser {
       return false;
     }
 
-    final chapterTrackIds =
-        tracksWithChapters.expand((track) => track.chapterTrackIds).toSet();
+    final chapterTrackIds = tracksWithChapters
+        .expand((track) => track.chapterTrackIds)
+        .toSet();
     if (chapterTrackIds.isEmpty) {
       return false;
     }
@@ -1200,7 +1204,7 @@ class Mp4Parser {
         chapterTrack.durationUnits ?? referencedTrack.durationUnits;
     final timeScale =
         (chapterTrack.durationUnits != null ? chapterTrack.timeScale : null) ??
-            referencedTrack.timeScale;
+        referencedTrack.timeScale;
 
     for (var i = 0; i < chapters.length; i++) {
       final current = chapters[i];
@@ -1210,7 +1214,7 @@ class Mp4Parser {
                 ? ((durationUnits * 1000) / timeScale).round()
                 : null);
 
-      if (end != null && end < current.start) {
+      if (end != null && end <= current.start) {
         final fallbackDurationMs = metadata.format.duration != null
             ? (metadata.format.duration! * 1000).round()
             : null;
@@ -1333,6 +1337,41 @@ class Mp4Parser {
     }
 
     if (sampleSize > 0) {
+      if (track.sampleToChunkTable.isNotEmpty) {
+        final samples = <_ChapterSampleEntry>[];
+        var sampleIndex = 0;
+        final totalSamples = track.sampleCount ?? 0x7FFFFFFF;
+        for (
+          var chunkIndex = 0;
+          chunkIndex < track.chunkOffsetTable.length &&
+              sampleIndex < totalSamples;
+          chunkIndex++
+        ) {
+          var absoluteOffset = track.chunkOffsetTable[chunkIndex];
+          final samplesPerChunk = _getSamplesPerChunk(chunkIndex + 1, track);
+          if (absoluteOffset < 0 || samplesPerChunk <= 0) {
+            return null;
+          }
+
+          for (
+            var i = 0;
+            i < samplesPerChunk && sampleIndex < totalSamples;
+            i++
+          ) {
+            samples.add(
+              _ChapterSampleEntry(
+                sampleIndex: sampleIndex,
+                absoluteOffset: absoluteOffset,
+                sampleSize: sampleSize,
+              ),
+            );
+            absoluteOffset += sampleSize;
+            sampleIndex++;
+          }
+        }
+        return samples;
+      }
+
       return <_ChapterSampleEntry>[
         for (var i = 0; i < track.chunkOffsetTable.length; i++)
           _ChapterSampleEntry(
@@ -1513,6 +1552,7 @@ class _TrackDescription {
   int? timeScale;
   int? durationUnits;
   int? sampleSize;
+  int? sampleCount;
   final List<SampleDescription> sampleDescriptions = <SampleDescription>[];
   final List<SttsEntry> timeToSampleTable = <SttsEntry>[];
   final List<StscEntry> sampleToChunkTable = <StscEntry>[];

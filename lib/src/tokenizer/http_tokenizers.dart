@@ -222,6 +222,7 @@ class RangeTokenizer extends HttpBasedTokenizer {
 
       // Try Range request
       final request = await client.getUrl(Uri.parse(url));
+      request.followRedirects = true;
       final endByte = totalSize != null && totalSize < headerSize
           ? totalSize - 1
           : headerSize - 1;

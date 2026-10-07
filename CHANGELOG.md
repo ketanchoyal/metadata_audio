@@ -1,3 +1,9 @@
+## 0.9.6
+
+- **Fixed**: Fixed MP4/M4B chapter extraction when uniform sample size (`stsz` with `sampleSize > 0`) chapter tracks group multiple samples per chunk via `stsc` (`sampleToChunkTable`). All chapter samples are now correctly expanded across chunk offsets and extracted.
+- **Fixed**: Fixed chapter end timestamp calculation fallback when the chapter track duration ends at or before the chapter's start timestamp to fall back to the overall container duration.
+- **Fixed**: Improved network probe resilience in URL integration test suite to gracefully skip when external storage hosts return HTTP 500 errors.
+
 ## 0.9.5
 
 - **Feat**: Mapped MP4/iTunes `©pub` to `publisher` and `©des` / `desc` to `description` in `Mp4TagMapper` so audiobook synopses and publishers are extracted into `CommonTags`.
