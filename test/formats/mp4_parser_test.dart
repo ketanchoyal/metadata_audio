@@ -36,6 +36,8 @@ void main() {
       expect(metadata.common.albumartist, 'Test Album Artist');
       expect(metadata.common.album, 'Test Album');
       expect(metadata.common.date, '2024');
+      expect(metadata.common.publisher, equals(<String>['Test Publisher']));
+      expect(metadata.common.description, equals(<String>['Test Description']));
       expect(metadata.common.track.no, 1);
       expect(metadata.common.track.of, 12);
       expect(metadata.common.musicbrainz_recordingid, 'mbid-track-123');
@@ -385,6 +387,8 @@ List<int> _buildSyntheticMp4() {
     ..._metadataItem('aART', _dataAtom(1, utf8.encode('Test Album Artist'))),
     ..._metadataItem('©alb', _dataAtom(1, utf8.encode('Test Album'))),
     ..._metadataItem('©day', _dataAtom(1, utf8.encode('2024'))),
+    ..._metadataItem('©pub', _dataAtom(1, utf8.encode('Test Publisher'))),
+    ..._metadataItem('©des', _dataAtom(1, utf8.encode('Test Description'))),
     ..._metadataItem('trkn', _dataAtom(0, <int>[0, 0, 0, 1, 0, 12, 0, 0])),
     ..._metadataItem('covr', _dataAtom(13, <int>[1, 2, 3, 4])),
     ..._metadataItem('----', <int>[

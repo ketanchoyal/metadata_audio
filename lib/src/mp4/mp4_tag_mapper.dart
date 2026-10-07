@@ -37,6 +37,9 @@ final Map<String, String> _mp4TagMap = <String, String>{
   'stik': 'stik',
   'rate': 'rating',
   '©grp': 'grouping',
+  '©pub': 'publisher',
+  '©des': 'description',
+  'desc': 'description',
   'soal': 'albumsort',
   'sonm': 'titlesort',
   'soar': 'artistsort',
@@ -180,6 +183,8 @@ class Mp4TagMapper extends GenericTagMapper {
       case 'musicbrainz_albumartistid':
       case 'catalognumber':
       case 'isrc':
+      case 'description':
+      case 'publisher':
         return _stringList(value);
       case 'picture':
         if (value is Picture) {

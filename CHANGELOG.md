@@ -1,3 +1,10 @@
+## 0.9.5
+
+- **Feat**: Mapped MP4/iTunes `©pub` to `publisher` and `©des` / `desc` to `description` in `Mp4TagMapper` so audiobook synopses and publishers are extracted into `CommonTags`.
+- **Feat**: Extracted MP4/M4B chapters are packaged into standard standalone `.m4a` containers (`audio/mp4`) by default in `ChapterDownloader.downloadChapter`, enabling playback and seeking across Chromecast, ExoPlayer, AVPlayer, and web audio players.
+- **Feat**: Added `AudioMetadataCache` to cache parsed MP4/M4B structures and sample tables in temporary storage, preventing duplicate container parsing on successive chapter downloads.
+- **Fixed**: Added HTTP 429 resilience with exponential backoff and retry support across HTTP tokenizers and chapter downloads.
+
 ## 0.9.4-beta.2
 
 - **Feat**: Added `AudioMetadataCache` to store parsed MP4/M4B audio track structures and sample tables in the OS temporary directory (`Directory.systemTemp`), preventing duplicate container parsing and network calls on subsequent chapter downloads.
