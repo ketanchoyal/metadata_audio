@@ -28,7 +28,7 @@ jobs:
           restore-keys: ${{ runner.os }}-pubcache-
 
       - name: Get dependencies
-        run: dart pub get
+        run: dart pub get --no-example
 
       - name: Run tests
         run: dart test
