@@ -69,5 +69,25 @@ void main() {
       expect(metadata.common.comment, isNotNull);
       expect(metadata.common.label, contains('Geffen Records'));
     });
+
+    test('ParseOptions defaults match upstream', () {
+      const options = ParseOptions();
+      expect(options.maxMemoryAllocation, equals(67108864));
+      expect(options.mkvUseIndex, isFalse);
+    });
+
+    test('Format.copyWith preserves and overrides fields', () {
+      const original = Format(container: 'mp3', duration: 10.0);
+      final updated = original.copyWith(overallBitrate: 128000);
+      expect(updated.container, equals('mp3'));
+      expect(updated.duration, equals(10.0));
+      expect(updated.overallBitrate, equals(128000));
+    });
+
+    test('Ogg unknown granule positions do not break parsing', () async {
+      final metadata = await parseFile('test/samples/ogg/vorbis.ogg');
+      expect(metadata.format.container, equals('Ogg'));
+      expect(metadata.format.duration, isNotNull);
+    });
   });
 }
