@@ -19,6 +19,7 @@ import 'package:metadata_audio/src/musepack/musepack_loader.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/tokenizer/http_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:metadata_audio/src/wav/wave_loader.dart';
@@ -267,6 +268,16 @@ Future<AudioMetadata> parseFromTokenizer(
 
   // Get file info from tokenizer, or create minimal info if not available
   final fileInfo = tokenizer.fileInfo ?? const FileInfo();
+
+  // Apply upstream-style allocation cap to tokenizers that support it.
+  final maxBufferSize = options.maxMemoryAllocation;
+  if (tokenizer is FileTokenizer) {
+    tokenizer.maxBufferSize = maxBufferSize;
+  } else if (tokenizer is BytesTokenizer) {
+    tokenizer.maxBufferSize = maxBufferSize;
+  } else if (tokenizer is HttpBasedTokenizer) {
+    tokenizer.maxBufferSize = maxBufferSize;
+  }
 
   // Select appropriate parser based on file info and tokenizer
   final parser = _parserFactory!.selectParser(fileInfo, tokenizer);

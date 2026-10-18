@@ -25,6 +25,9 @@ abstract class HttpBasedTokenizer extends Tokenizer {
   @override
   final FileInfo? fileInfo;
 
+  /// Maximum bytes allowed in a single read/peek operation.
+  int? maxBufferSize;
+
   /// Close any resources held by the tokenizer.
   void close();
 

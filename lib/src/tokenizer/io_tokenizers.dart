@@ -44,6 +44,9 @@ class FileTokenizer extends Tokenizer {
   /// Current read position in bytes
   int _position = 0;
 
+  /// Maximum bytes allowed in a single read/peek operation.
+  int? maxBufferSize;
+
   /// Cache for peek operations (single byte)
   int? _peekedByte;
 
@@ -105,6 +108,11 @@ class FileTokenizer extends Tokenizer {
 
   @override
   List<int> readBytes(int length) {
+    if (maxBufferSize != null && length > maxBufferSize!) {
+      throw TokenizerException(
+        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
+      );
+    }
     if (length < 0) {
       throw TokenizerException('Cannot read negative number of bytes');
     }
@@ -171,6 +179,11 @@ class FileTokenizer extends Tokenizer {
 
   @override
   List<int> peekBytes(int length) {
+    if (maxBufferSize != null && length > maxBufferSize!) {
+      throw TokenizerException(
+        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
+      );
+    }
     if (length < 0) {
       throw TokenizerException('Cannot peek negative number of bytes');
     }
@@ -319,6 +332,9 @@ class BytesTokenizer extends Tokenizer {
   /// Current read position in bytes
   int _position = 0;
 
+  /// Maximum bytes allowed in a single read/peek operation.
+  int? maxBufferSize;
+
   @override
   bool get canSeek => true;
 
@@ -365,6 +381,11 @@ class BytesTokenizer extends Tokenizer {
 
   @override
   List<int> readBytes(int length) {
+    if (maxBufferSize != null && length > maxBufferSize!) {
+      throw TokenizerException(
+        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
+      );
+    }
     if (_position + length > _bytes.length) {
       throw TokenizerException(
         'Insufficient data to read $length bytes: need ${_position + length} bytes total, buffer size ${_bytes.length}',
@@ -387,6 +408,11 @@ class BytesTokenizer extends Tokenizer {
 
   @override
   List<int> peekBytes(int length) {
+    if (maxBufferSize != null && length > maxBufferSize!) {
+      throw TokenizerException(
+        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
+      );
+    }
     if (_position + length > _bytes.length) {
       throw TokenizerException(
         'Insufficient data to peek $length bytes: need ${_position + length} bytes total, buffer size ${_bytes.length}',

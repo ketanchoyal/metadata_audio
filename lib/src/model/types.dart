@@ -1075,6 +1075,7 @@ class ParseOptions {
     this.includeChapters = false,
     this.duration = false,
     this.observer,
+    this.maxMemoryAllocation = 67108864,
     this.mkvUseIndex = false,
   });
 
@@ -1116,6 +1117,11 @@ class ParseOptions {
   ///
   /// Called as metadata is discovered during parsing
   final MetadataObserver? observer;
+
+  /// Maximum bytes buffered for a single metadata payload.
+  ///
+  /// Matches upstream `maxMemoryAllocation` option.
+  final int? maxMemoryAllocation;
 
   /// Whether to use the SeekHead index when parsing Matroska files.
   final bool mkvUseIndex;
