@@ -1075,7 +1075,7 @@ class ParseOptions {
     this.includeChapters = false,
     this.duration = false,
     this.observer,
-    this.maxMemoryAllocation,
+    this.maxMemoryAllocation = 67108864,
     this.mkvUseIndex = false,
   });
 
