@@ -277,6 +277,29 @@ Future<AudioMetadata> parseFromTokenizer(
   // Scan for post-headers if applicable
   await scanPostHeaders(tokenizer, options);
 
+  // Finalize container-level duration/bitrate information when possible.
+  final fileSize = tokenizer.fileInfo?.size;
+  final baseDuration = metadata.format.containerDuration ?? metadata.format.duration;
+  num? overallBitrate = metadata.format.overallBitrate;
+  if (overallBitrate == null && fileSize != null && baseDuration != null && baseDuration > 0) {
+    overallBitrate = fileSize * 8 / baseDuration;
+  }
+  final containerDuration = metadata.format.containerDuration ?? baseDuration;
+
+  if (containerDuration != metadata.format.containerDuration ||
+      overallBitrate != metadata.format.overallBitrate) {
+    final updatedFormat = metadata.format.copyWith(
+      containerDuration: containerDuration,
+      overallBitrate: overallBitrate,
+    );
+    return AudioMetadata(
+      format: updatedFormat,
+      native: metadata.native,
+      common: metadata.common,
+      quality: metadata.quality,
+    );
+  }
+
   return metadata;
 }
 

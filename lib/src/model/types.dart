@@ -394,6 +394,8 @@ class Format {
     this.hasAudio,
     this.hasVideo,
     this.trackInfo = const [],
+    this.containerDuration,
+    this.overallBitrate,
   });
 
   /// Container format (e.g., 'flac', 'mp3')
@@ -462,9 +464,70 @@ class Format {
   /// Track information
   final List<TrackInfo> trackInfo;
 
+  /// Complete media presentation duration in seconds, including video.
+  final double? containerDuration;
+
+  /// Average bitrate of the entire file in bits per second.
+  final num? overallBitrate;
+
   @override
   String toString() =>
       'Format(container: $container, codec: $codec, duration: $duration, bitrate: $bitrate)';
+
+  /// Return a copy with the given fields replaced.
+  Format copyWith({
+    String? container,
+    List<String>? tagTypes,
+    double? duration,
+    num? bitrate,
+    int? sampleRate,
+    int? bitsPerSample,
+    String? tool,
+    String? codec,
+    String? codecProfile,
+    bool? lossless,
+    int? numberOfChannels,
+    int? numberOfSamples,
+    List<int>? audioMD5,
+    List<Chapter>? chapters,
+    DateTime? creationTime,
+    DateTime? modificationTime,
+    double? trackGain,
+    double? trackPeakLevel,
+    double? albumGain,
+    bool? hasAudio,
+    bool? hasVideo,
+    List<TrackInfo>? trackInfo,
+    double? containerDuration,
+    num? overallBitrate,
+  }) {
+    return Format(
+      container: container ?? this.container,
+      tagTypes: tagTypes ?? this.tagTypes,
+      duration: duration ?? this.duration,
+      bitrate: bitrate ?? this.bitrate,
+      sampleRate: sampleRate ?? this.sampleRate,
+      bitsPerSample: bitsPerSample ?? this.bitsPerSample,
+      tool: tool ?? this.tool,
+      codec: codec ?? this.codec,
+      codecProfile: codecProfile ?? this.codecProfile,
+      lossless: lossless ?? this.lossless,
+      numberOfChannels: numberOfChannels ?? this.numberOfChannels,
+      numberOfSamples: numberOfSamples ?? this.numberOfSamples,
+      audioMD5: audioMD5 ?? this.audioMD5,
+      chapters: chapters ?? this.chapters,
+      creationTime: creationTime ?? this.creationTime,
+      modificationTime: modificationTime ?? this.modificationTime,
+      trackGain: trackGain ?? this.trackGain,
+      trackPeakLevel: trackPeakLevel ?? this.trackPeakLevel,
+      albumGain: albumGain ?? this.albumGain,
+      hasAudio: hasAudio ?? this.hasAudio,
+      hasVideo: hasVideo ?? this.hasVideo,
+      trackInfo: trackInfo ?? this.trackInfo,
+      containerDuration: containerDuration ?? this.containerDuration,
+      overallBitrate: overallBitrate ?? this.overallBitrate,
+    );
+  }
 }
 
 /// Common tags (standardized metadata)
@@ -956,6 +1019,18 @@ class QualityInformation {
 
 /// Map of native tags by type
 typedef NativeTags = Map<String, List<Tag>>;
+
+/// Track type constants, matching upstream `TrackType`.
+abstract final class TrackType {
+  const TrackType._();
+
+  static const String audio = 'audio';
+  static const String video = 'video';
+  static const String image = 'image';
+  static const String text = 'text';
+  static const String chapters = 'chapters';
+  static const String metadata = 'metadata';
+}
 
 /// Information about the audio file being parsed
 ///
