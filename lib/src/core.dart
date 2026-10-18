@@ -445,16 +445,11 @@ Picture? selectCover(List<Picture>? pictures) {
     return null;
   }
 
-  // Prefer a front/cover picture, matching upstream selectCover logic.
-  for (final picture in pictures) {
-    final type = picture.type?.toLowerCase();
-    if (type != null &&
-        (type == 'front' ||
-            type == 'cover' ||
-            type == 'cover (front)')) {
-      return picture;
-    }
+  // Try to find a picture with type='Cover'
+  try {
+    return pictures.firstWhere((p) => p.type == 'Cover');
+  } catch (_) {
+    // No picture with type='Cover' found, return first picture
+    return pictures.isNotEmpty ? pictures.first : null;
   }
-
-  return pictures.isNotEmpty ? pictures.first : null;
 }
