@@ -153,12 +153,10 @@ void _ensureInitialized() {
 /// print(metadata.common.title);
 /// ```
 Future<AudioMetadata> parseFile(String path, {ParseOptions? options}) async {
-  final file = File(path);
-  if (await file.exists()) {
-    final stat = await file.stat();
-    if (stat.type != FileSystemEntityType.file) {
-      throw NotRegularFileError('Not a regular file: $path');
-    }
+  final entityType = await FileSystemEntity.type(path, followLinks: true);
+  if (entityType != FileSystemEntityType.notFound &&
+      entityType != FileSystemEntityType.file) {
+    throw NotRegularFileError('Not a regular file: $path');
   }
 
   final tokenizer = FileTokenizer.fromPath(path);
