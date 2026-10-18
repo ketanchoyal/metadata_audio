@@ -103,5 +103,29 @@ void main() {
       final mapped = mapper.mapTags({'POPULARIMETER': '50'});
       expect(mapped['rating'], isNotNull);
     });
+
+    group('Simulated network parsing (local files)', () {
+      test('parses MP4 chapters from bytes', () async {
+        final bytes = File('test/samples/mp4/video_chapters.mp4').readAsBytesSync();
+        final metadata = await parseBytes(
+          bytes,
+          options: const ParseOptions(includeChapters: true),
+        );
+        expect(metadata.format.chapters, isNotNull);
+        expect(metadata.format.chapters, isNotEmpty);
+      });
+
+      test('parses M4B metadata from bytes', () async {
+        final bytes = File('test/samples/mp4/issue_mvhd_v1.m4b').readAsBytesSync();
+        final metadata = await parseBytes(bytes);
+        expect(metadata.format.container, isNotNull);
+      });
+
+      test('parses MP3 metadata from bytes', () async {
+        final bytes = File('test/samples/mp3/id3v2.3.mp3').readAsBytesSync();
+        final metadata = await parseBytes(bytes);
+        expect(metadata.common.title, isNotNull);
+      });
+    });
   });
 }
