@@ -1,6 +1,7 @@
 library;
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/aiff/aiff_loader.dart';
@@ -152,6 +153,14 @@ void _ensureInitialized() {
 /// print(metadata.common.title);
 /// ```
 Future<AudioMetadata> parseFile(String path, {ParseOptions? options}) async {
+  final file = File(path);
+  if (await file.exists()) {
+    final stat = await file.stat();
+    if (stat.type != FileSystemEntityType.file) {
+      throw NotRegularFileError('Not a regular file: $path');
+    }
+  }
+
   final tokenizer = FileTokenizer.fromPath(path);
   try {
     return await parseFromTokenizer(tokenizer, options: options);
