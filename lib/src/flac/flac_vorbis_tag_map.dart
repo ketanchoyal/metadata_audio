@@ -22,7 +22,9 @@ final _vorbisTagMap = {
   'ALBUMARTIST': 'albumartist',
   'ALBUM ARTIST': 'albumartist',
   'METADATA_BLOCK_PICTURE': 'picture',
+  'COMMENT': 'comment',
   'DESCRIPTION': 'comment',
+  'LABEL': 'label',
   'ORGANIZATION': 'label',
   'PUBLISHER': 'label',
 };
