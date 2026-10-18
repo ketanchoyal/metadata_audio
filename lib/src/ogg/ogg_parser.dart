@@ -61,10 +61,10 @@ class OggParser {
           stream.pendingOpusTagLength = null;
         }
         stream.pageNumber = header.pageSequenceNo;
-        stream.maxGranulePosition =
-            header.absoluteGranulePosition > stream.maxGranulePosition
-            ? header.absoluteGranulePosition
-            : stream.maxGranulePosition;
+        if (header.absoluteGranulePosition >= 0 &&
+            header.absoluteGranulePosition > stream.maxGranulePosition) {
+          stream.maxGranulePosition = header.absoluteGranulePosition;
+        }
 
         if (header.headerType.firstPage) {
           _identifyStream(stream, pageData);
