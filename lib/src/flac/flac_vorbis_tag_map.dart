@@ -22,6 +22,9 @@ final _vorbisTagMap = {
   'ALBUMARTIST': 'albumartist',
   'ALBUM ARTIST': 'albumartist',
   'METADATA_BLOCK_PICTURE': 'picture',
+  'DESCRIPTION': 'comment',
+  'ORGANIZATION': 'label',
+  'PUBLISHER': 'label',
 };
 
 class FlacVorbisTagMapper extends GenericTagMapper {
@@ -79,6 +82,11 @@ class FlacVorbisTagMapper extends GenericTagMapper {
           return <Picture>[FlacToken.toCommonPicture(value)];
         }
         return null;
+      case 'comment':
+        final text = _singleString(value);
+        return text == null ? null : <Comment>[Comment(text: text)];
+      case 'label':
+        return _stringList(value);
       default:
         return null;
     }
