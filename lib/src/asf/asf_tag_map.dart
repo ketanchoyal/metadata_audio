@@ -36,6 +36,7 @@ final _asfTagMap = <String, String>{
   'WM/SetSubTitle': 'discsubtitle',
   'WM/IsCompilation': 'compilation',
   'WM/SharedUserRating': 'rating',
+  'POPULARIMETER': 'rating',
   'WM/BeatsPerMinute': 'bpm',
   'WM/Mood': 'mood',
   'WM/Media': 'media',
