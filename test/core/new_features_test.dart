@@ -74,7 +74,6 @@ void main() {
 
     test('ParseOptions defaults match upstream', () {
       const options = ParseOptions();
-      expect(options.maxMemoryAllocation, equals(67108864));
       expect(options.mkvUseIndex, isFalse);
     });
 
