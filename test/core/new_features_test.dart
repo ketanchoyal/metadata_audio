@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/apev2/apev2_tag_map.dart';
+import 'package:metadata_audio/src/asf/asf_tag_map.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -88,6 +90,18 @@ void main() {
       final metadata = await parseFile('test/samples/ogg/vorbis.ogg');
       expect(metadata.format.container, equals('Ogg'));
       expect(metadata.format.duration, isNotNull);
+    });
+
+    test('APEv2 Date maps to common date', () {
+      final mapper = Apev2TagMapper();
+      final mapped = mapper.mapTags({'Date': '2024-01-02'});
+      expect(mapped['date'], equals('2024-01-02'));
+    });
+
+    test('ASF POPULARIMETER maps to rating', () {
+      final mapper = AsfTagMapper();
+      final mapped = mapper.mapTags({'POPULARIMETER': '50'});
+      expect(mapped['rating'], isNotNull);
     });
   });
 }

@@ -102,6 +102,7 @@ class Apev2TagMapper extends GenericTagMapper {
       case 'artist':
       case 'albumartist':
       case 'album':
+      case 'date':
       case 'originaldate':
       case 'releasedate':
       case 'grouping':
