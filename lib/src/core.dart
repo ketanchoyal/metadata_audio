@@ -343,6 +343,12 @@ Map<String, List<dynamic>> orderTags(List<Tag> tags) {
   return result;
 }
 
+/// Return a list of supported MIME-types.
+List<String> getSupportedMimeTypes() {
+  _ensureInitialized();
+  return _parserFactory!.getSupportedMimeTypes();
+}
+
 /// Convert normalized rating (0-1) to star rating (1-5).
 ///
 /// Maps a normalized rating value from 0.0 to 1.0 onto a 1-5 star scale.
@@ -407,11 +413,16 @@ Picture? selectCover(List<Picture>? pictures) {
     return null;
   }
 
-  // Try to find a picture with type='Cover'
-  try {
-    return pictures.firstWhere((p) => p.type == 'Cover');
-  } catch (_) {
-    // No picture with type='Cover' found, return first picture
-    return pictures.isNotEmpty ? pictures.first : null;
+  // Prefer a front/cover picture, matching upstream selectCover logic.
+  for (final picture in pictures) {
+    final type = picture.type?.toLowerCase();
+    if (type != null &&
+        (type == 'front' ||
+            type == 'cover' ||
+            type == 'cover (front)')) {
+      return picture;
+    }
   }
+
+  return pictures.isNotEmpty ? pictures.first : null;
 }

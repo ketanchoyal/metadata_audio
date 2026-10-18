@@ -1,5 +1,7 @@
 library;
 
+import 'dart:typed_data';
+
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
@@ -84,6 +86,20 @@ class ParserRegistry {
   ///
   /// Returns a sorted list of all MIME types that have registered loaders.
   List<String> getRegisteredMimeTypes() => _mimeTypeMap.keys.toList()..sort();
+
+  /// Returns a list of supported MIME-types.
+  ///
+  /// Includes `x-` prefixed variants for each registered MIME type, matching
+  /// upstream `music-metadata` behaviour.
+  List<String> getSupportedMimeTypes() {
+    final mimeTypeSet = <String>{};
+    for (final mimeType in _mimeTypeMap.keys) {
+      mimeTypeSet.add(mimeType);
+      mimeTypeSet.add(mimeType.replaceFirst('/', '/x-'));
+    }
+    final result = mimeTypeSet.toList()..sort();
+    return result;
+  }
 }
 
 /// Factory for selecting and retrieving appropriate parser loaders.
@@ -129,15 +145,20 @@ class ParserFactory {
       }
     }
 
-    // Priority 3: Content sniffing (placeholder for now)
-    // TODO: Implement actual content sniffing in T033
-    _attemptContentSniffing(tokenizer);
+    // Priority 3: Content sniffing via magic bytes
+    final sniffed = _sniffParser(tokenizer);
+    if (sniffed != null) {
+      return sniffed;
+    }
 
     // If we reach here, no parser was found
     throw CouldNotDetermineFileTypeError(
       'Could not determine file type from MIME type, extension, or content',
     );
   }
+
+  /// Returns a list of supported MIME-types.
+  List<String> getSupportedMimeTypes() => registry.getSupportedMimeTypes();
 
   /// Extract file extension from a file path.
   ///
@@ -151,12 +172,110 @@ class ParserFactory {
     return path.substring(lastDot + 1).toLowerCase();
   }
 
-  /// Placeholder for content sniffing implementation.
+  /// Attempt to determine a parser by inspecting magic bytes.
   ///
-  /// This method peeks at the tokenizer's magic bytes to determine file type.
-  /// Currently unimplemented; will be completed in T033.
-  void _attemptContentSniffing(Tokenizer tokenizer) {
-    // TODO: Implement content sniffing by peeking magic bytes
-    // This will be implemented in task T033
+  /// Returns the registered loader matching the detected MIME type, or null
+  /// when the content cannot be identified.
+  ParserLoader? _sniffParser(Tokenizer tokenizer) {
+    final bytes = _peekAvailableBytes(tokenizer);
+    if (bytes.isEmpty) {
+      return null;
+    }
+
+    final mimeType = _detectMimeType(bytes);
+    if (mimeType == null) {
+      return null;
+    }
+
+    return registry.getLoaderForMimeType(mimeType);
+  }
+
+  /// Read as many leading bytes as the tokenizer can provide without
+  /// advancing its position.
+  Uint8List _peekAvailableBytes(Tokenizer tokenizer) {
+    const candidateSizes = <int>[4096, 1024, 256, 64, 16, 8, 4, 1];
+    for (final size in candidateSizes) {
+      try {
+        return Uint8List.fromList(tokenizer.peekBytes(size));
+      } catch (_) {
+        // Try a smaller read.
+      }
+    }
+    return Uint8List(0);
+  }
+
+  /// Best-effort MIME type detection from leading magic bytes.
+  String? _detectMimeType(Uint8List bytes) {
+    if (bytes.length >= 4) {
+      // EBML / Matroska / WebM
+      if (bytes[0] == 0x1A && bytes[1] == 0x45 && bytes[2] == 0xDF && bytes[3] == 0xA3) {
+        return 'audio/matroska';
+      }
+      // FLAC
+      if (bytes[0] == 0x66 && bytes[1] == 0x4C && bytes[2] == 0x61 && bytes[3] == 0x43) {
+        return 'audio/flac';
+      }
+      // Ogg
+      if (bytes[0] == 0x4F && bytes[1] == 0x67 && bytes[2] == 0x67 && bytes[3] == 0x53) {
+        return 'audio/ogg';
+      }
+      // WAV / RIFF
+      if (bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46 &&
+          bytes.length >= 12 &&
+          bytes[8] == 0x57 && bytes[9] == 0x41 && bytes[10] == 0x56 && bytes[11] == 0x45) {
+        return 'audio/wav';
+      }
+      // AIFF
+      if (bytes[0] == 0x46 && bytes[1] == 0x4F && bytes[2] == 0x52 && bytes[3] == 0x4D &&
+          bytes.length >= 12 &&
+          (bytes[8] == 0x41 && bytes[9] == 0x49 && bytes[10] == 0x46 && bytes[11] == 0x46)) {
+        return 'audio/aiff';
+      }
+      // ASF
+      if (bytes.length >= 16 &&
+          bytes[0] == 0x30 && bytes[1] == 0x26 && bytes[2] == 0xB2 && bytes[3] == 0x75 &&
+          bytes[4] == 0x8E && bytes[5] == 0x66 && bytes[6] == 0xCF && bytes[7] == 0x11) {
+        return 'audio/x-ms-asf';
+      }
+      // MP4 / QuickTime (ftyp at offset 4)
+      if (bytes.length >= 8 &&
+          bytes[4] == 0x66 && bytes[5] == 0x74 && bytes[6] == 0x79 && bytes[7] == 0x70) {
+        return 'audio/mp4';
+      }
+      // APE
+      if ((bytes[0] == 0x4D && bytes[1] == 0x41 && bytes[2] == 0x43 && bytes[3] == 0x20) ||
+          (bytes.length >= 8 &&
+              bytes[0] == 0x41 && bytes[1] == 0x50 && bytes[2] == 0x45 && bytes[3] == 0x54 &&
+              bytes[4] == 0x41 && bytes[5] == 0x47 && bytes[6] == 0x45 && bytes[7] == 0x58)) {
+        return 'audio/ape';
+      }
+      // Musepack SV8
+      if (bytes[0] == 0x4D && bytes[1] == 0x50 && bytes[2] == 0x43 && bytes[3] == 0x4B) {
+        return 'audio/musepack';
+      }
+      // WavPack
+      if (bytes[0] == 0x77 && bytes[1] == 0x76 && bytes[2] == 0x70 && bytes[3] == 0x6B) {
+        return 'audio/wavpack';
+      }
+      // DSF
+      if (bytes[0] == 0x44 && bytes[1] == 0x53 && bytes[2] == 0x44 && bytes[3] == 0x20) {
+        return 'audio/dsf';
+      }
+      // DSDIFF
+      if (bytes[0] == 0x46 && bytes[1] == 0x52 && bytes[2] == 0x4D && bytes[3] == 0x38) {
+        return 'audio/dsd';
+      }
+      // ID3v2 tag
+      if (bytes[0] == 0x49 && bytes[1] == 0x44 && bytes[2] == 0x33) {
+        return 'audio/mpeg';
+      }
+    }
+
+    // MPEG frame sync (MP3 / ADTS)
+    if (bytes.length >= 2 && bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0) {
+      return 'audio/mpeg';
+    }
+
+    return null;
   }
 }
