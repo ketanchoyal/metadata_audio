@@ -370,32 +370,34 @@ AsfNativeTag _postProcessTag(String name, int valueType, List<int> data) {
 }
 
 Picture parseWmPicture(List<int> bytes) {
-  if (bytes.length < 7) {
-    throw AsfContentParseError('WM/Picture payload too short: ${bytes.length}');
+  // type (1) + declared size (4) — matches upstream's minimum header check.
+  if (bytes.length < 5) {
+    throw AsfContentParseError(
+      'Truncated ASF picture header: ${bytes.length}',
+    );
   }
 
   final typeId = bytes[0];
-  final declaredSize = readUint32Le(bytes, 1);
   var offset = 5;
 
-  final formatTerm = findUtf16LeNullTerminator(bytes, offset, bytes.length);
+  final formatTerm = _findUtf16LeNullTerminator(bytes, offset);
+  if (formatTerm < 0) {
+    throw AsfContentParseError('Unterminated ASF picture MIME type');
+  }
   final format = parseUnicodeAttr(bytes.sublist(offset, formatTerm));
   offset = formatTerm + 2;
-  if (offset > bytes.length) {
-    throw AsfContentParseError('WM/Picture format not null-terminated');
-  }
 
-  final descTerm = findUtf16LeNullTerminator(bytes, offset, bytes.length);
+  final descTerm = _findUtf16LeNullTerminator(bytes, offset);
+  if (descTerm < 0) {
+    throw AsfContentParseError('Unterminated ASF picture description');
+  }
   final description = parseUnicodeAttr(bytes.sublist(offset, descTerm));
   offset = descTerm + 2;
-  if (offset > bytes.length) {
-    throw AsfContentParseError('WM/Picture description not null-terminated');
-  }
 
-  var imageData = bytes.sublist(offset);
-  if (declaredSize <= imageData.length) {
-    imageData = imageData.sublist(0, declaredSize);
-  }
+  // The declared size is kept as reported; the image data is everything
+  // after the description, mirroring upstream behaviour where a wrong or
+  // zero declared size must not truncate the payload.
+  final imageData = bytes.sublist(offset);
 
   return Picture(
     format: format.isEmpty ? 'application/octet-stream' : format,
@@ -404,6 +406,20 @@ Picture parseWmPicture(List<int> bytes) {
     name: description.isEmpty ? null : description,
     type: _pictureTypeFromId(typeId),
   );
+}
+
+/// Returns the index of the terminating 0x0000 of a UTF-16LE string, or -1
+/// when the string is not terminated.
+int _findUtf16LeNullTerminator(List<int> bytes, int start) {
+  var index = start;
+  while (index + 2 <= bytes.length) {
+    final codeUnit = bytes[index] | (bytes[index + 1] << 8);
+    if (codeUnit == 0) {
+      return index;
+    }
+    index += 2;
+  }
+  return -1;
 }
 
 String? _pictureTypeFromId(int typeId) {
