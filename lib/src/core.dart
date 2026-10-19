@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:metadata_audio/src/aiff/aiff_loader.dart';
 import 'package:metadata_audio/src/apev2/apev2_loader.dart';
 import 'package:metadata_audio/src/asf/asf_loader.dart';
+import 'package:metadata_audio/src/caf/caf_loader.dart';
 import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
 import 'package:metadata_audio/src/dsf/dsf_loader.dart';
@@ -29,6 +30,7 @@ import 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
 export 'package:metadata_audio/src/aiff/aiff_loader.dart';
 export 'package:metadata_audio/src/apev2/apev2_loader.dart';
 export 'package:metadata_audio/src/asf/asf_loader.dart';
+export 'package:metadata_audio/src/caf/caf_loader.dart';
 export 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
 export 'package:metadata_audio/src/dsf/dsf_loader.dart';
 export 'package:metadata_audio/src/flac/flac_loader.dart';
@@ -118,6 +120,7 @@ ParserFactory createDefaultParserFactory() {
     ..register(WavPackLoader())
     ..register(DsfLoader())
     ..register(DsdiffLoader())
+    ..register(CafLoader())
     ..register(Id3v2Loader())
     ..register(MpegLoader());
 

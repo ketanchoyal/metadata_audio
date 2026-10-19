@@ -257,6 +257,11 @@ class ParserFactory {
       if (bytes[0] == 0x77 && bytes[1] == 0x76 && bytes[2] == 0x70 && bytes[3] == 0x6B) {
         return 'audio/wavpack';
       }
+      // CAF (Core Audio File): 'caff' + version + flags
+      if (bytes[0] == 0x63 && // 'c'
+          bytes[1] == 0x61 && bytes[2] == 0x66 && bytes[3] == 0x66) {
+        return 'audio/caf';
+      }
       // DSF
       if (bytes[0] == 0x44 && bytes[1] == 0x53 && bytes[2] == 0x44 && bytes[3] == 0x20) {
         return 'audio/dsf';
