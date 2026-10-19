@@ -1,9 +1,7 @@
-// This is a basic Flutter widget test.
+// Smoke test for the example app shell.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Verifies the main layout renders: the sidebar header, the Local/Remote
+// tabs, and the parser configuration switches.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,20 +9,46 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:example/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('app shell renders tabs and parser configuration', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Sidebar header.
+    expect(find.text('Metadata Audio'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Navigation tabs for local vs remote parsing.
+    expect(find.text('Local File'), findsOneWidget);
+    expect(find.text('Remote URL'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Parser configuration switches.
+    expect(find.text('Extract Chapters'), findsOneWidget);
+    expect(find.text('Calculate Duration'), findsOneWidget);
+    expect(find.text('Skip Cover Images'), findsOneWidget);
+    expect(find.text('Skip Post Headers'), findsOneWidget);
+    expect(find.text('Use MKV SeekHead Index'), findsOneWidget);
+    expect(find.text('Max In-Memory Buffer'), findsOneWidget);
+  });
+
+  testWidgets('supported formats button lists MIME types', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
+
+    // The button sits lower in the (scrollable) sidebar; make it visible.
+    await tester.ensureVisible(find.textContaining('Supported formats:'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.textContaining('Supported formats:'));
+    await tester.pumpAndSettle();
+
+    // The dialog shows the title and contains at least one MIME type.
+    expect(find.text('Supported Formats'), findsOneWidget);
+    expect(find.byType(ListView), findsOneWidget);
+
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
   });
 }

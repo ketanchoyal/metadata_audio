@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:metadata_audio/metadata_audio.dart';
 
 void main() {
@@ -82,6 +80,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   bool _duration = true;
   bool _skipCovers = false;
   bool _skipPostHeaders = false;
+  bool _mkvUseIndex = false;
+  int _maxMemoryAllocationMb = 64; // MB; mirrors ParseOptions' 64 MiB default
 
   // Custom HTTP Parsing Strategies
   ParseStrategy? _forcedParseStrategy;
@@ -130,7 +130,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         allowedExtensions: [
           'mp3', 'flac', 'ogg', 'oga', 'opus', 'wav', 'wave', 'aiff', 'aif',
           'ape', 'asf', 'wma', 'mkv', 'mka', 'webm', 'mpc', 'wv', 'dsf', 'dff',
-          'm4a', 'm4b', 'm4p', 'm4r', 'mp4', 'aac'
+          'm4a', 'm4b', 'm4p', 'm4r', 'mp4', 'aac', 'caf', 'caff'
         ],
         allowMultiple: false,
       );
@@ -152,6 +152,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         duration: _duration,
         skipCovers: _skipCovers,
         skipPostHeaders: _skipPostHeaders,
+        mkvUseIndex: _mkvUseIndex,
+        maxMemoryAllocation: _maxMemoryAllocationMb * 1024 * 1024,
       );
 
       final metadata = await parseFile(path, options: options);
@@ -194,6 +196,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         duration: _duration,
         skipCovers: _skipCovers,
         skipPostHeaders: _skipPostHeaders,
+        mkvUseIndex: _mkvUseIndex,
+        maxMemoryAllocation: _maxMemoryAllocationMb * 1024 * 1024,
       );
 
       final metadata = await parseUrl(
@@ -382,7 +386,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
               border: Border(right: BorderSide(color: Color(0xFF1E293B))),
             ),
             child: SafeArea(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +442,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                     const SizedBox(height: 16),
 
                     // Tab Views
-                    Expanded(
+                    SizedBox(
+                      height: 320,
                       child: TabBarView(
                         controller: _tabController,
                         physics: const NeverScrollableScrollPhysics(),
@@ -448,7 +453,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               const Text(
-                                'Extract metadata from local audio files. Supports MP3, FLAC, M4A, WAV, OGG, AIFF, MKV, DSF, and more.',
+                                'Extract metadata from local audio files. Supports MP3, FLAC, M4A, WAV, OGG, AIFF, MKV, DSF/DFF, WavPack, CAF (Core Audio), and more.',
                                 style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
                               ),
                               const Spacer(),
@@ -592,6 +597,31 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                     _buildSwitchTile('Calculate Duration', _duration, (val) => setState(() => _duration = val)),
                     _buildSwitchTile('Skip Cover Images', _skipCovers, (val) => setState(() => _skipCovers = val)),
                     _buildSwitchTile('Skip Post Headers', _skipPostHeaders, (val) => setState(() => _skipPostHeaders = val)),
+                    _buildSwitchTile(
+                      'Use MKV SeekHead Index',
+                      _mkvUseIndex,
+                      (val) => setState(() => _mkvUseIndex = val),
+                    ),
+                    _buildMemoryBudgetTile(),
+
+                    const SizedBox(height: 8),
+                    // Supported formats info
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.indigoAccent.shade100,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: _showSupportedFormats,
+                        icon: const Icon(Icons.grid_view_rounded, size: 14),
+                        label: Text(
+                          'Supported formats: ${getSupportedMimeTypes().length} MIME types',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
 
                     const Divider(color: Color(0xFF1E293B), height: 32),
                     const Text(
@@ -677,9 +707,14 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(fontSize: 12.5, color: Colors.grey)),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 12.5, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(width: 8),
           Switch(
             value: value,
             onChanged: onChanged,
@@ -688,6 +723,79 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildMemoryBudgetTile() {
+    const budgets = [1, 4, 16, 64, 256, 1024];
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Max In-Memory Buffer',
+              style: TextStyle(fontSize: 12.5, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 140,
+            child: DropdownButtonFormField<int>(
+              value: _maxMemoryAllocationMb,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
+              items: budgets
+                  .map(
+                    (mb) => DropdownMenuItem(
+                      value: mb,
+                      child: Text('$mb MB', style: const TextStyle(fontSize: 12)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _maxMemoryAllocationMb = val);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showSupportedFormats() async {
+    final mimeTypes = getSupportedMimeTypes()..sort();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Supported Formats'),
+          content: SizedBox(
+            width: 360,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: mimeTypes.length,
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Text(
+                  mimeTypes[index],
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -928,6 +1036,23 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     if (metadata.common.track.no != null) {
       final total = metadata.common.track.of;
       chips.add(_buildChip(Icons.tag_rounded, 'Track ${metadata.common.track.no}${total != null ? "/$total" : ""}'));
+    }
+
+    final ratings = metadata.common.rating;
+    if (ratings != null && ratings.isNotEmpty) {
+      final first = ratings.first;
+      final stars = ratingToStars(first.rating);
+      if (stars != null) {
+        final source = (first.source != null && first.source!.isNotEmpty)
+            ? ' (${first.source})'
+            : '';
+        chips.add(
+          _buildChip(
+            Icons.star_rounded,
+            '$stars/5 stars$source',
+          ),
+        );
+      }
     }
 
     if (chips.isEmpty) return const SizedBox.shrink();
