@@ -861,4 +861,120 @@ void main() {
       timeout: const Timeout(Duration(seconds: 60)),
     );
   });
+
+  group('transient HTTP failure retries', () {
+    test(
+      'RandomAccessTokenizer prefetchRange retries transient 500s',
+      () async {
+        final hitCount = [0];
+        final bytes = Uint8List.fromList(
+          List<int>.generate(1024, (i) => i & 0xFF),
+        );
+        final server = await _startRangeErrorServer(
+          bytes,
+          hitCount: hitCount,
+          failFirstN: 1,
+          failStatus: 500,
+        );
+
+        final tokenizer = await RandomAccessTokenizer.fromUrl(
+          'http://localhost:${server.port}/data.bin',
+        );
+
+        // First range request returns 500, the retry must succeed and the
+        // data must still come back correct.
+        await tokenizer.prefetchRange(0, 255);
+        final fetched = tokenizer.peekBytes(4);
+        expect(fetched, equals(bytes.sublist(0, 4)));
+
+        // At least two range GETs: the failed attempt plus the retry.
+        expect(hitCount[0], greaterThanOrEqualTo(2));
+
+        tokenizer.close();
+        await server.close(force: true);
+      },
+    );
+
+    test('Permanent client errors (403) fail without retries', () async {
+      final hitCount = [0];
+      final bytes = Uint8List.fromList(
+        List<int>.generate(1024, (i) => i & 0xFF),
+      );
+      final server = await _startRangeErrorServer(
+        bytes,
+        hitCount: hitCount,
+        failFirstN: 100, // every range request fails
+        failStatus: 403,
+      );
+
+      final tokenizer = await RandomAccessTokenizer.fromUrl(
+        'http://localhost:${server.port}/data.bin',
+      );
+
+      await expectLater(
+        tokenizer.prefetchRange(0, 255),
+        throwsA(isA<FileDownloadError>()),
+      );
+
+      // Exactly one range attempt: 403 is a permanent failure and must
+      // not consume the retry budget.
+      expect(hitCount[0], equals(1));
+
+      tokenizer.close();
+      await server.close(force: true);
+    });
+  });
+}
+
+/// Range-capable local server whose first [failFirstN] GET range requests
+/// respond with [failStatus] before serving real content. HEAD requests are
+/// always served normally (so `fromUrl` works). [hitCount] tracks the number
+/// of range GET requests received.
+Future<HttpServer> _startRangeErrorServer(
+  List<int> bytes, {
+  required List<int> hitCount,
+  required int failFirstN,
+  required int failStatus,
+}) async {
+  final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+  final data = Uint8List.fromList(bytes);
+
+  server.listen((request) async {
+    final rangeHeader = request.headers.value('range');
+    final isRangeGet = request.method == 'GET' && rangeHeader != null;
+
+    if (!isRangeGet) {
+      request.response.headers
+        ..set('Accept-Ranges', 'bytes')
+        ..contentLength = data.length;
+      if (request.method != 'HEAD') {
+        request.response.add(data);
+      }
+      await request.response.close();
+      return;
+    }
+
+    hitCount[0]++;
+    if (hitCount[0] <= failFirstN) {
+      request.response.statusCode = failStatus;
+      await request.response.close();
+      return;
+    }
+
+    final spec = rangeHeader.substring('bytes='.length);
+    final dash = spec.indexOf('-');
+    final start = int.parse(spec.substring(0, dash));
+    final endStr = spec.substring(dash + 1);
+    final end = endStr.isEmpty ? data.length - 1 : int.parse(endStr);
+    final sliceEnd = (end + 1).clamp(0, data.length);
+
+    request.response.statusCode = 206;
+    request.response.headers
+      ..set('Content-Range', 'bytes $start-$end/${data.length}')
+      ..contentLength = sliceEnd - start;
+    request.response.add(data.sublist(start, sliceEnd));
+    await request.response.close();
+  });
+
+  return server;
 }

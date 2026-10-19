@@ -225,7 +225,9 @@ class Mp4Parser {
         if (!_isTrackScopedAtom(atom)) {
           // Orphan track-specific box may not modify whichever track happens
           // to be registered last (upstream parity).
-          metadata.addWarning('Ignoring track-specific atom ${atom.atomPath} outside a track');
+          metadata.addWarning(
+            'Ignoring track-specific atom ${atom.atomPath} outside a track',
+          );
           tokenizer.skip(payloadLength);
           return;
         }
@@ -461,16 +463,17 @@ class Mp4Parser {
       );
     }
 
-    for (var i = 0;
-        i < chapterCount &&
-            offset + 9 <= payload.length &&
-            _chplChapters.length < _maxChapterCount;
-        i++) {
+    for (
+      var i = 0;
+      i < chapterCount &&
+          offset + 9 <= payload.length &&
+          _chplChapters.length < _maxChapterCount;
+      i++
+    ) {
       // Timestamp (8 bytes, 64-bit; time base: 10,000,000 ticks per second)
       var timestamp = BigInt.zero;
       for (var j = 0; j < 8; j++) {
-        timestamp =
-            (timestamp << 8) | BigInt.from(payload[offset + j] & 0xFF);
+        timestamp = (timestamp << 8) | BigInt.from(payload[offset + j] & 0xFF);
       }
       offset += 8;
 
@@ -814,14 +817,29 @@ class Mp4Parser {
             ));
           }
         }
+        // Prefetch the full set once; a single transient range failure
+        // (e.g. archive.org HTTP 500) is retried once before giving up.
         const batchSize = 4;
-        for (var i = 0; i < ranges.length; i += batchSize) {
-          final batch = ranges.skip(i).take(batchSize);
-          await Future.wait(
-            batch.map(
-              (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
-            ),
-          );
+        for (var pass = 0; pass < 2; pass++) {
+          try {
+            for (var i = 0; i < ranges.length; i += batchSize) {
+              final batch = ranges.skip(i).take(batchSize);
+              await Future.wait(
+                batch.map(
+                  (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
+                ),
+              );
+            }
+            break;
+          } on FileDownloadError {
+            // prefetchRange natively retries transient errors; a failure
+            // here most often means the whole batch raced a slow mirror.
+            if (pass == 0) {
+              await Future<void>.delayed(const Duration(seconds: 1));
+              continue;
+            }
+            rethrow;
+          }
         }
       } on Exception catch (e) {
         metadata.addWarning('Failed to prefetch chapter data: $e');
@@ -1089,9 +1107,9 @@ class Mp4Parser {
     // mdat atom (e.g. 300MB+) and we only need the small title samples.
     if (chapterRanges.isNotEmpty) {
       if (tokenizer case final HttpBasedTokenizer httpTokenizer) {
+        const batchSize = 4;
         try {
           // Batch prefetch to avoid overwhelming the server
-          const batchSize = 4;
           for (var i = 0; i < chapterRanges.length; i += batchSize) {
             final batch = chapterRanges.skip(i).take(batchSize);
             await Future.wait(
@@ -1099,6 +1117,24 @@ class Mp4Parser {
                 (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
               ),
             );
+          }
+        } on FileDownloadError {
+          // One retry after transient range-fetch failures (e.g. shared
+          // hosts returning HTTP 500 under load); prefetchRange already
+          // retries internally, so failing again here is persistent.
+          await Future<void>.delayed(const Duration(seconds: 1));
+          try {
+            for (var i = 0; i < chapterRanges.length; i += batchSize) {
+              final batch = chapterRanges.skip(i).take(batchSize);
+              await Future.wait(
+                batch.map(
+                  (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
+                ),
+              );
+            }
+          } on Exception catch (e) {
+            metadata.addWarning('Failed to prefetch chapter data: $e');
+            return null;
           }
         } on Exception catch (e) {
           metadata.addWarning('Failed to prefetch chapter data: $e');

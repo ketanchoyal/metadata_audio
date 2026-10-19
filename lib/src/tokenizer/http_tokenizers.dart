@@ -16,6 +16,15 @@ class FileDownloadError extends ParseError {
 
   @override
   String get name => 'FileDownloadError';
+
+  /// Whether this describes a transient server-side failure worth retrying.
+  ///
+  /// Archive.org and other large-serving hosts intermittently return
+  /// 500/502/503/504 load-shedding errors that succeed on retry, while
+  /// permanent client errors (403/404/410) never will.
+  bool get isTransient {
+    return RegExp(r'\b(?:500|502|503|504|429)\b').hasMatch(message);
+  }
 }
 
 /// Abstract base class for HTTP-based tokenizers.
@@ -442,8 +451,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
         final headRequest = await client.headUrl(Uri.parse(url));
         headRequest.headers.set('User-Agent', 'metadata_audio/0.9.4');
         headRequest.followRedirects = true;
-        final response =
-            await headRequest.close().timeout(effectiveTimeout);
+        final response = await headRequest.close().timeout(effectiveTimeout);
         if (response.statusCode == 429) {
           await response.drain<void>();
           if (attempt < maxRetries - 1) {
@@ -463,9 +471,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
       if (headResponse == null || headResponse.statusCode >= 300) {
         final code = headResponse?.statusCode ?? 0;
-        throw FileDownloadError(
-          'HTTP $code error accessing URL: $url',
-        );
+        throw FileDownloadError('HTTP $code error accessing URL: $url');
       }
 
       final totalSize = headResponse.contentLength;
@@ -685,8 +691,14 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
         final chunks = await response.toList();
         return Uint8List.fromList([for (final chunk in chunks) ...chunk]);
-      } on FileDownloadError {
-        rethrow;
+      } on FileDownloadError catch (error) {
+        // Transient server errors (500/502/503/504) are common on large
+        // shared hosts (e.g. archive.org) and usually succeed on retry;
+        // permanent client errors (403/404) never will.
+        if (!error.isTransient || attempt >= maxRetries - 1) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
       } catch (e) {
         if (attempt < maxRetries - 1) {
           await Future<void>.delayed(
@@ -965,9 +977,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
 
       if (headResponse == null || headResponse.statusCode >= 300) {
         final code = headResponse?.statusCode ?? 0;
-        throw FileDownloadError(
-          'HTTP $code error accessing URL: $url',
-        );
+        throw FileDownloadError('HTTP $code error accessing URL: $url');
       }
 
       final totalSize = headResponse.contentLength > 0
@@ -1188,8 +1198,14 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
         }
         totalBytesFetched += data.length;
         return;
-      } on FileDownloadError {
-        rethrow;
+      } on FileDownloadError catch (error) {
+        // Transient server errors (500/502/503/504) are common on large
+        // shared hosts (e.g. archive.org) and usually succeed on retry;
+        // permanent client errors (403/404) never will.
+        if (!error.isTransient || attempt >= maxRetries - 1) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
       } catch (e) {
         if (attempt < maxRetries - 1) {
           await Future<void>.delayed(
@@ -1202,6 +1218,9 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
         );
       }
     }
+    throw FileDownloadError(
+      'Failed to fetch range $startByte-$endByte after retries',
+    );
   }
 }
 
