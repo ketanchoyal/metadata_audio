@@ -223,6 +223,9 @@ class Mp4Parser {
         return;
       case 'chap':
         if (!_isTrackScopedAtom(atom)) {
+          // Orphan track-specific box may not modify whichever track happens
+          // to be registered last (upstream parity).
+          metadata.addWarning('Ignoring track-specific atom ${atom.atomPath} outside a track');
           tokenizer.skip(payloadLength);
           return;
         }
@@ -412,6 +415,8 @@ class Mp4Parser {
     }
   }
 
+  static const int _maxChapterCount = 1000;
+
   void _parseChpl(List<int> payload) {
     if (!options.includeChapters) {
       return;
@@ -426,9 +431,12 @@ class Mp4Parser {
 
     // Version (1 byte)
     final version = payload[offset++];
+    if (version > 1) {
+      metadata.addWarning('Unsupported chpl version: $version');
+      return;
+    }
 
     // Flags (3 bytes)
-    // ignore: unused_local_variable
     final flags =
         (payload[offset++] << 16) |
         (payload[offset++] << 8) |
@@ -440,8 +448,17 @@ class Mp4Parser {
     // Chapter count (4 bytes)
     final chapterCount = AtomToken.readUint32Be(payload, offset);
     offset += 4;
+    if (chapterCount > _maxChapterCount) {
+      metadata.addWarning(
+        'Chapter count exceeds the $_maxChapterCount chapter limit',
+      );
+    }
 
-    for (var i = 0; i < chapterCount && offset + 9 <= payload.length; i++) {
+    for (var i = 0;
+        i < chapterCount &&
+            offset + 9 <= payload.length &&
+            _chplChapters.length < _maxChapterCount;
+        i++) {
       // Timestamp (8 bytes) - use last 4 bytes for 32-bit values
       // as some files store 32-bit timestamps in 64-bit fields
       BigInt timestamp;
@@ -466,9 +483,15 @@ class Mp4Parser {
       // Title length (1 byte)
       final titleLen = payload[offset++] & 0xFF;
 
-      // Title string
+      // Title string. A title that exceeds the remaining payload ends the
+      // chapter list; continuing would re-read the same offset (upstream
+      // parity).
+      if (offset + titleLen > payload.length) {
+        break;
+      }
+
       var title = '';
-      if (titleLen > 0 && offset + titleLen <= payload.length) {
+      if (titleLen > 0) {
         title = utf8.decode(
           payload.sublist(offset, offset + titleLen),
           allowMalformed: true,
@@ -476,7 +499,9 @@ class Mp4Parser {
         offset += titleLen;
       }
 
-      _chplChapters.add(_ChplChapter(timestamp: timestamp, title: title));
+      _chplChapters.add(
+        _ChplChapter(timestamp: timestamp, title: title, flags: flags),
+      );
     }
   }
 
@@ -1579,13 +1604,16 @@ class _ChapterSampleEntry {
 
 /// Internal representation of a chapter from a chpl (Nero Chapter List) atom.
 class _ChplChapter {
-  _ChplChapter({required this.timestamp, required this.title});
+  _ChplChapter({required this.timestamp, required this.title, this.flags = 0});
 
   /// Timestamp in timescale units.
   final BigInt timestamp;
 
   /// Chapter title.
   final String title;
+
+  /// chpl flags from the atom header (currently unused downstream).
+  final int flags;
 }
 
 class Mp4TrackInfo {
