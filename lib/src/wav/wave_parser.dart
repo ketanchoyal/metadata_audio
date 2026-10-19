@@ -262,11 +262,7 @@ class WaveParser {
 
   Future<void> _parseCsetChunk(int chunkSize) async {
     if (chunkSize < 8) {
-      // Upstream tolerates a truncated CSET payload; the surrounding
-      // TokenizerException catch swallows the end-of-file error.
-      final bytes = tokenizer.readBytes(chunkSize);
-      _codePage = RiffChunk.readUint16Le(bytes, 0);
-      return;
+      throw WaveContentError('CSET chunk must contain at least 8 bytes');
     }
     final bytes = tokenizer.readBytes(chunkSize);
     _codePage = RiffChunk.readUint16Le(bytes, 0);

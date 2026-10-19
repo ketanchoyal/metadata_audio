@@ -442,12 +442,19 @@ class Mp4Parser {
         (payload[offset++] << 8) |
         payload[offset++];
 
-    // Reserved (1 byte)
-    offset++;
+    // Upstream layout: the version 0 header is 4 bytes; version 1 adds 4
+    // more header bytes (8 in total) before the single-byte chapter count.
+    if (version == 1) {
+      offset += 4;
+    }
 
-    // Chapter count (4 bytes)
-    final chapterCount = AtomToken.readUint32Be(payload, offset);
-    offset += 4;
+    if (offset + 9 > payload.length) {
+      metadata.addWarning('chpl atom too small');
+      return;
+    }
+
+    // Chapter count (1 byte, matching upstream)
+    final chapterCount = payload[offset++] & 0xFF;
     if (chapterCount > _maxChapterCount) {
       metadata.addWarning(
         'Chapter count exceeds the $_maxChapterCount chapter limit',
@@ -459,24 +466,11 @@ class Mp4Parser {
             offset + 9 <= payload.length &&
             _chplChapters.length < _maxChapterCount;
         i++) {
-      // Timestamp (8 bytes) - use last 4 bytes for 32-bit values
-      // as some files store 32-bit timestamps in 64-bit fields
-      BigInt timestamp;
-      if (version == 1) {
-        // Full 64-bit timestamp
-        timestamp = BigInt.zero;
-        for (var j = 0; j < 8; j++) {
-          timestamp =
-              (timestamp << 8) | BigInt.from(payload[offset + j] & 0xFF);
-        }
-      } else {
-        // 32-bit timestamp stored in last 4 bytes of 8-byte field
-        final ts32 =
-            (payload[offset + 4] << 24) |
-            (payload[offset + 5] << 16) |
-            (payload[offset + 6] << 8) |
-            payload[offset + 7];
-        timestamp = BigInt.from(ts32);
+      // Timestamp (8 bytes, 64-bit; time base: 10,000,000 ticks per second)
+      var timestamp = BigInt.zero;
+      for (var j = 0; j < 8; j++) {
+        timestamp =
+            (timestamp << 8) | BigInt.from(payload[offset + j] & 0xFF);
       }
       offset += 8;
 
@@ -927,8 +921,9 @@ class Mp4Parser {
     final fileDuration = metadata.format.duration;
     if (fileDuration == null || fileDuration <= 0) return;
 
-    final inferredTimeBase = _inferChplTimeBase(fileDuration);
-    if (inferredTimeBase == null || inferredTimeBase <= 0) return;
+    // chpl timestamps use the spec base of 10,000,000 ticks per second,
+    // matching upstream music-metadata's IChapter.timeScale.
+    const chplTimestampTimescale = 10000000;
 
     final chapters = <Chapter>[];
     final audioTrack = _tracks.values.where((t) => t.isAudio).firstOrNull;
@@ -937,7 +932,7 @@ class Mp4Parser {
       // Convert timestamp to milliseconds
       final timestampMs =
           (chplChapter.timestamp * BigInt.from(1000)) ~/
-          BigInt.from(inferredTimeBase);
+          BigInt.from(chplTimestampTimescale);
 
       // Skip chapters with timestamps exceeding file duration (plus small tolerance)
       final maxDuration = BigInt.from((fileDuration * 1000 + 5000).round());
@@ -994,61 +989,6 @@ class Mp4Parser {
     if (chapters.isNotEmpty) {
       metadata.setFormat(chapters: chapters);
     }
-  }
-
-  /// Infer chpl time base from file timing data.
-  ///
-  /// Many files encode chpl timestamps in high-resolution units. We infer the
-  /// scale factor by matching the largest chapter timestamp to media duration.
-  int? _inferChplTimeBase(double fileDurationSeconds) {
-    if (_chplChapters.isEmpty || fileDurationSeconds <= 0) {
-      return null;
-    }
-
-    var maxTimestamp = BigInt.zero;
-    for (final chapter in _chplChapters) {
-      if (chapter.timestamp > maxTimestamp) {
-        maxTimestamp = chapter.timestamp;
-      }
-    }
-
-    if (maxTimestamp == BigInt.zero) {
-      return null;
-    }
-
-    final inferred = (maxTimestamp.toDouble() / fileDurationSeconds).round();
-    if (inferred <= 0) {
-      return null;
-    }
-
-    return _normalizeTimeBase(inferred);
-  }
-
-  /// Normalize an inferred time base to a nearby canonical clock when possible.
-  int _normalizeTimeBase(int inferred) {
-    const candidates = <int>[
-      1000,
-      22050,
-      44100,
-      48000,
-      90000,
-      1000000,
-      10000000,
-    ];
-
-    var best = inferred;
-    var bestRelError = double.infinity;
-
-    for (final candidate in candidates) {
-      final relError = (candidate - inferred).abs() / inferred;
-      if (relError < bestRelError) {
-        bestRelError = relError;
-        best = candidate;
-      }
-    }
-
-    // Snap only when very close to avoid distorting truly custom bases.
-    return bestRelError <= 0.02 ? best : inferred;
   }
 
   Future<bool> _tryParseChaptersFromMdat(int payloadLength) async {
