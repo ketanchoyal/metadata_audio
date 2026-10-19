@@ -90,7 +90,7 @@ class AsfTagMapper extends GenericTagMapper {
         continue;
       }
 
-      final normalized = _normalize(mappedTag, entry.value);
+      final normalized = _normalize(entry.key, mappedTag, entry.value);
       if (normalized != null) {
         result[mappedTag] = normalized;
       }
@@ -99,7 +99,7 @@ class AsfTagMapper extends GenericTagMapper {
     return result;
   }
 
-  dynamic _normalize(String mappedTag, dynamic value) {
+  dynamic _normalize(String nativeKey, String mappedTag, dynamic value) {
     switch (mappedTag) {
       case 'title':
       case 'artist':
@@ -188,7 +188,9 @@ class AsfTagMapper extends GenericTagMapper {
         return _parseBool(_singleString(value));
 
       case 'rating':
-        return _toRating(value);
+        return nativeKey == 'POPULARIMETER'
+            ? _popularimeterToRating(value)
+            : _sharedUserRatingToRating(value);
 
       case 'picture':
         if (value is Picture) {
@@ -201,19 +203,54 @@ class AsfTagMapper extends GenericTagMapper {
     }
   }
 
-  static List<Rating>? _toRating(dynamic value) {
+  /// POPULARIMETER is a popm-style attribute written by e.g. foobar2000;
+  /// the value has the shape `email|rating|counter` where `rating` is an
+  /// integer in the range [0..255]. A rating of 1..255 maps to
+  /// `(value - 1) / 254` on the [0..1] scale (upstream parity).
+  ///
+  /// Mirrors upstream `AsfTagMapper.postMap` for `POPULARIMETER`.
+  static List<Rating>? _popularimeterToRating(dynamic value) {
     final text = _singleString(value);
-    if (text == null) {
+    if (text == null || text.isEmpty) {
       return null;
     }
 
-    final raw = double.tryParse(text.trim());
-    if (raw == null) {
+    final email = text.split('|').first;
+    final ratingPart = text.split('|').length > 1 ? text.split('|')[1] : '';
+
+    final raw = int.tryParse(ratingPart);
+    final valid = RegExp(r'^\d+$').hasMatch(ratingPart) &&
+        raw != null &&
+        raw >= 0 &&
+        raw <= 255;
+
+    // Upstream keeps the tag (rating side) even when invalid, but leaves the
+    // rating undefined; only valid non-zero ratings produce a score.
+    final rating = valid && raw > 0 ? (raw - 1) / 254.0 : null;
+
+    return <Rating>[Rating(source: email, rating: rating)];
+  }
+
+  /// Mirrors upstream `AsfTagMapper.toRating` for `WM/SharedUserRating`:
+  /// values are parsed as numbers, non-positive values yield no rating and
+  /// otherwise `value / 99` maps onto the [0..1] scale.
+  static List<Rating>? _sharedUserRatingToRating(dynamic value) {
+    double? raw;
+    if (value is num) {
+      raw = value.toDouble();
+    } else {
+      final text = _singleString(value);
+      if (text == null) {
+        return null;
+      }
+      raw = double.tryParse(text.trim());
+    }
+
+    if (raw == null || raw <= 0) {
       return null;
     }
 
-    final normalized = (raw / 100.0).clamp(0.0, 1.0);
-    return <Rating>[Rating(rating: normalized)];
+    return <Rating>[Rating(rating: raw / 99.0)];
   }
 
   static String? _singleString(dynamic value) {

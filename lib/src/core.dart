@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:metadata_audio/src/aiff/aiff_loader.dart';
 import 'package:metadata_audio/src/apev2/apev2_loader.dart';
 import 'package:metadata_audio/src/asf/asf_loader.dart';
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
 import 'package:metadata_audio/src/dsf/dsf_loader.dart';
 import 'package:metadata_audio/src/flac/flac_loader.dart';
@@ -270,7 +271,7 @@ Future<AudioMetadata> parseFromTokenizer(
   final fileInfo = tokenizer.fileInfo ?? const FileInfo();
 
   // Apply upstream-style allocation cap to tokenizers that support it.
-  final maxBufferSize = options.maxMemoryAllocation;
+  final maxBufferSize = getMaxMemoryAllocation(options);
   if (tokenizer is FileTokenizer) {
     tokenizer.maxBufferSize = maxBufferSize;
   } else if (tokenizer is BytesTokenizer) {

@@ -28,6 +28,17 @@ abstract class HttpBasedTokenizer extends Tokenizer {
   /// Maximum bytes allowed in a single read/peek operation.
   int? maxBufferSize;
 
+  /// Guard against allocations larger than [maxBufferSize].
+  ///
+  /// Mirrors upstream strtok3 `maxBufferSize` enforcement.
+  void checkAllocation(int length) {
+    if (maxBufferSize != null && length > maxBufferSize!) {
+      throw TokenizerException(
+        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
+      );
+    }
+  }
+
   /// Close any resources held by the tokenizer.
   void close();
 
@@ -127,6 +138,7 @@ class HttpTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> readBytes(int length) {
+    checkAllocation(length);
     if (_position + length > _bytes.length) {
       throw TokenizerException('Not enough bytes available');
     }
@@ -146,6 +158,7 @@ class HttpTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> peekBytes(int length) {
+    checkAllocation(length);
     if (_position + length > _bytes.length) {
       throw TokenizerException('Not enough bytes available');
     }
@@ -295,6 +308,7 @@ class RangeTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> readBytes(int length) {
+    checkAllocation(length);
     if (_position + length > _bytes.length) {
       throw TokenizerException(
         'Header too small: need $length bytes at position $_position, '
@@ -317,6 +331,7 @@ class RangeTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> peekBytes(int length) {
+    checkAllocation(length);
     if (_position + length > _bytes.length) {
       throw TokenizerException('Header too small for peek');
     }
@@ -726,6 +741,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> readBytes(int length) {
+    checkAllocation(length);
     final result = Uint8List(length);
     for (var i = 0; i < length; i++) {
       result[i] = readUint8();
@@ -1017,6 +1033,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> readBytes(int length) {
+    checkAllocation(length);
     final result = Uint8List(length);
     for (var i = 0; i < length; i++) {
       result[i] = readUint8();

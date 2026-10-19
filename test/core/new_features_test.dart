@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:metadata_audio/src/apev2/apev2_tag_map.dart';
 import 'package:metadata_audio/src/asf/asf_tag_map.dart';
+import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -75,6 +78,28 @@ void main() {
     test('ParseOptions defaults match upstream', () {
       const options = ParseOptions();
       expect(options.mkvUseIndex, isFalse);
+      expect(options.maxMemoryAllocation, equals(67108864));
+    });
+
+    test('non-positive maxMemoryAllocation is rejected', () async {
+      final tokenizer = BytesTokenizer(Uint8List.fromList([0, 1, 2, 3]));
+      await expectLater(
+        parseFromTokenizer(
+          tokenizer,
+          options: const ParseOptions(maxMemoryAllocation: 0),
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('maxBufferSize cap rejects oversized single reads', () async {
+      final tokenizer = BytesTokenizer(Uint8List.fromList([0, 1, 2, 3]));
+      tokenizer.maxBufferSize = 2;
+      expect(
+        () => tokenizer.readBytes(3),
+        throwsA(isA<TokenizerException>()),
+      );
+      expect(() => tokenizer.peekBytes(3), throwsA(isA<TokenizerException>()));
     });
 
     test('Format.copyWith preserves and overrides fields', () {
@@ -97,10 +122,31 @@ void main() {
       expect(mapped['date'], equals('2024-01-02'));
     });
 
-    test('ASF POPULARIMETER maps to rating', () {
+    test('ASF POPULARIMETER maps popm-style value to rating (upstream parity)',
+        () {
       final mapper = AsfTagMapper();
-      final mapped = mapper.mapTags({'POPULARIMETER': '50'});
-      expect(mapped['rating'], isNotNull);
+      final mapped = mapper.mapTags({'POPULARIMETER': 'user@example.com|100|0'});
+      final rating = mapped['rating'] as List<Rating>;
+      expect(rating, isNotEmpty);
+      expect(rating.first.source, equals('user@example.com'));
+      // (100 - 1) / 254 = 0.389763779527559
+      expect(rating.first.rating, closeTo(99 / 254, 1e-9));
+    });
+
+    test('ASF POPULARIMETER out-of-range rating yields no score', () {
+      final mapper = AsfTagMapper();
+      final mapped = mapper.mapTags({'POPULARIMETER': 'user@example.com|300|0'});
+      final rating = mapped['rating'] as List<Rating>;
+      expect(rating, isNotEmpty);
+      expect(rating.first.rating, isNull);
+    });
+
+    test('ASF WM/SharedUserRating maps to rating like upstream', () {
+      final mapper = AsfTagMapper();
+      final mapped = mapper.mapTags({'WM/SharedUserRating': '99'});
+      final rating = mapped['rating'] as List<Rating>;
+      expect(rating, isNotEmpty);
+      expect(rating.first.rating, closeTo(1.0, 1e-9));
     });
 
     group('Simulated network parsing (local files)', () {
