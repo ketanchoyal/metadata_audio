@@ -28,6 +28,14 @@ class WaveParser {
   final Map<int, String> _cueLabels = <int, String>{};
   final Map<int, int> _cueDurations = <int, int>{}; // From ltxt chunks
 
+  /// RIFF CSET code page. Null until a CSET chunk is seen.
+  ///
+  /// CSET applies to the whole file, including INFO chunks preceding it, so
+  /// LIST/INFO tags are queued until the code page is known (upstream parity).
+  int? _codePage;
+  final List<({RiffChunkHeader header, List<int> bytes})> _pendingInfoTags =
+      <({RiffChunkHeader header, List<int> bytes})>[];
+
   Future<void> parse() async {
     final riffHeader = RiffChunk.parseHeader(
       tokenizer.readBytes(RiffChunk.headerLength),
@@ -51,6 +59,9 @@ class WaveParser {
     } on TokenizerException {
       metadata.addWarning('Unexpected end of RIFF/WAVE data');
     }
+
+    // CSET applies to the whole file, including INFO chunks preceding it.
+    await _flushInfoTags();
 
     _applyCueChapters();
   }
@@ -120,6 +131,9 @@ class WaveParser {
       case 'data':
         _parseDataChunk(chunkSize);
         tokenizer.skip(chunkSize);
+        return;
+      case 'CSET':
+        await _parseCsetChunk(chunkSize);
         return;
       case 'bext':
         tokenizer.skip(chunkSize);
@@ -227,8 +241,12 @@ class WaveParser {
       }
 
       final valueBytes = tokenizer.readBytes(header.chunkSize);
-      final value = _stripNulls(valueToken.parse(valueBytes));
-      metadata.addNativeTag('exif', header.chunkId, value);
+      if (_codePage == null) {
+        // Code page not yet known; queue until the CSET chunk (or end of file).
+        _pendingInfoTags.add((header: header, bytes: valueBytes));
+      } else {
+        await _addInfoTag(header, valueBytes);
+      }
 
       if (valueToken.paddedLength > header.chunkSize) {
         tokenizer.skip(valueToken.paddedLength - header.chunkSize);
@@ -239,6 +257,62 @@ class WaveParser {
 
     if (remaining != 0) {
       throw WaveContentError('Illegal remaining size: $remaining');
+    }
+  }
+
+  Future<void> _parseCsetChunk(int chunkSize) async {
+    if (chunkSize < 8) {
+      // Upstream tolerates a truncated CSET payload; the surrounding
+      // TokenizerException catch swallows the end-of-file error.
+      final bytes = tokenizer.readBytes(chunkSize);
+      _codePage = RiffChunk.readUint16Le(bytes, 0);
+      return;
+    }
+    final bytes = tokenizer.readBytes(chunkSize);
+    _codePage = RiffChunk.readUint16Le(bytes, 0);
+
+    if (_getInfoEncoding() == null) {
+      metadata.addWarning(
+        'Unsupported RIFF CSET code page: $_codePage; '
+        'LIST/INFO tags will be omitted',
+      );
+    }
+    await _flushInfoTags();
+  }
+
+  /// Maps the RIFF CSET code page to a text encoding.
+  ///
+  /// Absent/zero/28591 IS ISO 8859-1 (Latin-1), not Windows-1252.
+  String? _getInfoEncoding() {
+    switch (_codePage) {
+      case null:
+      case 0:
+      case 28591:
+        return 'latin1';
+      case 1252:
+        return 'windows-1252';
+      case 65001:
+        return 'utf-8';
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _addInfoTag(RiffChunkHeader header, List<int> bytes) async {
+    final encoding = _getInfoEncoding();
+    if (encoding == null) {
+      return;
+    }
+    final valueToken = ListInfoTagValue(header);
+    final value = valueToken.parse(bytes, encoding: encoding);
+    metadata.addNativeTag('exif', header.chunkId, value);
+  }
+
+  Future<void> _flushInfoTags() async {
+    final pending = List.of(_pendingInfoTags);
+    _pendingInfoTags.clear();
+    for (final (:header, :bytes) in pending) {
+      await _addInfoTag(header, bytes);
     }
   }
 
