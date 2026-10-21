@@ -5,6 +5,44 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:metadata_audio/metadata_audio.dart';
 
+/// One demo URL showcased in the Remote URL tab.
+class _DemoPreset {
+  const _DemoPreset(this.label, this.url);
+
+  final String label;
+  final String url;
+}
+
+/// Archive.org audiobook demos plus upstream `music-metadata` sample files
+/// (served from raw.githubusercontent.com, HTTP-range capable) that exercise
+/// the parser's ASF/Ogg trackInfo and WMA rating/level features.
+const _demoPresets = <_DemoPreset>[
+  _DemoPreset(
+    'M4B (Chapters)',
+    'https://archive.org/download/city_of_fire_2209_librivox/CityFire_librivox.m4b',
+  ),
+  _DemoPreset(
+    'MP3 (No Chapters)',
+    'https://archive.org/download/city_of_fire_2209_librivox/cityoffire_01_hill_128kb.mp3',
+  ),
+  _DemoPreset(
+    'ASF (Track Info)',
+    'https://raw.githubusercontent.com/Borewit/music-metadata/master/test/samples/asf/asf.wma',
+  ),
+  _DemoPreset(
+    'ASF Audio+Video',
+    'https://raw.githubusercontent.com/Borewit/music-metadata/master/test/samples/asf/asf-video-audio-no-codec-list.asf',
+  ),
+  _DemoPreset(
+    'WMA (Rating/Levels)',
+    'https://raw.githubusercontent.com/Borewit/music-metadata/master/test/samples/asf/wma_rating.wma',
+  ),
+  _DemoPreset(
+    'Ogg/Theora (Track Info)',
+    'https://raw.githubusercontent.com/Borewit/music-metadata/master/test/samples/ogg/short.ogv',
+  ),
+];
+
 void main() {
   runApp(const MyApp());
 }
@@ -493,31 +531,27 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                   ),
                                 ),
                                  const SizedBox(height: 8),
-                                 Row(
+                                 Wrap(
+                                   spacing: 8,
+                                   runSpacing: 0,
+                                   crossAxisAlignment: WrapCrossAlignment.center,
                                    children: [
-                                     const Text('Presets: ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                     TextButton(
-                                       onPressed: () {
-                                         _urlController.text = 'https://archive.org/download/city_of_fire_2209_librivox/CityFire_librivox.m4b';
-                                       },
-                                       style: TextButton.styleFrom(
-                                         padding: EdgeInsets.zero,
-                                         minimumSize: const Size(60, 30),
-                                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                       ),
-                                       child: const Text('M4B (Chapters)', style: TextStyle(fontSize: 12)),
+                                     const Text(
+                                       'Presets: ',
+                                       style: TextStyle(fontSize: 12, color: Colors.grey),
                                      ),
-                                     const SizedBox(width: 8),
-                                     TextButton(
-                                       onPressed: () {
-                                         _urlController.text = 'https://archive.org/download/city_of_fire_2209_librivox/cityoffire_01_hill_128kb.mp3';
-                                       },
-                                       style: TextButton.styleFrom(
-                                         padding: EdgeInsets.zero,
-                                         minimumSize: const Size(60, 30),
-                                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                     ..._demoPresets.map(
+                                       (preset) => TextButton(
+                                         onPressed: () {
+                                           setState(() => _urlController.text = preset.url);
+                                         },
+                                         style: TextButton.styleFrom(
+                                           padding: EdgeInsets.zero,
+                                           minimumSize: const Size(60, 30),
+                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                         ),
+                                         child: Text(preset.label, style: const TextStyle(fontSize: 12)),
                                        ),
-                                       child: const Text('MP3 (No Chapters)', style: TextStyle(fontSize: 12)),
                                      ),
                                    ],
                                  ),
@@ -530,11 +564,26 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<ParseStrategy?>(
                                   value: _forcedParseStrategy,
+                                  isExpanded: true,
                                   decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                                   items: [
-                                    const DropdownMenuItem(value: null, child: Text('Auto-detect (Recommended)')),
+                                    const DropdownMenuItem(
+                                      value: null,
+                                      child: Text(
+                                        'Auto-detect (Recommended)',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                     ...ParseStrategy.values.map(
-                                      (s) => DropdownMenuItem(value: s, child: Text(s.name)),
+                                      (s) => DropdownMenuItem(
+                                        value: s,
+                                        child: Text(
+                                          s.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
                                     )
                                   ],
                                   onChanged: (val) {
@@ -551,11 +600,26 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<ProbeStrategy?>(
                                   value: _forcedProbeStrategy,
+                                  isExpanded: true,
                                   decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                                   items: [
-                                    const DropdownMenuItem(value: null, child: Text('Auto-detect from format')),
+                                    const DropdownMenuItem(
+                                      value: null,
+                                      child: Text(
+                                        'Auto-detect from format',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                     ...ProbeStrategy.values.map(
-                                      (s) => DropdownMenuItem(value: s, child: Text(s.name)),
+                                      (s) => DropdownMenuItem(
+                                        value: s,
+                                        child: Text(
+                                          s.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
                                     )
                                   ],
                                   onChanged: (val) {

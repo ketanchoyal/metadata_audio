@@ -181,4 +181,40 @@ void main() {
 
     expect(labels, isEmpty);
   });
+
+  testWidgets('demo URL presets fill the URL field', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
+
+    // Switch to the Remote URL tab where the presets live.
+    await tester.tap(find.text('Remote URL'));
+    await tester.pumpAndSettle();
+
+    // Every preset is rendered, including the feature demos.
+    for (final label in {
+      'M4B (Chapters)',
+      'MP3 (No Chapters)',
+      'ASF (Track Info)',
+      'ASF Audio+Video',
+      'WMA (Rating/Levels)',
+      'Ogg/Theora (Track Info)',
+    }) {
+      expect(find.text(label), findsOneWidget);
+    }
+
+    // Tapping a preset replaces the URL field contents with its URL.
+    final oggPreset = find.text('Ogg/Theora (Track Info)');
+    await tester.ensureVisible(oggPreset);
+    await tester.pumpAndSettle();
+    await tester.tap(oggPreset);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('short.ogv'), findsOneWidget);
+    expect(
+      find.textContaining('music-metadata/master/test/samples/ogg'),
+      findsOneWidget,
+    );
+  });
 }
