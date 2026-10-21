@@ -6,7 +6,6 @@ import 'package:metadata_audio/src/id3v2/id3v2_token.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
 class FrameParser {
-
   const FrameParser(this.majorVersion, {this.warningCollector});
   final Id3v2MajorVersion majorVersion;
   final void Function(String warning)? warningCollector;
@@ -37,6 +36,13 @@ class FrameParser {
       case 'PCST':
         return _parseTextFrame(bytes, frameId);
 
+      case 'PCNT':
+      case 'CNT':
+        return _parsePlayCounterFrame(bytes);
+
+      case 'PRIV':
+        return _parsePrivFrame(bytes);
+
       case 'TXXX':
         return _parseUserTextFrame(bytes, frameId);
 
@@ -57,6 +63,36 @@ class FrameParser {
       default:
         return null;
     }
+  }
+
+  /// PCNT frame: play counter, at minimum a 32-bit little-endian value.
+  /// Longer frames are speculative counters; only the first 32 bits are read
+  /// (upstream parity).
+  int? _parsePlayCounterFrame(List<int> bytes) {
+    if (bytes.length < 4) {
+      return null;
+    }
+
+    var counter = 0;
+    for (var i = 0; i < 4; i++) {
+      counter |= bytes[i] << (8 * i);
+    }
+    return counter;
+  }
+
+  /// PRIV frame: owner identifier (latin1, null-terminated) followed by data.
+  PrivFrame? _parsePrivFrame(List<int> bytes) {
+    final zeroIndex = bytes.indexOf(0);
+    if (zeroIndex < 0 || zeroIndex + 1 >= bytes.length) {
+      warningCollector?.call('Failed to parse PRIV frame');
+      return null;
+    }
+
+    final owner = latin1.decode(
+      bytes.sublist(0, zeroIndex),
+      allowInvalid: true,
+    );
+    return PrivFrame(owner: owner, data: bytes.sublist(zeroIndex + 1));
   }
 
   dynamic _parseTextFrame(List<int> bytes, String frameId) {
@@ -318,14 +354,12 @@ class FrameParser {
 }
 
 class _NullTerminatedText {
-
   const _NullTerminatedText({required this.text, required this.len});
   final String text;
   final int len;
 }
 
 class _IdentifierAndData {
-
   const _IdentifierAndData({required this.id, required this.data});
   final String id;
   final List<int> data;

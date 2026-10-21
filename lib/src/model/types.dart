@@ -99,6 +99,22 @@ class Comment {
       'Comment(descriptor: $descriptor, language: $language, text: $text)';
 }
 
+/// ID3v2 PRIV (private) frame content: an owner identifier plus private data
+///
+/// Used by Windows Media Player to carry `AverageLevel` / `PeakLevel` values
+class PrivFrame {
+  const PrivFrame({required this.owner, required this.data});
+
+  /// Owner identifier (latin1, null-terminated in the frame)
+  final String owner;
+
+  /// Private data following the owner identifier
+  final List<int> data;
+
+  @override
+  String toString() => 'PrivFrame(owner: $owner, bytes: ${data.length})';
+}
+
 /// Lyrics text with optional timestamp
 class LyricsText {
   /// Create LyricsText
@@ -152,6 +168,7 @@ class AudioTrack {
     this.channels,
     this.channelPositions,
     this.bitDepth,
+    this.numberOfSamples,
   });
 
   /// Sampling frequency in Hz
@@ -168,6 +185,9 @@ class AudioTrack {
 
   /// Bit depth
   final int? bitDepth;
+
+  /// Number of samples in the track
+  final int? numberOfSamples;
 
   @override
   String toString() =>
@@ -188,6 +208,7 @@ class VideoTrack {
     this.aspectRatioType,
     this.colourSpace,
     this.gammaValue,
+    this.frameRate,
   });
 
   /// Interlaced flag
@@ -220,6 +241,9 @@ class VideoTrack {
   /// Gamma value
   final double? gammaValue;
 
+  /// Video frame rate in frames per second
+  final double? frameRate;
+
   @override
   String toString() =>
       'VideoTrack(${pixelWidth}x$pixelHeight, interlaced: $flagInterlaced)';
@@ -239,6 +263,12 @@ class TrackInfo {
     this.language,
     this.audio,
     this.video,
+    this.id,
+    this.codecId,
+    this.codecProfile,
+    this.duration,
+    this.bitrate,
+    this.lossless,
   });
 
   /// Track type
@@ -270,6 +300,24 @@ class TrackInfo {
 
   /// Video track info
   final VideoTrack? video;
+
+  /// Track identifier (e.g. Ogg stream serial or ASF stream number)
+  final int? id;
+
+  /// Codec identifier (e.g. ASF codec id like '0x0160')
+  final String? codecId;
+
+  /// Codec profile
+  final String? codecProfile;
+
+  /// Track duration in seconds
+  final double? duration;
+
+  /// Track bitrate in bits per second
+  final double? bitrate;
+
+  /// Whether the track is lossless
+  final bool? lossless;
 
   @override
   String toString() =>

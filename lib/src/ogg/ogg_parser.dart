@@ -54,6 +54,7 @@ class OggParser {
           header.streamSerialNumber,
           () => _OggStreamState(streamSerial: header.streamSerialNumber),
         );
+        stream.payloadBytes += pageData.length;
         if (stream.pendingOpusTagLength != null &&
             !header.headerType.continued) {
           stream.lastTagPageOffset =
@@ -105,6 +106,9 @@ class OggParser {
           final header = VorbisDecoder.parseIdentificationHeader(pageData);
           stream.sampleRate = header.sampleRate;
           stream.numberOfChannels = header.channelMode;
+          stream.nominalBitrate = header.bitrateNominal > 0
+              ? header.bitrateNominal
+              : null;
           metadata.setFormat(
             codec: codec,
             sampleRate: header.sampleRate,
@@ -135,6 +139,7 @@ class OggParser {
           stream.numberOfChannels = header.numberOfChannels > 0
               ? header.numberOfChannels
               : null;
+          stream.nominalBitrate = header.bitrate >= 0 ? header.bitrate : null;
           metadata.setFormat(
             codec: header.version.isEmpty ? codec : 'Speex ${header.version}',
             sampleRate: stream.sampleRate,
@@ -158,6 +163,7 @@ class OggParser {
           metadata.setFormat(codec: codec, hasVideo: true);
           if (TheoraDecoder.isIdentificationHeader(pageData)) {
             final header = TheoraDecoder.parseIdentificationHeader(pageData);
+            stream.theoraIdentification = header;
             metadata.setFormat(bitrate: header.bitrate);
           }
           break;
@@ -212,6 +218,8 @@ class OggParser {
       final streamInfo = block.streamInfo!;
       stream.sampleRate = streamInfo.sampleRate;
       stream.numberOfChannels = streamInfo.channels;
+      stream.bitsPerSample = streamInfo.bitsPerSample;
+      stream.totalSamples = streamInfo.totalSamples;
       metadata.setFormat(
         sampleRate: streamInfo.sampleRate,
         numberOfChannels: streamInfo.channels,
@@ -438,6 +446,8 @@ class OggParser {
       }
     }
 
+    _addStreamTracks();
+
     if (!options.duration && reachedEndOfStream && _streams.isEmpty) {
       throw OggContentError('Unexpected end-of-stream while reading Ogg pages');
     }
@@ -452,6 +462,128 @@ class OggParser {
     }
 
     _applyVorbisChapters();
+  }
+
+  /// Adds a [TrackInfo] per logical stream (upstream parity: each
+  /// discovered audio/video stream becomes its own `format.trackInfo`
+  /// entry with the Ogg stream serial as `id`).
+  void _addStreamTracks() {
+    for (final stream in _streams.values) {
+      final codec = stream.codec;
+      if (codec == null) {
+        continue;
+      }
+
+      if (codec == 'Theora') {
+        final header = stream.theoraIdentification;
+        if (header == null) {
+          // Skeleton (fishead) streams do not carry an identification header.
+          continue;
+        }
+        metadata.addStreamInfo(
+          TrackInfo(
+            type: 'video',
+            codecName: codec,
+            id: stream.streamSerial,
+            bitrate: header.bitrate > 0 ? header.bitrate.toDouble() : null,
+            video: VideoTrack(
+              pixelWidth: header.pixelWidth,
+              pixelHeight: header.pixelHeight,
+              displayWidth: header.pictureWidth > 0
+                  ? header.pictureWidth
+                  : null,
+              displayHeight: header.pictureHeight > 0
+                  ? header.pictureHeight
+                  : null,
+              frameRate: header.frameRate,
+            ),
+          ),
+        );
+        continue;
+      }
+
+      if (stream.maxGranulePosition <= 0) {
+        continue;
+      }
+
+      final (samples, duration) = _trackSamplesAndDuration(stream);
+      if (duration == null || duration <= 0) {
+        continue;
+      }
+
+      metadata.addStreamInfo(
+        TrackInfo(
+          type: 'audio',
+          codecName: codec,
+          id: stream.streamSerial,
+          duration: duration,
+          bitrate: _trackBitrate(stream, duration),
+          lossless: codec == 'FLAC' ? true : null,
+          audio: AudioTrack(
+            samplingFrequency: stream.sampleRate,
+            outputSamplingFrequency:
+                codec == 'Opus' && (stream.sampleRate ?? 48000) != 48000
+                ? 48000
+                : null,
+            channels: stream.numberOfChannels,
+            bitDepth: codec == 'FLAC' ? stream.bitsPerSample : null,
+            numberOfSamples: samples,
+          ),
+        ),
+      );
+    }
+  }
+
+  /// The number of samples and duration attributed to a single audio stream.
+  (int?, double?) _trackSamplesAndDuration(_OggStreamState stream) {
+    switch (stream.codec) {
+      case 'Opus':
+        final samples = stream.maxGranulePosition - (stream.opusPreSkip ?? 0);
+        return (
+          samples > 0 ? samples : null,
+          samples > 0 ? samples / 48000.0 : null,
+        );
+      case 'FLAC':
+        if (stream.totalSamples != null && stream.totalSamples! > 0) {
+          return (
+            stream.totalSamples,
+            stream.sampleRate != null && stream.sampleRate! > 0
+                ? stream.totalSamples! / stream.sampleRate!
+                : null,
+          );
+        }
+        return _granuleSamples(stream);
+      default:
+        return _granuleSamples(stream);
+    }
+  }
+
+  (int?, double?) _granuleSamples(_OggStreamState stream) {
+    final rate = stream.sampleRate;
+    if (rate == null || rate <= 0) {
+      return (null, null);
+    }
+    return (
+      stream.maxGranulePosition,
+      stream.maxGranulePosition / rate.toDouble(),
+    );
+  }
+
+  double? _trackBitrate(_OggStreamState stream, double duration) {
+    if (!stream.closed) {
+      return null;
+    }
+    switch (stream.codec) {
+      case 'Opus':
+      case 'FLAC':
+        if (stream.payloadBytes > 0) {
+          return stream.payloadBytes * 8 / duration;
+        }
+        return null;
+      default:
+        final nominal = stream.nominalBitrate;
+        return nominal != null && nominal > 0 ? nominal.toDouble() : null;
+    }
   }
 
   void _applyVorbisChapters() {
@@ -535,8 +667,16 @@ class _OggStreamState {
   String? codec;
   int? sampleRate;
   int? numberOfChannels;
+
+  /// Sum of payload bytes carried by this stream's pages (upstream tracks
+  /// per-stream payload to compute an independent track bitrate)
+  int payloadBytes = 0;
+  int? bitsPerSample;
+  int? totalSamples;
+  int? nominalBitrate;
   int? opusPreSkip;
   int? lastTagPageOffset;
   int? pendingOpusTagLength;
   bool flacMetadataComplete = false;
+  TheoraIdentificationHeader? theoraIdentification;
 }

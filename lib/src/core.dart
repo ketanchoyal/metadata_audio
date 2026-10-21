@@ -301,9 +301,13 @@ Future<AudioMetadata> parseFromTokenizer(
 
   // Finalize container-level duration/bitrate information when possible.
   final fileSize = tokenizer.fileInfo?.size;
-  final baseDuration = metadata.format.containerDuration ?? metadata.format.duration;
+  final baseDuration =
+      metadata.format.containerDuration ?? metadata.format.duration;
   num? overallBitrate = metadata.format.overallBitrate;
-  if (overallBitrate == null && fileSize != null && baseDuration != null && baseDuration > 0) {
+  if (overallBitrate == null &&
+      fileSize != null &&
+      baseDuration != null &&
+      baseDuration > 0) {
     overallBitrate = fileSize * 8 / baseDuration;
   }
   final containerDuration = metadata.format.containerDuration ?? baseDuration;

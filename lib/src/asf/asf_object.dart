@@ -1,5 +1,7 @@
 library;
 
+import 'dart:convert';
+
 import 'package:metadata_audio/src/asf/asf_guid.dart';
 import 'package:metadata_audio/src/asf/asf_util.dart';
 import 'package:metadata_audio/src/model/types.dart';
@@ -97,23 +99,106 @@ class AsfStreamPropertiesObject {
   const AsfStreamPropertiesObject({
     required this.streamType,
     required this.errorCorrectionType,
+    this.streamNumber,
+    this.encrypted,
+    this.codecId,
+    this.audioChannels,
+    this.audioSampleRate,
+    this.audioBitDepth,
+    this.audioAvgBytesPerSec,
+    this.videoPixelWidth,
+    this.videoPixelHeight,
+    this.bitrate,
   });
 
   final String? streamType;
   final AsfGuid errorCorrectionType;
 
+  /// Stream number, or null for the default stream (0)
+  final int? streamNumber;
+
+  /// Whether the content published in this stream is encrypted
+  final bool? encrypted;
+
+  /// ASF codec id: '0x0160' for audio (format tag), or the video FourCC
+  final String? codecId;
+
+  final int? audioChannels;
+  final int? audioSampleRate;
+  final int? audioBitDepth;
+
+  /// Average bytes per second of the audio payload
+  final int? audioAvgBytesPerSec;
+
+  final int? videoPixelWidth;
+  final int? videoPixelHeight;
+
+  /// Bitrate in bits per second (audio payload based)
+  final int? bitrate;
+
+  static const int minimumPayloadLength = 54;
+
   static AsfStreamPropertiesObject parse(List<int> bytes) {
-    if (bytes.length < 32) {
+    if (bytes.length < minimumPayloadLength) {
+      throw AsfContentParseError('Truncated Stream Properties Object');
+    }
+
+    final typeSpecificSize = readUint32Le(bytes, 40);
+    final correctionSize = readUint32Le(bytes, 44);
+    if (typeSpecificSize + correctionSize > bytes.length - 54) {
       throw AsfContentParseError(
-        'Stream Properties payload must be >= 32 bytes, got ${bytes.length}',
+        'ASF stream data exceeds Stream Properties Object payload',
       );
     }
 
-    final mediaTypeGuid = AsfGuid.fromBytes(bytes);
+    final flags = readUint16Le(bytes, 48);
+    final streamType = AsfGuid.decodeMediaType(AsfGuid.fromBytes(bytes));
+    final data = bytes.sublist(54);
+
+    var codecId = '';
+    int? channels;
+    int? sampleRate;
+    int? bitDepth;
+    int? avgBytesPerSec;
+    int? pixelWidth;
+    int? pixelHeight;
+
+    if (streamType == 'audio' && typeSpecificSize >= 16) {
+      codecId = '0x${readUint16Le(data, 0).toRadixString(16).padLeft(4, '0')}';
+      channels = readUint16Le(data, 2);
+      sampleRate = readUint32Le(data, 4);
+      bitDepth = readUint16Le(data, 14);
+      avgBytesPerSec = readUint32Le(data, 8);
+    } else if (streamType == 'video' && typeSpecificSize >= 11) {
+      // ASF specification 9.2: DWORD width, DWORD height, BYTE flags,
+      // WORD format size. The packed BITMAPINFOHEADER follows at +11 and
+      // its compression DWORD (FourCC) is at +16 beyond that (+27 total).
+      pixelWidth = readUint32Le(data, 0);
+      pixelHeight = readUint32Le(data, 4);
+      final formatSize = readUint16Le(data, 9);
+      if (formatSize > typeSpecificSize - 11) {
+        throw AsfContentParseError('ASF video format data exceeds stream data');
+      }
+      if (formatSize >= 20 && data.length >= 31) {
+        codecId = ascii.decode(data.sublist(27, 31), allowInvalid: true);
+      }
+    }
 
     return AsfStreamPropertiesObject(
-      streamType: AsfGuid.decodeMediaType(mediaTypeGuid),
+      streamType: streamType,
       errorCorrectionType: AsfGuid.fromBytes(bytes, 16),
+      streamNumber: flags & 0x7f,
+      encrypted: (flags & 0x8000) != 0,
+      codecId: codecId.isEmpty ? null : codecId,
+      audioChannels: channels,
+      audioSampleRate: sampleRate,
+      audioBitDepth: bitDepth,
+      audioAvgBytesPerSec: avgBytesPerSec,
+      videoPixelWidth: pixelWidth,
+      videoPixelHeight: pixelHeight,
+      bitrate: avgBytesPerSec != null && avgBytesPerSec > 0
+          ? avgBytesPerSec * 8
+          : null,
     );
   }
 }
@@ -302,15 +387,91 @@ List<AsfNativeTag> parseExtendedContentDescriptionObject(List<int> bytes) {
 }
 
 class AsfExtendedStreamPropertiesObject {
-  const AsfExtendedStreamPropertiesObject();
+  const AsfExtendedStreamPropertiesObject({
+    this.startTime = 0,
+    this.endTime = 0,
+    this.dataBitrate = 0,
+    this.streamNumber,
+    this.averageTimePerFrame = 0,
+    this.streamName,
+    this.streamProperties,
+  });
+
+  final int startTime;
+  final int endTime;
+
+  /// Data bitrate of the stream payload (bits per second)
+  final int dataBitrate;
+  final int? streamNumber;
+
+  /// Average time per frame in 100-nanosecond units (video streams)
+  final int averageTimePerFrame;
+  final String? streamName;
+  final AsfStreamPropertiesObject? streamProperties;
+
+  static const int minimumPayloadLength = 64;
 
   static AsfExtendedStreamPropertiesObject parse(List<int> bytes) {
-    if (bytes.length < 64) {
-      throw AsfContentParseError(
-        'Extended Stream Properties payload too short: ${bytes.length}',
-      );
+    if (bytes.length < minimumPayloadLength) {
+      throw AsfContentParseError('Truncated Extended Stream Properties Object');
     }
-    return const AsfExtendedStreamPropertiesObject();
+
+    final streamNumber = readUint16Le(bytes, 48) & 0x7f;
+    final averageTimePerFrame = readUint64Le(bytes, 52).toInt();
+    final streamNameCount = readUint16Le(bytes, 60);
+    final payloadExtensionCount = readUint16Le(bytes, 62);
+
+    var cursor = 64;
+    var streamName = '';
+
+    for (var i = 0; i < streamNameCount; i++) {
+      if (cursor + 2 > bytes.length) {
+        throw AsfContentParseError(
+          'ASF extended stream data exceeds object payload',
+        );
+      }
+      final nameLength = readUint16Le(bytes, cursor);
+      cursor += 2;
+      if (cursor + nameLength > bytes.length) {
+        throw AsfContentParseError(
+          'ASF extended stream data exceeds object payload',
+        );
+      }
+      if (streamName.isEmpty && nameLength > 0) {
+        streamName = parseUnicodeAttr(
+          bytes.sublist(cursor, cursor + nameLength),
+        );
+      }
+      cursor += nameLength;
+    }
+
+    for (var i = 0; i < payloadExtensionCount; i++) {
+      if (cursor + 18 > bytes.length) {
+        throw AsfContentParseError(
+          'ASF extended stream data exceeds object payload',
+        );
+      }
+      final dataLength = readUint16Le(bytes, cursor + 16);
+      cursor += 18 + dataLength;
+    }
+
+    AsfStreamPropertiesObject? streamProperties;
+    if (bytes.length - cursor >= 54 &&
+        AsfGuid.fromBytes(
+          bytes.sublist(cursor),
+        ).equals(AsfGuid.streamPropertiesObject)) {
+      streamProperties = AsfStreamPropertiesObject.parse(bytes.sublist(cursor));
+    }
+
+    return AsfExtendedStreamPropertiesObject(
+      startTime: readUint64Le(bytes, 0).toInt(),
+      endTime: readUint64Le(bytes, 8).toInt(),
+      dataBitrate: readUint32Le(bytes, 16),
+      streamNumber: streamNumber,
+      averageTimePerFrame: averageTimePerFrame,
+      streamName: streamName.isEmpty ? null : streamName,
+      streamProperties: streamProperties,
+    );
   }
 }
 
@@ -354,7 +515,8 @@ List<AsfNativeTag> parseMetadataObject(List<int> bytes) {
   return tags;
 }
 
-List<AsfNativeTag> parseMetadataLibraryObject(List<int> bytes) => parseMetadataObject(bytes);
+List<AsfNativeTag> parseMetadataLibraryObject(List<int> bytes) =>
+    parseMetadataObject(bytes);
 
 AsfNativeTag _postProcessTag(String name, int valueType, List<int> data) {
   if (name == 'WM/Picture') {
@@ -372,9 +534,7 @@ AsfNativeTag _postProcessTag(String name, int valueType, List<int> data) {
 Picture parseWmPicture(List<int> bytes) {
   // type (1) + declared size (4) — matches upstream's minimum header check.
   if (bytes.length < 5) {
-    throw AsfContentParseError(
-      'Truncated ASF picture header: ${bytes.length}',
-    );
+    throw AsfContentParseError('Truncated ASF picture header: ${bytes.length}');
   }
 
   final typeId = bytes[0];

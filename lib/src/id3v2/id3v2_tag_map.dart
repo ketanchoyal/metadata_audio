@@ -35,9 +35,20 @@ final _id3v2TagMap = {
   'TPUB': 'publisher',
   'TIT1': 'grouping',
   'TMOO': 'mood',
-  'MVIN': 'movementindex',
+  'MVNM': 'movement',
+  'MVIN': 'movementIndex',
+  'PCNT': 'playCounter',
+  'PRIV:AverageLevel': 'averageLevel',
+  'PRIV:PeakLevel': 'peakLevel',
+  'PRIV:PeakValue': 'peakLevel',
   'PCST': 'podcast',
-  'PCS': 'podcastid',
+  'PCS': 'podcastId',
+  'TGID': 'podcastId',
+  'TCAT': 'category',
+  'TDES': 'description',
+  'TDRL': 'releasedate',
+  'TKWD': 'keywords',
+  'WFED': 'podcasturl',
   'TLAN': 'language',
   'TCOP': 'copyright',
 };
@@ -142,25 +153,41 @@ class Id3v2TagMapper extends GenericTagMapper {
       case 'mood':
       case 'language':
       case 'copyright':
+      case 'movement':
+      case 'releasedate':
+      case 'podcasturl':
+      case 'podcastId':
         return _singleString(value);
       // Extended ID3v2 mappings - string lists (creator roles)
       case 'composer':
       case 'lyricist':
       case 'encoder':
       case 'publisher':
-        return _stringList(value);
-      // Extended ID3v2 mappings (string list values)
-      case 'podcastid':
+      case 'category':
+      case 'description':
+      case 'keywords':
         return _stringList(value);
       // Extended ID3v2 mappings (numeric/boolean values)
-      case 'movementindex':
-        return _parseLeadingInt(_singleString(value));
+      case 'movementIndex':
+        return _parseCounter(value);
+      case 'playCounter':
+        return _parseCounter(value);
+      case 'averageLevel':
+      case 'peakLevel':
+        return value is num ? value.toDouble() : null;
       case 'podcast':
         final intVal = _parseLeadingInt(_singleString(value));
         return intVal != null ? intVal != 0 : null;
       default:
         return null;
     }
+  }
+
+  int? _parseCounter(dynamic value) {
+    if (value is int) {
+      return value >= 0 ? value : null;
+    }
+    return _parseLeadingInt(_singleString(value));
   }
 
   static String? _singleString(dynamic value) {
