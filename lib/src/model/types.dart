@@ -389,13 +389,14 @@ class Chapter {
 /// Ratio with dB value
 class Ratio {
   /// Create Ratio
-  const Ratio({required this.ratio, required this.dB});
+  const Ratio({required this.ratio, this.dB});
 
   /// Ratio value [0..1]
   final double ratio;
 
-  /// Decibel value
-  final double dB;
+  /// Decibel value, `null` when the source value did not carry a `dB` suffix
+  /// (upstream parity, where `IRatio.dB` is `number | null`).
+  final double? dB;
 
   @override
   String toString() => 'Ratio(ratio: $ratio, dB: $dB)';
@@ -1124,6 +1125,8 @@ class ParseOptions {
     this.duration = false,
     this.observer,
     this.maxMemoryAllocation = 67108864,
+    this.maxMetadataEntries,
+    this.maxChapterCount,
     this.mkvUseIndex = false,
   });
 
@@ -1170,6 +1173,17 @@ class ParseOptions {
   ///
   /// Matches upstream `maxMemoryAllocation` option.
   final int? maxMemoryAllocation;
+
+  /// Maximum number of entries in an individual decoded list or table,
+  /// independently of byte-buffer limits.
+  ///
+  /// Matches upstream `maxMetadataEntries` option (default: 100,000).
+  final int? maxMetadataEntries;
+
+  /// Maximum number of chapters returned by supported chapter parsers.
+  ///
+  /// Matches upstream `maxChapterCount` option (default: 1,000).
+  final int? maxChapterCount;
 
   /// Whether to use the SeekHead index when parsing Matroska files.
   final bool mkvUseIndex;

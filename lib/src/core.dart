@@ -275,6 +275,10 @@ Future<AudioMetadata> parseFromTokenizer(
 
   // Apply upstream-style allocation cap to tokenizers that support it.
   final maxBufferSize = getMaxMemoryAllocation(options);
+  // Validate the remaining resource limits up front, like upstream
+  // ParserFactory.parseFromTokenizer does (mirrors constructor validation).
+  getMaxMetadataEntries(options);
+  getMaxChapterCount(options);
   if (tokenizer is FileTokenizer) {
     tokenizer.maxBufferSize = maxBufferSize;
   } else if (tokenizer is BytesTokenizer) {

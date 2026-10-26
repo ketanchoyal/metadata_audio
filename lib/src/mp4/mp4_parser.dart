@@ -3,6 +3,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/atom.dart';
@@ -417,8 +418,6 @@ class Mp4Parser {
     }
   }
 
-  static const int _maxChapterCount = 1000;
-
   void _parseChpl(List<int> payload) {
     if (!options.includeChapters) {
       return;
@@ -457,9 +456,10 @@ class Mp4Parser {
 
     // Chapter count (1 byte, matching upstream)
     final chapterCount = payload[offset++] & 0xFF;
-    if (chapterCount > _maxChapterCount) {
+    final maxChapterCount = getMaxChapterCount(options);
+    if (chapterCount > maxChapterCount) {
       metadata.addWarning(
-        'Chapter count exceeds the $_maxChapterCount chapter limit',
+        'Chapter count exceeds the $maxChapterCount chapter limit',
       );
     }
 
@@ -467,7 +467,7 @@ class Mp4Parser {
       var i = 0;
       i < chapterCount &&
           offset + 9 <= payload.length &&
-          _chplChapters.length < _maxChapterCount;
+          _chplChapters.length < maxChapterCount;
       i++
     ) {
       // Timestamp (8 bytes, 64-bit; time base: 10,000,000 ticks per second)
@@ -596,11 +596,24 @@ class Mp4Parser {
       case 22:
         return _readUnsignedBeInteger(value);
       case 65:
-        return value.isEmpty ? null : value[0];
+        // INT8: signed 8-bit integer (upstream parity, #2839).
+        return value.isEmpty
+            ? null
+            : (value[0] < 128 ? value[0] : value[0] - 256);
       case 66:
-        return value.length < 2 ? null : AtomToken.readUint16Be(value, 0);
+        // INT16_BE: signed big-endian 16-bit integer (upstream parity, #2839).
+        if (value.length < 2) {
+          return null;
+        }
+        final int16 = AtomToken.readUint16Be(value, 0);
+        return int16 > 0x7FFF ? int16 - 0x10000 : int16;
       case 67:
-        return value.length < 4 ? null : AtomToken.readUint32Be(value, 0);
+        // INT32_BE: signed big-endian 32-bit integer (upstream parity, #2839).
+        if (value.length < 4) {
+          return null;
+        }
+        final int32 = AtomToken.readUint32Be(value, 0);
+        return int32 > 0x7FFFFFFF ? int32 - 0x100000000 : int32;
       default:
         metadata.addWarning(
           'Unknown MP4 data type ${dataAtom.type.type} for tag=$tagKey',

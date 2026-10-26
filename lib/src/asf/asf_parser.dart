@@ -322,7 +322,30 @@ class AsfParser {
 
   Future<void> _addTags(List<AsfNativeTag> tags) async {
     for (final tag in tags) {
+      _validateReplayGainValue(tag.id, tag.value);
       metadata.addNativeTag(_headerType, tag.id, tag.value);
+    }
+  }
+
+  /// Emits the upstream warning for ASF ReplayGain attributes whose value
+  /// does not match `<number>[ <dB>]` (mirrors `AsfTagMapper.postMap`).
+  ///
+  /// Invalid values stay native without being mapped to common metadata.
+  static final RegExp _replayGainPattern = RegExp(
+    r'^([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?)\s*(dB)?$',
+    caseSensitive: false,
+  );
+
+  void _validateReplayGainValue(String id, dynamic value) {
+    if (!id.toLowerCase().startsWith('replaygain_')) {
+      return;
+    }
+    if (value is! String) {
+      return;
+    }
+    final match = _replayGainPattern.firstMatch(value.trim());
+    if (match == null) {
+      metadata.addWarning('Invalid ASF ReplayGain value for $id');
     }
   }
 
