@@ -45,12 +45,12 @@ class OpusDecoder {
     );
   }
 
-  static VorbisCommentHeader parseTags(List<int> data) {
+  static VorbisCommentHeader parseTags(List<int> data, {int maxComments = 100000}) {
     if (!isTagsHeader(data)) {
       throw const FormatException('Invalid OpusTags header');
     }
 
-    return VorbisDecoder.parseCommentData(data, 8);
+    return VorbisDecoder.parseCommentData(data, 8, maxComments: maxComments);
   }
 
   static int _uint16Le(List<int> data, int offset) {

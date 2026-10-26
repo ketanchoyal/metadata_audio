@@ -4,6 +4,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:metadata_audio/src/musepack/musepack_content_error.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 class Sv8PacketHeader {
@@ -52,7 +53,11 @@ class StreamVersion8Reader {
   Future<Sv8PacketHeader> readPacketHeader() async {
     final key = latin1.decode(_tokenizer.readBytes(2), allowInvalid: true);
     final size = await readVariableSizeField();
-    return Sv8PacketHeader(key: key, payloadLength: size.value - 2 - size.len);
+    final headerLength = 2 + size.len;
+    if (size.value < headerLength) {
+      throw MusepackContentError('Invalid packet size: ${size.value}');
+    }
+    return Sv8PacketHeader(key: key, payloadLength: size.value - headerLength);
   }
 
   Future<Sv8StreamHeader> readStreamHeader(int size) async {
@@ -105,18 +110,22 @@ class StreamVersion8Reader {
     );
   }
 
-  Future<Sv8VariableSize> readVariableSizeField([
-    int len = 1,
-    int hb = 0,
-  ]) async {
-    var n = _tokenizer.readUint8();
-    if ((n & 0x80) == 0) {
-      return Sv8VariableSize(len: len, value: hb + n);
+  Future<Sv8VariableSize> readVariableSizeField() async {
+    var value = 0;
+    for (var len = 1; len <= 9; len++) {
+      final byte = _tokenizer.readUint8();
+      final digit = byte & 0x7F;
+      if (value > (9007199254740991 - digit) ~/ 128) {
+        throw MusepackContentError(
+          'Variable-size integer exceeds JavaScript safe integer range',
+        );
+      }
+      value = value * 128 + digit;
+      if ((byte & 0x80) == 0) {
+        return Sv8VariableSize(len: len, value: value);
+      }
     }
-
-    n &= 0x7F;
-    n += hb;
-    return readVariableSizeField(len + 1, n << 7);
+    throw MusepackContentError('Variable-size integer exceeds 9 bytes');
   }
 
   static int _readUint32Le(List<int> bytes, int offset) =>

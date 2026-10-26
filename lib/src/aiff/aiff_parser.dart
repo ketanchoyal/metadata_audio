@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/aiff/aiff_token.dart';
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
 import 'package:metadata_audio/src/model/types.dart';
@@ -62,6 +63,11 @@ class AiffParser {
       bytesRemaining -= AiffToken.chunkHeaderLength;
 
       final declaredSize = chunkHeader.chunkSize;
+      if (declaredSize > bytesRemaining) {
+        throw AiffContentError(
+          'Chunk ${chunkHeader.chunkId} size $declaredSize exceeds remaining FORM data',
+        );
+      }
       var readableSize = declaredSize;
       if (readableSize > bytesRemaining) {
         metadata.addWarning('Data chunk size exceeds file size');
@@ -154,6 +160,18 @@ class AiffParser {
       tokenizer.readBytes(chunkSize),
       allowInvalid: true,
     );
+    var valueCount = 1;
+    for (var offset = text.indexOf('\x00');
+        offset >= 0;
+        offset = text.indexOf('\x00', offset + 1)) {
+      valueCount++;
+    }
+    if (valueCount > getMaxMetadataEntries(options)) {
+      throw AiffContentError(
+        'Text value count $valueCount exceeds entry limit '
+        '${getMaxMetadataEntries(options)}',
+      );
+    }
     final values = text
         .split('\x00')
         .map((value) => value.trim())

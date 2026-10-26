@@ -520,6 +520,10 @@ class Mp4Parser {
         tokenizer,
         (atom, atomPayloadLength) async {
           if (atom.header.name == 'data') {
+            if (options.skipCovers && itemAtom.header.name == 'covr') {
+              tokenizer.skip(atomPayloadLength);
+              return;
+            }
             final data = AtomToken.parseDataAtom(
               tokenizer.readBytes(atomPayloadLength),
             );

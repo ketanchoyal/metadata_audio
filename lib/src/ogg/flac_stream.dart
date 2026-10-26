@@ -96,6 +96,12 @@ class OggFlacStream {
     final commentCount = FlacToken.uint32Le(data, offset);
     offset += 4;
 
+    if (commentCount > 100000) {
+      throw const FormatException(
+        'Vorbis comment count exceeds entry limit 100000',
+      );
+    }
+
     final comments = <String>[];
     for (var i = 0; i < commentCount; i++) {
       _ensureReadable(data, offset, 4);

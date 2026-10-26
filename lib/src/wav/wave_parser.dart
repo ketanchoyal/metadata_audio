@@ -3,6 +3,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
 import 'package:metadata_audio/src/model/types.dart';
@@ -88,11 +89,26 @@ class WaveParser {
       bytesRemaining -= RiffChunk.headerLength;
 
       final declaredSize = header.chunkSize;
-      var readableSize = declaredSize;
-      if (readableSize < 0) {
+      if (declaredSize < 0) {
         metadata.addWarning('Ignore malformed negative RIFF chunk size');
         break;
       }
+      if (declaredSize > bytesRemaining &&
+          const <String>{
+            'CSET',
+            'LIST',
+            'fact',
+            'fmt ',
+            'id3 ',
+            'ID3 ',
+            'bext',
+          }.contains(header.chunkId)) {
+        throw WaveContentError(
+          'Chunk ${header.chunkId} size $declaredSize exceeds remaining '
+          'RIFF data $bytesRemaining',
+        );
+      }
+      var readableSize = declaredSize;
       if (readableSize > bytesRemaining) {
         metadata.addWarning('Data chunk size exceeds file size');
         readableSize = bytesRemaining;
@@ -136,7 +152,7 @@ class WaveParser {
         await _parseCsetChunk(chunkSize);
         return;
       case 'bext':
-        tokenizer.skip(chunkSize);
+        _parseBextChunk(chunkSize);
         return;
       case '\x00\x00\x00\x00':
         metadata.addWarning('Ignore chunk: RIFF/$chunkId');
@@ -236,8 +252,14 @@ class WaveParser {
       );
       final valueToken = ListInfoTagValue(header);
 
-      if (valueToken.paddedLength > remaining - RiffChunk.headerLength) {
-        throw WaveContentError('Illegal remaining size: $remaining');
+      if (_codePage == null &&
+          _pendingInfoTags.length >= getMaxMetadataEntries(options)) {
+        throw WaveContentError(
+          'Pending RIFF INFO tag count exceeds entry limit',
+        );
+      }
+      if (valueToken.tagHeader.chunkSize > remaining - RiffChunk.headerLength) {
+        throw WaveContentError('RIFF INFO tag size exceeds remaining LIST data');
       }
 
       final valueBytes = tokenizer.readBytes(header.chunkSize);
@@ -258,6 +280,28 @@ class WaveParser {
     if (remaining != 0) {
       throw WaveContentError('Illegal remaining size: $remaining');
     }
+  }
+
+  int _uint16Le(List<int> data, int offset) {
+    if (offset < 0 || offset + 2 > data.length) {
+      throw WaveContentError('Unexpected end of BWF chunk');
+    }
+    return data[offset] | (data[offset + 1] << 8);
+  }
+
+  int _uint32Le(List<int> data, int offset) {
+    if (offset < 0 || offset + 4 > data.length) {
+      throw WaveContentError('Unexpected end of BWF chunk');
+    }
+    return data[offset] |
+        (data[offset + 1] << 8) |
+        (data[offset + 2] << 16) |
+        (data[offset + 3] << 24);
+  }
+
+  int _int16Le(List<int> data, int offset) {
+    final value = _uint16Le(data, offset);
+    return value >= 0x8000 ? value - 0x10000 : value;
   }
 
   Future<void> _parseCsetChunk(int chunkSize) async {
@@ -309,6 +353,64 @@ class WaveParser {
     _pendingInfoTags.clear();
     for (final (:header, :bytes) in pending) {
       await _addInfoTag(header, bytes);
+    }
+  }
+
+  void _parseBextChunk(int chunkSize) {
+    if (chunkSize < 348) {
+      throw WaveContentError(
+        'BWF extension is shorter than its 348-byte base header',
+      );
+    }
+    final len = chunkSize < 422 ? chunkSize : 422;
+    final data = tokenizer.readBytes(chunkSize);
+
+    String stripNulls(List<int> bytes) {
+      final end = bytes.indexOf(0);
+      final slice = end < 0 ? bytes : bytes.sublist(0, end);
+      return ascii.decode(slice, allowInvalid: true).trim();
+    }
+
+    final version = _uint16Le(data, 346);
+    if (version >= 2 && len < 422) {
+      throw WaveContentError('BWF v2 extension is missing loudness fields');
+    }
+
+    final result = <String, Object>{};
+    result['description'] = stripNulls(data.sublist(0, 256));
+    result['originator'] = stripNulls(data.sublist(256, 288));
+    result['originatorReference'] = stripNulls(data.sublist(288, 320));
+    result['originationDate'] = stripNulls(data.sublist(320, 330));
+    result['originationTime'] = stripNulls(data.sublist(330, 338));
+    result['timeReferenceLow'] = _uint32Le(data, 338);
+    result['timeReferenceHigh'] = _uint32Le(data, 342);
+    result['version'] = version;
+    if (version >= 1 && len >= 412) {
+      result['umid'] = data.sublist(348, 412);
+    }
+    if (version >= 2) {
+      const fields = <String>[
+        'loudnessValue',
+        'loudnessRange',
+        'maxTruePeakLevel',
+        'maxMomentaryLoudness',
+        'maxShortTermLoudness',
+      ];
+      for (var i = 0; i < fields.length; i++) {
+        final value = _int16Le(data, 412 + i * 2);
+        if (value == 0x7FFF) {
+          continue;
+        }
+        final min = fields[i] == 'loudnessRange' ? 0 : -9999;
+        if (value < min || value > 9999) {
+          continue;
+        }
+        result[fields[i]] = value;
+      }
+    }
+
+    for (final entry in result.entries) {
+      metadata.addNativeTag('exif', 'bext.${entry.key}', entry.value);
     }
   }
 
