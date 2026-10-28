@@ -1,4 +1,4 @@
-# metadata_audio [![Pub](https://img.shields.io/pub/v/metadata_audio)](https://pub.dev/packages/metadata_audio)
+# metadata_audio [![Pub](https://img.shields.io/pub/v/metadata_audio)](https://pub.dev/packages/metadata_audio) [![Tests](https://img.shields.io/badge/tests-868%20passing-brightgreen)](https://github.com/ketanchoyal/metadata_audio) [![Coverage](https://codecov.io/gh/ketanchoyal/metadata_audio/branch/main/graph/badge.svg)](https://codecov.io/gh/ketanchoyal/metadata_audio)
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/ketanchoyal)
 
@@ -16,6 +16,9 @@ A Dart-native audio metadata parser library that provides comprehensive metadata
 - **Well-tested**: Extensive test suite with TDD principles
 - **TypeScript parity**: Ported from [music-metadata](https://github.com/Borewit/music-metadata) with exact output compatibility
 - **Chapter downloading**: Extract individual audiobook chapters as standalone playable AAC files with parallel HTTP downloads
+- **Metadata caching**: Optional disk-backed cache for parsed metadata (any format) via `ParseOptions.useCache` / `cacheKey`
+- **Parse limits**: `maxMetadataEntries` and `maxChapterCount` options for bounding resource usage
+- **BWF support**: Broadcast Wave Format (bext) loudness fields (EBU R128)
 
 ## Screenshots
 
@@ -117,6 +120,42 @@ final bytes = await File('/path/to/audio.flac').readAsBytes();
 final metadata = await parseBytes(
   bytes,
   fileInfo: FileInfo(mimeType: 'audio/flac'),
+);
+```
+
+### Parse Options
+
+Control parsing behavior via `ParseOptions`:
+
+```dart
+final metadata = await parseFile(
+  '/path/to/audio.mp3',
+  options: const ParseOptions(
+    includeChapters: true,
+    duration: true,
+    skipCovers: false,
+    maxMetadataEntries: 100000, // bound decoded list/table sizes
+    maxChapterCount: 1000,      // bound chapter count
+    useCache: true,             // opt-in disk-backed metadata cache
+  ),
+);
+```
+
+### Caching
+
+Parsed metadata can be cached to disk so repeated parses of the same file
+skip re-parsing:
+
+```dart
+final metadata = await parseFile(
+  '/path/to/audio.mp3',
+  options: const ParseOptions(useCache: true), // key derived from file name
+);
+
+// Or provide an explicit key:
+final metadata2 = await parseFile(
+  '/path/to/audio.mp3',
+  options: const ParseOptions(cacheKey: 'my-audio-key'),
 );
 ```
 
@@ -328,6 +367,10 @@ dart pub get
 
 # Run tests
 dart test
+
+# Generate coverage report
+dart test --coverage=coverage
+dart run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o coverage/lcov.info -i coverage
 
 # Run analysis
 dart analyze

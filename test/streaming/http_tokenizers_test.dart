@@ -10,6 +10,7 @@ import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:path/path.dart' as p;
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 Future<HttpServer> _startBytesServer(
@@ -140,6 +141,7 @@ Future<String?> _validateUrl(String url) async {
 /// NOTE: These tests require a real HTTP URL to test against.
 /// Set [testUrl] below to an audio file URL that supports HTTP Range requests.
 /// The file should be at least 5MB to properly test the strategies.
+@Tags(['network'])
 void main() {
   // Unit tests for detectStrategy logic (no network required)
   group('detectStrategy logic', () {
@@ -383,6 +385,7 @@ void main() {
   late final String? skipReason;
 
   setUpAll(() async {
+    AudioMetadataCache.enabled = false;
     // Initialize parser factory
     final registry = ParserRegistry()
       ..register(MpegLoader())

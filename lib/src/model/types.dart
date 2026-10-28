@@ -1128,6 +1128,8 @@ class ParseOptions {
     this.maxMetadataEntries,
     this.maxChapterCount,
     this.mkvUseIndex = false,
+    this.cacheKey,
+    this.useCache = false,
   });
 
   /// Create ParseOptions with all parsing enabled
@@ -1187,6 +1189,17 @@ class ParseOptions {
 
   /// Whether to use the SeekHead index when parsing Matroska files.
   final bool mkvUseIndex;
+
+  /// Optional cache key for general metadata caching.
+  ///
+  /// When non-null, [parseFromTokenizer] checks [AudioMetadataCache] for a
+  /// cached [AudioMetadata] before parsing and stores the result afterwards.
+  /// Works for every supported format.
+  final String? cacheKey;
+
+  /// Enable automatic caching using a key derived from the source file name
+  /// (or URL). When true and [cacheKey] is null, a default key is derived.
+  final bool useCache;
 }
 
 /// Complete audio metadata including format, native tags, and common tags

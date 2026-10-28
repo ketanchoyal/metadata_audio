@@ -322,7 +322,10 @@ class BytesTokenizer extends Tokenizer {
   BytesTokenizer(Uint8List bytes, {FileInfo? fileInfo})
     : _bytes = bytes,
       fileInfo = fileInfo ?? FileInfo(size: bytes.length);
-  /// Underlying byte buffer
+  /// Underlying byte buffer (read-only view).
+  Uint8List get bytes => _bytes;
+
+  /// Underlying byte buffer.
   final Uint8List _bytes;
 
   /// File information metadata

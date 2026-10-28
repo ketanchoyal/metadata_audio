@@ -24,6 +24,7 @@ import 'package:metadata_audio/src/parser_factory.dart';
 import 'package:metadata_audio/src/tokenizer/http_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
 
@@ -270,6 +271,21 @@ Future<AudioMetadata> parseFromTokenizer(
 
   options ??= const ParseOptions();
 
+  // General metadata cache. An explicit ParseOptions.cacheKey always wins.
+  // When ParseOptions.useCache is true and no key is given, derive one from
+  // the source file name / URL.
+  String? cacheKey = options.cacheKey;
+  if (cacheKey == null && (options.useCache || AudioMetadataCache.enabled)) {
+    final derived = _defaultCacheKey(tokenizer, options);
+    if (derived.isNotEmpty) cacheKey = derived;
+  }
+  if (cacheKey != null && cacheKey.isNotEmpty) {
+    final cached = await AudioMetadataCache.getMetadata(cacheKey);
+    if (cached != null) {
+      return cached;
+    }
+  }
+
   // Get file info from tokenizer, or create minimal info if not available
   final fileInfo = tokenizer.fileInfo ?? const FileInfo();
 
@@ -316,21 +332,29 @@ Future<AudioMetadata> parseFromTokenizer(
   }
   final containerDuration = metadata.format.containerDuration ?? baseDuration;
 
+  AudioMetadata result;
   if (containerDuration != metadata.format.containerDuration ||
       overallBitrate != metadata.format.overallBitrate) {
     final updatedFormat = metadata.format.copyWith(
       containerDuration: containerDuration,
       overallBitrate: overallBitrate,
     );
-    return AudioMetadata(
+    result = AudioMetadata(
       format: updatedFormat,
       native: metadata.native,
       common: metadata.common,
       quality: metadata.quality,
     );
+  } else {
+    result = metadata;
   }
 
-  return metadata;
+  // Persist to general metadata cache if opted in.
+  if (cacheKey != null) {
+    unawaited(AudioMetadataCache.putMetadata(cacheKey, result));
+  }
+
+  return result;
 }
 
 /// Scans for appending headers at the end of the audio file
@@ -348,6 +372,27 @@ Future<AudioMetadata> parseFromTokenizer(
 /// - If tokenizer supports seek: Performs post-header scan (actual detection delegated to format parsers)
 ///
 /// **Returns:** null (placeholder for future return value if needed)
+
+/// Derives a default cache key from the tokenizer source and the options that
+/// affect parsed output, so caching is always on even without an explicit
+/// [ParseOptions.cacheKey].
+String _defaultCacheKey(Tokenizer tokenizer, ParseOptions options) {
+  final info = tokenizer.fileInfo;
+  String base;
+  if (info?.path != null && info!.path!.isNotEmpty) {
+    base = 'path:${info.path}';
+  } else if (info?.url != null && info!.url!.isNotEmpty) {
+    base = 'url:${info.url}';
+  } else {
+    // No file name available: disable default caching. Callers can still
+    // opt in by passing an explicit ParseOptions.cacheKey.
+    return '';
+  }
+  final optSig =
+      'ic=${options.includeChapters}|dur=${options.duration}|sc=${options.skipCovers}|sph=${options.skipPostHeaders}|ch=${options.maxChapterCount}';
+  return '$base|$optSig';
+}
+
 Future<void> scanPostHeaders(Tokenizer tokenizer, ParseOptions options) async {
   // Skip post-header scan if explicitly disabled
   if (options.skipPostHeaders) {

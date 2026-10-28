@@ -60,6 +60,7 @@ bool _isSkippableRemoteError(Object e) {
       msg.contains('HTTP 500');
 }
 
+@Tags(["network"])
 void main() {
   setUpAll(() {
     final registry = ParserRegistry()

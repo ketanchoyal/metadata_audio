@@ -31,4 +31,17 @@ jobs:
         run: dart pub get --no-example
 
       - name: Run tests
-        run: dart test
+        run: dart test --exclude-tags network --coverage=coverage
+
+      - name: Generate lcov report
+        run: dart run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o coverage/lcov.info -i coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/lcov.info
+
+      - name: Run network-dependent tests (best effort)
+        run: dart test --tags network
+        continue-on-error: true

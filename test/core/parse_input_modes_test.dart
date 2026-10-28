@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -13,6 +14,7 @@ void main() {
     late ParserFactory factory;
 
     setUpAll(() async {
+      AudioMetadataCache.enabled = false;
       // Create a test file with minimal valid data
       // This is just dummy MP3 data with ID3v2 header
       testBytes = Uint8List.fromList([

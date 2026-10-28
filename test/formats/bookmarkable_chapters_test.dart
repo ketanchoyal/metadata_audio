@@ -13,6 +13,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 /// Bookmarkable M4B from archive.org with companion `.afpk` derivative.
@@ -63,6 +64,7 @@ bool _isSkippableRemoteError(Object e) {
 
 void main() {
   setUpAll(() {
+    AudioMetadataCache.enabled = false;
     final registry = ParserRegistry()
       ..register(MpegLoader())
       ..register(FlacLoader())

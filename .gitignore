@@ -21,3 +21,6 @@ comparison/node_modules/
 # Debug tools
 tool/debug_*.dart
 The Dark Forest.m4a
+
+# Test coverage output
+coverage/

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 List<int> _buildFrame({int bitrateIndex = 9}) {
@@ -107,6 +108,7 @@ class _LocalServer {
 }
 
 void main() {
+  setUpAll(() => AudioMetadataCache.enabled = false);
   test('probe fallback retries full download for malformed ID3 MP3', () async {
     final frames = <int>[
       ..._buildFrame(),
