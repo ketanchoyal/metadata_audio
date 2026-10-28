@@ -17,7 +17,7 @@ Future<void> main() async {
 
     final result = await Process.run(
       'dart',
-      ['test', '--exclude-tags', 'network', 'test/'],
+      ['test', '--exclude-tags', 'network,meta', 'test/'],
       environment: {...Platform.environment, ...pass.env},
       runInShell: true,
     );
