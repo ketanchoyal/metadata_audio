@@ -2,6 +2,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/id3v2/frame_header.dart';
 import 'package:metadata_audio/src/id3v2/frame_parser.dart';
@@ -11,7 +12,6 @@ import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:collection/collection.dart';
 
 class Id3v2ChapterInfo {
-
   const Id3v2ChapterInfo({
     required this.startTime,
     required this.endTime,
@@ -25,7 +25,6 @@ class Id3v2ChapterInfo {
 }
 
 class Id3v2ChapterFrame {
-
   const Id3v2ChapterFrame({
     required this.label,
     required this.info,
@@ -37,14 +36,12 @@ class Id3v2ChapterFrame {
 }
 
 class Id3v2TocFlags {
-
   const Id3v2TocFlags({required this.topLevel, required this.ordered});
   final bool topLevel;
   final bool ordered;
 }
 
 class Id3v2TocFrame {
-
   const Id3v2TocFrame({
     required this.label,
     required this.flags,
@@ -56,7 +53,6 @@ class Id3v2TocFrame {
 }
 
 class Id3v2Parser {
-
   Id3v2Parser({
     required this.metadata,
     required this.tokenizer,
@@ -65,6 +61,10 @@ class Id3v2Parser {
   final MetadataCollector metadata;
   final Tokenizer tokenizer;
   final ParseOptions options;
+
+  /// PRIV owner identifiers recognized as Windows Media Player level fields
+  /// (upstream parity, #2859; `PeakLevel` accepts the WMP composite name).
+  static const _priviligeOwners = {'AverageLevel', 'PeakValue', 'PeakLevel'};
 
   Future<void> parse() async {
     while (_hasNextId3Header()) {
@@ -122,7 +122,12 @@ class Id3v2Parser {
     }
 
     if (options.includeChapters) {
-      final chapters = mapId3v2Chapters(parsed.chapters, parsed.tocs);
+      final chapters = mapId3v2Chapters(
+        parsed.chapters,
+        parsed.tocs,
+        maxChapterCount: getMaxChapterCount(options),
+        warning: metadata.addWarning,
+      );
       if (chapters != null) {
         metadata.setFormat(chapters: chapters);
       }
@@ -184,6 +189,7 @@ class Id3v2Parser {
     int? recoveryOffset;
 
     var offset = 0;
+    var frameCount = 0;
     while (offset < data.length) {
       final frameStartOffset = offset;
       final frameHeaderLength = FrameHeader.getFrameHeaderLength(majorVersion);
@@ -200,6 +206,12 @@ class Id3v2Parser {
         majorVersion,
         warningCollector: metadata.addWarning,
       );
+
+      // Mirrors upstream `parseMetadata`: bound the number of frames per tag
+      // independently of byte limits (maxMetadataEntries).
+      if (++frameCount > getMaxMetadataEntries(options)) {
+        throw const Id3v2ContentError('Frame count exceeds entry limit');
+      }
 
       if (frameHeader.isPadding) {
         break;
@@ -237,6 +249,38 @@ class Id3v2Parser {
         value = _parseTocFrame(frameData);
         if (value is Id3v2TocFrame) {
           tocs.add(value);
+        }
+      } else if (frameHeader.id == 'PRIV') {
+        final priv = frameParser.readData(frameData, 'PRIV') as PrivFrame?;
+        if (priv == null) {
+          continue;
+        }
+        if (!_priviligeOwners.contains(priv.owner)) {
+          // Upstream caps the echoed owner identifier at 128 characters
+          // (upstream parity, #2859).
+          final owner = priv.owner;
+          final truncatedOwner = owner.length > 128
+              ? owner.substring(0, 128)
+              : owner;
+          metadata.addWarning('Unknown PRIV owner-identifier: $truncatedOwner');
+          tags['PRIV:${priv.owner}'] = priv.data;
+          continue;
+        }
+        if (priv.data.length != 4) {
+          metadata.addWarning('Failed to parse PRIV:${priv.owner}');
+          continue;
+        }
+        var level = 0;
+        for (var i = 0; i < 4; i++) {
+          level |= priv.data[i] << (8 * i);
+        }
+        tags['PRIV:${priv.owner}'] = level;
+      } else if (frameHeader.id.startsWith('W')) {
+        value = latin1
+            .decode(frameData, allowInvalid: true)
+            .replaceAll(RegExp(r'\x00+$'), '');
+        if (value.isEmpty) {
+          continue;
         }
       } else {
         value = frameParser.readData(
@@ -556,8 +600,10 @@ class Id3v2Parser {
 
   static List<Chapter>? mapId3v2Chapters(
     List<Id3v2ChapterFrame> chapterFrames,
-    List<Id3v2TocFrame> tocFrames,
-  ) {
+    List<Id3v2TocFrame> tocFrames, {
+    int maxChapterCount = 1000,
+    void Function(String warning)? warning,
+  }) {
     if (chapterFrames.isEmpty) {
       return null;
     }
@@ -569,10 +615,19 @@ class Id3v2Parser {
     final topLevelToc = tocFrames
         .where((toc) => toc.flags.topLevel)
         .firstOrNull;
-    final sourceIds =
-        topLevelToc != null && topLevelToc.childElementIds.isNotEmpty
-        ? topLevelToc.childElementIds
-        : chapterById.keys.toList();
+    // Without a CTOC, return the earliest chapters even if CHAP frames
+    // arrive out of order (upstream parity).
+    final List<String> sourceIds;
+    if (topLevelToc != null && topLevelToc.childElementIds.isNotEmpty) {
+      sourceIds = topLevelToc.childElementIds;
+    } else {
+      sourceIds = chapterById.keys.toList()
+        ..sort(
+          (left, right) =>
+              (chapterById[left]?.info.startTime ?? 0) -
+              (chapterById[right]?.info.startTime ?? 0),
+        );
+    }
 
     final chapters = <Chapter>[];
     for (final id in sourceIds) {
@@ -589,6 +644,13 @@ class Id3v2Parser {
           : null;
       final resolvedTitle = (title == null || title.isEmpty) ? id : title;
 
+      if (chapters.length >= maxChapterCount) {
+        warning?.call(
+          'Chapter count exceeds the $maxChapterCount chapter limit',
+        );
+        break;
+      }
+
       chapters.add(
         Chapter(
           id: id,
@@ -603,23 +665,17 @@ class Id3v2Parser {
       );
     }
 
-    if (topLevelToc == null) {
-      chapters.sort((a, b) => a.start.compareTo(b.start));
-    }
-
     return chapters.isEmpty ? null : chapters;
   }
 }
 
 class _CStringResult {
-
   const _CStringResult({required this.text, required this.nextOffset});
   final String text;
   final int nextOffset;
 }
 
 class _ParsedFrames {
-
   const _ParsedFrames({
     required this.tags,
     required this.chapters,

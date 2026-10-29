@@ -13,6 +13,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 /// Bookmarkable M4B from archive.org with companion `.afpk` derivative.
@@ -63,6 +64,7 @@ bool _isSkippableRemoteError(Object e) {
 
 void main() {
   setUpAll(() {
+    AudioMetadataCache.enabled = false;
     final registry = ParserRegistry()
       ..register(MpegLoader())
       ..register(FlacLoader())
@@ -92,7 +94,16 @@ void main() {
           return;
         }
 
-        final info = await detectStrategy(_bookmarkableAfpkChapterUrl);
+        late final dynamic info;
+        try {
+          info = await detectStrategy(_bookmarkableAfpkChapterUrl);
+        } catch (e) {
+          if (_isSkippableRemoteError(e)) {
+            markTestSkipped('remote URL transient failure: $e');
+            return;
+          }
+          rethrow;
+        }
         late final AudioMetadata metadata;
         try {
           metadata = await parseUrl(
@@ -167,7 +178,16 @@ void main() {
           return;
         }
 
-        final info = await detectStrategy(_bookmarkableAfpkChapterUrl);
+        late final dynamic info;
+        try {
+          info = await detectStrategy(_bookmarkableAfpkChapterUrl);
+        } catch (e) {
+          if (_isSkippableRemoteError(e)) {
+            markTestSkipped('remote URL transient failure: $e');
+            return;
+          }
+          rethrow;
+        }
 
         expect(info.detectedFormat, equals('mp4'));
         expect(info.supportsRange, isTrue);

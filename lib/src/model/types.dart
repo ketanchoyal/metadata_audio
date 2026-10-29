@@ -99,6 +99,22 @@ class Comment {
       'Comment(descriptor: $descriptor, language: $language, text: $text)';
 }
 
+/// ID3v2 PRIV (private) frame content: an owner identifier plus private data
+///
+/// Used by Windows Media Player to carry `AverageLevel` / `PeakLevel` values
+class PrivFrame {
+  const PrivFrame({required this.owner, required this.data});
+
+  /// Owner identifier (latin1, null-terminated in the frame)
+  final String owner;
+
+  /// Private data following the owner identifier
+  final List<int> data;
+
+  @override
+  String toString() => 'PrivFrame(owner: $owner, bytes: ${data.length})';
+}
+
 /// Lyrics text with optional timestamp
 class LyricsText {
   /// Create LyricsText
@@ -152,6 +168,7 @@ class AudioTrack {
     this.channels,
     this.channelPositions,
     this.bitDepth,
+    this.numberOfSamples,
   });
 
   /// Sampling frequency in Hz
@@ -168,6 +185,9 @@ class AudioTrack {
 
   /// Bit depth
   final int? bitDepth;
+
+  /// Number of samples in the track
+  final int? numberOfSamples;
 
   @override
   String toString() =>
@@ -188,6 +208,7 @@ class VideoTrack {
     this.aspectRatioType,
     this.colourSpace,
     this.gammaValue,
+    this.frameRate,
   });
 
   /// Interlaced flag
@@ -220,6 +241,9 @@ class VideoTrack {
   /// Gamma value
   final double? gammaValue;
 
+  /// Video frame rate in frames per second
+  final double? frameRate;
+
   @override
   String toString() =>
       'VideoTrack(${pixelWidth}x$pixelHeight, interlaced: $flagInterlaced)';
@@ -239,6 +263,12 @@ class TrackInfo {
     this.language,
     this.audio,
     this.video,
+    this.id,
+    this.codecId,
+    this.codecProfile,
+    this.duration,
+    this.bitrate,
+    this.lossless,
   });
 
   /// Track type
@@ -270,6 +300,24 @@ class TrackInfo {
 
   /// Video track info
   final VideoTrack? video;
+
+  /// Track identifier (e.g. Ogg stream serial or ASF stream number)
+  final int? id;
+
+  /// Codec identifier (e.g. ASF codec id like '0x0160')
+  final String? codecId;
+
+  /// Codec profile
+  final String? codecProfile;
+
+  /// Track duration in seconds
+  final double? duration;
+
+  /// Track bitrate in bits per second
+  final double? bitrate;
+
+  /// Whether the track is lossless
+  final bool? lossless;
 
   @override
   String toString() =>
@@ -341,13 +389,14 @@ class Chapter {
 /// Ratio with dB value
 class Ratio {
   /// Create Ratio
-  const Ratio({required this.ratio, required this.dB});
+  const Ratio({required this.ratio, this.dB});
 
   /// Ratio value [0..1]
   final double ratio;
 
-  /// Decibel value
-  final double dB;
+  /// Decibel value, `null` when the source value did not carry a `dB` suffix
+  /// (upstream parity, where `IRatio.dB` is `number | null`).
+  final double? dB;
 
   @override
   String toString() => 'Ratio(ratio: $ratio, dB: $dB)';
@@ -394,6 +443,8 @@ class Format {
     this.hasAudio,
     this.hasVideo,
     this.trackInfo = const [],
+    this.containerDuration,
+    this.overallBitrate,
   });
 
   /// Container format (e.g., 'flac', 'mp3')
@@ -462,9 +513,70 @@ class Format {
   /// Track information
   final List<TrackInfo> trackInfo;
 
+  /// Complete media presentation duration in seconds, including video.
+  final double? containerDuration;
+
+  /// Average bitrate of the entire file in bits per second.
+  final num? overallBitrate;
+
   @override
   String toString() =>
       'Format(container: $container, codec: $codec, duration: $duration, bitrate: $bitrate)';
+
+  /// Return a copy with the given fields replaced.
+  Format copyWith({
+    String? container,
+    List<String>? tagTypes,
+    double? duration,
+    num? bitrate,
+    int? sampleRate,
+    int? bitsPerSample,
+    String? tool,
+    String? codec,
+    String? codecProfile,
+    bool? lossless,
+    int? numberOfChannels,
+    int? numberOfSamples,
+    List<int>? audioMD5,
+    List<Chapter>? chapters,
+    DateTime? creationTime,
+    DateTime? modificationTime,
+    double? trackGain,
+    double? trackPeakLevel,
+    double? albumGain,
+    bool? hasAudio,
+    bool? hasVideo,
+    List<TrackInfo>? trackInfo,
+    double? containerDuration,
+    num? overallBitrate,
+  }) {
+    return Format(
+      container: container ?? this.container,
+      tagTypes: tagTypes ?? this.tagTypes,
+      duration: duration ?? this.duration,
+      bitrate: bitrate ?? this.bitrate,
+      sampleRate: sampleRate ?? this.sampleRate,
+      bitsPerSample: bitsPerSample ?? this.bitsPerSample,
+      tool: tool ?? this.tool,
+      codec: codec ?? this.codec,
+      codecProfile: codecProfile ?? this.codecProfile,
+      lossless: lossless ?? this.lossless,
+      numberOfChannels: numberOfChannels ?? this.numberOfChannels,
+      numberOfSamples: numberOfSamples ?? this.numberOfSamples,
+      audioMD5: audioMD5 ?? this.audioMD5,
+      chapters: chapters ?? this.chapters,
+      creationTime: creationTime ?? this.creationTime,
+      modificationTime: modificationTime ?? this.modificationTime,
+      trackGain: trackGain ?? this.trackGain,
+      trackPeakLevel: trackPeakLevel ?? this.trackPeakLevel,
+      albumGain: albumGain ?? this.albumGain,
+      hasAudio: hasAudio ?? this.hasAudio,
+      hasVideo: hasVideo ?? this.hasVideo,
+      trackInfo: trackInfo ?? this.trackInfo,
+      containerDuration: containerDuration ?? this.containerDuration,
+      overallBitrate: overallBitrate ?? this.overallBitrate,
+    );
+  }
 }
 
 /// Common tags (standardized metadata)
@@ -957,6 +1069,18 @@ class QualityInformation {
 /// Map of native tags by type
 typedef NativeTags = Map<String, List<Tag>>;
 
+/// Track type constants, matching upstream `TrackType`.
+abstract final class TrackType {
+  const TrackType._();
+
+  static const String audio = 'audio';
+  static const String video = 'video';
+  static const String image = 'image';
+  static const String text = 'text';
+  static const String chapters = 'chapters';
+  static const String metadata = 'metadata';
+}
+
 /// Information about the audio file being parsed
 ///
 /// Corresponds to the FileInfo concept used for parsing hints
@@ -1000,6 +1124,12 @@ class ParseOptions {
     this.includeChapters = false,
     this.duration = false,
     this.observer,
+    this.maxMemoryAllocation = 67108864,
+    this.maxMetadataEntries,
+    this.maxChapterCount,
+    this.mkvUseIndex = false,
+    this.cacheKey,
+    this.useCache = false,
   });
 
   /// Create ParseOptions with all parsing enabled
@@ -1040,6 +1170,36 @@ class ParseOptions {
   ///
   /// Called as metadata is discovered during parsing
   final MetadataObserver? observer;
+
+  /// Maximum bytes buffered for a single metadata payload.
+  ///
+  /// Matches upstream `maxMemoryAllocation` option.
+  final int? maxMemoryAllocation;
+
+  /// Maximum number of entries in an individual decoded list or table,
+  /// independently of byte-buffer limits.
+  ///
+  /// Matches upstream `maxMetadataEntries` option (default: 100,000).
+  final int? maxMetadataEntries;
+
+  /// Maximum number of chapters returned by supported chapter parsers.
+  ///
+  /// Matches upstream `maxChapterCount` option (default: 1,000).
+  final int? maxChapterCount;
+
+  /// Whether to use the SeekHead index when parsing Matroska files.
+  final bool mkvUseIndex;
+
+  /// Optional cache key for general metadata caching.
+  ///
+  /// When non-null, [parseFromTokenizer] checks [AudioMetadataCache] for a
+  /// cached [AudioMetadata] before parsing and stores the result afterwards.
+  /// Works for every supported format.
+  final String? cacheKey;
+
+  /// Enable automatic caching using a key derived from the source file name
+  /// (or URL). When true and [cacheKey] is null, a default key is derived.
+  final bool useCache;
 }
 
 /// Complete audio metadata including format, native tags, and common tags

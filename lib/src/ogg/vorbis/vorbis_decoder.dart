@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'package:metadata_audio/src/ogg/ogg_token.dart';
 
+const _defaultMaxMetadataEntries = 100000;
+
 class VorbisIdentificationHeader {
   const VorbisIdentificationHeader({
     required this.version,
@@ -64,18 +66,41 @@ class VorbisDecoder {
     );
   }
 
-  static VorbisCommentHeader parseCommentHeader(List<int> data) {
+  static VorbisCommentHeader parseCommentHeader(
+    List<int> data, {
+    int maxComments = _defaultMaxMetadataEntries,
+  }) {
     if (!isCommentHeader(data)) {
       throw const FormatException('Invalid Vorbis comment header');
     }
 
-    return parseCommentData(data, commonHeaderLength);
+    return parseCommentData(
+      data,
+      commonHeaderLength,
+      maxComments: maxComments,
+    );
   }
 
-  static VorbisCommentHeader parseCommentData(List<int> data, int offset) {
+  static VorbisCommentHeader parseCommentData(
+    List<int> data,
+    int offset, {
+    int maxComments = _defaultMaxMetadataEntries,
+  }) {
     final decoder = _VorbisStringDecoder(data, offset);
     final vendor = decoder.readStringUtf8();
     final count = decoder.readInt32();
+
+    final remaining = data.length - decoder.offset;
+    if (count > remaining ~/ 4) {
+      throw FormatException(
+        'Vorbis comment count $count exceeds remaining data',
+      );
+    }
+    if (count > maxComments) {
+      throw FormatException(
+        'Vorbis comment count $count exceeds entry limit $maxComments',
+      );
+    }
 
     final comments = <VorbisUserComment>[];
     for (var i = 0; i < count; i++) {
@@ -107,6 +132,8 @@ class _VorbisStringDecoder {
 
   final List<int> _data;
   int _offset;
+
+  int get offset => _offset;
 
   int readInt32() {
     _ensureReadable(4);

@@ -45,7 +45,7 @@ class MatroskaParser {
             case 0x1C53BB6B:
               return ParseAction.ignoreElement;
             case 0x1F43B675:
-              if (_seekHead != null) {
+              if (options.mkvUseIndex && _seekHead != null) {
                 final seekEntries = _asTreeList(_seekHead!['seek']);
                 final nextSeek = seekEntries
                     .map((entry) => _asInt(entry['position']))

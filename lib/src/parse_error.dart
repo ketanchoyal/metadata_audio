@@ -77,6 +77,17 @@ class FieldDecodingError extends ParseError {
   String get name => 'FieldDecodingError';
 }
 
+/// Error thrown when a path does not resolve to a regular file.
+///
+/// Matches upstream `strtok3` `NotRegularFileError`.
+class NotRegularFileError extends ParseError {
+  /// Creates a new [NotRegularFileError] with the given [message].
+  NotRegularFileError(super.message);
+
+  @override
+  String get name => 'NotRegularFileError';
+}
+
 /// Error thrown for internal parser bugs.
 ///
 /// This error indicates an unexpected condition within the parser itself

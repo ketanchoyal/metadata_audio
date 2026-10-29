@@ -273,6 +273,7 @@ class _LocalAudioServer {
 // Tests
 // =============================================================================
 
+@Tags(['network'])
 void main() {
   // ---------------------------------------------------------------------------
   // Register all parsers once for the entire test file.

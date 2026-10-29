@@ -12,6 +12,7 @@ final _apev2TagMap = <String, String>{
   'Album Artist': 'albumartist',
   'Album': 'album',
   'Year': 'year',
+  'Date': 'date',
   'Originalyear': 'originalyear',
   'Originaldate': 'originaldate',
   'Releasedate': 'releasedate',
@@ -101,6 +102,7 @@ class Apev2TagMapper extends GenericTagMapper {
       case 'artist':
       case 'albumartist':
       case 'album':
+      case 'date':
       case 'originaldate':
       case 'releasedate':
       case 'grouping':

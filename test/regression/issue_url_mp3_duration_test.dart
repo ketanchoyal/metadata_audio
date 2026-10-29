@@ -12,6 +12,7 @@ library;
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
@@ -148,6 +149,7 @@ int _bitrateFromIndex(int index) {
 void main() {
   group('URL MP3 duration (partial tokenizer)', () {
     setUp(() {
+      AudioMetadataCache.enabled = false;
       final registry = ParserRegistry()..register(MpegLoader());
       initializeParserFactory(ParserFactory(registry));
     });

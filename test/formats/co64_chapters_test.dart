@@ -57,6 +57,7 @@ bool _isSkippableRemoteError(Object e) {
       msg.contains('HTTP 500');
 }
 
+@Tags(["network"])
 void main() {
   setUpAll(() {
     final registry = ParserRegistry()
@@ -88,7 +89,16 @@ void main() {
           return;
         }
 
-        final info = await detectStrategy(_co64ChapterUrl);
+        late final dynamic info;
+        try {
+          info = await detectStrategy(_co64ChapterUrl);
+        } catch (e) {
+          if (_isSkippableRemoteError(e)) {
+            markTestSkipped('remote URL transient failure: $e');
+            return;
+          }
+          rethrow;
+        }
         late final AudioMetadata metadata;
         try {
           metadata = await parseUrl(
@@ -159,7 +169,16 @@ void main() {
           return;
         }
 
-        final info = await detectStrategy(_co64ChapterUrl);
+        late final dynamic info;
+        try {
+          info = await detectStrategy(_co64ChapterUrl);
+        } catch (e) {
+          if (_isSkippableRemoteError(e)) {
+            markTestSkipped('co64 URL transient remote failure: $e');
+            return;
+          }
+          rethrow;
+        }
 
         expect(info.detectedFormat, equals('mp4'));
         expect(info.supportsRange, isTrue);

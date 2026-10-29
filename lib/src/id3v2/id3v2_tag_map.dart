@@ -25,6 +25,23 @@ final _id3v2TagMap = {
   'TCON': 'genre',
   'COM': 'comment',
   'COMM': 'comment',
+  'USLT': 'lyrics', // Unsynchronized lyrics
+  'ULT': 'lyrics', // v2.2: Unsynchronized lyrics
+  'IPL:arranger': 'arranger',
+  'IPL:engineer': 'engineer',
+  'IPL:producer': 'producer',
+  'IPL:DJ-mix': 'djmixer',
+  'IPL:mix': 'mixer',
+  'IPLS:arranger': 'arranger',
+  'IPLS:engineer': 'engineer',
+  'IPLS:producer': 'producer',
+  'IPLS:DJ-mix': 'djmixer',
+  'IPLS:mix': 'mixer',
+  'TIPL:arranger': 'arranger',
+  'TIPL:engineer': 'engineer',
+  'TIPL:producer': 'producer',
+  'TIPL:DJ-mix': 'djmixer',
+  'TIPL:mix': 'mixer',
   'TSOT': 'titlesort',
   'TSOA': 'albumsort',
   'TSOP': 'artistsort',
@@ -35,14 +52,29 @@ final _id3v2TagMap = {
   'TPUB': 'publisher',
   'TIT1': 'grouping',
   'TMOO': 'mood',
-  'MVIN': 'movementindex',
+  'MVNM': 'movement',
+  'MVIN': 'movementIndex',
+  'PCNT': 'playCounter',
+  'PRIV:AverageLevel': 'averageLevel',
+  'PRIV:PeakLevel': 'peakLevel',
+  'PRIV:PeakValue': 'peakLevel',
   'PCST': 'podcast',
-  'PCS': 'podcastid',
+  'PCS': 'podcastId',
+  'TGID': 'podcastId',
+  'TCAT': 'category',
+  'TDES': 'description',
+  'TDRL': 'releasedate',
+  'TKWD': 'keywords',
+  'WFED': 'podcasturl',
   'TLAN': 'language',
   'TCOP': 'copyright',
 };
 
 class Id3v2TagMapper extends GenericTagMapper {
+  /// ID3v2 frames carrying role-to-people credit maps, parsed by
+  /// [FrameParser] (upstream `functionList`).
+  static const _creditsFrameIds = {'IPL', 'IPLS', 'TMCL', 'TIPL'};
+
   @override
   CaseInsensitiveTagMap<String> get tagMap {
     final map = CaseInsensitiveTagMap<String>();
@@ -58,14 +90,66 @@ class Id3v2TagMapper extends GenericTagMapper {
 
     for (final entry in nativeTags.entries) {
       final tagId = entry.key.toUpperCase();
-      final mappedTag = mapTag(entry.key, entry.value);
+      final rawValue = entry.value;
+
+      // Involved-person credits (TMCL/TIPL/IPL/IPLS) are neither mapped
+      // wholesale nor replicated as synthetic native tags; each role is
+      // expanded to `<frameId>:<role>` lookups instead (upstream parity,
+      // #2862: "Expand involved-person roles for mapping without adding
+      // synthetic native tags").
+      if (_creditsFrameIds.contains(entry.key) &&
+          rawValue is Map<String, dynamic>) {
+        rawValue.forEach((role, people) {
+          if (people is! List) {
+            return;
+          }
+          for (final person in people) {
+            if (person is! String || person.isEmpty) {
+              continue;
+            }
+            final mappedRole = mapTag('${entry.key}:$role', person);
+            if (mappedRole == null) {
+              continue;
+            }
+            final normalizedPeople = _normalizeValue(mappedRole, person);
+            if (normalizedPeople == null) {
+              continue;
+            }
+            if (normalizedPeople is! List) {
+              continue;
+            }
+            // Multiple people per role must aggregate (upstream emits one
+            // mapped tag per person).
+            final existing = result[mappedRole];
+            if (existing is List<String>) {
+              for (final normalizedPerson in normalizedPeople) {
+                if (!existing.contains(normalizedPerson)) {
+                  existing.add(normalizedPerson);
+                }
+              }
+            } else if (existing != null) {
+              result[mappedRole] = [
+                ...existing.whereType<String>(),
+                ...normalizedPeople.whereType<String>(),
+              ];
+            } else {
+              result[mappedRole] = normalizedPeople
+                  .whereType<String>()
+                  .toList();
+            }
+          }
+        });
+        continue;
+      }
+
+      final mappedTag = mapTag(entry.key, rawValue);
       if (mappedTag == null) {
         continue;
       }
 
       // Handle TPOS (disk position) specially to extract totaldiscs
       if (tagId == 'TPOS' || tagId == 'TPA') {
-        final parsed = _parsePositionWithTotal(entry.value);
+        final parsed = _parsePositionWithTotal(rawValue);
         if (parsed.$1 != null) {
           result['disk'] = parsed.$1;
         }
@@ -77,7 +161,7 @@ class Id3v2TagMapper extends GenericTagMapper {
 
       // Handle TRCK (track position) specially to extract totaltracks
       if (tagId == 'TRCK' || tagId == 'TRK') {
-        final parsed = _parsePositionWithTotal(entry.value);
+        final parsed = _parsePositionWithTotal(rawValue);
         if (parsed.$1 != null) {
           result['track'] = parsed.$1;
         }
@@ -87,7 +171,7 @@ class Id3v2TagMapper extends GenericTagMapper {
         continue;
       }
 
-      final value = _normalizeValue(mappedTag, entry.value);
+      final value = _normalizeValue(mappedTag, rawValue);
       if (value != null) {
         result[mappedTag] = value;
       }
@@ -133,6 +217,18 @@ class Id3v2TagMapper extends GenericTagMapper {
           return [value];
         }
         return null;
+      case 'lyrics':
+        if (value is LyricsTag) {
+          return [value];
+        }
+        return null;
+      // Involved-person credits (expanded from TMCL/TIPL/IPL/IPLS role maps)
+      case 'arranger':
+      case 'engineer':
+      case 'producer':
+      case 'djmixer':
+      case 'mixer':
+        return _stringList(value);
       // Extended ID3v2 mappings - string singletons
       case 'titlesort':
       case 'albumsort':
@@ -142,25 +238,41 @@ class Id3v2TagMapper extends GenericTagMapper {
       case 'mood':
       case 'language':
       case 'copyright':
+      case 'movement':
+      case 'releasedate':
+      case 'podcasturl':
+      case 'podcastId':
         return _singleString(value);
       // Extended ID3v2 mappings - string lists (creator roles)
       case 'composer':
       case 'lyricist':
       case 'encoder':
       case 'publisher':
-        return _stringList(value);
-      // Extended ID3v2 mappings (string list values)
-      case 'podcastid':
+      case 'category':
+      case 'description':
+      case 'keywords':
         return _stringList(value);
       // Extended ID3v2 mappings (numeric/boolean values)
-      case 'movementindex':
-        return _parseLeadingInt(_singleString(value));
+      case 'movementIndex':
+        return _parseCounter(value);
+      case 'playCounter':
+        return _parseCounter(value);
+      case 'averageLevel':
+      case 'peakLevel':
+        return value is num ? value.toDouble() : null;
       case 'podcast':
         final intVal = _parseLeadingInt(_singleString(value));
         return intVal != null ? intVal != 0 : null;
       default:
         return null;
     }
+  }
+
+  int? _parseCounter(dynamic value) {
+    if (value is int) {
+      return value >= 0 ? value : null;
+    }
+    return _parseLeadingInt(_singleString(value));
   }
 
   static String? _singleString(dynamic value) {

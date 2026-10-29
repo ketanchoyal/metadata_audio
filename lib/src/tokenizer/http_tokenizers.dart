@@ -16,6 +16,15 @@ class FileDownloadError extends ParseError {
 
   @override
   String get name => 'FileDownloadError';
+
+  /// Whether this describes a transient server-side failure worth retrying.
+  ///
+  /// Archive.org and other large-serving hosts intermittently return
+  /// 500/502/503/504 load-shedding errors that succeed on retry, while
+  /// permanent client errors (403/404/410) never will.
+  bool get isTransient {
+    return RegExp(r'\b(?:500|502|503|504|429)\b').hasMatch(message);
+  }
 }
 
 /// Abstract base class for HTTP-based tokenizers.
@@ -24,6 +33,20 @@ abstract class HttpBasedTokenizer extends Tokenizer {
   final String url;
   @override
   final FileInfo? fileInfo;
+
+  /// Maximum bytes allowed in a single read/peek operation.
+  int? maxBufferSize;
+
+  /// Guard against allocations larger than [maxBufferSize].
+  ///
+  /// Mirrors upstream strtok3 `maxBufferSize` enforcement.
+  void checkAllocation(int length) {
+    if (maxBufferSize != null && length > maxBufferSize!) {
+      throw TokenizerException(
+        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
+      );
+    }
+  }
 
   /// Close any resources held by the tokenizer.
   void close();
@@ -124,6 +147,7 @@ class HttpTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> readBytes(int length) {
+    checkAllocation(length);
     if (_position + length > _bytes.length) {
       throw TokenizerException('Not enough bytes available');
     }
@@ -143,6 +167,7 @@ class HttpTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> peekBytes(int length) {
+    checkAllocation(length);
     if (_position + length > _bytes.length) {
       throw TokenizerException('Not enough bytes available');
     }
@@ -292,6 +317,7 @@ class RangeTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> readBytes(int length) {
+    checkAllocation(length);
     if (_position + length > _bytes.length) {
       throw TokenizerException(
         'Header too small: need $length bytes at position $_position, '
@@ -314,6 +340,7 @@ class RangeTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> peekBytes(int length) {
+    checkAllocation(length);
     if (_position + length > _bytes.length) {
       throw TokenizerException('Header too small for peek');
     }
@@ -424,8 +451,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
         final headRequest = await client.headUrl(Uri.parse(url));
         headRequest.headers.set('User-Agent', 'metadata_audio/0.9.4');
         headRequest.followRedirects = true;
-        final response =
-            await headRequest.close().timeout(effectiveTimeout);
+        final response = await headRequest.close().timeout(effectiveTimeout);
         if (response.statusCode == 429) {
           await response.drain<void>();
           if (attempt < maxRetries - 1) {
@@ -445,9 +471,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
       if (headResponse == null || headResponse.statusCode >= 300) {
         final code = headResponse?.statusCode ?? 0;
-        throw FileDownloadError(
-          'HTTP $code error accessing URL: $url',
-        );
+        throw FileDownloadError('HTTP $code error accessing URL: $url');
       }
 
       final totalSize = headResponse.contentLength;
@@ -667,8 +691,14 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
         final chunks = await response.toList();
         return Uint8List.fromList([for (final chunk in chunks) ...chunk]);
-      } on FileDownloadError {
-        rethrow;
+      } on FileDownloadError catch (error) {
+        // Transient server errors (500/502/503/504) are common on large
+        // shared hosts (e.g. archive.org) and usually succeed on retry;
+        // permanent client errors (403/404) never will.
+        if (!error.isTransient || attempt >= maxRetries - 1) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
       } catch (e) {
         if (attempt < maxRetries - 1) {
           await Future<void>.delayed(
@@ -723,6 +753,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> readBytes(int length) {
+    checkAllocation(length);
     final result = Uint8List(length);
     for (var i = 0; i < length; i++) {
       result[i] = readUint8();
@@ -946,9 +977,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
 
       if (headResponse == null || headResponse.statusCode >= 300) {
         final code = headResponse?.statusCode ?? 0;
-        throw FileDownloadError(
-          'HTTP $code error accessing URL: $url',
-        );
+        throw FileDownloadError('HTTP $code error accessing URL: $url');
       }
 
       final totalSize = headResponse.contentLength > 0
@@ -1014,6 +1043,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
 
   @override
   List<int> readBytes(int length) {
+    checkAllocation(length);
     final result = Uint8List(length);
     for (var i = 0; i < length; i++) {
       result[i] = readUint8();
@@ -1168,8 +1198,14 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
         }
         totalBytesFetched += data.length;
         return;
-      } on FileDownloadError {
-        rethrow;
+      } on FileDownloadError catch (error) {
+        // Transient server errors (500/502/503/504) are common on large
+        // shared hosts (e.g. archive.org) and usually succeed on retry;
+        // permanent client errors (403/404) never will.
+        if (!error.isTransient || attempt >= maxRetries - 1) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
       } catch (e) {
         if (attempt < maxRetries - 1) {
           await Future<void>.delayed(
@@ -1182,6 +1218,9 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
         );
       }
     }
+    throw FileDownloadError(
+      'Failed to fetch range $startByte-$endByte after retries',
+    );
   }
 }
 

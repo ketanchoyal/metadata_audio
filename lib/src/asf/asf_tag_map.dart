@@ -2,6 +2,7 @@ library;
 
 import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
 import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
+import 'package:metadata_audio/src/common/util.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
 final _asfTagMap = <String, String>{
@@ -14,6 +15,7 @@ final _asfTagMap = <String, String>{
   'WM/OriginalReleaseYear': 'originalyear',
   'Description': 'comment',
   'WM/TrackNumber': 'track',
+  'TotalTracks': 'totaltracks',
   'WM/PartOfSet': 'disk',
   'WM/Genre': 'genre',
   'WM/Composer': 'composer',
@@ -35,7 +37,16 @@ final _asfTagMap = <String, String>{
   'WM/SubTitle': 'subtitle',
   'WM/SetSubTitle': 'discsubtitle',
   'WM/IsCompilation': 'compilation',
+  'REPLAYGAIN_TRACK_GAIN': 'replaygain_track_gain',
+  'REPLAYGAIN_TRACK_PEAK': 'replaygain_track_peak',
+  'REPLAYGAIN_ALBUM_GAIN': 'replaygain_album_gain',
+  'REPLAYGAIN_ALBUM_PEAK': 'replaygain_album_peak',
+  'replaygain_track_gain': 'replaygain_track_gain',
+  'replaygain_track_peak': 'replaygain_track_peak',
+  'replaygain_album_gain': 'replaygain_album_gain',
+  'replaygain_album_peak': 'replaygain_album_peak',
   'WM/SharedUserRating': 'rating',
+  'POPULARIMETER': 'rating',
   'WM/BeatsPerMinute': 'bpm',
   'WM/Mood': 'mood',
   'WM/Media': 'media',
@@ -89,7 +100,7 @@ class AsfTagMapper extends GenericTagMapper {
         continue;
       }
 
-      final normalized = _normalize(mappedTag, entry.value);
+      final normalized = _normalize(entry.key, mappedTag, entry.value);
       if (normalized != null) {
         result[mappedTag] = normalized;
       }
@@ -98,7 +109,7 @@ class AsfTagMapper extends GenericTagMapper {
     return result;
   }
 
-  dynamic _normalize(String mappedTag, dynamic value) {
+  dynamic _normalize(String nativeKey, String mappedTag, dynamic value) {
     switch (mappedTag) {
       case 'title':
       case 'artist':
@@ -141,9 +152,16 @@ class AsfTagMapper extends GenericTagMapper {
 
       case 'originalyear':
       case 'track':
+      case 'totaltracks':
       case 'disk':
       case 'bpm':
         return _parseLeadingInt(_singleString(value));
+
+      case 'replaygain_track_gain':
+      case 'replaygain_track_peak':
+      case 'replaygain_album_gain':
+      case 'replaygain_album_peak':
+        return _replayGainToRatio(value);
 
       case 'artists':
       case 'genre':
@@ -187,7 +205,9 @@ class AsfTagMapper extends GenericTagMapper {
         return _parseBool(_singleString(value));
 
       case 'rating':
-        return _toRating(value);
+        return nativeKey == 'POPULARIMETER'
+            ? _popularimeterToRating(value)
+            : _sharedUserRatingToRating(value);
 
       case 'picture':
         if (value is Picture) {
@@ -200,20 +220,82 @@ class AsfTagMapper extends GenericTagMapper {
     }
   }
 
-  static List<Rating>? _toRating(dynamic value) {
+  /// POPULARIMETER is a popm-style attribute written by e.g. foobar2000;
+  /// the value has the shape `email|rating|counter` where `rating` is an
+  /// integer in the range [0..255]. A rating of 1..255 maps to
+  /// `(value - 1) / 254` on the [0..1] scale (upstream parity).
+  ///
+  /// Mirrors upstream `AsfTagMapper.postMap` for `POPULARIMETER`.
+  static List<Rating>? _popularimeterToRating(dynamic value) {
+    final text = _singleString(value);
+    if (text == null || text.isEmpty) {
+      return null;
+    }
+
+    final email = text.split('|').first;
+    final ratingPart = text.split('|').length > 1 ? text.split('|')[1] : '';
+
+    final raw = int.tryParse(ratingPart);
+    final valid =
+        RegExp(r'^\d+$').hasMatch(ratingPart) &&
+        raw != null &&
+        raw >= 0 &&
+        raw <= 255;
+
+    // Upstream keeps the tag (rating side) even when invalid, but leaves the
+    // rating undefined; only valid non-zero ratings produce a score.
+    final rating = valid && raw > 0 ? (raw - 1) / 254.0 : null;
+
+    return <Rating>[Rating(source: email, rating: rating)];
+  }
+
+  /// Mirrors upstream `AsfTagMapper.toRating` for `WM/SharedUserRating`:
+  /// values are parsed as numbers, non-positive values yield no rating and
+  /// otherwise `value / 99` maps onto the [0..1] scale.
+  static List<Rating>? _sharedUserRatingToRating(dynamic value) {
+    double? raw;
+    if (value is num) {
+      raw = value.toDouble();
+    } else {
+      final text = _singleString(value);
+      if (text == null) {
+        return null;
+      }
+      raw = double.tryParse(text.trim());
+    }
+
+    if (raw == null || raw <= 0) {
+      return null;
+    }
+
+    return <Rating>[Rating(rating: raw / 99.0)];
+  }
+
+  /// Validates and decodes an ASF ReplayGain attribute into a [Ratio].
+  ///
+  /// Mirrors upstream `AsfTagMapper.postMap` for `replaygain_*` attributes:
+  /// the value must match `<number>[ <dB>]` (case-insensitive `dB` suffix);
+  /// invalid values are left to the caller to keep native without mapping
+  /// them to common metadata (the parser emits the upstream
+  /// `Invalid ASF ReplayGain value for <id>` warning).
+  static Ratio? _replayGainToRatio(dynamic value) {
     final text = _singleString(value);
     if (text == null) {
       return null;
     }
-
-    final raw = double.tryParse(text.trim());
-    if (raw == null) {
+    final match = _replayGainPattern.firstMatch(text.trim());
+    if (match == null) {
       return null;
     }
-
-    final normalized = (raw / 100.0).clamp(0.0, 1.0);
-    return <Rating>[Rating(rating: normalized)];
+    final normalized =
+        '${match.group(1)!}${match.group(2) != null ? ' dB' : ''}';
+    return toRatio(normalized);
   }
+
+  static final RegExp _replayGainPattern = RegExp(
+    r'^([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?)\s*(dB)?$',
+    caseSensitive: false,
+  );
 
   static String? _singleString(dynamic value) {
     if (value is String) {

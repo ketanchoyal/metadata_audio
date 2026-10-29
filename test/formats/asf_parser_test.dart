@@ -211,26 +211,64 @@ List<int> _buildSyntheticAsf() {
   ];
 }
 
-List<int> _asfObject(AsfGuid guid, List<int> payload) => <int>[...guid.toBytes(), ..._u64le(payload.length + 24), ...payload];
+List<int> _asfObject(AsfGuid guid, List<int> payload) => <int>[
+  ...guid.toBytes(),
+  ..._u64le(payload.length + 24),
+  ...payload,
+];
 
 List<int> _filePropertiesBody({
   required int playDuration100ns,
   required int prerollMs,
 }) => <int>[
-    ...List<int>.filled(16, 0),
-    ..._u64le(0),
-    ..._u64le(0),
-    ..._u64le(0),
-    ..._u64le(playDuration100ns),
-    ..._u64le(0),
-    ..._u64le(prerollMs),
-    ..._u32le(0),
-    ..._u32le(0),
-    ..._u32le(0),
-    ..._u32le(192639),
-  ];
+  ...List<int>.filled(16, 0),
+  ..._u64le(0),
+  ..._u64le(0),
+  ..._u64le(0),
+  ..._u64le(playDuration100ns),
+  ..._u64le(0),
+  ..._u64le(prerollMs),
+  ..._u32le(0),
+  ..._u32le(0),
+  ..._u32le(0),
+  ..._u32le(192639),
+];
 
-List<int> _streamPropertiesBody() => <int>[...AsfGuid.audioMedia.toBytes(), ...List<int>.filled(16, 0)];
+List<int> _streamPropertiesBody() {
+  // Layout per ASF spec / upstream AsfObject.StreamPropertiesObject:
+  // 0-16 stream type GUID, 16-32 error-correction type GUID,
+  // 32-40 time offset, 40-44 type-specific size, 44-48 correction size,
+  // 48-50 flags (stream number), 50-54 reserved, then type-specific data
+  // (WAVEFORMATEX: format tag, channels, sample rate, avg bytes/sec, block
+  // align, bits per sample).
+  return <int>[
+    ...AsfGuid.audioMedia.toBytes(),
+    // Audio Spread error-correction GUID (75B22636-668E-11CF-A6D9-00AA0062CE6C)
+    ...const AsfGuid('75B22636-668E-11CF-A6D9-00AA0062CE6C').toBytes(),
+    ...List<int>.filled(8, 0), // time offset
+    ..._uint32(16), // type-specific size
+    ..._uint32(0), // correction size
+    ..._uint16(1), // flags: stream number 1
+    ...List<int>.filled(4, 0), // reserved
+    ..._uint16(0x0161), // format tag: Windows Media Audio 9.1
+    ..._uint16(2), // channels
+    ..._uint32(44100), // samples/sec
+    ..._uint32(24080), // avg bytes/sec -> 192639 b/s? (24080 * 8 = 192640)
+    ..._uint16(2000), // block align
+    ..._uint16(16), // bits per sample
+    ..._uint16(10), // codec-specific data size
+    ...List<int>.filled(10, 0),
+  ];
+}
+
+List<int> _uint16(int value) => [value & 0xff, (value >> 8) & 0xff];
+
+List<int> _uint32(int value) => [
+  value & 0xff,
+  (value >> 8) & 0xff,
+  (value >> 16) & 0xff,
+  (value >> 24) & 0xff,
+];
 
 List<int> _codecListBody() {
   final codecName = _utf16('Windows Media Audio 9.1');
@@ -272,35 +310,35 @@ List<int> _contentDescriptionBody({
 }
 
 List<int> _extendedContentDescriptionBody(List<_ExtAttr> attrs) => <int>[
-    ..._u16le(attrs.length),
-    for (final attr in attrs) ...[
-      ..._u16le(_utf16(attr.name).length),
-      ..._utf16(attr.name),
-      ..._u16le(attr.valueType),
-      ..._u16le(attr.value.length),
-      ...attr.value,
-    ],
-  ];
+  ..._u16le(attrs.length),
+  for (final attr in attrs) ...[
+    ..._u16le(_utf16(attr.name).length),
+    ..._utf16(attr.name),
+    ..._u16le(attr.valueType),
+    ..._u16le(attr.value.length),
+    ...attr.value,
+  ],
+];
 
 List<int> _headerExtensionBody(List<int> extensionObjects) => <int>[
-    ...AsfGuid.headerObject.toBytes(),
-    ..._u16le(6),
-    ..._u32le(extensionObjects.length),
-    ...extensionObjects,
-  ];
+  ...AsfGuid.headerObject.toBytes(),
+  ..._u16le(6),
+  ..._u32le(extensionObjects.length),
+  ...extensionObjects,
+];
 
 List<int> _metadataBody(List<_MetadataRecord> records) => <int>[
-    ..._u16le(records.length),
-    for (final record in records) ...[
-      ..._u16le(0),
-      ..._u16le(0),
-      ..._u16le(_utf16(record.name).length),
-      ..._u16le(record.dataType),
-      ..._u32le(record.data.length),
-      ..._utf16(record.name),
-      ...record.data,
-    ],
-  ];
+  ..._u16le(records.length),
+  for (final record in records) ...[
+    ..._u16le(0),
+    ..._u16le(0),
+    ..._u16le(_utf16(record.name).length),
+    ..._u16le(record.dataType),
+    ..._u32le(record.data.length),
+    ..._utf16(record.name),
+    ...record.data,
+  ],
+];
 
 List<int> _wmPicturePayload() {
   final imageData = <int>[0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3, 4];
@@ -323,11 +361,11 @@ List<int> _wmPicturePayload() {
 List<int> _u16le(int value) => <int>[value & 0xFF, (value >> 8) & 0xFF];
 
 List<int> _u32le(int value) => <int>[
-    value & 0xFF,
-    (value >> 8) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 24) & 0xFF,
-  ];
+  value & 0xFF,
+  (value >> 8) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 24) & 0xFF,
+];
 
 List<int> _u64le(int value) {
   final lower = value & 0xFFFFFFFF;

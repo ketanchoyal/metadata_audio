@@ -6,7 +6,6 @@ import 'package:metadata_audio/src/id3v2/id3v2_token.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
 class FrameParser {
-
   const FrameParser(this.majorVersion, {this.warningCollector});
   final Id3v2MajorVersion majorVersion;
   final void Function(String warning)? warningCollector;
@@ -30,12 +29,24 @@ class FrameParser {
       case 'T*':
       case 'GRP1':
       case 'GP1':
-      case 'IPLS':
+      case 'IPL': // v2.2: Involved people list
+      case 'IPLS': // v2.3: Involved people list
       case 'MVIN':
       case 'MVNM':
       case 'PCS':
       case 'PCST':
         return _parseTextFrame(bytes, frameId);
+
+      case 'USLT': // Unsynchronized lyrics
+      case 'ULT': // v2.2: Unsynchronized lyrics
+        return _parseUnsyncedLyricsFrame(bytes);
+
+      case 'PCNT':
+      case 'CNT':
+        return _parsePlayCounterFrame(bytes);
+
+      case 'PRIV':
+        return _parsePrivFrame(bytes);
 
       case 'TXXX':
         return _parseUserTextFrame(bytes, frameId);
@@ -59,6 +70,36 @@ class FrameParser {
     }
   }
 
+  /// PCNT frame: play counter, at minimum a 32-bit little-endian value.
+  /// Longer frames are speculative counters; only the first 32 bits are read
+  /// (upstream parity).
+  int? _parsePlayCounterFrame(List<int> bytes) {
+    if (bytes.length < 4) {
+      return null;
+    }
+
+    var counter = 0;
+    for (var i = 0; i < 4; i++) {
+      counter |= bytes[i] << (8 * i);
+    }
+    return counter;
+  }
+
+  /// PRIV frame: owner identifier (latin1, null-terminated) followed by data.
+  PrivFrame? _parsePrivFrame(List<int> bytes) {
+    final zeroIndex = bytes.indexOf(0);
+    if (zeroIndex < 0 || zeroIndex + 1 >= bytes.length) {
+      warningCollector?.call('Failed to parse PRIV frame');
+      return null;
+    }
+
+    final owner = latin1.decode(
+      bytes.sublist(0, zeroIndex),
+      allowInvalid: true,
+    );
+    return PrivFrame(owner: owner, data: bytes.sublist(zeroIndex + 1));
+  }
+
   dynamic _parseTextFrame(List<int> bytes, String frameId) {
     final encoding = ID3v2Token.textEncodingFromByte(bytes[0]);
     final decoded = _trimNullPadding(_decodeString(bytes.sublist(1), encoding));
@@ -71,9 +112,59 @@ class FrameParser {
       case 'TIT2':
       case 'TIT3':
         return decoded;
+      case 'TMCL': // Musician credits list
+      case 'TIPL': // Involved people list
+      case 'IPL': // v2.2: Involved people list
+      case 'IPLS': // Involved people list
+        return _parseCreditsFrame(frameId, decoded);
       default:
         return _splitValue(frameId, decoded);
     }
+  }
+
+  /// Converts TMCL (Musician credits list) or TIPL / IPL / IPLS (involved
+  /// people list) text into a role-to-people map.
+  ///
+  /// Mirrors upstream `FrameParser.functionList`: entries alternate
+  /// `role, names`; each names value is split on `,` keeping empty segments.
+  Map<String, List<String>> _parseCreditsFrame(String frameId, String text) {
+    final entries = _splitValue(frameId, text);
+    final roles = <String, List<String>>{};
+    for (var i = 0; i + 1 < entries.length; i += 2) {
+      final role = entries[i];
+      final people = entries[i + 1];
+      roles.putIfAbsent(role, () => <String>[]).addAll(people.split(','));
+    }
+    return roles;
+  }
+
+  /// Parses an unsynchronized lyrics frame (`USLT` / v2.2 `ULT`).
+  ///
+  /// Layout mirrors upstream: [text encoding] [language] [descriptor]
+  /// 0x00 [lyrics text] 0x00.
+  LyricsTag _parseUnsyncedLyricsFrame(List<int> bytes) {
+    final header = ID3v2Token.parseTextHeader(bytes);
+    var offset = 4;
+
+    final descriptorValue = _readNullTerminatedString(
+      bytes.sublist(offset),
+      header.encoding,
+    );
+    offset += descriptorValue.len;
+
+    final textValue = _readNullTerminatedString(
+      bytes.sublist(offset),
+      header.encoding,
+    );
+
+    return LyricsTag(
+      contentType: 'lyrics',
+      timeStampFormat: 'none',
+      syncText: const [],
+      language: header.language,
+      descriptor: descriptorValue.text,
+      text: textValue.text,
+    );
   }
 
   Map<String, dynamic> _parseUserTextFrame(List<int> bytes, String frameId) {
@@ -167,15 +258,23 @@ class FrameParser {
     return {'owner': owner, 'identifier': identifier};
   }
 
+  /// Mirrors upstream `FrameParser.splitValue`: for ID3v2 < 4 a null-separator
+  /// warns (except involved-person lists, which legitimately use
+  /// null-separated role/name pairs in all versions), and slash-splitting is
+  /// restricted to a fixed legacy tag list.
   List<String> _splitValue(String frameId, String text) {
     List<String> values;
     if (majorVersion < 4) {
       values = text.split('\u0000');
       if (values.length > 1) {
-        warningCollector?.call(
-          'ID3v2.$majorVersion $frameId uses non-standard null separator',
-        );
-      } else {
+        // Involved-person lists use null-separated role/name pairs in all
+        // versions.
+        if (frameId != 'IPL' && frameId != 'IPLS') {
+          warningCollector?.call(
+            'ID3v2.$majorVersion $frameId uses non-standard null separator',
+          );
+        }
+      } else if (_legacySlashSplitTags.contains(frameId)) {
         values = text.split('/');
       }
     } else {
@@ -184,6 +283,31 @@ class FrameParser {
 
     return values.map((value) => _trimNullPadding(value).trim()).toList();
   }
+
+  /// Legacy tags for which a single value may be split on `/` in ID3v2 < 4
+  /// (upstream parity). Genre (TCON/TCO) is deliberately not in this list:
+  /// a genre like "Duo Cello/Piano" must stay intact.
+  static const _legacySlashSplitTags = {
+    /* v2.3/2.4 */ 'TPE1',
+    'TPE2',
+    'TCOM',
+    /* v2.2 */ 'TP1',
+    'TP2',
+    'TCM',
+    'TXT',
+    'TOL',
+    /* v2.3/2.4 */ 'TEXT',
+    'TOLY',
+    /* v2.2 */ 'TOF',
+    /* v2.3/2.4 */ 'TOO',
+    'TENC',
+    'TPUB',
+    'TXXX',
+    'TSRC',
+    // Retain legacy support for nonstandard slash-separated credits.
+    'IPL',
+    'IPLS',
+  };
 
   _NullTerminatedText _readNullTerminatedString(
     List<int> bytes,
@@ -318,14 +442,12 @@ class FrameParser {
 }
 
 class _NullTerminatedText {
-
   const _NullTerminatedText({required this.text, required this.len});
   final String text;
   final int len;
 }
 
 class _IdentifierAndData {
-
   const _IdentifierAndData({required this.id, required this.data});
   final String id;
   final List<int> data;

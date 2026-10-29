@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/atom_token.dart';
 import 'package:metadata_audio/src/mp4/mp4_parser.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_json.dart';
 
 /// A disk-backed cache for parsed MP4/M4B audio-track metadata.
 ///
@@ -12,11 +14,19 @@ import 'package:metadata_audio/src/mp4/mp4_parser.dart';
 ///
 /// **Cache key**: A sanitised version of the source URL/path, so the
 /// same file is never re-parsed within the same or subsequent app runs.
+import 'package:meta/meta.dart';
+
 class AudioMetadataCache {
   AudioMetadataCache._();
 
+  /// When true, [parseFromTokenizer] derives a default cache key for every
+  /// parse, even if [ParseOptions.useCache] is false. Intended for test
+  /// sessions that want to exercise the caching path across all tests.
+  @visibleForTesting
+  static bool enabled = Platform.environment['METADATA_CACHE_ENABLED'] == '1';
+
   static const String _cacheDir = 'metadata_audio_cache';
-  static const String _cacheVersion = '1';
+  static const String _cacheVersion = '2';
 
   // In-memory cache (simple map – sufficient for typical audiobook usage).
   static final Map<String, CachedAudioTrack> _memCache = {};
@@ -78,6 +88,57 @@ class AudioMetadataCache {
     } on Object catch (_) {
       // Non-fatal: caching is best-effort.
     }
+  }
+
+  // ── general metadata cache (all formats) ───────────────────────────────
+
+  static final Map<String, AudioMetadata> _metaMemCache = {};
+
+  /// Reads a cached [AudioMetadata] for [key], or `null` if absent/corrupt.
+  static Future<AudioMetadata?> getMetadata(String key) async {
+    if (_metaMemCache.containsKey(key)) return _metaMemCache[key];
+
+    final file = File(
+      '${_dir.path}${Platform.pathSeparator}${_keyFor(key)}_meta.json',
+    );
+    if (!file.existsSync()) return null;
+    try {
+      final raw = await file.readAsString();
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      if (map['v'] != _cacheVersion) {
+        await file.delete();
+        return null;
+      }
+      final entry = audioMetadataFromJson(map['data'] as Map<String, dynamic>);
+      if (entry == null) {
+        await file.delete();
+        return null;
+      }
+      _metaMemCache[key] = entry;
+      return entry;
+    } on Object catch (_) {
+      try { await file.delete(); } on Object catch (_) {}
+      return null;
+    }
+  }
+
+  /// Writes [metadata] to the cache for [key].
+  static Future<void> putMetadata(String key, AudioMetadata metadata) async {
+    // Guard against excessive memory/disk use on memory-constrained devices
+    // (e.g. phones): skip caching when the payload would be too large.
+    final data = audioMetadataToJson(metadata);
+    final encoded = jsonEncode({'v': _cacheVersion, 'key': key, 'data': data});
+    if (encoded.length > 4 * 1024 * 1024) {
+      return;
+    }
+    _metaMemCache[key] = metadata;
+    try {
+      await _dir.create(recursive: true);
+      final file = File(
+        '${_dir.path}${Platform.pathSeparator}${_keyFor(key)}_meta.json',
+      );
+      await file.writeAsString(encoded);
+    } on Object catch (_) {}
   }
 
   /// Evicts a single entry from memory and disk for [url].

@@ -1,11 +1,47 @@
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:metadata_audio/metadata_audio.dart';
+
+/// One demo URL showcased in the Remote URL tab.
+class _DemoPreset {
+  const _DemoPreset(this.label, this.url);
+
+  final String label;
+  final String url;
+}
+
+/// Archive.org audiobook demos plus upstream `music-metadata` sample files
+/// (served from raw.githubusercontent.com, HTTP-range capable) that exercise
+/// the parser's ASF/Ogg trackInfo and WMA rating/level features.
+const _demoPresets = <_DemoPreset>[
+  _DemoPreset(
+    'M4B (Chapters)',
+    'https://archive.org/download/city_of_fire_2209_librivox/CityFire_librivox.m4b',
+  ),
+  _DemoPreset(
+    'MP3 (No Chapters)',
+    'https://archive.org/download/city_of_fire_2209_librivox/cityoffire_01_hill_128kb.mp3',
+  ),
+  _DemoPreset(
+    'ASF (Track Info)',
+    'https://raw.githubusercontent.com/Borewit/music-metadata/master/test/samples/asf/asf.wma',
+  ),
+  _DemoPreset(
+    'ASF Audio+Video',
+    'https://raw.githubusercontent.com/Borewit/music-metadata/master/test/samples/asf/asf-video-audio-no-codec-list.asf',
+  ),
+  _DemoPreset(
+    'WMA (Rating/Levels)',
+    'https://raw.githubusercontent.com/Borewit/music-metadata/master/test/samples/asf/wma_rating.wma',
+  ),
+  _DemoPreset(
+    'Ogg/Theora (Track Info)',
+    'https://raw.githubusercontent.com/Borewit/music-metadata/master/test/samples/ogg/short.ogv',
+  ),
+];
 
 void main() {
   runApp(const MyApp());
@@ -82,6 +118,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   bool _duration = true;
   bool _skipCovers = false;
   bool _skipPostHeaders = false;
+  bool _mkvUseIndex = false;
+  int _maxMemoryAllocationMb = 64; // MB; mirrors ParseOptions' 64 MiB default
 
   // Custom HTTP Parsing Strategies
   ParseStrategy? _forcedParseStrategy;
@@ -130,7 +168,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         allowedExtensions: [
           'mp3', 'flac', 'ogg', 'oga', 'opus', 'wav', 'wave', 'aiff', 'aif',
           'ape', 'asf', 'wma', 'mkv', 'mka', 'webm', 'mpc', 'wv', 'dsf', 'dff',
-          'm4a', 'm4b', 'm4p', 'm4r', 'mp4', 'aac'
+          'm4a', 'm4b', 'm4p', 'm4r', 'mp4', 'aac', 'caf', 'caff'
         ],
         allowMultiple: false,
       );
@@ -152,6 +190,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         duration: _duration,
         skipCovers: _skipCovers,
         skipPostHeaders: _skipPostHeaders,
+        mkvUseIndex: _mkvUseIndex,
+        maxMemoryAllocation: _maxMemoryAllocationMb * 1024 * 1024,
       );
 
       final metadata = await parseFile(path, options: options);
@@ -194,6 +234,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         duration: _duration,
         skipCovers: _skipCovers,
         skipPostHeaders: _skipPostHeaders,
+        mkvUseIndex: _mkvUseIndex,
+        maxMemoryAllocation: _maxMemoryAllocationMb * 1024 * 1024,
       );
 
       final metadata = await parseUrl(
@@ -382,7 +424,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
               border: Border(right: BorderSide(color: Color(0xFF1E293B))),
             ),
             child: SafeArea(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +480,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                     const SizedBox(height: 16),
 
                     // Tab Views
-                    Expanded(
+                    SizedBox(
+                      height: 320,
                       child: TabBarView(
                         controller: _tabController,
                         physics: const NeverScrollableScrollPhysics(),
@@ -448,7 +491,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               const Text(
-                                'Extract metadata from local audio files. Supports MP3, FLAC, M4A, WAV, OGG, AIFF, MKV, DSF, and more.',
+                                'Extract metadata from local audio files. Supports MP3, FLAC, M4A, WAV, OGG, AIFF, MKV, DSF/DFF, WavPack, CAF (Core Audio), and more.',
                                 style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
                               ),
                               const Spacer(),
@@ -488,31 +531,27 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                   ),
                                 ),
                                  const SizedBox(height: 8),
-                                 Row(
+                                 Wrap(
+                                   spacing: 8,
+                                   runSpacing: 0,
+                                   crossAxisAlignment: WrapCrossAlignment.center,
                                    children: [
-                                     const Text('Presets: ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                     TextButton(
-                                       onPressed: () {
-                                         _urlController.text = 'https://archive.org/download/city_of_fire_2209_librivox/CityFire_librivox.m4b';
-                                       },
-                                       style: TextButton.styleFrom(
-                                         padding: EdgeInsets.zero,
-                                         minimumSize: const Size(60, 30),
-                                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                       ),
-                                       child: const Text('M4B (Chapters)', style: TextStyle(fontSize: 12)),
+                                     const Text(
+                                       'Presets: ',
+                                       style: TextStyle(fontSize: 12, color: Colors.grey),
                                      ),
-                                     const SizedBox(width: 8),
-                                     TextButton(
-                                       onPressed: () {
-                                         _urlController.text = 'https://archive.org/download/city_of_fire_2209_librivox/cityoffire_01_hill_128kb.mp3';
-                                       },
-                                       style: TextButton.styleFrom(
-                                         padding: EdgeInsets.zero,
-                                         minimumSize: const Size(60, 30),
-                                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                     ..._demoPresets.map(
+                                       (preset) => TextButton(
+                                         onPressed: () {
+                                           setState(() => _urlController.text = preset.url);
+                                         },
+                                         style: TextButton.styleFrom(
+                                           padding: EdgeInsets.zero,
+                                           minimumSize: const Size(60, 30),
+                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                         ),
+                                         child: Text(preset.label, style: const TextStyle(fontSize: 12)),
                                        ),
-                                       child: const Text('MP3 (No Chapters)', style: TextStyle(fontSize: 12)),
                                      ),
                                    ],
                                  ),
@@ -525,11 +564,26 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<ParseStrategy?>(
                                   value: _forcedParseStrategy,
+                                  isExpanded: true,
                                   decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                                   items: [
-                                    const DropdownMenuItem(value: null, child: Text('Auto-detect (Recommended)')),
+                                    const DropdownMenuItem(
+                                      value: null,
+                                      child: Text(
+                                        'Auto-detect (Recommended)',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                     ...ParseStrategy.values.map(
-                                      (s) => DropdownMenuItem(value: s, child: Text(s.name)),
+                                      (s) => DropdownMenuItem(
+                                        value: s,
+                                        child: Text(
+                                          s.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
                                     )
                                   ],
                                   onChanged: (val) {
@@ -546,11 +600,26 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<ProbeStrategy?>(
                                   value: _forcedProbeStrategy,
+                                  isExpanded: true,
                                   decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                                   items: [
-                                    const DropdownMenuItem(value: null, child: Text('Auto-detect from format')),
+                                    const DropdownMenuItem(
+                                      value: null,
+                                      child: Text(
+                                        'Auto-detect from format',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                     ...ProbeStrategy.values.map(
-                                      (s) => DropdownMenuItem(value: s, child: Text(s.name)),
+                                      (s) => DropdownMenuItem(
+                                        value: s,
+                                        child: Text(
+                                          s.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
                                     )
                                   ],
                                   onChanged: (val) {
@@ -592,6 +661,31 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                     _buildSwitchTile('Calculate Duration', _duration, (val) => setState(() => _duration = val)),
                     _buildSwitchTile('Skip Cover Images', _skipCovers, (val) => setState(() => _skipCovers = val)),
                     _buildSwitchTile('Skip Post Headers', _skipPostHeaders, (val) => setState(() => _skipPostHeaders = val)),
+                    _buildSwitchTile(
+                      'Use MKV SeekHead Index',
+                      _mkvUseIndex,
+                      (val) => setState(() => _mkvUseIndex = val),
+                    ),
+                    _buildMemoryBudgetTile(),
+
+                    const SizedBox(height: 8),
+                    // Supported formats info
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.indigoAccent.shade100,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: _showSupportedFormats,
+                        icon: const Icon(Icons.grid_view_rounded, size: 14),
+                        label: Text(
+                          'Supported formats: ${getSupportedMimeTypes().length} MIME types',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
 
                     const Divider(color: Color(0xFF1E293B), height: 32),
                     const Text(
@@ -677,9 +771,14 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(fontSize: 12.5, color: Colors.grey)),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 12.5, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(width: 8),
           Switch(
             value: value,
             onChanged: onChanged,
@@ -688,6 +787,79 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildMemoryBudgetTile() {
+    const budgets = [1, 4, 16, 64, 256, 1024];
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Max In-Memory Buffer',
+              style: TextStyle(fontSize: 12.5, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 140,
+            child: DropdownButtonFormField<int>(
+              value: _maxMemoryAllocationMb,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
+              items: budgets
+                  .map(
+                    (mb) => DropdownMenuItem(
+                      value: mb,
+                      child: Text('$mb MB', style: const TextStyle(fontSize: 12)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _maxMemoryAllocationMb = val);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showSupportedFormats() async {
+    final mimeTypes = getSupportedMimeTypes()..sort();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Supported Formats'),
+          content: SizedBox(
+            width: 360,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: mimeTypes.length,
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Text(
+                  mimeTypes[index],
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -803,6 +975,12 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
 
           const SizedBox(height: 32),
 
+          // Streams & Tracks Section (per-stream format.trackInfo)
+          if (metadata.format.trackInfo.isNotEmpty) ...[
+            TracksCard(metadata: metadata),
+            const SizedBox(height: 32),
+          ],
+
           // Chapters Section
           if (_includeChapters) ...[
             _buildChaptersCard(metadata),
@@ -914,54 +1092,13 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildTagChips(AudioMetadata metadata) {
-    final chips = <Widget>[];
-
-    if (metadata.common.album != null) {
-      chips.add(_buildChip(Icons.album_rounded, metadata.common.album!));
-    }
-    if (metadata.common.genre != null && metadata.common.genre!.isNotEmpty) {
-      chips.add(_buildChip(Icons.style_rounded, metadata.common.genre!.join(', ')));
-    }
-    if (metadata.common.year != null) {
-      chips.add(_buildChip(Icons.calendar_today_rounded, metadata.common.year!.toString()));
-    }
-    if (metadata.common.track.no != null) {
-      final total = metadata.common.track.of;
-      chips.add(_buildChip(Icons.tag_rounded, 'Track ${metadata.common.track.no}${total != null ? "/$total" : ""}'));
-    }
-
-    if (chips.isEmpty) return const SizedBox.shrink();
+    final specs = buildCommonTagChipSpecs(metadata.common);
+    if (specs.isEmpty) return const SizedBox.shrink();
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: chips,
-    );
-  }
-
-  Widget _buildChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF334155)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.indigoAccent.shade100),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
+      children: [for (final (icon, label) in specs) buildTagChip(icon, label)],
     );
   }
 
@@ -1553,4 +1690,278 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
 
     return 'Unknown';
   }
+}
+
+/// Builds icon + label pairs for the standardized common-tag chips row.
+///
+/// Includes the fields ported from upstream `music-metadata`: movement
+/// (ID3v2 MVNM/MVIN, MP4 `©mvn`/`©mvi`), TV show, podcast id
+/// (ID3v2 PCS/TGID, MP4 egid), the WMP play counter (PCNT) and the WMA
+/// PRIV Peak/Average levels.
+List<(IconData, String)> buildCommonTagChipSpecs(CommonTags common) {
+  final specs = <(IconData, String)>[];
+
+  if (common.album != null) {
+    specs.add((Icons.album_rounded, common.album!));
+  }
+  if (common.genre != null && common.genre!.isNotEmpty) {
+    specs.add((Icons.style_rounded, common.genre!.join(', ')));
+  }
+  if (common.year != null) {
+    specs.add((Icons.calendar_today_rounded, common.year!.toString()));
+  }
+  if (common.track.no != null) {
+    final total = common.track.of;
+    specs.add(
+      (
+        Icons.tag_rounded,
+        'Track ${common.track.no}${total != null ? "/$total" : ""}',
+      ),
+    );
+  }
+
+  // Movement name/number (ID3v2 MVNM/MVIN, MP4 ©mvn/©mvi).
+  if (common.movement != null) {
+    final label = StringBuffer(common.movement!);
+    final index = common.movementIndex;
+    if (index.no != null) {
+      label.write(' (Movement ');
+      label.write(index.no);
+      if (index.of != null) {
+        label.write('/');
+        label.write(index.of);
+      }
+      label.write(')');
+    }
+    specs.add((Icons.queue_music_rounded, label.toString()));
+  }
+
+  if (common.tvShow != null) {
+    specs.add((Icons.live_tv_rounded, common.tvShow!));
+  }
+  if (common.podcastId != null) {
+    specs.add((Icons.mic_rounded, 'Podcast: ${common.podcastId}'));
+  }
+  if (common.playCounter != null) {
+    specs.add((Icons.play_circle_outline_rounded, 'Play count: ${common.playCounter}'));
+  }
+
+  // WMA Peak/Average levels decoded from PRIV frames.
+  if (common.peakLevel != null || common.averageLevel != null) {
+    final parts = <String>[
+      if (common.peakLevel != null) 'Peak ${common.peakLevel!.toStringAsFixed(1)}',
+      if (common.averageLevel != null) 'Avg ${common.averageLevel!.toStringAsFixed(1)}',
+    ];
+    specs.add((Icons.graphic_eq_rounded, parts.join(' / ')));
+  }
+
+  final ratings = common.rating;
+  if (ratings != null && ratings.isNotEmpty) {
+    final first = ratings.first;
+    final stars = ratingToStars(first.rating);
+    if (stars != null) {
+      final source = (first.source != null && first.source!.isNotEmpty)
+          ? ' (${first.source})'
+          : '';
+      specs.add((Icons.star_rounded, '$stars/5 stars$source'));
+    }
+  }
+
+  return specs;
+}
+
+/// Renders one standardized common-tag chip.
+Widget buildTagChip(IconData icon, String label) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    decoration: BoxDecoration(
+      color: const Color(0xFF1E293B),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: const Color(0xFF334155)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Colors.indigoAccent.shade100),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Card listing the per-stream [TrackInfo] entries from [Format.trackInfo].
+///
+/// Shown whenever the parser reports stream-level information (upstream
+/// parity for ASF, Ogg/Theora, Matroska/MP4 streams): stream id, codec,
+/// duration, bitrate, lossless flag, plus audio channel/sample-rate and
+/// video resolution/frame-rate details.
+class TracksCard extends StatelessWidget {
+  const TracksCard({super.key, required this.metadata});
+
+  final AudioMetadata metadata;
+
+  @override
+  Widget build(BuildContext context) {
+    final tracks = metadata.format.trackInfo;
+    if (tracks.isEmpty) return const SizedBox.shrink();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Streams & Tracks (${tracks.length})',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Per-stream track info: stream id, codec, duration, bitrate, and audio/video details.',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: tracks.length,
+              separatorBuilder: (context, index) =>
+                  const Divider(color: Color(0xFF334155)),
+              itemBuilder: (context, index) =>
+                  _TrackRow(track: tracks[index], index: index),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackRow extends StatelessWidget {
+  const _TrackRow({required this.track, required this.index});
+
+  final TrackInfo track;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final isVideo = track.video != null || track.type == TrackType.video;
+    final codec = track.codecName ?? track.codecId ?? track.codecProfile;
+
+    final parts = <String>[
+      if (track.id != null) 'Stream #${track.id}',
+      if (track.audio?.samplingFrequency != null)
+        '${(track.audio!.samplingFrequency! / 1000).toStringAsFixed(1)} kHz',
+      if (track.audio?.channels != null) '${track.audio!.channels} ch',
+      if (track.audio?.bitDepth != null) '${track.audio!.bitDepth}-bit',
+      if (track.audio?.numberOfSamples != null)
+        '${_formatSampleCount(track.audio!.numberOfSamples!)} samples',
+      if (track.video?.pixelWidth != null && track.video?.pixelHeight != null)
+        '${track.video!.pixelWidth}×${track.video!.pixelHeight}',
+      if (track.video?.frameRate != null)
+        '${track.video!.frameRate!.toStringAsFixed(2)} fps',
+      if (track.duration != null) _formatShortDuration(track.duration!),
+      if (track.bitrate != null)
+        '${(track.bitrate! / 1000).toStringAsFixed(0)} kbps',
+      if (track.lossless != null) track.lossless! ? 'Lossless' : 'Lossy',
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF334155)),
+            ),
+            child: Icon(
+              isVideo ? Icons.videocam_rounded : Icons.surround_sound_rounded,
+              size: 16,
+              color: Colors.indigoAccent.shade100,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${track.type ?? 'Track'} ${index + 1}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (codec != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF334155)),
+                        ),
+                        child: Text(
+                          codec,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                            color: Colors.cyanAccent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (parts.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    parts.join(' · '),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Thousands-grouped sample count, e.g. `544,000`.
+String _formatSampleCount(int value) {
+  return value
+      .toString()
+      .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m.group(1)},');
+}
+
+/// Compact duration, e.g. `2m 34s`.
+String _formatShortDuration(double seconds) {
+  final s = seconds.round();
+  final h = s ~/ 3600;
+  final m = (s % 3600) ~/ 60;
+  final sec = s % 60;
+
+  if (h > 0) return '${h}h ${m}m ${sec}s';
+  if (m > 0) return '${m}m ${sec}s';
+  return '${sec}s';
 }

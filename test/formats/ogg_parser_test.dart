@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
-import 'package:metadata_audio/src/ogg/ogg_parser.dart';
 import 'package:metadata_audio/src/ogg/ogg_token.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:test/test.dart';
@@ -341,19 +340,20 @@ void main() {
       expect(metadata.format.bitrate, isNotNull);
     });
 
-    test('throws on invalid Ogg capture pattern', () async {
+    test('warns on invalid Ogg capture pattern', () async {
       final invalidPage = <int>[
         ...ascii.encode('Bad!'),
         ...List<int>.filled(23, 0),
       ];
 
       final loader = OggLoader();
-      await expectLater(
-        loader.parse(
-          BytesTokenizer(Uint8List.fromList(invalidPage)),
-          const ParseOptions(),
-        ),
-        throwsA(isA<OggContentError>()),
+      final metadata = await loader.parse(
+        BytesTokenizer(Uint8List.fromList(invalidPage)),
+        const ParseOptions(),
+      );
+      expect(
+        metadata.quality.warnings.map((w) => w.message),
+        contains(contains('Corrupt Ogg content')),
       );
     });
 
