@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:metadata_audio/src/flac/flac_token.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
 // ── helpers ────────────────────────────────────────────────────────────────
@@ -21,6 +22,28 @@ Picture _pictureFromJson(Map<String, dynamic> m) => Picture(
       description: m['description'] as String?,
       type: m['type'] as String?,
       name: m['name'] as String?,
+    );
+
+Map<String, dynamic> _flacPictureToJson(FlacPicture p) => {
+      'type': p.type,
+      'format': p.format,
+      'description': p.description,
+      'width': p.width,
+      'height': p.height,
+      'colourDepth': p.colourDepth,
+      'indexedColor': p.indexedColor,
+      'data': _b64Encode(p.data),
+    };
+
+FlacPicture _flacPictureFromJson(Map<String, dynamic> m) => FlacPicture(
+      type: m['type'] as String,
+      format: m['format'] as String,
+      description: m['description'] as String,
+      width: m['width'] as int,
+      height: m['height'] as int,
+      colourDepth: m['colourDepth'] as int,
+      indexedColor: m['indexedColor'] as int,
+      data: _b64Decode(m['data'] as String),
     );
 
 Map<String, dynamic> _commentToJson(Comment c) => {
@@ -220,6 +243,7 @@ VideoTrack _videoTrackFromJson(Map<String, dynamic> m) => VideoTrack(
 dynamic _encodeValue(dynamic v) {
   if (v == null) return null;
   if (v is Picture) return {'__t': 'Picture', ..._pictureToJson(v)};
+  if (v is FlacPicture) return {'__t': 'FlacPicture', ..._flacPictureToJson(v)};
   if (v is PrivFrame) return {'__t': 'PrivFrame', ..._privToJson(v)};
   if (v is Rating) return {'__t': 'Rating', ..._ratingToJson(v)};
   if (v is Url) return {'__t': 'Url', ..._urlToJson(v)};
@@ -240,6 +264,7 @@ dynamic _decodeValue(dynamic v) {
     final m = v as Map<String, dynamic>;
     final t = m['__t'] as String?;
     if (t == 'Picture') return _pictureFromJson(m);
+    if (t == 'FlacPicture') return _flacPictureFromJson(m);
     if (t == 'PrivFrame') return _privFromJson(m);
     if (t == 'Rating') return _ratingFromJson(m);
     if (t == 'Url') return _urlFromJson(m);

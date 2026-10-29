@@ -124,18 +124,20 @@ class AudioMetadataCache {
 
   /// Writes [metadata] to the cache for [key].
   static Future<void> putMetadata(String key, AudioMetadata metadata) async {
+    // Guard against excessive memory/disk use on memory-constrained devices
+    // (e.g. phones): skip caching when the payload would be too large.
+    final data = audioMetadataToJson(metadata);
+    final encoded = jsonEncode({'v': _cacheVersion, 'key': key, 'data': data});
+    if (encoded.length > 4 * 1024 * 1024) {
+      return;
+    }
     _metaMemCache[key] = metadata;
     try {
       await _dir.create(recursive: true);
       final file = File(
         '${_dir.path}${Platform.pathSeparator}${_keyFor(key)}_meta.json',
       );
-      final map = <String, dynamic>{
-        'v': _cacheVersion,
-        'key': key,
-        'data': audioMetadataToJson(metadata),
-      };
-      await file.writeAsString(jsonEncode(map));
+      await file.writeAsString(encoded);
     } on Object catch (_) {}
   }
 
