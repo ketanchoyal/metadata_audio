@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:metadata_audio/src/caf/caf_token.dart';
 import 'package:metadata_audio/src/flac/flac_token.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
@@ -44,6 +45,19 @@ FlacPicture _flacPictureFromJson(Map<String, dynamic> m) => FlacPicture(
       colourDepth: m['colourDepth'] as int,
       indexedColor: m['indexedColor'] as int,
       data: _b64Decode(m['data'] as String),
+    );
+
+Map<String, dynamic> _channelDescriptionToJson(ChannelDescription c) => {
+      'channelLabel': c.channelLabel,
+      'channelFlags': c.channelFlags,
+      'coordinates': c.coordinates,
+    };
+
+ChannelDescription _channelDescriptionFromJson(Map<String, dynamic> m) =>
+    ChannelDescription(
+      channelLabel: m['channelLabel'] as int,
+      channelFlags: m['channelFlags'] as int,
+      coordinates: (m['coordinates'] as List).map((e) => (e as num).toDouble()).toList(),
     );
 
 Map<String, dynamic> _commentToJson(Comment c) => {
@@ -244,6 +258,7 @@ dynamic _encodeValue(dynamic v) {
   if (v == null) return null;
   if (v is Picture) return {'__t': 'Picture', ..._pictureToJson(v)};
   if (v is FlacPicture) return {'__t': 'FlacPicture', ..._flacPictureToJson(v)};
+  if (v is ChannelDescription) return {'__t': 'ChannelDescription', ..._channelDescriptionToJson(v)};
   if (v is PrivFrame) return {'__t': 'PrivFrame', ..._privToJson(v)};
   if (v is Rating) return {'__t': 'Rating', ..._ratingToJson(v)};
   if (v is Url) return {'__t': 'Url', ..._urlToJson(v)};
@@ -265,6 +280,7 @@ dynamic _decodeValue(dynamic v) {
     final t = m['__t'] as String?;
     if (t == 'Picture') return _pictureFromJson(m);
     if (t == 'FlacPicture') return _flacPictureFromJson(m);
+    if (t == 'ChannelDescription') return _channelDescriptionFromJson(m);
     if (t == 'PrivFrame') return _privFromJson(m);
     if (t == 'Rating') return _ratingFromJson(m);
     if (t == 'Url') return _urlFromJson(m);
