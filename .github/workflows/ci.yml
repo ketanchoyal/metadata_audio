@@ -43,5 +43,12 @@ jobs:
           files: coverage/lcov.info
 
       - name: Run network-dependent tests (best effort)
-        run: dart test --tags network
+        run: >
+          dart test
+          test/streaming/http_tokenizers_test.dart
+          test/streaming/url_integration_test.dart
+          test/streaming/librivox_collection_url_test.dart
+          test/formats/alternate_chapters_test.dart
+          test/formats/co64_chapters_test.dart
+          test/formats/bookmarkable_chapters_test.dart
         continue-on-error: true
