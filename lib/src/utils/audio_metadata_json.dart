@@ -10,7 +10,7 @@ List<int> _b64Decode(String s) => base64Decode(s);
 
 Map<String, dynamic> _pictureToJson(Picture p) => {
       'format': p.format,
-      'data': _b64Encode(p.data),
+      'data': const <int>[], // binary cover data is not cached (memory safety)
       'description': p.description,
       'type': p.type,
       'name': p.name,
@@ -32,7 +32,7 @@ Map<String, dynamic> _flacPictureToJson(FlacPicture p) => {
       'height': p.height,
       'colourDepth': p.colourDepth,
       'indexedColor': p.indexedColor,
-      'data': _b64Encode(p.data),
+      'data': const <int>[], // binary cover data is not cached (memory safety)
     };
 
 FlacPicture _flacPictureFromJson(Map<String, dynamic> m) => FlacPicture(
@@ -114,7 +114,7 @@ Ratio _ratioFromJson(Map<String, dynamic> m) =>
 
 Map<String, dynamic> _privToJson(PrivFrame p) => {
       'owner': p.owner,
-      'data': _b64Encode(p.data),
+      'data': const <int>[], // binary data is not cached (memory safety)
     };
 
 PrivFrame _privFromJson(Map<String, dynamic> m) => PrivFrame(
@@ -296,7 +296,7 @@ Map<String, dynamic> _formatToJson(Format f) => {
       'lossless': f.lossless,
       'numberOfChannels': f.numberOfChannels,
       'numberOfSamples': f.numberOfSamples,
-      'audioMD5': f.audioMD5 == null ? null : _b64Encode(f.audioMD5!),
+      'audioMD5': null, // not cached (memory safety)
       'chapters': f.chapters?.map(_chapterToJson).toList(),
       'creationTime': f.creationTime?.toIso8601String(),
       'modificationTime': f.modificationTime?.toIso8601String(),
