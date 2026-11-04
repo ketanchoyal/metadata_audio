@@ -186,7 +186,9 @@ void main() {
     });
 
     test('ad hoc IDs compare equal to built-in constants', () {
+      // ignore: use_named_constants
       const dynamicTitle = MetadataCommonId<Object?>('title');
+      // ignore: use_named_constants
       const dynamicContainer = MetadataFormatId<Object?>('container');
 
       expect(dynamicTitle, MetadataCommonId.title);
@@ -210,7 +212,7 @@ void main() {
           events.any(
             (event) =>
                 event.tag?.type == MetadataEventTagType.format &&
-                event.tag?.id == const MetadataFormatId<Object?>('duration') &&
+                event.tag?.id == MetadataFormatId.duration &&
                 event.tag?.value == 12.5,
           ),
           isTrue,
@@ -219,7 +221,7 @@ void main() {
           events.any(
             (event) =>
                 event.tag?.type == MetadataEventTagType.format &&
-                event.tag?.id == const MetadataFormatId<Object?>('hasAudio') &&
+                event.tag?.id == MetadataFormatId.hasAudio &&
                 event.tag?.value == true,
           ),
           isTrue,

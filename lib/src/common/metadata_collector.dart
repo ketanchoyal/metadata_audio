@@ -3,9 +3,6 @@
 ///
 /// Collects metadata from various sources and resolves tag priorities.
 /// Higher-priority formats override lower-priority formats.
-///
-/// Based on upstream:
-/// https://github.com/Borewit/music-metadata/blob/master/lib/common/MetadataCollector.ts
 library;
 
 import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
@@ -152,6 +149,38 @@ class MetadataCollector {
     notify('hasAudio', hasAudio);
     notify('hasVideo', hasVideo);
     notify('trackInfo', trackInfo);
+  }
+
+  /// Appends a single track to [Format.trackInfo].
+  ///
+  /// [setFormat]'s `trackInfo` argument replaces the whole list, so parsers
+  /// that discover tracks one at a time should use this instead.
+  void addStreamInfo(TrackInfo track) {
+    _format = Format(
+      container: _format.container,
+      tagTypes: _format.tagTypes,
+      duration: _format.duration,
+      bitrate: _format.bitrate,
+      sampleRate: _format.sampleRate,
+      bitsPerSample: _format.bitsPerSample,
+      tool: _format.tool,
+      codec: _format.codec,
+      codecProfile: _format.codecProfile,
+      lossless: _format.lossless,
+      numberOfChannels: _format.numberOfChannels,
+      numberOfSamples: _format.numberOfSamples,
+      audioMD5: _format.audioMD5,
+      chapters: _format.chapters,
+      creationTime: _format.creationTime,
+      modificationTime: _format.modificationTime,
+      trackGain: _format.trackGain,
+      trackPeakLevel: _format.trackPeakLevel,
+      albumGain: _format.albumGain,
+      hasAudio: _format.hasAudio,
+      hasVideo: _format.hasVideo,
+      trackInfo: [..._format.trackInfo, track],
+    );
+    _emitFormatEvent('trackInfo', _format.trackInfo);
   }
 
   /// Adds a native tag from a specific format.
@@ -430,7 +459,7 @@ class MetadataCollector {
       of: _commonTags['totaldiscs'] as int?,
     ),
     movementIndex: TrackNo(
-      no: _commonTags['movement'] as int?,
+      no: _commonTags['movementIndex'] as int?,
       of: _commonTags['movementTotal'] as int?,
     ),
     year: _commonTags['year'] as int?,

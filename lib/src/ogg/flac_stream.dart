@@ -23,10 +23,11 @@ class OggFlacMetadataBlock {
 }
 
 class OggFlacStream {
-  static bool isFirstPage(List<int> data) => data.length >= 13 &&
-        data[0] == 0x7F &&
-        _ascii(data, 1, 4) == 'FLAC' &&
-        _ascii(data, 9, 4) == 'fLaC';
+  static bool isFirstPage(List<int> data) =>
+      data.length >= 13 &&
+      data[0] == 0x7F &&
+      _ascii(data, 1, 4) == 'FLAC' &&
+      _ascii(data, 9, 4) == 'fLaC';
 
   static OggFlacMetadataBlock parseFirstPage(List<int> data) {
     if (!isFirstPage(data)) {
@@ -95,6 +96,12 @@ class OggFlacStream {
     _ensureReadable(data, offset, 4);
     final commentCount = FlacToken.uint32Le(data, offset);
     offset += 4;
+
+    if (commentCount > 100000) {
+      throw const FormatException(
+        'Vorbis comment count exceeds entry limit 100000',
+      );
+    }
 
     final comments = <String>[];
     for (var i = 0; i < commentCount; i++) {

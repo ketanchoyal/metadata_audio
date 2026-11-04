@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_parser.dart';
 import 'package:metadata_audio/src/mpeg/xing_tag.dart';
-import 'package:metadata_audio/src/utils/chapter_downloader.dart';
 
 // Copying internal private helpers from ChapterDownloader to diagnose
 Future<int> _findMpegAudioOffset(Tokenizer tokenizer) async {
@@ -94,7 +93,7 @@ double _interpolateToc(List<int> toc, double percent) {
   return val1 + (val2 - val1) * fraction;
 }
 
-void diagnoseFile(String name, String path, int startMs, int endMs) async {
+Future<void> diagnoseFile(String name, String path, int startMs, int endMs) async {
   print('=== DIAGNOSING: $name ===');
   final file = File(path);
   if (!file.existsSync()) {

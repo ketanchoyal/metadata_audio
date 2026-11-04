@@ -4,9 +4,9 @@ import 'package:metadata_audio/src/model/types.dart';
 
 /// Exception thrown when attempting an unsupported operation on a tokenizer
 class TokenizerException implements Exception {
-
   /// Create a TokenizerException
   TokenizerException(this.message);
+
   /// Error message
   final String message;
 
@@ -14,13 +14,29 @@ class TokenizerException implements Exception {
   String toString() => 'TokenizerException: $message';
 }
 
+/// Exception thrown when a requested buffer or read exceeds configured maxBufferSize
+class BufferSizeError extends TokenizerException {
+  /// Create a BufferSizeError
+  BufferSizeError(this.requestedSize, this.maxBufferSize)
+    : super(
+        'Requested buffer size $requestedSize exceeds maxBufferSize $maxBufferSize',
+      );
+
+  /// The size in bytes requested to be read or buffered
+  final int requestedSize;
+
+  /// The maximum allowed buffer size configured
+  final int maxBufferSize;
+
+  @override
+  String toString() => 'BufferSizeError: $message';
+}
+
 /// Abstract base class for tokenizers that read and parse binary audio data
 ///
 /// Tokenizers provide a sequential or random-access interface for reading
 /// bytes from audio data sources. They expose capabilities (peek, seek)
 /// to determine what operations are supported.
-///
-/// Corresponds to the tokenizer contract in the upstream music-metadata library.
 abstract class Tokenizer {
   /// File information metadata about the source
   ///

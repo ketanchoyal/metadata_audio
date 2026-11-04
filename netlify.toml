@@ -1,0 +1,20 @@
+[build]
+  publish = "example/build/web"
+  command = "git clone --depth 1 -b stable https://github.com/flutter/flutter.git _flutter && export PATH=\"$PATH:$(pwd)/_flutter/bin\" && cd example && flutter pub get && flutter build web --release --base-href /"
+
+[[redirects]]
+  from = "/metadata_audio/*"
+  to = "/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

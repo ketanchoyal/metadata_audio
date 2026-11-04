@@ -3,8 +3,6 @@
 /// Defines common tag types used across different audio metadata formats,
 /// and specifies whether each tag should be treated as a singleton value
 /// or as a list of values, and whether duplicate values should be unique.
-///
-/// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/common/GenericTagTypes.ts
 library;
 
 /// Enumeration of common generic tag types.
@@ -162,8 +160,8 @@ enum GenericTagType {
 
 /// Defines the semantics of a tag (singleton vs list, unique vs duplicate).
 class TagTypeSemantics {
-
   const TagTypeSemantics({required this.isSingleton, this.isUnique = false});
+
   /// Whether this tag should have at most one value (singleton).
   /// If false, the tag can have multiple values (list).
   final bool isSingleton;
@@ -175,7 +173,6 @@ class TagTypeSemantics {
 
 /// Catalog of generic tag types and their semantics.
 class GenericTagTypes {
-
   GenericTagTypes._();
   static const Map<String, TagTypeSemantics> _semanticsMap = {
     // Core metadata - most are singletons

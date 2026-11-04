@@ -56,14 +56,13 @@ void main() {
       required String format,
       required ParseStrategy strategy,
       required ProbeStrategy probeStrategy,
-    }) =>
-        StrategyInfo(
-          strategy: strategy,
-          fileSize: 10 * 1024 * 1024,
-          supportsRange: true,
-          probeStrategy: probeStrategy,
-          detectedFormat: format,
-        );
+    }) => StrategyInfo(
+      strategy: strategy,
+      fileSize: 10 * 1024 * 1024,
+      supportsRange: true,
+      probeStrategy: probeStrategy,
+      detectedFormat: format,
+    );
 
     test('mp4 → probe + mp4Optimized', () {
       final info = _buildFor(
@@ -119,8 +118,7 @@ void main() {
       try {
         final path = Uri.parse(url).path;
         final lastSlash = path.lastIndexOf('/');
-        final filename =
-            lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
+        final filename = lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
         final lastDot = filename.lastIndexOf('.');
         if (lastDot <= 0 || lastDot == filename.length - 1) return null;
         return filename.substring(lastDot + 1).toLowerCase();
@@ -176,7 +174,7 @@ void main() {
     // checks must stay in sync with the production implementation.
     // The duplication is intentional: _detectAudioFormatCategory is private
     // and cannot be imported directly from tests.
-    String _category({String? mime, required String url}) {
+    String _category({required String url, String? mime}) {
       final m = mime?.toLowerCase() ?? '';
       final ext = (() {
         try {
@@ -195,26 +193,43 @@ void main() {
       const mpegExts = {'mp3', 'mp2', 'mp1', 'aac', 'm2a', 'mpa', 'aacp'};
       const headerOnlyExts = {
         'flac',
-        'ogg', 'oga', 'ogv', 'opus',
-        'wav', 'wave',
-        'aiff', 'aif',
-        'mkv', 'mka', 'webm',
-        'mpc', 'mpp',
-        'wv', 'wvp', 'ape',
-        'dsf', 'dff',
-        'asf', 'wma', 'wmv',
+        'ogg',
+        'oga',
+        'ogv',
+        'opus',
+        'wav',
+        'wave',
+        'aiff',
+        'aif',
+        'mkv',
+        'mka',
+        'webm',
+        'mpc',
+        'mpp',
+        'wv',
+        'wvp',
+        'ape',
+        'dsf',
+        'dff',
+        'asf',
+        'wma',
+        'wmv',
       };
 
       if (m.contains('/mp4') ||
           m.contains('m4a') ||
           m.contains('m4b') ||
-          mp4Exts.contains(ext)) return 'mp4';
+          mp4Exts.contains(ext)) {
+        return 'mp4';
+      }
 
       if (m.contains('mpeg') ||
           m.contains('mp3') ||
           m.contains('/aac') ||
           m.contains('aacp') ||
-          mpegExts.contains(ext)) return 'mpeg';
+          mpegExts.contains(ext)) {
+        return 'mpeg';
+      }
 
       if (m.contains('flac') ||
           m.contains('ogg') ||
@@ -230,7 +245,9 @@ void main() {
           m.contains('dsdiff') ||
           m.contains('asf') ||
           m.contains('wma') ||
-          headerOnlyExts.contains(ext)) return 'header-only';
+          headerOnlyExts.contains(ext)) {
+        return 'header-only';
+      }
 
       return 'unknown';
     }
@@ -313,10 +330,7 @@ void main() {
     });
     test('application/octet-stream + no extension → unknown', () {
       expect(
-        _category(
-          mime: 'application/octet-stream',
-          url: 'https://x.com/file',
-        ),
+        _category(mime: 'application/octet-stream', url: 'https://x.com/file'),
         'unknown',
       );
     });

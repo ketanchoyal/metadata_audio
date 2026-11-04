@@ -157,7 +157,21 @@ class M4aMuxer {
       ..add(const [0, 0, 0, 0]) // component type
       ..add(const [0x73, 0x6F, 0x75, 0x6E]) // 'soun'
       ..add(List<int>.filled(12, 0)) // manufacturer + flags
-      ..add(const [0x53, 0x6F, 0x75, 0x6E, 0x64, 0x48, 0x61, 0x6E, 0x64, 0x6C, 0x65, 0x72, 0x00]); // 'SoundHandler\0'
+      ..add(const [
+        0x53,
+        0x6F,
+        0x75,
+        0x6E,
+        0x64,
+        0x48,
+        0x61,
+        0x6E,
+        0x64,
+        0x6C,
+        0x65,
+        0x72,
+        0x00,
+      ]); // 'SoundHandler\0'
     final hdlrBox = _makeBox('hdlr', hdlrBuilder.takeBytes());
 
     // mdhd box
@@ -181,9 +195,42 @@ class M4aMuxer {
     // tkhd box (Track Header)
     // Flags: track_enabled (1) | track_in_movie (2) | track_in_preview (4) = 7
     final unityMatrix = <int>[
-      0x00, 0x01, 0x00, 0x00, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0x00, 0x01, 0x00, 0x00, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0x00, 0x00, 0x00,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0x40,
+      0x00,
+      0x00,
+      0x00,
     ];
     final tkhdBuilder = BytesBuilder(copy: false)
       ..add(const [0, 0, 0, 7]) // version + flags (enabled, in movie)
@@ -246,9 +293,9 @@ class M4aMuxer {
   }
 
   static List<int> _uint32Be(int value) => [
-        (value >> 24) & 0xFF,
-        (value >> 16) & 0xFF,
-        (value >> 8) & 0xFF,
-        value & 0xFF,
-      ];
+    (value >> 24) & 0xFF,
+    (value >> 16) & 0xFF,
+    (value >> 8) & 0xFF,
+    value & 0xFF,
+  ];
 }

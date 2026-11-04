@@ -301,25 +301,25 @@ List<int> _buildCueChunk(List<Map<String, Object>> points) {
 List<int> _u16le(int value) => <int>[value & 0xFF, (value >> 8) & 0xFF];
 
 List<int> _u32le(int value) => <int>[
-    value & 0xFF,
-    (value >> 8) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 24) & 0xFF,
-  ];
+  value & 0xFF,
+  (value >> 8) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 24) & 0xFF,
+];
 
 List<int> _u32be(int value) => <int>[
-    (value >> 24) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 8) & 0xFF,
-    value & 0xFF,
-  ];
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
 
 List<int> _synchsafe(int value) => <int>[
-    (value >> 21) & 0x7F,
-    (value >> 14) & 0x7F,
-    (value >> 7) & 0x7F,
-    value & 0x7F,
-  ];
+  (value >> 21) & 0x7F,
+  (value >> 14) & 0x7F,
+  (value >> 7) & 0x7F,
+  value & 0x7F,
+];
 
 class _NonSeekTokenizer extends Tokenizer {
   @override

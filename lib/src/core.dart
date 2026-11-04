@@ -1,31 +1,37 @@
 library;
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/aiff/aiff_loader.dart';
 import 'package:metadata_audio/src/apev2/apev2_loader.dart';
 import 'package:metadata_audio/src/asf/asf_loader.dart';
+import 'package:metadata_audio/src/caf/caf_loader.dart';
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
 import 'package:metadata_audio/src/dsf/dsf_loader.dart';
 import 'package:metadata_audio/src/flac/flac_loader.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_loader.dart';
 import 'package:metadata_audio/src/matroska/matroska_loader.dart';
 import 'package:metadata_audio/src/model/types.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/mp4/mp4_loader.dart';
+import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/musepack/musepack_loader.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/parser_factory.dart';
+import 'package:metadata_audio/src/tokenizer/http_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
 
 export 'package:metadata_audio/src/aiff/aiff_loader.dart';
 export 'package:metadata_audio/src/apev2/apev2_loader.dart';
 export 'package:metadata_audio/src/asf/asf_loader.dart';
+export 'package:metadata_audio/src/caf/caf_loader.dart';
 export 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
 export 'package:metadata_audio/src/dsf/dsf_loader.dart';
 export 'package:metadata_audio/src/flac/flac_loader.dart';
@@ -35,8 +41,8 @@ export 'package:metadata_audio/src/matroska/matroska_loader.dart';
 export 'package:metadata_audio/src/matroska/matroska_parser.dart';
 export 'package:metadata_audio/src/matroska/matroska_tag_mapper.dart';
 export 'package:metadata_audio/src/model/types.dart';
-export 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 export 'package:metadata_audio/src/mp4/mp4_loader.dart';
+export 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 export 'package:metadata_audio/src/musepack/musepack_loader.dart';
 export 'package:metadata_audio/src/ogg/ogg_loader.dart';
 export 'package:metadata_audio/src/parse_error.dart';
@@ -115,6 +121,7 @@ ParserFactory createDefaultParserFactory() {
     ..register(WavPackLoader())
     ..register(DsfLoader())
     ..register(DsdiffLoader())
+    ..register(CafLoader())
     ..register(Id3v2Loader())
     ..register(MpegLoader());
 
@@ -152,9 +159,20 @@ void _ensureInitialized() {
 /// print(metadata.common.title);
 /// ```
 Future<AudioMetadata> parseFile(String path, {ParseOptions? options}) async {
-  final tokenizer = FileTokenizer.fromPath(path);
+  final effectiveOptions = options ?? const ParseOptions();
+  final maxAllocation = getMaxMemoryAllocation(effectiveOptions);
+  getMaxMetadataEntries(effectiveOptions);
+  getMaxChapterCount(effectiveOptions);
+
+  final entityType = await FileSystemEntity.type(path);
+  if (entityType != FileSystemEntityType.notFound &&
+      entityType != FileSystemEntityType.file) {
+    throw NotRegularFileError('Not a regular file: $path');
+  }
+
+  final tokenizer = FileTokenizer.fromPath(path, maxBufferSize: maxAllocation);
   try {
-    return await parseFromTokenizer(tokenizer, options: options);
+    return await parseFromTokenizer(tokenizer, options: effectiveOptions);
   } finally {
     tokenizer.close();
   }
@@ -184,8 +202,17 @@ Future<AudioMetadata> parseBytes(
   FileInfo? fileInfo,
   ParseOptions? options,
 }) async {
-  final tokenizer = BytesTokenizer(bytes, fileInfo: fileInfo);
-  return parseFromTokenizer(tokenizer, options: options);
+  final effectiveOptions = options ?? const ParseOptions();
+  final maxAllocation = getMaxMemoryAllocation(effectiveOptions);
+  getMaxMetadataEntries(effectiveOptions);
+  getMaxChapterCount(effectiveOptions);
+
+  final tokenizer = BytesTokenizer(
+    bytes,
+    fileInfo: fileInfo,
+    maxBufferSize: maxAllocation,
+  );
+  return parseFromTokenizer(tokenizer, options: effectiveOptions);
 }
 
 /// Parse audio metadata from a stream of bytes.
@@ -214,14 +241,21 @@ Future<AudioMetadata> parseStream(
   FileInfo? fileInfo,
   ParseOptions? options,
 }) async {
+  final effectiveOptions = options ?? const ParseOptions();
+  final maxAllocation = getMaxMemoryAllocation(effectiveOptions);
   final chunks = <int>[];
   await for (final chunk in stream) {
+    if (chunks.length + chunk.length > maxAllocation) {
+      throw TokenizerException(
+        'Stream size exceeds maxMemoryAllocation ($maxAllocation bytes)',
+      );
+    }
     chunks.addAll(chunk);
   }
   return parseBytes(
     Uint8List.fromList(chunks),
     fileInfo: fileInfo,
-    options: options,
+    options: effectiveOptions,
   );
 }
 
@@ -258,15 +292,43 @@ Future<AudioMetadata> parseFromTokenizer(
 
   options ??= const ParseOptions();
 
+  // General metadata cache. An explicit ParseOptions.cacheKey always wins.
+  // When ParseOptions.useCache is true and no key is given, derive one from
+  // the source file name / URL.
+  var cacheKey = options.cacheKey;
+  if (cacheKey == null && (options.useCache || AudioMetadataCache.enabled)) {
+    final derived = _defaultCacheKey(tokenizer, options);
+    if (derived.isNotEmpty) cacheKey = derived;
+  }
+  if (cacheKey != null && cacheKey.isNotEmpty) {
+    final cached = await AudioMetadataCache.getMetadata(cacheKey);
+    if (cached != null) {
+      return cached;
+    }
+  }
+
   // Get file info from tokenizer, or create minimal info if not available
   final fileInfo = tokenizer.fileInfo ?? const FileInfo();
+
+  // Apply allocation cap to tokenizers that support it.
+  final maxBufferSize = getMaxMemoryAllocation(options);
+  // Validate resource limits up front.
+  getMaxMetadataEntries(options);
+  getMaxChapterCount(options);
+  if (tokenizer is FileTokenizer) {
+    tokenizer.maxBufferSize = maxBufferSize;
+  } else if (tokenizer is BytesTokenizer) {
+    tokenizer.maxBufferSize = maxBufferSize;
+  } else if (tokenizer is HttpBasedTokenizer) {
+    tokenizer.maxBufferSize = maxBufferSize;
+  }
 
   // Select appropriate parser based on file info and tokenizer
   final parser = _parserFactory!.selectParser(fileInfo, tokenizer);
 
   // Verify parser supports tokenizer capabilities
   if (!parser.supports(tokenizer)) {
-    throw UnsupportedFileTypeError(
+    throw const UnsupportedFileTypeError(
       'Parser requires random access, but tokenizer does not support seeking',
     );
   }
@@ -277,7 +339,48 @@ Future<AudioMetadata> parseFromTokenizer(
   // Scan for post-headers if applicable
   await scanPostHeaders(tokenizer, options);
 
-  return metadata;
+  // Finalize container-level duration/bitrate information when possible.
+  final fileSize = tokenizer.fileInfo?.size;
+  final baseDuration =
+      metadata.format.containerDuration ?? metadata.format.duration;
+  var overallBitrate = metadata.format.overallBitrate;
+  if (overallBitrate == null &&
+      fileSize != null &&
+      baseDuration != null &&
+      baseDuration > 0) {
+    overallBitrate = fileSize * 8 / baseDuration;
+  }
+  final containerDuration = metadata.format.containerDuration ?? baseDuration;
+
+  AudioMetadata result;
+  if (containerDuration != metadata.format.containerDuration ||
+      overallBitrate != metadata.format.overallBitrate) {
+    final updatedFormat = metadata.format.copyWith(
+      containerDuration: containerDuration,
+      overallBitrate: overallBitrate,
+    );
+    result = AudioMetadata(
+      format: updatedFormat,
+      native: metadata.native,
+      common: metadata.common,
+      quality: metadata.quality,
+    );
+  } else {
+    result = metadata;
+  }
+
+  // Persist to general metadata cache if opted in.
+  if (cacheKey != null) {
+    unawaited(
+      AudioMetadataCache.putMetadata(
+        cacheKey,
+        result,
+        maxMemoryAllocation: getMaxMemoryAllocation(options),
+      ),
+    );
+  }
+
+  return result;
 }
 
 /// Scans for appending headers at the end of the audio file
@@ -295,6 +398,27 @@ Future<AudioMetadata> parseFromTokenizer(
 /// - If tokenizer supports seek: Performs post-header scan (actual detection delegated to format parsers)
 ///
 /// **Returns:** null (placeholder for future return value if needed)
+
+/// Derives a default cache key from the tokenizer source and the options that
+/// affect parsed output, so caching is always on even without an explicit
+/// [ParseOptions.cacheKey].
+String _defaultCacheKey(Tokenizer tokenizer, ParseOptions options) {
+  final info = tokenizer.fileInfo;
+  String base;
+  if (info?.path != null && info!.path!.isNotEmpty) {
+    base = 'path:${info.path}';
+  } else if (info?.url != null && info!.url!.isNotEmpty) {
+    base = 'url:${info.url}';
+  } else {
+    // No file name available: disable default caching. Callers can still
+    // opt in by passing an explicit ParseOptions.cacheKey.
+    return '';
+  }
+  final optSig =
+      'ic=${options.includeChapters}|dur=${options.duration}|sc=${options.skipCovers}|sph=${options.skipPostHeaders}|ch=${options.maxChapterCount}';
+  return '$base|$optSig';
+}
+
 Future<void> scanPostHeaders(Tokenizer tokenizer, ParseOptions options) async {
   // Skip post-header scan if explicitly disabled
   if (options.skipPostHeaders) {
@@ -322,7 +446,7 @@ Future<void> scanPostHeaders(Tokenizer tokenizer, ParseOptions options) async {
 /// **Parameters:**
 /// - `tags`: List of tags to organize
 ///
-/// **Returns:** Map<String, List<dynamic>> where keys are tag IDs
+/// **Returns:** `Map<String, List<dynamic>>` where keys are tag IDs
 ///
 /// **Example:**
 /// ```dart
@@ -341,6 +465,12 @@ Map<String, List<dynamic>> orderTags(List<Tag> tags) {
     result.putIfAbsent(tag.id, () => []).add(tag.value);
   }
   return result;
+}
+
+/// Return a list of supported MIME-types.
+List<String> getSupportedMimeTypes() {
+  _ensureInitialized();
+  return _parserFactory!.getSupportedMimeTypes();
 }
 
 /// Convert normalized rating (0-1) to star rating (1-5).

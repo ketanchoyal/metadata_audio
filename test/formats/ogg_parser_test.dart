@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
-import 'package:metadata_audio/src/ogg/ogg_parser.dart';
 import 'package:metadata_audio/src/ogg/ogg_token.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:test/test.dart';
@@ -341,19 +340,20 @@ void main() {
       expect(metadata.format.bitrate, isNotNull);
     });
 
-    test('throws on invalid Ogg capture pattern', () async {
+    test('warns on invalid Ogg capture pattern', () async {
       final invalidPage = <int>[
         ...ascii.encode('Bad!'),
         ...List<int>.filled(23, 0),
       ];
 
       final loader = OggLoader();
-      await expectLater(
-        loader.parse(
-          BytesTokenizer(Uint8List.fromList(invalidPage)),
-          const ParseOptions(),
-        ),
-        throwsA(isA<OggContentError>()),
+      final metadata = await loader.parse(
+        BytesTokenizer(Uint8List.fromList(invalidPage)),
+        const ParseOptions(),
+      );
+      expect(
+        metadata.quality.warnings.map((w) => w.message),
+        contains(contains('Corrupt Ogg content')),
       );
     });
 
@@ -398,17 +398,17 @@ List<int> _buildVorbisIdentificationPayload({
   required int channels,
   required int sampleRate,
 }) => <int>[
-    0x01,
-    ...ascii.encode('vorbis'),
-    ..._uint32Le(0),
-    channels,
-    ..._uint32Le(sampleRate),
-    ..._uint32Le(0),
-    ..._uint32Le(192000),
-    ..._uint32Le(0),
-    0,
-    1,
-  ];
+  0x01,
+  ...ascii.encode('vorbis'),
+  ..._uint32Le(0),
+  channels,
+  ..._uint32Le(sampleRate),
+  ..._uint32Le(0),
+  ..._uint32Le(192000),
+  ..._uint32Le(0),
+  0,
+  1,
+];
 
 List<int> _buildVorbisCommentPayload({
   required String vendor,
@@ -435,16 +435,16 @@ List<int> _buildOpusHeadPayload({
   required int preSkip,
   required int sampleRate,
 }) => <int>[
-    ...ascii.encode('OpusHead'),
-    1,
-    channels,
-    preSkip & 0xFF,
-    (preSkip >> 8) & 0xFF,
-    ..._uint32Le(sampleRate),
-    0,
-    0,
-    0,
-  ];
+  ...ascii.encode('OpusHead'),
+  1,
+  channels,
+  preSkip & 0xFF,
+  (preSkip >> 8) & 0xFF,
+  ..._uint32Le(sampleRate),
+  0,
+  0,
+  0,
+];
 
 List<int> _buildOpusTagsPayload({
   required String vendor,
@@ -555,11 +555,11 @@ void _writeInt32Le(List<int> target, int offset, int value) {
 }
 
 List<int> _uint32Le(int value) => <int>[
-    value & 0xFF,
-    (value >> 8) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 24) & 0xFF,
-  ];
+  value & 0xFF,
+  (value >> 8) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 24) & 0xFF,
+];
 
 List<int> _uint64Le(int value) {
   final low = value & 0xFFFFFFFF;

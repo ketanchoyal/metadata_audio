@@ -3,45 +3,6 @@ import 'package:metadata_audio/src/parser_factory.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
-class MockTokenizer implements Tokenizer {
-  @override
-  bool get hasCompleteData => true;
-  MockTokenizer({required this.canSeek});
-
-  @override
-  final bool canSeek;
-
-  @override
-  FileInfo? get fileInfo => null;
-
-  @override
-  int get position => 0;
-
-  @override
-  int peekUint8() => throw UnimplementedError();
-
-  @override
-  List<int> peekBytes(int length) => throw UnimplementedError();
-
-  @override
-  int readUint8() => throw UnimplementedError();
-
-  @override
-  int readUint16() => throw UnimplementedError();
-
-  @override
-  int readUint32() => throw UnimplementedError();
-
-  @override
-  List<int> readBytes(int length) => throw UnimplementedError();
-
-  @override
-  void seek(int position) => throw UnimplementedError();
-
-  @override
-  void skip(int length) => throw UnimplementedError();
-}
-
 class TestParserLoader extends ParserLoader {
   TestParserLoader({
     required this.extension,
@@ -59,16 +20,19 @@ class TestParserLoader extends ParserLoader {
   final bool hasRandomAccessRequirements;
 
   @override
-  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async => const AudioMetadata(
-      format: Format(),
-      native: {},
-      common: CommonTags(
-        track: TrackNo(),
-        disk: TrackNo(),
-        movementIndex: TrackNo(),
-      ),
-      quality: QualityInformation(),
-    );
+  Future<AudioMetadata> parse(
+    Tokenizer tokenizer,
+    ParseOptions options,
+  ) async => const AudioMetadata(
+    format: Format(),
+    native: {},
+    common: CommonTags(
+      track: TrackNo(),
+      disk: TrackNo(),
+      movementIndex: TrackNo(),
+    ),
+    quality: QualityInformation(),
+  );
 }
 
 void main() {

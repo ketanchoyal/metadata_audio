@@ -2,8 +2,6 @@
 ///
 /// Defines an abstract interface for mapping tags from format-specific
 /// identifiers (like ID3v2 "TIT2") to generic tag types (like "title").
-///
-/// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/common/GenericTagMapper.ts
 library;
 
 import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';

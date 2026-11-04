@@ -49,8 +49,10 @@ class Mp4Loader extends ParserLoader {
 
     final source = tokenizer.fileInfo?.url ?? tokenizer.fileInfo?.path;
     if (source != null && source.isNotEmpty) {
-      final audioTrack =
-          parser.getTrackInfos().where((t) => t.isAudio).firstOrNull;
+      final audioTrack = parser
+          .getTrackInfos()
+          .where((t) => t.isAudio)
+          .firstOrNull;
       if (audioTrack != null) {
         final stsc = parser.getSampleToChunkTable(audioTrack.trackId) ?? [];
         final stco = parser.getChunkOffsetTable(audioTrack.trackId) ?? [];

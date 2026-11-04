@@ -3,7 +3,9 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/ebml/types.dart';
+import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
@@ -16,9 +18,12 @@ class EbmlContentError extends UnexpectedFileContentError {
 /// Extensible Binary Meta Language (EBML) iterator.
 class EbmlIterator {
   /// Creates an [EbmlIterator].
-  EbmlIterator(this._tokenizer);
+  EbmlIterator(this._tokenizer, [this.options = const ParseOptions()]);
 
   final Tokenizer _tokenizer;
+
+  /// Parsing options
+  final ParseOptions options;
 
   static const int _ebmlMaxIDLength = 4;
   static const int _ebmlMaxSizeLength = 8;
@@ -209,8 +214,10 @@ class EbmlIterator {
     return utf8.decode(payload, allowMalformed: true);
   }
 
-  Uint8List _readBuffer(EbmlHeader header) =>
-      Uint8List.fromList(_tokenizer.readBytes(header.len));
+  Uint8List _readBuffer(EbmlHeader header) {
+    validateAllocation(header.len, options, EbmlContentError.new);
+    return Uint8List.fromList(_tokenizer.readBytes(header.len));
+  }
 
   bool _isEndOfStream(TokenizerException error) =>
       error.message.startsWith('End of file') ||

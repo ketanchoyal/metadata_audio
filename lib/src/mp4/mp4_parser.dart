@@ -3,6 +3,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/atom.dart';
@@ -150,12 +151,18 @@ class Mp4Parser {
     await _postProcessTracks();
   }
 
+  void _validatePayloadLength(int length) {
+    validateAllocation(length, options, Mp4ContentError.new);
+  }
+
   Future<void> _handleAtom(Mp4Atom atom, int payloadLength) async {
     switch (atom.header.name) {
       case 'ftyp':
+        _validatePayloadLength(payloadLength);
         _parseFtyp(tokenizer.readBytes(payloadLength));
         return;
       case 'mvhd':
+        _validatePayloadLength(payloadLength);
         _parseMvhd(tokenizer.readBytes(payloadLength));
         return;
       case 'tkhd':
@@ -163,6 +170,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseTkhd(tokenizer.readBytes(payloadLength));
         return;
       case 'mdhd':
@@ -170,6 +178,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseMdhd(tokenizer.readBytes(payloadLength));
         return;
       case 'hdlr':
@@ -177,6 +186,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseHdlr(tokenizer.readBytes(payloadLength));
         return;
       case 'stsd':
@@ -184,6 +194,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStsd(tokenizer.readBytes(payloadLength));
         return;
       case 'stts':
@@ -191,6 +202,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStts(tokenizer.readBytes(payloadLength));
         return;
       case 'stsc':
@@ -198,6 +210,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStsc(tokenizer.readBytes(payloadLength));
         return;
       case 'stsz':
@@ -205,6 +218,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStsz(tokenizer.readBytes(payloadLength));
         return;
       case 'stco':
@@ -212,6 +226,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStco(tokenizer.readBytes(payloadLength));
         return;
       case 'co64':
@@ -219,13 +234,20 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseCo64(tokenizer.readBytes(payloadLength));
         return;
       case 'chap':
         if (!_isTrackScopedAtom(atom)) {
+          // Orphan track-specific box may not modify whichever track happens
+          // to be registered last.
+          metadata.addWarning(
+            'Ignoring track-specific atom ${atom.atomPath} outside a track',
+          );
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseChap(tokenizer.readBytes(payloadLength));
         return;
       case 'mdat':
@@ -237,6 +259,7 @@ class Mp4Parser {
       case 'chpl':
         // Nero chapter list atom (inside udta)
         if (atom.parent?.header.name == 'udta') {
+          _validatePayloadLength(payloadLength);
           _parseChpl(tokenizer.readBytes(payloadLength));
         } else {
           tokenizer.skip(payloadLength);
@@ -426,49 +449,62 @@ class Mp4Parser {
 
     // Version (1 byte)
     final version = payload[offset++];
+    if (version > 1) {
+      metadata.addWarning('Unsupported chpl version: $version');
+      return;
+    }
 
     // Flags (3 bytes)
-    // ignore: unused_local_variable
     final flags =
         (payload[offset++] << 16) |
         (payload[offset++] << 8) |
         payload[offset++];
 
-    // Reserved (1 byte)
-    offset++;
+    // Version 0 header is 4 bytes; version 1 adds 4
+    // more header bytes (8 in total) before the single-byte chapter count.
+    if (version == 1) {
+      offset += 4;
+    }
 
-    // Chapter count (4 bytes)
-    final chapterCount = AtomToken.readUint32Be(payload, offset);
-    offset += 4;
+    if (offset + 9 > payload.length) {
+      metadata.addWarning('chpl atom too small');
+      return;
+    }
 
-    for (var i = 0; i < chapterCount && offset + 9 <= payload.length; i++) {
-      // Timestamp (8 bytes) - use last 4 bytes for 32-bit values
-      // as some files store 32-bit timestamps in 64-bit fields
-      BigInt timestamp;
-      if (version == 1) {
-        // Full 64-bit timestamp
-        timestamp = BigInt.zero;
-        for (var j = 0; j < 8; j++) {
-          timestamp =
-              (timestamp << 8) | BigInt.from(payload[offset + j] & 0xFF);
-        }
-      } else {
-        // 32-bit timestamp stored in last 4 bytes of 8-byte field
-        final ts32 =
-            (payload[offset + 4] << 24) |
-            (payload[offset + 5] << 16) |
-            (payload[offset + 6] << 8) |
-            payload[offset + 7];
-        timestamp = BigInt.from(ts32);
+    // Chapter count (1 byte)
+    final chapterCount = payload[offset++] & 0xFF;
+    final maxChapterCount = getMaxChapterCount(options);
+    if (chapterCount > maxChapterCount) {
+      metadata.addWarning(
+        'Chapter count exceeds the $maxChapterCount chapter limit',
+      );
+    }
+
+    for (
+      var i = 0;
+      i < chapterCount &&
+          offset + 9 <= payload.length &&
+          _chplChapters.length < maxChapterCount;
+      i++
+    ) {
+      // Timestamp (8 bytes, 64-bit; time base: 10,000,000 ticks per second)
+      var timestamp = BigInt.zero;
+      for (var j = 0; j < 8; j++) {
+        timestamp = (timestamp << 8) | BigInt.from(payload[offset + j] & 0xFF);
       }
       offset += 8;
 
       // Title length (1 byte)
       final titleLen = payload[offset++] & 0xFF;
 
-      // Title string
+      // Title string. A title that exceeds the remaining payload ends the
+      // chapter list; continuing would re-read the same offset.
+      if (offset + titleLen > payload.length) {
+        break;
+      }
+
       var title = '';
-      if (titleLen > 0 && offset + titleLen <= payload.length) {
+      if (titleLen > 0) {
         title = utf8.decode(
           payload.sublist(offset, offset + titleLen),
           allowMalformed: true,
@@ -476,7 +512,9 @@ class Mp4Parser {
         offset += titleLen;
       }
 
-      _chplChapters.add(_ChplChapter(timestamp: timestamp, title: title));
+      _chplChapters.add(
+        _ChplChapter(timestamp: timestamp, title: title, flags: flags),
+      );
     }
   }
 
@@ -498,6 +536,11 @@ class Mp4Parser {
         tokenizer,
         (atom, atomPayloadLength) async {
           if (atom.header.name == 'data') {
+            if (options.skipCovers && itemAtom.header.name == 'covr') {
+              tokenizer.skip(atomPayloadLength);
+              return;
+            }
+            _validatePayloadLength(atomPayloadLength);
             final data = AtomToken.parseDataAtom(
               tokenizer.readBytes(atomPayloadLength),
             );
@@ -509,6 +552,7 @@ class Mp4Parser {
           }
 
           if (atom.header.name == 'mean') {
+            _validatePayloadLength(atomPayloadLength);
             mean = AtomToken.parseNameAtom(
               tokenizer.readBytes(atomPayloadLength),
             );
@@ -516,6 +560,7 @@ class Mp4Parser {
           }
 
           if (atom.header.name == 'name') {
+            _validatePayloadLength(atomPayloadLength);
             name = AtomToken.parseNameAtom(
               tokenizer.readBytes(atomPayloadLength),
             );
@@ -574,11 +619,24 @@ class Mp4Parser {
       case 22:
         return _readUnsignedBeInteger(value);
       case 65:
-        return value.isEmpty ? null : value[0];
+        // INT8: signed 8-bit integer.
+        return value.isEmpty
+            ? null
+            : (value[0] < 128 ? value[0] : value[0] - 256);
       case 66:
-        return value.length < 2 ? null : AtomToken.readUint16Be(value, 0);
+        // INT16_BE: signed big-endian 16-bit integer.
+        if (value.length < 2) {
+          return null;
+        }
+        final int16 = AtomToken.readUint16Be(value, 0);
+        return int16 > 0x7FFF ? int16 - 0x10000 : int16;
       case 67:
-        return value.length < 4 ? null : AtomToken.readUint32Be(value, 0);
+        // INT32_BE: signed big-endian 32-bit integer.
+        if (value.length < 4) {
+          return null;
+        }
+        final int32 = AtomToken.readUint32Be(value, 0);
+        return int32 > 0x7FFFFFFF ? int32 - 0x100000000 : int32;
       default:
         metadata.addWarning(
           'Unknown MP4 data type ${dataAtom.type.type} for tag=$tagKey',
@@ -698,14 +756,27 @@ class Mp4Parser {
     // Fallback chapter extraction after all atoms are parsed.
     // This handles files where mdat appears before moov/chapter tables.
     if (options.includeChapters && metadata.format.chapters == null) {
-      await _tryParseChaptersFromTrackReferences();
+      try {
+        await _tryParseChaptersFromTrackReferences();
+      } catch (e) {
+        if (_chplChapters.isEmpty) {
+          rethrow;
+        }
+        metadata.addWarning('Cannot read QuickTime chapter track: $e');
+      }
     }
 
     // Process chpl (Nero chapter list) chapters if present.
-    // chpl uses a fixed time base of 1/10000000.
+    // In files with both, QuickTime chapters are preferred UNLESS
+    // QuickTime chapters had no titles (empty strings) and Nero has titles,
+    // or QuickTime chapter extraction yielded no chapters.
+    final existingChapters = metadata.format.chapters;
+    final quickTimeHasTitles = existingChapters != null &&
+        existingChapters.any((c) => c.title.trim().isNotEmpty);
+
     if (_chplChapters.isNotEmpty &&
         options.includeChapters &&
-        metadata.format.chapters == null) {
+        !quickTimeHasTitles) {
       _processChplChapters();
     }
   }
@@ -795,14 +866,29 @@ class Mp4Parser {
             ));
           }
         }
+        // Prefetch the full set once; a single transient range failure
+        // (e.g. archive.org HTTP 500) is retried once before giving up.
         const batchSize = 4;
-        for (var i = 0; i < ranges.length; i += batchSize) {
-          final batch = ranges.skip(i).take(batchSize);
-          await Future.wait(
-            batch.map(
-              (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
-            ),
-          );
+        for (var pass = 0; pass < 2; pass++) {
+          try {
+            for (var i = 0; i < ranges.length; i += batchSize) {
+              final batch = ranges.skip(i).take(batchSize);
+              await Future.wait(
+                batch.map(
+                  (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
+                ),
+              );
+            }
+            break;
+          } on FileDownloadError {
+            // prefetchRange natively retries transient errors; a failure
+            // here most often means the whole batch raced a slow mirror.
+            if (pass == 0) {
+              await Future<void>.delayed(const Duration(seconds: 1));
+              continue;
+            }
+            rethrow;
+          }
         }
       } on Exception catch (e) {
         metadata.addWarning('Failed to prefetch chapter data: $e');
@@ -817,6 +903,7 @@ class Mp4Parser {
       }
 
       tokenizer.seek(sample.absoluteOffset);
+      _validatePayloadLength(sample.sampleSize);
       final title = AtomToken.parseChapterText(
         tokenizer.readBytes(sample.sampleSize),
       );
@@ -902,8 +989,8 @@ class Mp4Parser {
     final fileDuration = metadata.format.duration;
     if (fileDuration == null || fileDuration <= 0) return;
 
-    final inferredTimeBase = _inferChplTimeBase(fileDuration);
-    if (inferredTimeBase == null || inferredTimeBase <= 0) return;
+    // chpl timestamps use the spec base of 10,000,000 ticks per second.
+    const chplTimestampTimescale = 10000000;
 
     final chapters = <Chapter>[];
     final audioTrack = _tracks.values.where((t) => t.isAudio).firstOrNull;
@@ -912,7 +999,7 @@ class Mp4Parser {
       // Convert timestamp to milliseconds
       final timestampMs =
           (chplChapter.timestamp * BigInt.from(1000)) ~/
-          BigInt.from(inferredTimeBase);
+          BigInt.from(chplTimestampTimescale);
 
       // Skip chapters with timestamps exceeding file duration (plus small tolerance)
       final maxDuration = BigInt.from((fileDuration * 1000 + 5000).round());
@@ -969,61 +1056,6 @@ class Mp4Parser {
     if (chapters.isNotEmpty) {
       metadata.setFormat(chapters: chapters);
     }
-  }
-
-  /// Infer chpl time base from file timing data.
-  ///
-  /// Many files encode chpl timestamps in high-resolution units. We infer the
-  /// scale factor by matching the largest chapter timestamp to media duration.
-  int? _inferChplTimeBase(double fileDurationSeconds) {
-    if (_chplChapters.isEmpty || fileDurationSeconds <= 0) {
-      return null;
-    }
-
-    var maxTimestamp = BigInt.zero;
-    for (final chapter in _chplChapters) {
-      if (chapter.timestamp > maxTimestamp) {
-        maxTimestamp = chapter.timestamp;
-      }
-    }
-
-    if (maxTimestamp == BigInt.zero) {
-      return null;
-    }
-
-    final inferred = (maxTimestamp.toDouble() / fileDurationSeconds).round();
-    if (inferred <= 0) {
-      return null;
-    }
-
-    return _normalizeTimeBase(inferred);
-  }
-
-  /// Normalize an inferred time base to a nearby canonical clock when possible.
-  int _normalizeTimeBase(int inferred) {
-    const candidates = <int>[
-      1000,
-      22050,
-      44100,
-      48000,
-      90000,
-      1000000,
-      10000000,
-    ];
-
-    var best = inferred;
-    var bestRelError = double.infinity;
-
-    for (final candidate in candidates) {
-      final relError = (candidate - inferred).abs() / inferred;
-      if (relError < bestRelError) {
-        bestRelError = relError;
-        best = candidate;
-      }
-    }
-
-    // Snap only when very close to avoid distorting truly custom bases.
-    return bestRelError <= 0.02 ? best : inferred;
   }
 
   Future<bool> _tryParseChaptersFromMdat(int payloadLength) async {
@@ -1124,9 +1156,9 @@ class Mp4Parser {
     // mdat atom (e.g. 300MB+) and we only need the small title samples.
     if (chapterRanges.isNotEmpty) {
       if (tokenizer case final HttpBasedTokenizer httpTokenizer) {
+        const batchSize = 4;
         try {
           // Batch prefetch to avoid overwhelming the server
-          const batchSize = 4;
           for (var i = 0; i < chapterRanges.length; i += batchSize) {
             final batch = chapterRanges.skip(i).take(batchSize);
             await Future.wait(
@@ -1134,6 +1166,24 @@ class Mp4Parser {
                 (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
               ),
             );
+          }
+        } on FileDownloadError {
+          // One retry after transient range-fetch failures (e.g. shared
+          // hosts returning HTTP 500 under load); prefetchRange already
+          // retries internally, so failing again here is persistent.
+          await Future<void>.delayed(const Duration(seconds: 1));
+          try {
+            for (var i = 0; i < chapterRanges.length; i += batchSize) {
+              final batch = chapterRanges.skip(i).take(batchSize);
+              await Future.wait(
+                batch.map(
+                  (range) => httpTokenizer.prefetchRange(range.$1, range.$2),
+                ),
+              );
+            }
+          } on Exception catch (e) {
+            metadata.addWarning('Failed to prefetch chapter data: $e');
+            return null;
           }
         } on Exception catch (e) {
           metadata.addWarning('Failed to prefetch chapter data: $e');
@@ -1161,6 +1211,7 @@ class Mp4Parser {
       }
 
       tokenizer.skip(skipLength);
+      _validatePayloadLength(sample.sampleSize);
       final title = AtomToken.parseChapterText(
         tokenizer.readBytes(sample.sampleSize),
       );
@@ -1473,8 +1524,7 @@ class Mp4Parser {
       final samplesNeeded = remainingTime ~/ sampleDuration;
 
       if (samplesNeeded < maxSamplesToConsume) {
-        sampleIndex += samplesNeeded;
-        return sampleIndex;
+        return sampleIndex + samplesNeeded;
       }
 
       sampleIndex += maxSamplesToConsume;
@@ -1579,13 +1629,16 @@ class _ChapterSampleEntry {
 
 /// Internal representation of a chapter from a chpl (Nero Chapter List) atom.
 class _ChplChapter {
-  _ChplChapter({required this.timestamp, required this.title});
+  _ChplChapter({required this.timestamp, required this.title, this.flags = 0});
 
   /// Timestamp in timescale units.
   final BigInt timestamp;
 
   /// Chapter title.
   final String title;
+
+  /// chpl flags from the atom header (currently unused downstream).
+  final int flags;
 }
 
 class Mp4TrackInfo {

@@ -10,7 +10,6 @@
 /// - [mm:ss.xx]Lyrics text
 ///
 /// Spec: https://en.wikipedia.org/wiki/LRC_(file_format)
-/// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/lrc/LyricsParser.ts
 library;
 
 import 'package:metadata_audio/src/model/types.dart';

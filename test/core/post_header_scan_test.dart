@@ -1,13 +1,11 @@
 import 'package:metadata_audio/src/core.dart';
-import 'package:metadata_audio/src/model/types.dart';
-import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 /// Mock tokenizer for testing post-header scan behavior
 class MockTokenizer implements Tokenizer {
+  MockTokenizer({required this.canSeek, this.fileInfo});
   @override
   bool get hasCompleteData => true;
-  MockTokenizer({required this.canSeek, this.fileInfo});
 
   @override
   final bool canSeek;
@@ -182,10 +180,7 @@ void main() {
           canSeek: false,
           fileInfo: const FileInfo(size: 1000),
         );
-        await scanPostHeaders(
-          nonSeekable,
-          const ParseOptions(),
-        );
+        await scanPostHeaders(nonSeekable, const ParseOptions());
       });
     });
 

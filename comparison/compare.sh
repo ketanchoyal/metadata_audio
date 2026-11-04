@@ -2,7 +2,7 @@
 set -e
 
 echo "============================================================"
-echo "Comparing Dart vs TypeScript music-metadata output"
+echo "Comparing Dart vs Reference Output"
 echo "============================================================"
 echo ""
 
@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Run TypeScript
-echo "Running TypeScript music-metadata..."
+echo "Running reference runner..."
 cd "$SCRIPT_DIR"
 npm run test:ts > output_ts.json 2>/dev/null || true
 

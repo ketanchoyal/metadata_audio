@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:test/test.dart';
 
 void main() {

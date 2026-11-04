@@ -3,6 +3,7 @@ library;
 import 'dart:convert';
 
 import 'package:metadata_audio/src/apev2/apev2_token.dart';
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/parse_error.dart';
@@ -197,6 +198,7 @@ class Apev2Parser {
 
       switch (itemHeader.flags.dataType) {
         case Apev2DataType.textUtf8:
+          validateAllocation(itemHeader.size, options, ApeContentError.new);
           final textBytes = tokenizer.readBytes(itemHeader.size);
           bytesRemaining -= itemHeader.size;
           final decoded = utf8.decode(textBytes, allowMalformed: true);
@@ -222,6 +224,7 @@ class Apev2Parser {
             break;
           }
 
+          validateAllocation(itemHeader.size, options, ApeContentError.new);
           final data = tokenizer.readBytes(itemHeader.size);
           bytesRemaining -= itemHeader.size;
           final zero = data.indexOf(0);

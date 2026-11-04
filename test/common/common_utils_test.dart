@@ -4,15 +4,10 @@ import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/core.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_tag_map.dart';
-import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/mp4_tag_mapper.dart';
-import 'package:metadata_audio/src/parse_error.dart';
-import 'package:metadata_audio/src/parser_factory.dart';
-import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 class _StaticParserLoader implements ParserLoader {
-
   _StaticParserLoader({required this.extension, required this.mimeType});
   @override
   final List<String> extension;

@@ -7,7 +7,7 @@ void main() {
   group('ParseError Hierarchy', () {
     test('CouldNotDetermineFileTypeError instantiates with message', () {
       const message = 'Unable to determine file type';
-      final error = CouldNotDetermineFileTypeError(message);
+      const error = CouldNotDetermineFileTypeError(message);
 
       expect(error.message, equals(message));
       expect(error.name, equals('CouldNotDetermineFileTypeError'));
@@ -16,7 +16,7 @@ void main() {
 
     test('UnsupportedFileTypeError instantiates with message', () {
       const message = 'File type FLAC is not supported';
-      final error = UnsupportedFileTypeError(message);
+      const error = UnsupportedFileTypeError(message);
 
       expect(error.message, equals(message));
       expect(error.name, equals('UnsupportedFileTypeError'));
@@ -26,7 +26,7 @@ void main() {
     test('UnexpectedFileContentError includes fileType information', () {
       const fileType = 'mp3';
       const message = 'Invalid ID3 header';
-      final error = UnexpectedFileContentError(fileType, message);
+      const error = UnexpectedFileContentError(fileType, message);
 
       expect(error.message, equals(message));
       expect(error.fileType, equals(fileType));
@@ -37,7 +37,7 @@ void main() {
 
     test('FieldDecodingError instantiates with message', () {
       const message = 'Unable to decode UTF-8 field';
-      final error = FieldDecodingError(message);
+      const error = FieldDecodingError(message);
 
       expect(error.message, equals(message));
       expect(error.name, equals('FieldDecodingError'));
@@ -46,7 +46,7 @@ void main() {
 
     test('InternalParserError instantiates with message', () {
       const message = 'Unexpected state in parser';
-      final error = InternalParserError(message);
+      const error = InternalParserError(message);
 
       expect(error.message, equals(message));
       expect(error.name, equals('InternalParserError'));
@@ -54,19 +54,22 @@ void main() {
     });
 
     test('All error types are instances of ParseError', () {
-      expect(CouldNotDetermineFileTypeError('test'), isA<ParseError>());
-      expect(UnsupportedFileTypeError('test'), isA<ParseError>());
-      expect(UnexpectedFileContentError('mp3', 'test'), isA<ParseError>());
-      expect(FieldDecodingError('test'), isA<ParseError>());
-      expect(InternalParserError('test'), isA<ParseError>());
+      expect(const CouldNotDetermineFileTypeError('test'), isA<ParseError>());
+      expect(const UnsupportedFileTypeError('test'), isA<ParseError>());
+      expect(
+        const UnexpectedFileContentError('mp3', 'test'),
+        isA<ParseError>(),
+      );
+      expect(const FieldDecodingError('test'), isA<ParseError>());
+      expect(const InternalParserError('test'), isA<ParseError>());
     });
 
     test('All error types implement Exception', () {
-      expect(CouldNotDetermineFileTypeError('test'), isA<Exception>());
-      expect(UnsupportedFileTypeError('test'), isA<Exception>());
-      expect(UnexpectedFileContentError('mp3', 'test'), isA<Exception>());
-      expect(FieldDecodingError('test'), isA<Exception>());
-      expect(InternalParserError('test'), isA<Exception>());
+      expect(const CouldNotDetermineFileTypeError('test'), isA<Exception>());
+      expect(const UnsupportedFileTypeError('test'), isA<Exception>());
+      expect(const UnexpectedFileContentError('mp3', 'test'), isA<Exception>());
+      expect(const FieldDecodingError('test'), isA<Exception>());
+      expect(const InternalParserError('test'), isA<Exception>());
     });
   });
 
@@ -123,7 +126,10 @@ void main() {
             extension: const ['mp3'],
             mimeType: const ['audio/mpeg'],
             onParse: (_, _) async {
-              throw UnexpectedFileContentError('mp3', 'Invalid frame header');
+              throw const UnexpectedFileContentError(
+                'mp3',
+                'Invalid frame header',
+              );
             },
           ),
         );

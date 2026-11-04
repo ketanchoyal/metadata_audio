@@ -26,9 +26,11 @@ class OpusIdHeader {
 class OpusDecoder {
   static const int idHeaderMinLength = 19;
 
-  static bool isIdHeader(List<int> data) => data.length >= 8 && _ascii(data, 0, 8) == 'OpusHead';
+  static bool isIdHeader(List<int> data) =>
+      data.length >= 8 && _ascii(data, 0, 8) == 'OpusHead';
 
-  static bool isTagsHeader(List<int> data) => data.length >= 8 && _ascii(data, 0, 8) == 'OpusTags';
+  static bool isTagsHeader(List<int> data) =>
+      data.length >= 8 && _ascii(data, 0, 8) == 'OpusTags';
 
   static OpusIdHeader parseIdHeader(List<int> data) {
     if (!isIdHeader(data) || data.length < idHeaderMinLength) {
@@ -45,12 +47,15 @@ class OpusDecoder {
     );
   }
 
-  static VorbisCommentHeader parseTags(List<int> data) {
+  static VorbisCommentHeader parseTags(
+    List<int> data, {
+    int maxComments = 100000,
+  }) {
     if (!isTagsHeader(data)) {
       throw const FormatException('Invalid OpusTags header');
     }
 
-    return VorbisDecoder.parseCommentData(data, 8);
+    return VorbisDecoder.parseCommentData(data, 8, maxComments: maxComments);
   }
 
   static int _uint16Le(List<int> data, int offset) {

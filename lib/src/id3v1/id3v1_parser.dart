@@ -5,8 +5,6 @@
 ///
 /// Spec: http://id3.org/ID3v1
 /// Wiki: https://en.wikipedia.org/wiki/ID3
-///
-/// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/id3v1/ID3v1Parser.ts
 library;
 
 import 'dart:convert';

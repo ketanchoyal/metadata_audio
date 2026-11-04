@@ -1,6 +1,7 @@
 /// Audio metadata parser library for Dart.
 library;
 
+export 'src/common/allocation.dart';
 export 'src/core.dart';
 export 'src/model/types.dart';
 export 'src/parse_error.dart';
@@ -9,4 +10,5 @@ export 'src/tokenizer/http_tokenizers.dart';
 export 'src/tokenizer/io_tokenizers.dart';
 export 'src/tokenizer/tokenizer.dart';
 export 'src/utils/audio_metadata_cache.dart';
+export 'src/utils/audio_metadata_json.dart';
 export 'src/utils/chapter_downloader.dart';

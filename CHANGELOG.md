@@ -1,3 +1,14 @@
+## 1.0.0-beta.1
+
+- **Feat**: General metadata cache for all formats (disk-backed JSON via `ParseOptions.useCache` / `cacheKey`).
+- **Feat**: `maxMetadataEntries` and `maxChapterCount` ParseOptions for bounding resource usage.
+- **Feat**: MP4 signed INT8/INT16/INT32 data atoms; movement freeform keys.
+- **Feat**: ASF ReplayGain + TotalTracks mappings; ID3v2 credits expansion + USLT/ULT lyrics; PRIV warnings.
+- **Feat**: BWF (bext) chunk parsing with EBU R128 loudness fields.
+- **Feat**: Ogg/FLAC-in-Ogg packet assembly and hardening; AIFF/Musepack SV8 bounds.
+- **Feat**: `Ratio.dB` made nullable; `toRatio`/`dbToRatio`/`ratioToDb` helpers.
+- **Fixed**: ID3 chapter ordering (sorted by start time) and chapter count cap.
+
 ## 0.9.6
 
 - **Fixed**: Fixed MP4/M4B chapter extraction when uniform sample size (`stsz` with `sampleSize > 0`) chapter tracks group multiple samples per chunk via `stsc` (`sampleToChunkTable`). All chapter samples are now correctly expanded across chunk offsets and extracted.

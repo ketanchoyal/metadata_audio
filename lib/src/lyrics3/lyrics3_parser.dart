@@ -4,8 +4,6 @@
 /// MP3 files. The format allows embedding lyrics in MP3 files with metadata.
 ///
 /// Spec: http://id3.org/Lyrics3
-/// Based on upstream:
-/// https://github.com/Borewit/music-metadata/blob/master/lib/lyrics3/Lyrics3.ts
 library;
 
 import 'dart:convert';
@@ -48,7 +46,6 @@ const String lyrics3BeginTag = 'LYRICSBEGIN';
 /// - EAU: Extended artist
 /// - ETT: Extended title
 class Lyrics3Parser {
-
   Lyrics3Parser({required this.metadata, required this.tokenizer});
   static const int lyrics3v2FooterLength = 15; // Size (6) + "LYRICS200" (9)
   static const int maxLyrics3Size = 102400; // 100 KB max

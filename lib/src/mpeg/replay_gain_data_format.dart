@@ -15,7 +15,6 @@ class ReplayGainOriginator {
 }
 
 class ReplayGainData {
-
   const ReplayGainData({
     required this.type,
     required this.origin,

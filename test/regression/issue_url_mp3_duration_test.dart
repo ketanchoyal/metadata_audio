@@ -12,10 +12,6 @@ library;
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
-import 'package:metadata_audio/src/model/types.dart';
-import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
-import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:test/test.dart';
 
 // ---------------------------------------------------------------------------
@@ -148,6 +144,7 @@ int _bitrateFromIndex(int index) {
 void main() {
   group('URL MP3 duration (partial tokenizer)', () {
     setUp(() {
+      AudioMetadataCache.enabled = false;
       final registry = ParserRegistry()..register(MpegLoader());
       initializeParserFactory(ParserFactory(registry));
     });
@@ -214,7 +211,7 @@ void main() {
         const totalFrames = 300;
         final allFrameBytes = <int>[];
         for (var i = 0; i < totalFrames; i++) {
-          allFrameBytes.addAll(_buildFrame(bitrateIndex: 9)); // 128kbps
+          allFrameBytes.addAll(_buildFrame()); // 128kbps
         }
 
         final fullFileSize = allFrameBytes.length;
@@ -222,7 +219,7 @@ void main() {
         // Only the first 50 frames are visible.
         final partialBytes = <int>[];
         for (var i = 0; i < 50; i++) {
-          partialBytes.addAll(_buildFrame(bitrateIndex: 9));
+          partialBytes.addAll(_buildFrame());
         }
 
         final tokenizer = _PartialTokenizer(
@@ -235,7 +232,7 @@ void main() {
         // CBR with known file size → duration from file-size / frame-size.
         const sampleRate = 44100;
         const samplesPerFrame = 1152;
-        final expectedDuration = totalFrames * samplesPerFrame / sampleRate;
+        const expectedDuration = totalFrames * samplesPerFrame / sampleRate;
 
         expect(metadata.format.duration, isNotNull);
         expect(metadata.format.duration!, closeTo(expectedDuration, 0.01));
@@ -246,9 +243,9 @@ void main() {
       'Full MP3 with too few frames still estimates duration from file size',
       () async {
         final bytes = <int>[
-          ..._buildFrame(bitrateIndex: 9),
+          ..._buildFrame(),
           ..._buildFrame(bitrateIndex: 10),
-          ..._buildFrame(bitrateIndex: 9),
+          ..._buildFrame(),
           ...List<int>.filled(1000, 0),
         ];
 
@@ -296,9 +293,9 @@ void main() {
 
         final bytes = <int>[
           ...malformedTag,
-          ..._buildFrame(bitrateIndex: 9),
+          ..._buildFrame(),
           ..._buildFrame(bitrateIndex: 10),
-          ..._buildFrame(bitrateIndex: 9),
+          ..._buildFrame(),
         ];
 
         final tokenizer = BytesTokenizer(
@@ -313,9 +310,7 @@ void main() {
         expect(metadata.format.duration, isNotNull);
         expect(
           metadata.quality.warnings.map((warning) => warning.message),
-          contains(
-            contains('Invalid ID3v2.3 frame header ID'),
-          ),
+          contains(contains('Invalid ID3v2.3 frame header ID')),
         );
       },
     );

@@ -1,0 +1,5 @@
+tags:
+  network:
+    description: Tests requiring network access (archive.org samples).
+  meta:
+    description: Meta-test that runs the whole suite twice.

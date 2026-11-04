@@ -59,7 +59,7 @@ class OggToken {
       ),
       version: bytes[offset + 4],
       headerType: _parseHeaderType(bytes[offset + 5]),
-      absoluteGranulePosition: uint64Le(bytes, offset + 6),
+      absoluteGranulePosition: _granulePosition(bytes, offset + 6),
       streamSerialNumber: uint32Le(bytes, offset + 14),
       pageSequenceNo: uint32Le(bytes, offset + 18),
       pageChecksum: uint32Le(bytes, offset + 22),
@@ -85,10 +85,10 @@ class OggToken {
   }
 
   static OggHeaderType _parseHeaderType(int value) => OggHeaderType(
-      continued: (value & 0x01) != 0,
-      firstPage: (value & 0x02) != 0,
-      lastPage: (value & 0x04) != 0,
-    );
+    continued: (value & 0x01) != 0,
+    firstPage: (value & 0x02) != 0,
+    lastPage: (value & 0x04) != 0,
+  );
 
   static int uint32Le(List<int> bytes, [int offset = 0]) {
     _expectLength(bytes, offset, 4, 'unsigned 32-bit integer (LE)');
@@ -102,6 +102,16 @@ class OggToken {
     _expectLength(bytes, offset, 8, 'unsigned 64-bit integer (LE)');
     final low = uint32Le(bytes, offset);
     final high = uint32Le(bytes, offset + 4);
+    return low + (high << 32);
+  }
+
+  static int _granulePosition(List<int> bytes, int offset) {
+    final low = uint32Le(bytes, offset);
+    final high = uint32Le(bytes, offset + 4);
+    // Unknown granule positions are encoded as all bits set (-1).
+    if (low == 0xFFFFFFFF && high == 0xFFFFFFFF) {
+      return -1;
+    }
     return low + (high << 32);
   }
 

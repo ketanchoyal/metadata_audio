@@ -3,15 +3,12 @@
 /// Acts as a registry and dispatcher for format-specific tag mappers.
 /// Maps tags from various audio formats (ID3v2, Vorbis, MP4, APEv2, etc.)
 /// to a common generic tag format.
-///
-/// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/common/CombinedTagMapper.ts
 library;
 
 import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
 
 /// Exception thrown when attempting to map tags for an unknown format.
 class UnknownFormatException implements Exception {
-
   UnknownFormatException(this.formatId);
   final String formatId;
 

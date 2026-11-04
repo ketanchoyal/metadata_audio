@@ -140,7 +140,7 @@ class ChapterDownloader {
       }
 
       var finalPath = outputPath;
-      final bool wantsAac = finalPath.toLowerCase().endsWith('.aac');
+      final wantsAac = finalPath.toLowerCase().endsWith('.aac');
       if (isMp3) {
         if (!finalPath.toLowerCase().endsWith('.mp3')) {
           finalPath += '.mp3';
@@ -249,10 +249,8 @@ class ChapterDownloader {
           );
         }
 
-        final stsc =
-            parser.getSampleToChunkTable(audioTrack.trackId) ?? [];
-        final stco =
-            parser.getChunkOffsetTable(audioTrack.trackId) ?? [];
+        final stsc = parser.getSampleToChunkTable(audioTrack.trackId) ?? [];
+        final stco = parser.getChunkOffsetTable(audioTrack.trackId) ?? [];
 
         cached = CachedAudioTrack.fromParser(
           trackInfo: audioTrack,
@@ -295,8 +293,7 @@ class ChapterDownloader {
     }
 
     final lastSampleIndex = endSampleIndex - 1;
-    final lastSampleByteOffset =
-        cached.getByteOffsetForSample(lastSampleIndex);
+    final lastSampleByteOffset = cached.getByteOffsetForSample(lastSampleIndex);
     if (lastSampleByteOffset == null) {
       return const ChapterDownloadResult.failure(
         'Could not resolve ending byte offset for chapter.',
@@ -501,8 +498,8 @@ class ChapterDownloader {
             rangeStart: start,
             rangeEnd: end,
             onProgress: (chunkProgress) {
-              downloadedPerChunk[i] =
-                  (expectedChunkSize * chunkProgress).round();
+              downloadedPerChunk[i] = (expectedChunkSize * chunkProgress)
+                  .round();
               if (onProgress != null) {
                 final totalDownloaded = downloadedPerChunk.fold<int>(
                   0,

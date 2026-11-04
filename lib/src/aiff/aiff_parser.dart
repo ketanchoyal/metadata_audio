@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/aiff/aiff_token.dart';
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
 import 'package:metadata_audio/src/model/types.dart';
@@ -62,6 +63,11 @@ class AiffParser {
       bytesRemaining -= AiffToken.chunkHeaderLength;
 
       final declaredSize = chunkHeader.chunkSize;
+      if (declaredSize > bytesRemaining) {
+        throw AiffContentError(
+          'Chunk ${chunkHeader.chunkId} size $declaredSize exceeds remaining FORM data',
+        );
+      }
       var readableSize = declaredSize;
       if (readableSize > bytesRemaining) {
         metadata.addWarning('Data chunk size exceeds file size');
@@ -85,6 +91,7 @@ class AiffParser {
   Future<int> _readData(String chunkId, int chunkSize) async {
     switch (chunkId) {
       case 'COMM':
+        validateAllocation(chunkSize, options, AiffContentError.new);
         if (_isCompressed == null) {
           throw AiffContentError(
             'Failed to parse AIFF.COMM chunk when compression type is unknown',
@@ -117,6 +124,7 @@ class AiffParser {
         return chunkSize;
 
       case 'ID3 ':
+        validateAllocation(chunkSize, options, AiffContentError.new);
         final id3Bytes = tokenizer.readBytes(chunkSize);
         final id3Tokenizer = BytesTokenizer(
           Uint8List.fromList(id3Bytes),
@@ -141,6 +149,7 @@ class AiffParser {
       case 'AUTH':
       case '(c) ':
       case 'ANNO':
+        validateAllocation(chunkSize, options, AiffContentError.new);
         return _readTextChunk(chunkId, chunkSize);
 
       default:
@@ -154,6 +163,20 @@ class AiffParser {
       tokenizer.readBytes(chunkSize),
       allowInvalid: true,
     );
+    var valueCount = 1;
+    for (
+      var offset = text.indexOf('\x00');
+      offset >= 0;
+      offset = text.indexOf('\x00', offset + 1)
+    ) {
+      valueCount++;
+    }
+    if (valueCount > getMaxMetadataEntries(options)) {
+      throw AiffContentError(
+        'Text value count $valueCount exceeds entry limit '
+        '${getMaxMetadataEntries(options)}',
+      );
+    }
     final values = text
         .split('\x00')
         .map((value) => value.trim())
