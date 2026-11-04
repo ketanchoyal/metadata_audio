@@ -756,14 +756,27 @@ class Mp4Parser {
     // Fallback chapter extraction after all atoms are parsed.
     // This handles files where mdat appears before moov/chapter tables.
     if (options.includeChapters && metadata.format.chapters == null) {
-      await _tryParseChaptersFromTrackReferences();
+      try {
+        await _tryParseChaptersFromTrackReferences();
+      } catch (e) {
+        if (_chplChapters.isEmpty) {
+          rethrow;
+        }
+        metadata.addWarning('Cannot read QuickTime chapter track: $e');
+      }
     }
 
     // Process chpl (Nero chapter list) chapters if present.
-    // chpl uses a fixed time base of 1/10000000.
+    // In files with both, QuickTime chapters are preferred UNLESS
+    // QuickTime chapters had no titles (empty strings) and Nero has titles,
+    // or QuickTime chapter extraction yielded no chapters.
+    final existingChapters = metadata.format.chapters;
+    final quickTimeHasTitles = existingChapters != null &&
+        existingChapters.any((c) => c.title.trim().isNotEmpty);
+
     if (_chplChapters.isNotEmpty &&
         options.includeChapters &&
-        metadata.format.chapters == null) {
+        !quickTimeHasTitles) {
       _processChplChapters();
     }
   }
