@@ -9,7 +9,7 @@
   <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.10+-0175C2.svg?style=flat-square&logo=dart" alt="Dart SDK" /></a>
   <a href="https://audio-tag-analyzer-web.netlify.app/"><img src="https://img.shields.io/badge/Live_Demo-Netlify-00C7B7?style=flat-square&logo=netlify" alt="Live Demo" /></a>
   <a href="https://github.com/ketanchoyal/metadata_audio/actions"><img src="https://img.shields.io/badge/tests-868%20passing-brightgreen.svg?style=flat-square" alt="Tests" /></a>
-  <a href="https://codecov.io/gh/ketanchoyal/metadata_audio"><img src="https://img.shields.io/codecov/c/github/ketanchoyal/metadata_audio?style=flat-square" alt="Coverage" /></a>
+  <a href="https://codecov.io/gh/ketanchoyal/metadata_audio"><img src="https://img.shields.io/codecov/c/github/ketanchoyal/metadata_audio?branch=main&style=flat-square" alt="Coverage" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License" /></a>
   <a href="https://buymeacoffee.com/ketanchoyal"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=flat-square&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" /></a>
 </p>
