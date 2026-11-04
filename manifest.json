@@ -1,11 +1,11 @@
 {
-    "name": "metadata_audio demo",
-    "short_name": "metadata_audio",
+    "name": "example",
+    "short_name": "example",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0F172A",
-    "theme_color": "#0F172A",
-    "description": "metadata_audio - Dart audio metadata parser demo.",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
