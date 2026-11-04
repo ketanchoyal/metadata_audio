@@ -1,11 +1,10 @@
-/// Tests for ASF ReplayGain and track-total attribute mapping
-/// (upstream parity, music-metadata v12.3.0 #2863).
+/// Tests for ASF ReplayGain and track-total attribute mapping.
 ///
 /// `REPLAYGAIN_TRACK_GAIN` / `REPLAYGAIN_TRACK_PEAK` /
 /// `REPLAYGAIN_ALBUM_GAIN` / `REPLAYGAIN_ALBUM_PEAK` (both upper and lower
 /// case) map onto the common `replaygain_*` tags, `TotalTracks` maps onto
 /// `totaltracks`, and invalid ReplayGain values keep the tag native while
-/// emitting the upstream `Invalid ASF ReplayGain value for <id>` warning.
+/// emitting the `Invalid ASF ReplayGain value for <id>` warning.
 library;
 
 import 'dart:typed_data';

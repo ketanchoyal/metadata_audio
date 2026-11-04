@@ -9,7 +9,6 @@ import 'package:test/test.dart';
 
 /// Mock tokenizer for testing Lyrics3 parser
 class MockLyrics3Tokenizer implements Tokenizer {
-
   MockLyrics3Tokenizer({required List<int> data, required int fileSize})
     : _data = data,
       _fileInfo = FileInfo(size: fileSize, path: 'test.mp3');

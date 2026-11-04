@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -47,7 +46,7 @@ void main() {
       expect(metadata.common.artist, equals('Regression Artist'));
       expect(metadata.common.album, equals('Regression Album'));
 
-      // TODO(T095): Expand ID3v2 tag mapping parity with upstream PR-544.
+      // TODO(T095): Expand ID3v2 tag mapping coverage.
     });
   });
 }

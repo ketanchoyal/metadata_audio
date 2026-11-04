@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
@@ -14,7 +13,7 @@ class _DemoPreset {
   final String url;
 }
 
-/// Archive.org audiobook demos plus upstream `music-metadata` sample files
+/// Archive.org audiobook demos plus sample audio files
 /// (served from raw.githubusercontent.com, HTTP-range capable) that exercise
 /// the parser's ASF/Ogg trackInfo and WMA rating/level features.
 const _demoPresets = <_DemoPreset>[
@@ -62,7 +61,6 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF6366F1), // Indigo
           brightness: Brightness.dark,
-          background: const Color(0xFF0F172A), // Slate 900
           surface: const Color(0xFF1E293B), // Slate 800
           primary: const Color(0xFF818CF8), // Indigo 400
           secondary: const Color(0xFF38BDF8), // Sky 400
@@ -73,7 +71,10 @@ class MyApp extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFF334155), width: 1), // Slate 700
+            side: const BorderSide(
+              color: Color(0xFF334155),
+              width: 1,
+            ), // Slate 700
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
@@ -106,13 +107,19 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _urlController = TextEditingController(
-    text: 'https://archive.org/download/city_of_fire_2209_librivox/CityFire_librivox.m4b',
+    text:
+        'https://archive.org/download/city_of_fire_2209_librivox/CityFire_librivox.m4b',
   );
-  final TextEditingController _startMsController = TextEditingController(text: '0');
-  final TextEditingController _endMsController = TextEditingController(text: '5000');
+  final TextEditingController _startMsController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _endMsController = TextEditingController(
+    text: '5000',
+  );
 
   // Parse Options
   bool _includeChapters = true;
@@ -134,8 +141,6 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   String? _parsedSource;
   String? _strategyReason;
   ParseStrategy? _selectedStrategy;
-
-
 
   @override
   void initState() {
@@ -167,9 +172,33 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: [
-          'mp3', 'flac', 'ogg', 'oga', 'opus', 'wav', 'wave', 'aiff', 'aif',
-          'ape', 'asf', 'wma', 'mkv', 'mka', 'webm', 'mpc', 'wv', 'dsf', 'dff',
-          'm4a', 'm4b', 'm4p', 'm4r', 'mp4', 'aac', 'caf', 'caff'
+          'mp3',
+          'flac',
+          'ogg',
+          'oga',
+          'opus',
+          'wav',
+          'wave',
+          'aiff',
+          'aif',
+          'ape',
+          'asf',
+          'wma',
+          'mkv',
+          'mka',
+          'webm',
+          'mpc',
+          'wv',
+          'dsf',
+          'dff',
+          'm4a',
+          'm4b',
+          'm4p',
+          'm4r',
+          'mp4',
+          'aac',
+          'caf',
+          'caff',
         ],
         allowMultiple: false,
       );
@@ -270,28 +299,44 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     final url = _parsedSource;
     if (url == null || !url.startsWith('http')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Partial downloads require a parsed remote URL source.')),
+        const SnackBar(
+          content: Text(
+            'Partial downloads require a parsed remote URL source.',
+          ),
+        ),
       );
       return;
     }
 
-    final endMs = chapter.end ?? 
-        (_metadata?.format.duration != null 
-            ? (_metadata!.format.duration! * 1000).toInt() 
+    final endMs =
+        chapter.end ??
+        (_metadata?.format.duration != null
+            ? (_metadata!.format.duration! * 1000).toInt()
             : (chapter.start + 180000));
 
-    await _testCustomRangeDownload(url, chapter.start, endMs, title: chapter.title);
+    await _testCustomRangeDownload(
+      url,
+      chapter.start,
+      endMs,
+      title: chapter.title,
+    );
   }
 
-  Future<void> _testCustomRangeDownload(String url, int startMs, int endMs, {String? title}) async {
-    final isMp3 = url.toLowerCase().contains('.mp3') ||
+  Future<void> _testCustomRangeDownload(
+    String url,
+    int startMs,
+    int endMs, {
+    String? title,
+  }) async {
+    final isMp3 =
+        url.toLowerCase().contains('.mp3') ||
         url.toLowerCase().contains('/mp3/');
     final ext = isMp3 ? 'mp3' : 'm4a';
-    
-    final cleanTitle = title != null 
+
+    final cleanTitle = title != null
         ? title.replaceAll(RegExp(r'[^\w\-\.]'), '_')
         : 'range_${startMs}_$endMs';
-    final defaultFileName = 'chapter_${cleanTitle}.$ext';
+    final defaultFileName = 'chapter_$cleanTitle.$ext';
 
     final savePath = await FilePicker.platform.saveFile(
       dialogTitle: 'Save partial chapter download to:',
@@ -322,9 +367,13 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         case ChapterDownloadPhase.downloading:
           return 'Downloading chapter audio...';
         case ChapterDownloadPhase.writing:
-          return isMp3 ? 'Writing playable MP3 file...' : 'Writing playable M4A file...';
+          return isMp3
+              ? 'Writing playable MP3 file...'
+              : 'Writing playable M4A file...';
       }
     }
+
+    if (!mounted) return;
 
     // Show Progress Dialog with phase-aware indicator
     showDialog(
@@ -332,7 +381,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(title != null ? 'Extracting Chapter: $title' : 'Extracting Range: $startMs to $endMs ms'),
+          title: Text(
+            title != null
+                ? 'Extracting Chapter: $title'
+                : 'Extracting Range: $startMs to $endMs ms',
+          ),
           content: SizedBox(
             width: 320,
             child: ValueListenableBuilder<double>(
@@ -361,7 +414,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                       builder: (context, phase, _) {
                         return Text(
                           phaseLabel(phase),
-                          style: const TextStyle(fontSize: 13, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                          ),
                           textAlign: TextAlign.center,
                         );
                       },
@@ -388,16 +444,21 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       },
     );
 
+    progressNotifier.dispose();
+    phaseNotifier.dispose();
+
+    if (!mounted) return;
+
     if (Navigator.canPop(context)) {
       Navigator.of(context).pop(); // Dismiss progress dialog
     }
-    progressNotifier.dispose();
-    phaseNotifier.dispose();
 
     if (result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Playable chapter downloaded successfully to:\n${result.outputPath}'),
+          content: Text(
+            'Playable chapter downloaded successfully to:\n${result.outputPath}',
+          ),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 4),
         ),
@@ -443,7 +504,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.audiotrack_rounded, color: Colors.white, size: 28),
+                          child: const Icon(
+                            Icons.audiotrack_rounded,
+                            color: Colors.white,
+                            size: 28,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         const Column(
@@ -459,10 +524,13 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             ),
                             Text(
                               'Dart-Native Parser',
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -475,11 +543,20 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                       unselectedLabelColor: Colors.grey,
                       tabs: kIsWeb
                           ? const [
-                              Tab(text: 'Local File', icon: Icon(Icons.file_open_rounded, size: 20)),
+                              Tab(
+                                text: 'Local File',
+                                icon: Icon(Icons.file_open_rounded, size: 20),
+                              ),
                             ]
                           : const [
-                              Tab(text: 'Local File', icon: Icon(Icons.file_open_rounded, size: 20)),
-                              Tab(text: 'Remote URL', icon: Icon(Icons.cloud_rounded, size: 20)),
+                              Tab(
+                                text: 'Local File',
+                                icon: Icon(Icons.file_open_rounded, size: 20),
+                              ),
+                              Tab(
+                                text: 'Remote URL',
+                                icon: Icon(Icons.cloud_rounded, size: 20),
+                              ),
                             ],
                     ),
                     const SizedBox(height: 16),
@@ -497,21 +574,32 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             children: [
                               const Text(
                                 'Extract metadata from local audio files. Supports MP3, FLAC, M4A, WAV, OGG, AIFF, MKV, DSF/DFF, WavPack, CAF (Core Audio), and more.',
-                                style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  height: 1.4,
+                                ),
                               ),
                               const Spacer(),
                               ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 onPressed: _isLoading ? null : _parseLocalFile,
                                 icon: const Icon(Icons.search_rounded),
-                                label: const Text('Browse Audio File', style: TextStyle(fontWeight: FontWeight.bold)),
+                                label: const Text(
+                                  'Browse Audio File',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                               ),
                               const Spacer(),
                             ],
@@ -520,137 +608,183 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                           // Remote URL tab content (desktop/native only)
                           if (!kIsWeb)
                             SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const Text(
-                                  'Test range-aware stream parsing from direct audio URLs. Ideal for streaming M4B audiobooks.',
-                                  style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
-                                ),
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: _urlController,
-                                  maxLines: 2,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Audio File URL',
-                                    alignLabelWithHint: true,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Text(
+                                    'Test range-aware stream parsing from direct audio URLs. Ideal for streaming M4B audiobooks.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey,
+                                      height: 1.4,
+                                    ),
                                   ),
-                                ),
-                                 const SizedBox(height: 8),
-                                 Wrap(
-                                   spacing: 8,
-                                   runSpacing: 0,
-                                   crossAxisAlignment: WrapCrossAlignment.center,
-                                   children: [
-                                     const Text(
-                                       'Presets: ',
-                                       style: TextStyle(fontSize: 12, color: Colors.grey),
-                                     ),
-                                     ..._demoPresets.map(
-                                       (preset) => TextButton(
-                                         onPressed: () {
-                                           setState(() => _urlController.text = preset.url);
-                                         },
-                                         style: TextButton.styleFrom(
-                                           padding: EdgeInsets.zero,
-                                           minimumSize: const Size(60, 30),
-                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                         ),
-                                         child: Text(preset.label, style: const TextStyle(fontSize: 12)),
-                                       ),
-                                     ),
-                                   ],
-                                 ),
-                                 const SizedBox(height: 16),
-                                 // Force strategy selector
-                                const Text(
-                                  'HTTP Parse Strategy',
-                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.indigoAccent),
-                                ),
-                                const SizedBox(height: 8),
-                                DropdownButtonFormField<ParseStrategy?>(
-                                  value: _forcedParseStrategy,
-                                  isExpanded: true,
-                                  decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
-                                  items: [
-                                    const DropdownMenuItem(
-                                      value: null,
-                                      child: Text(
-                                        'Auto-detect (Recommended)',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _urlController,
+                                    maxLines: 2,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Audio File URL',
+                                      alignLabelWithHint: true,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 0,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      const Text(
+                                        'Presets: ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      ..._demoPresets.map(
+                                        (preset) => TextButton(
+                                          onPressed: () {
+                                            setState(
+                                              () => _urlController.text =
+                                                  preset.url,
+                                            );
+                                          },
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(60, 30),
+                                            tapTargetSize: MaterialTapTargetSize
+                                                .shrinkWrap,
+                                          ),
+                                          child: Text(
+                                            preset.label,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Force strategy selector
+                                  const Text(
+                                    'HTTP Parse Strategy',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigoAccent,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<ParseStrategy?>(
+                                    initialValue: _forcedParseStrategy,
+                                    isExpanded: true,
+                                    decoration: const InputDecoration(
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
                                       ),
                                     ),
-                                    ...ParseStrategy.values.map(
-                                      (s) => DropdownMenuItem(
-                                        value: s,
+                                    items: [
+                                      const DropdownMenuItem(
+                                        value: null,
                                         child: Text(
-                                          s.name,
+                                          'Auto-detect (Recommended)',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                    )
-                                  ],
-                                  onChanged: (val) {
-                                    setState(() {
-                                      _forcedParseStrategy = val;
-                                    });
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Override Probe Strategy',
-                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.indigoAccent),
-                                ),
-                                const SizedBox(height: 8),
-                                DropdownButtonFormField<ProbeStrategy?>(
-                                  value: _forcedProbeStrategy,
-                                  isExpanded: true,
-                                  decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
-                                  items: [
-                                    const DropdownMenuItem(
-                                      value: null,
-                                      child: Text(
-                                        'Auto-detect from format',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      ...ParseStrategy.values.map(
+                                        (s) => DropdownMenuItem(
+                                          value: s,
+                                          child: Text(
+                                            s.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _forcedParseStrategy = val;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'Override Probe Strategy',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigoAccent,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<ProbeStrategy?>(
+                                    initialValue: _forcedProbeStrategy,
+                                    isExpanded: true,
+                                    decoration: const InputDecoration(
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
                                       ),
                                     ),
-                                    ...ProbeStrategy.values.map(
-                                      (s) => DropdownMenuItem(
-                                        value: s,
+                                    items: [
+                                      const DropdownMenuItem(
+                                        value: null,
                                         child: Text(
-                                          s.name,
+                                          'Auto-detect from format',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                    )
-                                  ],
-                                  onChanged: (val) {
-                                    setState(() {
-                                      _forcedProbeStrategy = val;
-                                    });
-                                  },
-                                ),
-                                const SizedBox(height: 24),
-                                ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      ...ProbeStrategy.values.map(
+                                        (s) => DropdownMenuItem(
+                                          value: s,
+                                          child: Text(
+                                            s.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _forcedProbeStrategy = val;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _parseRemoteUrl,
+                                    icon: const Icon(
+                                      Icons.cloud_download_rounded,
+                                    ),
+                                    label: const Text(
+                                      'Parse Remote URL',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                  onPressed: _isLoading ? null : _parseRemoteUrl,
-                                  icon: const Icon(Icons.cloud_download_rounded),
-                                  label: const Text('Parse Remote URL', style: TextStyle(fontWeight: FontWeight.bold)),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -660,13 +794,33 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                     // Options Configuration Panel
                     const Text(
                       'Parser Configurations',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    _buildSwitchTile('Extract Chapters', _includeChapters, (val) => setState(() => _includeChapters = val)),
-                    _buildSwitchTile('Calculate Duration', _duration, (val) => setState(() => _duration = val)),
-                    _buildSwitchTile('Skip Cover Images', _skipCovers, (val) => setState(() => _skipCovers = val)),
-                    _buildSwitchTile('Skip Post Headers', _skipPostHeaders, (val) => setState(() => _skipPostHeaders = val)),
+                    _buildSwitchTile(
+                      'Extract Chapters',
+                      _includeChapters,
+                      (val) => setState(() => _includeChapters = val),
+                    ),
+                    _buildSwitchTile(
+                      'Calculate Duration',
+                      _duration,
+                      (val) => setState(() => _duration = val),
+                    ),
+                    _buildSwitchTile(
+                      'Skip Cover Images',
+                      _skipCovers,
+                      (val) => setState(() => _skipCovers = val),
+                    ),
+                    _buildSwitchTile(
+                      'Skip Post Headers',
+                      _skipPostHeaders,
+                      (val) => setState(() => _skipPostHeaders = val),
+                    ),
                     _buildSwitchTile(
                       'Use MKV SeekHead Index',
                       _mkvUseIndex,
@@ -696,7 +850,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                     const Divider(color: Color(0xFF1E293B), height: 32),
                     const Text(
                       'Custom Range Downloader',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -707,7 +865,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
                               labelText: 'Start (ms)',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
                             ),
                           ),
                         ),
@@ -718,7 +879,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
                               labelText: 'End (ms)',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
                             ),
                           ),
                         ),
@@ -741,16 +905,28 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                           final url = _urlController.text.trim();
                           if (url.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please enter a remote URL first.')),
+                              const SnackBar(
+                                content: Text(
+                                  'Please enter a remote URL first.',
+                                ),
+                              ),
                             );
                             return;
                           }
-                          final start = int.tryParse(_startMsController.text) ?? 0;
-                          final end = int.tryParse(_endMsController.text) ?? 5000;
+                          final start =
+                              int.tryParse(_startMsController.text) ?? 0;
+                          final end =
+                              int.tryParse(_endMsController.text) ?? 5000;
                           _testCustomRangeDownload(url, start, end);
                         },
                         icon: const Icon(Icons.cut_rounded, size: 16),
-                        label: const Text('Download Custom Range', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'Download Custom Range',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -763,9 +939,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           Expanded(
             child: Container(
               color: const Color(0xFF0F172A), // Slate 900
-              child: SafeArea(
-                child: _buildMainContent(),
-              ),
+              child: SafeArea(child: _buildMainContent()),
             ),
           ),
         ],
@@ -773,7 +947,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildSwitchTile(String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildSwitchTile(
+    String title,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -788,9 +966,9 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: Theme.of(context).colorScheme.primary,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          )
+          ),
         ],
       ),
     );
@@ -812,16 +990,22 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           SizedBox(
             width: 140,
             child: DropdownButtonFormField<int>(
-              value: _maxMemoryAllocationMb,
+              initialValue: _maxMemoryAllocationMb,
               decoration: const InputDecoration(
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
               ),
               items: budgets
                   .map(
                     (mb) => DropdownMenuItem(
                       value: mb,
-                      child: Text('$mb MB', style: const TextStyle(fontSize: 12)),
+                      child: Text(
+                        '$mb MB',
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ),
                   )
                   .toList(),
@@ -894,14 +1078,25 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           decoration: BoxDecoration(
             color: const Color(0xFF451A21), // Slate-red background
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.redAccent,
+                size: 48,
+              ),
               const SizedBox(height: 16),
-              const Text('Parsing Error', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              const Text(
+                'Parsing Error',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
               const SizedBox(height: 12),
               SelectableText(
                 _errorMessage!,
@@ -920,7 +1115,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.library_music_rounded, size: 72, color: Colors.grey.shade700),
+            Icon(
+              Icons.library_music_rounded,
+              size: 72,
+              color: Colors.grey.shade700,
+            ),
             const SizedBox(height: 16),
             const Text(
               'No Audio Selected',
@@ -962,7 +1161,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                   children: [
                     SelectableText(
                       metadata.common.title ?? 'Unknown Track',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     SelectableText(
@@ -1023,7 +1225,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('HTTP Streaming Strategy Selected', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const Text(
+                    'HTTP Streaming Strategy Selected',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     _strategyReason ?? 'Automatic heuristic evaluation',
@@ -1041,9 +1246,13 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
               ),
               child: Text(
                 _selectedStrategy?.name.toUpperCase() ?? '',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.cyanAccent,
+                ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -1062,10 +1271,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),
-          )
+          ),
         ],
         border: Border.all(color: const Color(0xFF334155), width: 1.5),
       ),
@@ -1075,7 +1284,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
             ? Image.memory(
                 Uint8List.fromList(cover.data),
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _buildPlaceholderIcon(),
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildPlaceholderIcon(),
               )
             : _buildPlaceholderIcon(),
       ),
@@ -1114,29 +1324,41 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         : 'Unknown';
 
     final specs = [
-      {'label': 'Container', 'value': metadata.format.container?.toUpperCase() ?? 'Unknown'},
-      {'label': 'Codec', 'value': metadata.format.codec?.toUpperCase() ?? 'Unknown'},
+      {
+        'label': 'Container',
+        'value': metadata.format.container?.toUpperCase() ?? 'Unknown',
+      },
+      {
+        'label': 'Codec',
+        'value': metadata.format.codec?.toUpperCase() ?? 'Unknown',
+      },
       {'label': 'Duration', 'value': durationText},
       {
         'label': 'Bitrate',
         'value': metadata.format.bitrate != null
             ? '${(metadata.format.bitrate! / 1000).toStringAsFixed(0)} kbps'
-            : 'Unknown'
+            : 'Unknown',
       },
       {
         'label': 'Sample Rate',
         'value': metadata.format.sampleRate != null
             ? '${(metadata.format.sampleRate! / 1000).toStringAsFixed(1)} kHz'
-            : 'Unknown'
+            : 'Unknown',
       },
       {
         'label': 'Bit Depth',
         'value': metadata.format.bitsPerSample != null
             ? '${metadata.format.bitsPerSample} bit'
-            : 'Unknown'
+            : 'Unknown',
       },
-      {'label': 'Channels', 'value': metadata.format.numberOfChannels?.toString() ?? 'Unknown'},
-      {'label': 'Lossless', 'value': metadata.format.lossless == true ? 'Yes' : 'No'},
+      {
+        'label': 'Channels',
+        'value': metadata.format.numberOfChannels?.toString() ?? 'Unknown',
+      },
+      {
+        'label': 'Lossless',
+        'value': metadata.format.lossless == true ? 'Yes' : 'No',
+      },
     ];
 
     return GridView.builder(
@@ -1171,7 +1393,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
               const SizedBox(height: 4),
               Text(
                 spec['value']!,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1192,9 +1417,15 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
             children: [
               Icon(Icons.toc_rounded, size: 48, color: Colors.grey.shade700),
               const SizedBox(height: 12),
-              const Text('No Chapters Found', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'No Chapters Found',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 4),
-              const Text('This file does not contain chapter markers.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              const Text(
+                'This file does not contain chapter markers.',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
             ],
           ),
         ),
@@ -1217,7 +1448,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                   children: [
                     Text(
                       'Chapters & Byte Offsets (${chapters.length})',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     const Text(
@@ -1228,9 +1462,15 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                 ),
                 if (isRemote)
                   Chip(
-                    backgroundColor: Colors.indigo.withOpacity(0.3),
+                    backgroundColor: Colors.indigo.withValues(alpha: 0.3),
                     side: const BorderSide(color: Colors.indigo),
-                    label: const Text('Range Request Ready', style: TextStyle(fontSize: 11, color: Colors.indigoAccent)),
+                    label: const Text(
+                      'Range Request Ready',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.indigoAccent,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -1239,11 +1479,14 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: chapters.length,
-              separatorBuilder: (context, index) => const Divider(color: Color(0xFF334155)),
+              separatorBuilder: (context, index) =>
+                  const Divider(color: Color(0xFF334155)),
               itemBuilder: (context, index) {
                 final ch = chapters[index];
                 final startTime = _formatDurationMs(ch.start);
-                final endTime = ch.end != null ? _formatDurationMs(ch.end!) : 'End';
+                final endTime = ch.end != null
+                    ? _formatDurationMs(ch.end!)
+                    : 'End';
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -1261,7 +1504,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                         child: Center(
                           child: Text(
                             '${index + 1}',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -1273,29 +1519,44 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              ch.title.trim().isNotEmpty ? ch.title : 'Chapter ${index + 1}',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              ch.title.trim().isNotEmpty
+                                  ? ch.title
+                                  : 'Chapter ${index + 1}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.copy_rounded, size: 12, color: Colors.grey),
+                                const Icon(
+                                  Icons.copy_rounded,
+                                  size: 12,
+                                  color: Colors.grey,
+                                ),
                                 const SizedBox(width: 4),
                                 InkWell(
                                   onTap: () {
-                                    final sec = (ch.start / 1000).toStringAsFixed(3);
+                                    final sec = (ch.start / 1000)
+                                        .toStringAsFixed(3);
                                     Clipboard.setData(ClipboardData(text: sec));
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Copied start: $sec seconds'),
+                                        content: Text(
+                                          'Copied start: $sec seconds',
+                                        ),
                                         duration: const Duration(seconds: 1),
                                       ),
                                     );
                                   },
                                   borderRadius: BorderRadius.circular(4),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
                                     child: Text(
                                       startTime,
                                       style: TextStyle(
@@ -1306,27 +1567,51 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                     ),
                                   ),
                                 ),
-                                const Text(' - ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                const Text(
+                                  ' - ',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                                 InkWell(
-                                  onTap: ch.end == null ? null : () {
-                                    final sec = (ch.end! / 1000).toStringAsFixed(3);
-                                    Clipboard.setData(ClipboardData(text: sec));
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Copied end: $sec seconds'),
-                                        duration: const Duration(seconds: 1),
-                                      ),
-                                    );
-                                  },
+                                  onTap: ch.end == null
+                                      ? null
+                                      : () {
+                                          final sec = (ch.end! / 1000)
+                                              .toStringAsFixed(3);
+                                          Clipboard.setData(
+                                            ClipboardData(text: sec),
+                                          );
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Copied end: $sec seconds',
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 1,
+                                              ),
+                                            ),
+                                          );
+                                        },
                                   borderRadius: BorderRadius.circular(4),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
                                     child: Text(
                                       endTime,
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: ch.end != null ? Colors.indigoAccent.shade100 : Colors.grey,
-                                        decoration: ch.end != null ? TextDecoration.underline : TextDecoration.none,
+                                        color: ch.end != null
+                                            ? Colors.indigoAccent.shade100
+                                            : Colors.grey,
+                                        decoration: ch.end != null
+                                            ? TextDecoration.underline
+                                            : TextDecoration.none,
                                       ),
                                     ),
                                   ),
@@ -1337,18 +1622,27 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                               const SizedBox(height: 4),
                               InkWell(
                                 onTap: () {
-                                  final durationSec = ((ch.end! - ch.start) / 1000).toStringAsFixed(3);
-                                  Clipboard.setData(ClipboardData(text: durationSec));
+                                  final durationSec =
+                                      ((ch.end! - ch.start) / 1000)
+                                          .toStringAsFixed(3);
+                                  Clipboard.setData(
+                                    ClipboardData(text: durationSec),
+                                  );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Copied duration: $durationSec seconds'),
+                                      content: Text(
+                                        'Copied duration: $durationSec seconds',
+                                      ),
                                       duration: const Duration(seconds: 1),
                                     ),
                                   );
                                 },
                                 borderRadius: BorderRadius.circular(4),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
                                   child: Text(
                                     'Duration: ${((ch.end! - ch.start) / 1000).toStringAsFixed(3)}s',
                                     style: TextStyle(
@@ -1370,22 +1664,37 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                         children: [
                           Text(
                             'Size: ${_getChapterPossibleSize(ch, metadata)}',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           InkWell(
-                            onTap: ch.byteOffset == null ? null : () {
-                              Clipboard.setData(ClipboardData(text: ch.byteOffset!.toString()));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Copied start offset: ${ch.byteOffset}'),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
+                            onTap: ch.byteOffset == null
+                                ? null
+                                : () {
+                                    Clipboard.setData(
+                                      ClipboardData(
+                                        text: ch.byteOffset!.toString(),
+                                      ),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Copied start offset: ${ch.byteOffset}',
+                                        ),
+                                        duration: const Duration(seconds: 1),
+                                      ),
+                                    );
+                                  },
                             borderRadius: BorderRadius.circular(4),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
                               child: Text(
                                 ch.byteOffset != null
                                     ? 'Start: ${ch.byteOffset} B'
@@ -1393,26 +1702,41 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontFamily: 'monospace',
-                                  color: ch.byteOffset != null ? Colors.indigoAccent.shade100 : Colors.grey,
-                                  decoration: ch.byteOffset != null ? TextDecoration.underline : TextDecoration.none,
+                                  color: ch.byteOffset != null
+                                      ? Colors.indigoAccent.shade100
+                                      : Colors.grey,
+                                  decoration: ch.byteOffset != null
+                                      ? TextDecoration.underline
+                                      : TextDecoration.none,
                                 ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 2),
                           InkWell(
-                            onTap: ch.endByteOffset == null ? null : () {
-                              Clipboard.setData(ClipboardData(text: ch.endByteOffset!.toString()));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Copied end offset: ${ch.endByteOffset}'),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
+                            onTap: ch.endByteOffset == null
+                                ? null
+                                : () {
+                                    Clipboard.setData(
+                                      ClipboardData(
+                                        text: ch.endByteOffset!.toString(),
+                                      ),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Copied end offset: ${ch.endByteOffset}',
+                                        ),
+                                        duration: const Duration(seconds: 1),
+                                      ),
+                                    );
+                                  },
                             borderRadius: BorderRadius.circular(4),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
                               child: Text(
                                 ch.endByteOffset != null
                                     ? 'End: ${ch.endByteOffset} B'
@@ -1420,8 +1744,12 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontFamily: 'monospace',
-                                  color: ch.endByteOffset != null ? Colors.indigoAccent.shade100 : Colors.grey,
-                                  decoration: ch.endByteOffset != null ? TextDecoration.underline : TextDecoration.none,
+                                  color: ch.endByteOffset != null
+                                      ? Colors.indigoAccent.shade100
+                                      : Colors.grey,
+                                  decoration: ch.endByteOffset != null
+                                      ? TextDecoration.underline
+                                      : TextDecoration.none,
                                 ),
                               ),
                             ),
@@ -1441,36 +1769,65 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF1E293B),
                                 foregroundColor: Colors.white,
-                                side: const BorderSide(color: Color(0xFF334155)),
+                                side: const BorderSide(
+                                  color: Color(0xFF334155),
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
-                              icon: const Icon(Icons.download_rounded, size: 14),
-                              label: const Text('Download', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                              icon: const Icon(
+                                Icons.download_rounded,
+                                size: 14,
+                              ),
+                              label: const Text(
+                                'Download',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 6),
                           ],
                           OutlinedButton.icon(
                             onPressed: () {
-                              final startSec = (ch.start / 1000).toStringAsFixed(3);
+                              final startSec = (ch.start / 1000)
+                                  .toStringAsFixed(3);
                               final endSec = ch.end != null
                                   ? (ch.end! / 1000).toStringAsFixed(3)
                                   : null;
                               final cleanTitle = ch.title.trim().isNotEmpty
-                                  ? ch.title.replaceAll(RegExp(r'[^\w\-\.]'), '_')
+                                  ? ch.title.replaceAll(
+                                      RegExp(r'[^\w\-\.]'),
+                                      '_',
+                                    )
                                   : 'chapter_${index + 1}';
-                              final ext = _parsedSource?.split('?').first.split('.').lastOrNull ?? 'm4b';
+                              final ext =
+                                  _parsedSource
+                                      ?.split('?')
+                                      .first
+                                      .split('.')
+                                      .lastOrNull ??
+                                  'm4b';
 
-                              final toPart = endSec != null ? ' -to $endSec' : '';
+                              final toPart = endSec != null
+                                  ? ' -to $endSec'
+                                  : '';
                               final sourceStr = _parsedSource ?? 'input.$ext';
-                              final cmd = 'ffmpeg -ss $startSec$toPart -i "$sourceStr" -c copy "${cleanTitle}.$ext"';
+                              final cmd =
+                                  'ffmpeg -ss $startSec$toPart -i "$sourceStr" -c copy "$cleanTitle.$ext"';
 
                               Clipboard.setData(ClipboardData(text: cmd));
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Copied FFmpeg command for "${ch.title}"!'),
+                                  content: Text(
+                                    'Copied FFmpeg command for "${ch.title}"!',
+                                  ),
                                   duration: const Duration(seconds: 2),
                                 ),
                               );
@@ -1481,10 +1838,19 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
                             icon: const Icon(Icons.terminal_rounded, size: 14),
-                            label: const Text('Copy FFmpeg', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              'Copy FFmpeg',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -1504,7 +1870,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       color: const Color(0xFF2D1E12), // Warning orange tint
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.orange.withOpacity(0.3)),
+        side: BorderSide(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -1513,11 +1879,19 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           children: [
             Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 24),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orangeAccent,
+                  size: 24,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   'Parser Warnings (${metadata.quality.warnings.length})',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orangeAccent),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orangeAccent,
+                  ),
                 ),
               ],
             ),
@@ -1532,11 +1906,14 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Text(
                     '• ${w.message}',
-                    style: const TextStyle(color: Colors.orangeAccent, fontSize: 13),
+                    style: const TextStyle(
+                      color: Colors.orangeAccent,
+                      fontSize: 13,
+                    ),
                   ),
                 );
               },
-            )
+            ),
           ],
         ),
       ),
@@ -1574,11 +1951,17 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                 return ExpansionTile(
                   title: Text(
                     '${type.toUpperCase()} tags (${tagsList.length})',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                   textColor: Theme.of(context).colorScheme.primary,
                   iconColor: Theme.of(context).colorScheme.primary,
-                  childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  childrenPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   children: tagsList.map((tag) {
                     final valueString = tag.value is List
                         ? '[Binary Data: ${(tag.value as List).length} bytes]'
@@ -1595,11 +1978,17 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             decoration: BoxDecoration(
                               color: const Color(0xFF0F172A),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFF1E293B)),
+                              border: Border.all(
+                                color: const Color(0xFF1E293B),
+                              ),
                             ),
                             child: SelectableText(
                               tag.id,
-                              style: const TextStyle(fontFamily: 'monospace', fontSize: 12, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -1608,7 +1997,10 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                               padding: const EdgeInsets.only(top: 4.0),
                               child: SelectableText(
                                 valueString,
-                                style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ),
@@ -1684,7 +2076,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     }
 
     // Estimate size using duration and average bitrate
-    final endVal = ch.end ?? (metadata.format.duration != null ? (metadata.format.duration! * 1000).round() : ch.start);
+    final endVal =
+        ch.end ??
+        (metadata.format.duration != null
+            ? (metadata.format.duration! * 1000).round()
+            : ch.start);
     final durationMs = endVal - ch.start;
     final durationSec = durationMs / 1000.0;
     final bitrate = metadata.format.bitrate; // in bps
@@ -1700,10 +2096,9 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
 
 /// Builds icon + label pairs for the standardized common-tag chips row.
 ///
-/// Includes the fields ported from upstream `music-metadata`: movement
-/// (ID3v2 MVNM/MVIN, MP4 `©mvn`/`©mvi`), TV show, podcast id
-/// (ID3v2 PCS/TGID, MP4 egid), the WMP play counter (PCNT) and the WMA
-/// PRIV Peak/Average levels.
+/// Includes common fields: movement (ID3v2 MVNM/MVIN, MP4 `©mvn`/`©mvi`),
+/// TV show, podcast id (ID3v2 PCS/TGID, MP4 egid), the WMP play counter (PCNT)
+/// and the WMA PRIV Peak/Average levels.
 List<(IconData, String)> buildCommonTagChipSpecs(CommonTags common) {
   final specs = <(IconData, String)>[];
 
@@ -1718,12 +2113,10 @@ List<(IconData, String)> buildCommonTagChipSpecs(CommonTags common) {
   }
   if (common.track.no != null) {
     final total = common.track.of;
-    specs.add(
-      (
-        Icons.tag_rounded,
-        'Track ${common.track.no}${total != null ? "/$total" : ""}',
-      ),
-    );
+    specs.add((
+      Icons.tag_rounded,
+      'Track ${common.track.no}${total != null ? "/$total" : ""}',
+    ));
   }
 
   // Movement name/number (ID3v2 MVNM/MVIN, MP4 ©mvn/©mvi).
@@ -1749,14 +2142,19 @@ List<(IconData, String)> buildCommonTagChipSpecs(CommonTags common) {
     specs.add((Icons.mic_rounded, 'Podcast: ${common.podcastId}'));
   }
   if (common.playCounter != null) {
-    specs.add((Icons.play_circle_outline_rounded, 'Play count: ${common.playCounter}'));
+    specs.add((
+      Icons.play_circle_outline_rounded,
+      'Play count: ${common.playCounter}',
+    ));
   }
 
   // WMA Peak/Average levels decoded from PRIV frames.
   if (common.peakLevel != null || common.averageLevel != null) {
     final parts = <String>[
-      if (common.peakLevel != null) 'Peak ${common.peakLevel!.toStringAsFixed(1)}',
-      if (common.averageLevel != null) 'Avg ${common.averageLevel!.toStringAsFixed(1)}',
+      if (common.peakLevel != null)
+        'Peak ${common.peakLevel!.toStringAsFixed(1)}',
+      if (common.averageLevel != null)
+        'Avg ${common.averageLevel!.toStringAsFixed(1)}',
     ];
     specs.add((Icons.graphic_eq_rounded, parts.join(' / ')));
   }
@@ -1805,10 +2203,9 @@ Widget buildTagChip(IconData icon, String label) {
 
 /// Card listing the per-stream [TrackInfo] entries from [Format.trackInfo].
 ///
-/// Shown whenever the parser reports stream-level information (upstream
-/// parity for ASF, Ogg/Theora, Matroska/MP4 streams): stream id, codec,
-/// duration, bitrate, lossless flag, plus audio channel/sample-rate and
-/// video resolution/frame-rate details.
+/// Shown whenever the parser reports stream-level information:
+/// stream id, codec, duration, bitrate, lossless flag, plus audio
+/// channel/sample-rate and video resolution/frame-rate details.
 class TracksCard extends StatelessWidget {
   const TracksCard({super.key, required this.metadata});
 
@@ -1955,9 +2352,10 @@ class _TrackRow extends StatelessWidget {
 
 /// Thousands-grouped sample count, e.g. `544,000`.
 String _formatSampleCount(int value) {
-  return value
-      .toString()
-      .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m.group(1)},');
+  return value.toString().replaceAllMapped(
+    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+    (m) => '${m.group(1)},',
+  );
 }
 
 /// Compact duration, e.g. `2m 34s`.

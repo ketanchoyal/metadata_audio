@@ -184,22 +184,18 @@ List<int> _i32le(int value) {
   return data.buffer.asUint8List();
 }
 
-List<int> _i64le(int value) {
-  return _u64le(value);
-}
+List<int> _i64le(int value) => _u64le(value);
 
-List<int> _u64le(int value) {
-  return <int>[
-    value & 0xFF,
-    (value >> 8) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 24) & 0xFF,
-    (value >> 32) & 0xFF,
-    (value >> 40) & 0xFF,
-    (value >> 48) & 0xFF,
-    (value >> 56) & 0xFF,
-  ];
-}
+List<int> _u64le(int value) => <int>[
+  value & 0xFF,
+  (value >> 8) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 24) & 0xFF,
+  (value >> 32) & 0xFF,
+  (value >> 40) & 0xFF,
+  (value >> 48) & 0xFF,
+  (value >> 56) & 0xFF,
+];
 
 List<int> _u32be(int value) => <int>[
   (value >> 24) & 0xFF,

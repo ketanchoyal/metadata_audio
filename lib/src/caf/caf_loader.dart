@@ -1,5 +1,4 @@
-/// CAF (Core Audio File) loader, ported from upstream
-/// `lib/caf/CafLoader.ts` (Borewit/music-metadata).
+/// CAF (Core Audio File) loader.
 library;
 
 import 'package:metadata_audio/src/caf/caf_parser.dart';
@@ -22,8 +21,7 @@ class CafLoader extends ParserLoader {
 
   @override
   Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
-    final mapper = CombinedTagMapper()
-      ..registerMapper('CAF', CafTagMapper());
+    final mapper = CombinedTagMapper()..registerMapper('CAF', CafTagMapper());
 
     final metadata = MetadataCollector(mapper, options);
 

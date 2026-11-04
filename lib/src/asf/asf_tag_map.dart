@@ -223,9 +223,7 @@ class AsfTagMapper extends GenericTagMapper {
   /// POPULARIMETER is a popm-style attribute written by e.g. foobar2000;
   /// the value has the shape `email|rating|counter` where `rating` is an
   /// integer in the range [0..255]. A rating of 1..255 maps to
-  /// `(value - 1) / 254` on the [0..1] scale (upstream parity).
-  ///
-  /// Mirrors upstream `AsfTagMapper.postMap` for `POPULARIMETER`.
+  /// `(value - 1) / 254` on the [0..1] scale.
   static List<Rating>? _popularimeterToRating(dynamic value) {
     final text = _singleString(value);
     if (text == null || text.isEmpty) {
@@ -242,14 +240,14 @@ class AsfTagMapper extends GenericTagMapper {
         raw >= 0 &&
         raw <= 255;
 
-    // Upstream keeps the tag (rating side) even when invalid, but leaves the
+    // Keeps the tag (rating side) even when invalid, but leaves the
     // rating undefined; only valid non-zero ratings produce a score.
     final rating = valid && raw > 0 ? (raw - 1) / 254.0 : null;
 
     return <Rating>[Rating(source: email, rating: rating)];
   }
 
-  /// Mirrors upstream `AsfTagMapper.toRating` for `WM/SharedUserRating`:
+  /// Maps `WM/SharedUserRating`:
   /// values are parsed as numbers, non-positive values yield no rating and
   /// otherwise `value / 99` maps onto the [0..1] scale.
   static List<Rating>? _sharedUserRatingToRating(dynamic value) {
@@ -273,10 +271,10 @@ class AsfTagMapper extends GenericTagMapper {
 
   /// Validates and decodes an ASF ReplayGain attribute into a [Ratio].
   ///
-  /// Mirrors upstream `AsfTagMapper.postMap` for `replaygain_*` attributes:
+  /// For `replaygain_*` attributes:
   /// the value must match `<number>[ <dB>]` (case-insensitive `dB` suffix);
   /// invalid values are left to the caller to keep native without mapping
-  /// them to common metadata (the parser emits the upstream
+  /// them to common metadata (the parser emits the
   /// `Invalid ASF ReplayGain value for <id>` warning).
   static Ratio? _replayGainToRatio(dynamic value) {
     final text = _singleString(value);

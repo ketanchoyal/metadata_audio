@@ -2,8 +2,6 @@
 ///
 /// Maps ID3v1 tag fields to generic common tag names.
 /// ID3v1 has fixed fields: title, artist, album, year, comment, track, genre.
-///
-/// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/id3v1/ID3v1TagMap.ts
 library;
 
 import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';

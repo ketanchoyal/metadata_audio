@@ -7,7 +7,7 @@ library;
 /// error information.
 abstract class ParseError implements Exception {
   /// Creates a new [ParseError] with the given [message].
-  ParseError(this.message);
+  const ParseError(this.message);
 
   /// The error message describing what went wrong
   final String message;
@@ -26,7 +26,7 @@ abstract class ParseError implements Exception {
 class CouldNotDetermineFileTypeError extends ParseError {
   /// Creates a new [CouldNotDetermineFileTypeError] with the given
   /// [message].
-  CouldNotDetermineFileTypeError(super.message);
+  const CouldNotDetermineFileTypeError(super.message);
 
   @override
   String get name => 'CouldNotDetermineFileTypeError';
@@ -38,7 +38,7 @@ class CouldNotDetermineFileTypeError extends ParseError {
 /// but the parser does not have support for that particular format.
 class UnsupportedFileTypeError extends ParseError {
   /// Creates a new [UnsupportedFileTypeError] with the given [message].
-  UnsupportedFileTypeError(super.message);
+  const UnsupportedFileTypeError(super.message);
 
   @override
   String get name => 'UnsupportedFileTypeError';
@@ -52,7 +52,7 @@ class UnsupportedFileTypeError extends ParseError {
 class UnexpectedFileContentError extends ParseError {
   /// Creates a new [UnexpectedFileContentError] with the given [fileType]
   /// and [message].
-  UnexpectedFileContentError(this.fileType, super.message);
+  const UnexpectedFileContentError(this.fileType, super.message);
 
   /// The file type that was expected
   final String fileType;
@@ -71,18 +71,16 @@ class UnexpectedFileContentError extends ParseError {
 /// malformed data, or unsupported field formats.
 class FieldDecodingError extends ParseError {
   /// Creates a new [FieldDecodingError] with the given [message].
-  FieldDecodingError(super.message);
+  const FieldDecodingError(super.message);
 
   @override
   String get name => 'FieldDecodingError';
 }
 
 /// Error thrown when a path does not resolve to a regular file.
-///
-/// Matches upstream `strtok3` `NotRegularFileError`.
 class NotRegularFileError extends ParseError {
   /// Creates a new [NotRegularFileError] with the given [message].
-  NotRegularFileError(super.message);
+  const NotRegularFileError(super.message);
 
   @override
   String get name => 'NotRegularFileError';
@@ -95,7 +93,7 @@ class NotRegularFileError extends ParseError {
 /// a bug in the parser implementation.
 class InternalParserError extends ParseError {
   /// Creates a new [InternalParserError] with the given [message].
-  InternalParserError(super.message);
+  const InternalParserError(super.message);
 
   @override
   String get name => 'InternalParserError';

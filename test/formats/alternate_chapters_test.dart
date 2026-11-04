@@ -6,6 +6,7 @@
 ///
 /// This test validates that our parser correctly detects and handles
 /// chapters from M4B files using the alternate layout structure.
+@Tags(['network'])
 library;
 
 import 'dart:async';
@@ -60,7 +61,6 @@ bool _isSkippableRemoteError(Object e) {
       msg.contains('HTTP 500');
 }
 
-@Tags(["network"])
 void main() {
   setUpAll(() {
     final registry = ParserRegistry()
@@ -84,93 +84,81 @@ void main() {
       }
     });
 
-    test(
-      'parses chapter list from M4B with alternate-layout atoms',
-      () async {
-        if (urlSkip != null) {
-          markTestSkipped(urlSkip!);
+    test('parses chapter list from M4B with alternate-layout atoms', () async {
+      if (urlSkip != null) {
+        markTestSkipped(urlSkip!);
+        return;
+      }
+
+      late final dynamic info;
+      try {
+        info = await detectStrategy(_librivox22ChapterUrl);
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('remote URL transient failure: $e');
           return;
         }
-
-        late final dynamic info;
-        try {
-          info = await detectStrategy(_librivox22ChapterUrl);
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped('remote URL transient failure: $e');
-            return;
-          }
-          rethrow;
-        }
-        late final AudioMetadata metadata;
-        try {
-          metadata = await parseUrl(
-            _librivox22ChapterUrl,
-            options: const ParseOptions(includeChapters: true),
-            strategy: ParseStrategy.probe,
-            probeStrategy: ProbeStrategy.mp4Optimized,
-            timeout: const Duration(seconds: 120),
-          );
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped(
-              'alternate-layout URL transient remote failure: $e',
-            );
-            return;
-          }
-          rethrow;
-        }
-
-        expect(info.detectedFormat, equals('mp4'));
-        expect(info.supportsRange, isTrue);
-        expect(
-          (metadata.format.container ?? '').toLowerCase(),
-          anyOf(contains('m4'), contains('mp4')),
+        rethrow;
+      }
+      late final AudioMetadata metadata;
+      try {
+        metadata = await parseUrl(
+          _librivox22ChapterUrl,
+          options: const ParseOptions(includeChapters: true),
+          strategy: ParseStrategy.probe,
+          probeStrategy: ProbeStrategy.mp4Optimized,
+          timeout: const Duration(seconds: 120),
         );
-        expect(metadata.format.chapters, isNotNull);
-        expect(metadata.format.chapters!.length, greaterThanOrEqualTo(5));
-        expect(metadata.format.chapters!.first.title, isNotEmpty);
-      },
-      timeout: const Timeout(Duration(seconds: 180)),
-    );
-
-    test(
-      'chapter metadata is accessible for alternate-layout atoms',
-      () async {
-        if (urlSkip != null) {
-          markTestSkipped(urlSkip!);
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('alternate-layout URL transient remote failure: $e');
           return;
         }
+        rethrow;
+      }
 
-        late final AudioMetadata metadata;
-        try {
-          metadata = await parseUrl(
-            _librivox22ChapterUrl,
-            options: const ParseOptions(includeChapters: true),
-            strategy: ParseStrategy.probe,
-            probeStrategy: ProbeStrategy.mp4Optimized,
-            timeout: const Duration(seconds: 120),
-          );
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped(
-              'alternate-layout URL transient remote failure: $e',
-            );
-            return;
-          }
-          rethrow;
+      expect(info.detectedFormat, equals('mp4'));
+      expect(info.supportsRange, isTrue);
+      expect(
+        (metadata.format.container ?? '').toLowerCase(),
+        anyOf(contains('m4'), contains('mp4')),
+      );
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters!.length, greaterThanOrEqualTo(5));
+      expect(metadata.format.chapters!.first.title, isNotEmpty);
+    }, timeout: const Timeout(Duration(seconds: 180)));
+
+    test('chapter metadata is accessible for alternate-layout atoms', () async {
+      if (urlSkip != null) {
+        markTestSkipped(urlSkip!);
+        return;
+      }
+
+      late final AudioMetadata metadata;
+      try {
+        metadata = await parseUrl(
+          _librivox22ChapterUrl,
+          options: const ParseOptions(includeChapters: true),
+          strategy: ParseStrategy.probe,
+          probeStrategy: ProbeStrategy.mp4Optimized,
+          timeout: const Duration(seconds: 120),
+        );
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('alternate-layout URL transient remote failure: $e');
+          return;
         }
+        rethrow;
+      }
 
-        final chapters = metadata.format.chapters;
-        expect(chapters, isNotNull);
+      final chapters = metadata.format.chapters;
+      expect(chapters, isNotNull);
 
-        for (final chapter in chapters!) {
-          expect(chapter.title, isNotNull);
-          expect(chapter.start, isNotNull);
-        }
-      },
-      timeout: const Timeout(Duration(seconds: 180)),
-    );
+      for (final chapter in chapters!) {
+        expect(chapter.title, isNotNull);
+        expect(chapter.start, isNotNull);
+      }
+    }, timeout: const Timeout(Duration(seconds: 180)));
 
     test(
       'validates file format detection for alternate-layout-based M4B',

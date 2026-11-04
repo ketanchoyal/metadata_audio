@@ -14,12 +14,11 @@ import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 /// - Peeking without advancing position
 /// - Efficient RandomAccessFile operations
 class FileTokenizer extends Tokenizer {
-
   /// Create a FileTokenizer from a file path
   ///
   /// Throws [FileSystemException] if file doesn't exist or can't be opened
   /// Throws [TokenizerException] if file size can't be determined
-  FileTokenizer.fromPath(String filePath)
+  FileTokenizer.fromPath(String filePath, {this.maxBufferSize})
     : _file = File(filePath).openSync(),
       fileInfo = _createFileInfo(filePath) {
     _validateFile();
@@ -29,11 +28,12 @@ class FileTokenizer extends Tokenizer {
   ///
   /// Throws [FileSystemException] if file can't be opened
   /// Throws [TokenizerException] if file size can't be determined
-  FileTokenizer.fromFile(File file)
+  FileTokenizer.fromFile(File file, {this.maxBufferSize})
     : _file = file.openSync(),
       fileInfo = _createFileInfo(file.path) {
     _validateFile();
   }
+
   /// Underlying file handle for random access operations
   final RandomAccessFile _file;
 
@@ -109,9 +109,7 @@ class FileTokenizer extends Tokenizer {
   @override
   List<int> readBytes(int length) {
     if (maxBufferSize != null && length > maxBufferSize!) {
-      throw TokenizerException(
-        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
-      );
+      throw BufferSizeError(length, maxBufferSize!);
     }
     if (length < 0) {
       throw TokenizerException('Cannot read negative number of bytes');
@@ -180,9 +178,7 @@ class FileTokenizer extends Tokenizer {
   @override
   List<int> peekBytes(int length) {
     if (maxBufferSize != null && length > maxBufferSize!) {
-      throw TokenizerException(
-        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
-      );
+      throw BufferSizeError(length, maxBufferSize!);
     }
     if (length < 0) {
       throw TokenizerException('Cannot peek negative number of bytes');
@@ -314,14 +310,15 @@ class FileTokenizer extends Tokenizer {
 /// - Peeking without advancing position
 /// - Efficient in-memory byte operations
 class BytesTokenizer extends Tokenizer {
-
   /// Create a BytesTokenizer from a Uint8List
   ///
   /// [bytes]: The byte buffer to read from
   /// [fileInfo]: Optional file information (auto-created with buffer size if not provided)
-  BytesTokenizer(Uint8List bytes, {FileInfo? fileInfo})
+  /// [maxBufferSize]: Optional limit on single-read byte allocations
+  BytesTokenizer(Uint8List bytes, {FileInfo? fileInfo, this.maxBufferSize})
     : _bytes = bytes,
       fileInfo = fileInfo ?? FileInfo(size: bytes.length);
+
   /// Underlying byte buffer (read-only view).
   Uint8List get bytes => _bytes;
 
@@ -385,9 +382,7 @@ class BytesTokenizer extends Tokenizer {
   @override
   List<int> readBytes(int length) {
     if (maxBufferSize != null && length > maxBufferSize!) {
-      throw TokenizerException(
-        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
-      );
+      throw BufferSizeError(length, maxBufferSize!);
     }
     if (_position + length > _bytes.length) {
       throw TokenizerException(
@@ -412,9 +407,7 @@ class BytesTokenizer extends Tokenizer {
   @override
   List<int> peekBytes(int length) {
     if (maxBufferSize != null && length > maxBufferSize!) {
-      throw TokenizerException(
-        'Requested $length bytes exceeds maxBufferSize $maxBufferSize',
-      );
+      throw BufferSizeError(length, maxBufferSize!);
     }
     if (_position + length > _bytes.length) {
       throw TokenizerException(

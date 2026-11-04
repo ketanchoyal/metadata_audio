@@ -41,13 +41,15 @@ class VorbisCommentHeader {
 class VorbisDecoder {
   static const int commonHeaderLength = 7;
 
-  static bool isIdentificationHeader(List<int> data) => data.length >= commonHeaderLength &&
-        data[0] == 0x01 &&
-        _ascii(data, 1, 6) == 'vorbis';
+  static bool isIdentificationHeader(List<int> data) =>
+      data.length >= commonHeaderLength &&
+      data[0] == 0x01 &&
+      _ascii(data, 1, 6) == 'vorbis';
 
-  static bool isCommentHeader(List<int> data) => data.length >= commonHeaderLength &&
-        data[0] == 0x03 &&
-        _ascii(data, 1, 6) == 'vorbis';
+  static bool isCommentHeader(List<int> data) =>
+      data.length >= commonHeaderLength &&
+      data[0] == 0x03 &&
+      _ascii(data, 1, 6) == 'vorbis';
 
   static VorbisIdentificationHeader parseIdentificationHeader(List<int> data) {
     if (!isIdentificationHeader(data) ||
@@ -74,11 +76,7 @@ class VorbisDecoder {
       throw const FormatException('Invalid Vorbis comment header');
     }
 
-    return parseCommentData(
-      data,
-      commonHeaderLength,
-      maxComments: maxComments,
-    );
+    return parseCommentData(data, commonHeaderLength, maxComments: maxComments);
   }
 
   static VorbisCommentHeader parseCommentData(

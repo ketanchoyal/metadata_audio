@@ -5,8 +5,8 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/common/js_safe_numbers.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/ebml/ebml_iterator.dart';
 import 'package:metadata_audio/src/ebml/types.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
@@ -72,7 +72,7 @@ class MusepackParser {
 
   Future<void> _parseMatroskaContainer() async {
     final containerSize = tokenizer.fileInfo?.size ?? maxSafeJsInt;
-    final iterator = EbmlIterator(tokenizer);
+    final iterator = EbmlIterator(tokenizer, options);
 
     await iterator.iterate(
       matroskaDtd,

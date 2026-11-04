@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:metadata_audio/src/asf/asf_guid.dart';
 import 'package:metadata_audio/src/asf/asf_object.dart';
 import 'package:metadata_audio/src/asf/asf_util.dart';
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
@@ -26,6 +27,14 @@ class AsfParser {
   final List<AsfCodecEntry> _codecs = [];
   final Map<int, AsfExtendedStreamPropertiesObject> _extendedStreams = {};
   final Map<int, int> _streamBitrates = {};
+
+  void _validateAllocationSize(int payloadSize, String objectType) {
+    validateAllocation(
+      payloadSize,
+      options,
+      (message) => AsfContentParseError('ASF $objectType: $message'),
+    );
+  }
 
   Future<void> parse() async {
     final topLevelHeader = AsfTopLevelHeader.parse(
@@ -60,6 +69,7 @@ class AsfParser {
 
       switch (header.objectId.str) {
         case '8CABDCA1-A947-11CF-8EE4-00C00C205365':
+          _validateAllocationSize(header.payloadSize, 'File Properties Object');
           final fpo = AsfFilePropertiesObject.parse(
             tokenizer.readBytes(header.payloadSize),
           );
@@ -75,6 +85,10 @@ class AsfParser {
           break;
 
         case 'B7DC0791-A9B7-11CF-8EE6-00C00C205365':
+          _validateAllocationSize(
+            header.payloadSize,
+            'Stream Properties Object',
+          );
           final stream = AsfStreamPropertiesObject.parse(
             tokenizer.readBytes(header.payloadSize),
           );
@@ -118,6 +132,10 @@ class AsfParser {
           break;
 
         case '75B22633-668E-11CF-A6D9-00AA0062CE6C':
+          _validateAllocationSize(
+            header.payloadSize,
+            'Content Description Object',
+          );
           await _addTags(
             parseContentDescriptionObject(
               tokenizer.readBytes(header.payloadSize),
@@ -126,6 +144,10 @@ class AsfParser {
           break;
 
         case 'D2D0A440-E307-11D2-97F0-00A0C95EA850':
+          _validateAllocationSize(
+            header.payloadSize,
+            'Extended Content Description Object',
+          );
           await _addTags(
             parseExtendedContentDescriptionObject(
               tokenizer.readBytes(header.payloadSize),
@@ -134,6 +156,7 @@ class AsfParser {
           break;
 
         case '86D15240-311D-11D0-A3A4-00A0C90348F6':
+          _validateAllocationSize(header.payloadSize, 'Codec List Object');
           final codecs = await readCodecEntries(tokenizer, header.payloadSize);
           _codecs.addAll(codecs);
           final audioCodecs = codecs
@@ -147,6 +170,10 @@ class AsfParser {
           break;
 
         case '7BF875CE-468D-11D1-8D82-006097C9A2B2':
+          _validateAllocationSize(
+            header.payloadSize,
+            'Stream Bitrate Properties Object',
+          );
           final bitrates = _parseStreamBitrates(header.payloadSize);
           _streamBitrates.addAll(bitrates);
           break;
@@ -186,7 +213,7 @@ class AsfParser {
     return bitrates;
   }
 
-  /// Builds [TrackInfo]s from the discovered streams (upstream parity).
+  /// Builds [TrackInfo]s from the discovered streams.
   ///
   /// Matches each stream's codec id against the Codec List entries, applies
   /// Extended Stream Properties (duration, name, frame rate) and Stream
@@ -220,9 +247,7 @@ class AsfParser {
       if (bitrate == null && extended != null && extended.dataBitrate > 0) {
         bitrate = extended.dataBitrate;
       }
-      if (bitrate == null) {
-        bitrate = stream.bitrate;
-      }
+      bitrate ??= stream.bitrate;
 
       final audio = stream.streamType == 'audio'
           ? AudioTrack(
@@ -327,7 +352,7 @@ class AsfParser {
     }
   }
 
-  /// Emits the upstream warning for ASF ReplayGain attributes whose value
+  /// Emits a warning for ASF ReplayGain attributes whose value
   /// does not match `<number>[ <dB>]` (mirrors `AsfTagMapper.postMap`).
   ///
   /// Invalid values stay native without being mapped to common metadata.
@@ -372,6 +397,10 @@ class AsfParser {
 
       switch (header.objectId.str) {
         case '14E6A5CB-C672-4332-8399-A96952065B5A':
+          _validateAllocationSize(
+            payloadSize,
+            'Extended Stream Properties Object',
+          );
           final extended = AsfExtendedStreamPropertiesObject.parse(
             tokenizer.readBytes(payloadSize),
           );
@@ -392,10 +421,12 @@ class AsfParser {
           break;
 
         case 'C5F8CBEA-5BAF-4877-8467-AA8C44FA4CCA':
+          _validateAllocationSize(payloadSize, 'Metadata Object');
           await _addTags(parseMetadataObject(tokenizer.readBytes(payloadSize)));
           break;
 
         case '44231C94-9498-49D1-A141-1D134E457054':
+          _validateAllocationSize(payloadSize, 'Metadata Library Object');
           await _addTags(
             parseMetadataLibraryObject(tokenizer.readBytes(payloadSize)),
           );

@@ -1,5 +1,4 @@
-/// CAF-native tag mapping, ported from upstream `lib/caf/CafTagMap.ts`
-/// (Borewit/music-metadata).
+/// CAF-native tag mapping.
 ///
 /// "time signature", "nominal bit rate" and channel layout keys have no
 /// common equivalent and stay native. Undocumented keys pass through as

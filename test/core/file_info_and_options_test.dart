@@ -138,7 +138,41 @@ void main() {
       expect(called, isTrue);
     });
 
-    test('MetadataEvent exposes upstream-compatible payload fields', () {
+    test('ParseOptions copyWith preserves and overrides values', () {
+      const original = ParseOptions(
+        skipCovers: true,
+        includeChapters: true,
+        maxMemoryAllocation: 1024,
+        maxMetadataEntries: 50,
+        maxChapterCount: 10,
+        cacheKey: 'orig-key',
+        useCache: true,
+      );
+
+      final copy = original.copyWith(
+        skipCovers: false,
+        maxMemoryAllocation: 2048,
+        cacheKey: 'new-key',
+      );
+
+      expect(copy.skipCovers, isFalse);
+      expect(copy.skipPostHeaders, isFalse);
+      expect(copy.includeChapters, isTrue);
+      expect(copy.duration, isFalse);
+      expect(copy.maxMemoryAllocation, equals(2048));
+      expect(copy.maxMetadataEntries, equals(50));
+      expect(copy.maxChapterCount, equals(10));
+      expect(copy.mkvUseIndex, isFalse);
+      expect(copy.cacheKey, equals('new-key'));
+      expect(copy.useCache, isTrue);
+
+      final copyDefaults = original.copyWith();
+      expect(copyDefaults.skipCovers, isTrue);
+      expect(copyDefaults.maxMemoryAllocation, equals(1024));
+      expect(copyDefaults.cacheKey, equals('orig-key'));
+    });
+
+    test('MetadataEvent exposes standard payload fields', () {
       const event = MetadataEvent(
         tag: CommonMetadataEventTag(
           id: MetadataCommonId.title,

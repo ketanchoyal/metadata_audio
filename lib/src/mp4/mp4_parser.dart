@@ -151,12 +151,18 @@ class Mp4Parser {
     await _postProcessTracks();
   }
 
+  void _validatePayloadLength(int length) {
+    validateAllocation(length, options, Mp4ContentError.new);
+  }
+
   Future<void> _handleAtom(Mp4Atom atom, int payloadLength) async {
     switch (atom.header.name) {
       case 'ftyp':
+        _validatePayloadLength(payloadLength);
         _parseFtyp(tokenizer.readBytes(payloadLength));
         return;
       case 'mvhd':
+        _validatePayloadLength(payloadLength);
         _parseMvhd(tokenizer.readBytes(payloadLength));
         return;
       case 'tkhd':
@@ -164,6 +170,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseTkhd(tokenizer.readBytes(payloadLength));
         return;
       case 'mdhd':
@@ -171,6 +178,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseMdhd(tokenizer.readBytes(payloadLength));
         return;
       case 'hdlr':
@@ -178,6 +186,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseHdlr(tokenizer.readBytes(payloadLength));
         return;
       case 'stsd':
@@ -185,6 +194,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStsd(tokenizer.readBytes(payloadLength));
         return;
       case 'stts':
@@ -192,6 +202,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStts(tokenizer.readBytes(payloadLength));
         return;
       case 'stsc':
@@ -199,6 +210,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStsc(tokenizer.readBytes(payloadLength));
         return;
       case 'stsz':
@@ -206,6 +218,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStsz(tokenizer.readBytes(payloadLength));
         return;
       case 'stco':
@@ -213,6 +226,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseStco(tokenizer.readBytes(payloadLength));
         return;
       case 'co64':
@@ -220,18 +234,20 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseCo64(tokenizer.readBytes(payloadLength));
         return;
       case 'chap':
         if (!_isTrackScopedAtom(atom)) {
           // Orphan track-specific box may not modify whichever track happens
-          // to be registered last (upstream parity).
+          // to be registered last.
           metadata.addWarning(
             'Ignoring track-specific atom ${atom.atomPath} outside a track',
           );
           tokenizer.skip(payloadLength);
           return;
         }
+        _validatePayloadLength(payloadLength);
         _parseChap(tokenizer.readBytes(payloadLength));
         return;
       case 'mdat':
@@ -243,6 +259,7 @@ class Mp4Parser {
       case 'chpl':
         // Nero chapter list atom (inside udta)
         if (atom.parent?.header.name == 'udta') {
+          _validatePayloadLength(payloadLength);
           _parseChpl(tokenizer.readBytes(payloadLength));
         } else {
           tokenizer.skip(payloadLength);
@@ -443,7 +460,7 @@ class Mp4Parser {
         (payload[offset++] << 8) |
         payload[offset++];
 
-    // Upstream layout: the version 0 header is 4 bytes; version 1 adds 4
+    // Version 0 header is 4 bytes; version 1 adds 4
     // more header bytes (8 in total) before the single-byte chapter count.
     if (version == 1) {
       offset += 4;
@@ -454,7 +471,7 @@ class Mp4Parser {
       return;
     }
 
-    // Chapter count (1 byte, matching upstream)
+    // Chapter count (1 byte)
     final chapterCount = payload[offset++] & 0xFF;
     final maxChapterCount = getMaxChapterCount(options);
     if (chapterCount > maxChapterCount) {
@@ -481,8 +498,7 @@ class Mp4Parser {
       final titleLen = payload[offset++] & 0xFF;
 
       // Title string. A title that exceeds the remaining payload ends the
-      // chapter list; continuing would re-read the same offset (upstream
-      // parity).
+      // chapter list; continuing would re-read the same offset.
       if (offset + titleLen > payload.length) {
         break;
       }
@@ -524,6 +540,7 @@ class Mp4Parser {
               tokenizer.skip(atomPayloadLength);
               return;
             }
+            _validatePayloadLength(atomPayloadLength);
             final data = AtomToken.parseDataAtom(
               tokenizer.readBytes(atomPayloadLength),
             );
@@ -535,6 +552,7 @@ class Mp4Parser {
           }
 
           if (atom.header.name == 'mean') {
+            _validatePayloadLength(atomPayloadLength);
             mean = AtomToken.parseNameAtom(
               tokenizer.readBytes(atomPayloadLength),
             );
@@ -542,6 +560,7 @@ class Mp4Parser {
           }
 
           if (atom.header.name == 'name') {
+            _validatePayloadLength(atomPayloadLength);
             name = AtomToken.parseNameAtom(
               tokenizer.readBytes(atomPayloadLength),
             );
@@ -600,19 +619,19 @@ class Mp4Parser {
       case 22:
         return _readUnsignedBeInteger(value);
       case 65:
-        // INT8: signed 8-bit integer (upstream parity, #2839).
+        // INT8: signed 8-bit integer.
         return value.isEmpty
             ? null
             : (value[0] < 128 ? value[0] : value[0] - 256);
       case 66:
-        // INT16_BE: signed big-endian 16-bit integer (upstream parity, #2839).
+        // INT16_BE: signed big-endian 16-bit integer.
         if (value.length < 2) {
           return null;
         }
         final int16 = AtomToken.readUint16Be(value, 0);
         return int16 > 0x7FFF ? int16 - 0x10000 : int16;
       case 67:
-        // INT32_BE: signed big-endian 32-bit integer (upstream parity, #2839).
+        // INT32_BE: signed big-endian 32-bit integer.
         if (value.length < 4) {
           return null;
         }
@@ -871,6 +890,7 @@ class Mp4Parser {
       }
 
       tokenizer.seek(sample.absoluteOffset);
+      _validatePayloadLength(sample.sampleSize);
       final title = AtomToken.parseChapterText(
         tokenizer.readBytes(sample.sampleSize),
       );
@@ -956,8 +976,7 @@ class Mp4Parser {
     final fileDuration = metadata.format.duration;
     if (fileDuration == null || fileDuration <= 0) return;
 
-    // chpl timestamps use the spec base of 10,000,000 ticks per second,
-    // matching upstream music-metadata's IChapter.timeScale.
+    // chpl timestamps use the spec base of 10,000,000 ticks per second.
     const chplTimestampTimescale = 10000000;
 
     final chapters = <Chapter>[];
@@ -1179,6 +1198,7 @@ class Mp4Parser {
       }
 
       tokenizer.skip(skipLength);
+      _validatePayloadLength(sample.sampleSize);
       final title = AtomToken.parseChapterText(
         tokenizer.readBytes(sample.sampleSize),
       );
@@ -1491,8 +1511,7 @@ class Mp4Parser {
       final samplesNeeded = remainingTime ~/ sampleDuration;
 
       if (samplesNeeded < maxSamplesToConsume) {
-        sampleIndex += samplesNeeded;
-        return sampleIndex;
+        return sampleIndex + samplesNeeded;
       }
 
       sampleIndex += maxSamplesToConsume;

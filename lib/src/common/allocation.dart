@@ -1,24 +1,70 @@
-/// Memory allocation guards for metadata parsing (upstream parity).
-///
-/// Mirrors upstream `lib/common/Allocation.ts` from Borewit/music-metadata.
+/// Memory allocation guards for metadata parsing.
 library;
 
-import '../model/types.dart';
+import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/src/parse_error.dart';
+import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 
 /// Default maximum bytes buffered for a single metadata payload, accumulated
-/// Ogg packet, or tokenizer stream lookahead. Matches upstream's
-/// `defaultMaxMemoryAllocation` (64 MiB).
-const _defaultMaxMemoryAllocation = 64 * 1024 * 1024;
+/// Ogg packet, or tokenizer stream lookahead (64 MiB).
+const defaultMaxMemoryAllocation = 64 * 1024 * 1024;
+const _defaultMaxMemoryAllocation = defaultMaxMemoryAllocation;
 
-/// Default limit for entries in an individual decoded list or table.
-///
-/// Matches upstream's `defaultMaxMetadataEntries` (100,000).
-const _defaultMaxMetadataEntries = 100000;
+/// Default limit for entries in an individual decoded list or table (100,000).
+const defaultMaxMetadataEntries = 100000;
+const _defaultMaxMetadataEntries = defaultMaxMetadataEntries;
 
-/// Default maximum number of chapters returned by supported chapter parsers.
+/// Default maximum number of chapters returned by supported chapter parsers (1,000).
+const defaultMaxChapterCount = 1000;
+const _defaultMaxChapterCount = defaultMaxChapterCount;
+
+/// Chunk size used for bounded reading (64 KiB).
+const readChunkSize = 64 * 1024;
+
+/// Factory function type for constructing exceptions thrown when an allocation fails validation.
+typedef AllocationErrorFactory = Exception Function(String message);
+
+/// Default exception factory producing an [UnexpectedFileContentError].
+Exception defaultAllocationError(String message) =>
+    UnexpectedFileContentError('metadata', message);
+
+/// Check untrusted lengths before allocating, including accumulated stream payloads.
 ///
-/// Matches upstream's `defaultMaxChapterCount` (1,000).
-const _defaultMaxChapterCount = 1000;
+/// Throws an error from [makeError] (defaulting to [UnexpectedFileContentError])
+/// if [length] is negative or exceeds [options.maxMemoryAllocation].
+void validateAllocation(
+  int length,
+  ParseOptions options, [
+  AllocationErrorFactory makeError = defaultAllocationError,
+]) {
+  if (length < 0) {
+    throw makeError('Invalid allocation size: $length');
+  }
+  final limit = getMaxMemoryAllocation(options);
+  if (length > limit) {
+    throw makeError(
+      'Metadata size $length exceeds allocation limit $limit (buffering limit)',
+    );
+  }
+}
+
+/// Reads [length] bytes from [tokenizer] after validating the allocation size
+/// against [options.maxMemoryAllocation] and verifying sufficient bytes remain.
+List<int> readBuffer(
+  Tokenizer tokenizer,
+  int length,
+  ParseOptions options, [
+  AllocationErrorFactory makeError = defaultAllocationError,
+]) {
+  validateAllocation(length, options, makeError);
+  final fileInfoSize = tokenizer.fileInfo?.size;
+  if (fileInfoSize != null && length > fileInfoSize - tokenizer.position) {
+    throw TokenizerException(
+      'End of file reached: requested $length bytes at position ${tokenizer.position}, total size $fileInfoSize',
+    );
+  }
+  return tokenizer.readBytes(length);
+}
 
 /// Returns the validated `maxMemoryAllocation` limit for the given
 /// [options].
@@ -39,7 +85,7 @@ int getMaxMemoryAllocation(ParseOptions options) {
 /// Returns the validated `maxMetadataEntries` limit for the given [options].
 ///
 /// Limits entries in an individual decoded list or table, independently of
-/// byte-buffer limits. Mirrors upstream `getMaxMetadataEntries`.
+/// byte-buffer limits.
 ///
 /// Throws [ArgumentError] when the value is not a positive integer.
 int getMaxMetadataEntries(ParseOptions options) {
@@ -57,7 +103,6 @@ int getMaxMetadataEntries(ParseOptions options) {
 /// Returns the validated `maxChapterCount` limit for the given [options].
 ///
 /// Maximum number of chapters returned by supported chapter parsers.
-/// Mirrors upstream `getMaxChapterCount`.
 ///
 /// Throws [ArgumentError] when the value is not a positive integer.
 int getMaxChapterCount(ParseOptions options) {

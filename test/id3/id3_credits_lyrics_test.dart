@@ -1,6 +1,5 @@
 /// Tests for ID3v2 involved-person credits (TMCL / TIPL / IPL / IPLS),
-/// unsynchronized lyrics (USLT / ULT) and PRIV owner warning alignment
-/// (upstream parity, music-metadata v12.3.0 #2860, #2862, #2859).
+/// unsynchronized lyrics (USLT / ULT) and PRIV owner warning alignment.
 library;
 
 import 'dart:convert';
@@ -178,7 +177,7 @@ void main() {
     });
   });
 
-  group('ID3v2 PRIV owner warnings (upstream #2859)', () {
+  group('ID3v2 PRIV owner warnings', () {
     test('warns and keeps native data for unknown owners', () async {
       final priv = buildId3v24Frame('PRIV', [
         ...ascii.encode('SomethingElse'),

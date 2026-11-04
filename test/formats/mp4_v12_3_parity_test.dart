@@ -1,4 +1,4 @@
-/// Tests for music-metadata v12.3.0 MP4 parser parity:
+/// Tests for MP4 parser features:
 /// - iTunes freeform movement tags (`----:com.apple.iTunes:Movement*`, #2835)
 /// - signed integer data atoms (types 65/66/67, #2839)
 /// - `maxChapterCount` ParseOption applied to the `chpl` atom (#2838)

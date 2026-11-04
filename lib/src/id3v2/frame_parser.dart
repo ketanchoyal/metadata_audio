@@ -71,8 +71,7 @@ class FrameParser {
   }
 
   /// PCNT frame: play counter, at minimum a 32-bit little-endian value.
-  /// Longer frames are speculative counters; only the first 32 bits are read
-  /// (upstream parity).
+  /// Longer frames are speculative counters; only the first 32 bits are read.
   int? _parsePlayCounterFrame(List<int> bytes) {
     if (bytes.length < 4) {
       return null;
@@ -125,8 +124,7 @@ class FrameParser {
   /// Converts TMCL (Musician credits list) or TIPL / IPL / IPLS (involved
   /// people list) text into a role-to-people map.
   ///
-  /// Mirrors upstream `FrameParser.functionList`: entries alternate
-  /// `role, names`; each names value is split on `,` keeping empty segments.
+  /// Entries alternate `role, names`; each names value is split on `,` keeping empty segments.
   Map<String, List<String>> _parseCreditsFrame(String frameId, String text) {
     final entries = _splitValue(frameId, text);
     final roles = <String, List<String>>{};
@@ -140,7 +138,7 @@ class FrameParser {
 
   /// Parses an unsynchronized lyrics frame (`USLT` / v2.2 `ULT`).
   ///
-  /// Layout mirrors upstream: [text encoding] [language] [descriptor]
+  /// Layout: [text encoding] [language] [descriptor]
   /// 0x00 [lyrics text] 0x00.
   LyricsTag _parseUnsyncedLyricsFrame(List<int> bytes) {
     final header = ID3v2Token.parseTextHeader(bytes);
@@ -258,7 +256,7 @@ class FrameParser {
     return {'owner': owner, 'identifier': identifier};
   }
 
-  /// Mirrors upstream `FrameParser.splitValue`: for ID3v2 < 4 a null-separator
+  /// Splitting logic: for ID3v2 < 4 a null-separator
   /// warns (except involved-person lists, which legitimately use
   /// null-separated role/name pairs in all versions), and slash-splitting is
   /// restricted to a fixed legacy tag list.
@@ -284,8 +282,8 @@ class FrameParser {
     return values.map((value) => _trimNullPadding(value).trim()).toList();
   }
 
-  /// Legacy tags for which a single value may be split on `/` in ID3v2 < 4
-  /// (upstream parity). Genre (TCON/TCO) is deliberately not in this list:
+  /// Legacy tags for which a single value may be split on `/` in ID3v2 < 4.
+  /// Genre (TCON/TCO) is deliberately not in this list:
   /// a genre like "Duo Cello/Piano" must stay intact.
   static const _legacySlashSplitTags = {
     /* v2.3/2.4 */ 'TPE1',

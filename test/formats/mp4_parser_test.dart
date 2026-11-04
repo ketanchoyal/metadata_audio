@@ -122,10 +122,12 @@ void main() {
         }
       }
       expect(mdatIndex, greaterThan(0));
-      final mdatDataOffset = mdatIndex + 4; // payload starts at index + 4 (after 4-byte length and 4-byte type)
+      final mdatDataOffset =
+          mdatIndex +
+          4; // payload starts at index + 4 (after 4-byte length and 4-byte type)
 
       // Chapter 1 text sample: prefix (2 bytes) + 'Intro' (5 bytes) = 7 bytes.
-      final expectedAudio1Offset = mdatDataOffset + 7; 
+      final expectedAudio1Offset = mdatDataOffset + 7;
       // Chapter 1 (7) + audio sample 1 (20) + Chapter 2 text prefix (2) + 'Outro' (5) = 34 bytes payload before audio sample 2.
       final expectedAudio2Offset = mdatDataOffset + 34;
 
@@ -161,74 +163,80 @@ void main() {
       expect(metadata.format.chapters![1].end, 2000);
     });
 
-    test('parses MP4 chapter track when stsz uses a uniform sample size', () async {
-      final bytes = _buildSyntheticMp4WithUniformChapterSampleSize();
+    test(
+      'parses MP4 chapter track when stsz uses a uniform sample size',
+      () async {
+        final bytes = _buildSyntheticMp4WithUniformChapterSampleSize();
 
-      final loader = Mp4Loader();
-      final metadata = await loader.parse(
-        BytesTokenizer(
-          Uint8List.fromList(bytes),
-          fileInfo: FileInfo(size: bytes.length),
-        ),
-        const ParseOptions(includeChapters: true),
-      );
+        final loader = Mp4Loader();
+        final metadata = await loader.parse(
+          BytesTokenizer(
+            Uint8List.fromList(bytes),
+            fileInfo: FileInfo(size: bytes.length),
+          ),
+          const ParseOptions(includeChapters: true),
+        );
 
-      expect(metadata.format.chapters, isNotNull);
-      expect(metadata.format.chapters, hasLength(2));
-      expect(metadata.format.chapters![0].title, 'Intro');
-      expect(metadata.format.chapters![0].start, 0);
-      expect(metadata.format.chapters![0].end, 1000);
-      expect(metadata.format.chapters![1].title, 'Outro');
-      expect(metadata.format.chapters![1].start, 1000);
-      expect(metadata.format.chapters![1].end, 2000);
-    });
-
-    test('parses MP4 chapter track when multiple chapter samples share one chunk', () async {
-      final bytes = _buildSyntheticMp4WithMultiSampleChapterChunk();
-
-      final loader = Mp4Loader();
-      final metadata = await loader.parse(
-        BytesTokenizer(
-          Uint8List.fromList(bytes),
-          fileInfo: FileInfo(size: bytes.length),
-        ),
-        const ParseOptions(includeChapters: true),
-      );
-
-      expect(metadata.format.chapters, isNotNull);
-      expect(metadata.format.chapters, hasLength(2));
-      expect(metadata.format.chapters![0].title, 'Intro');
-      expect(metadata.format.chapters![0].start, 0);
-      expect(metadata.format.chapters![0].end, 1000);
-      expect(metadata.format.chapters![1].title, 'Outro');
-      expect(metadata.format.chapters![1].start, 1000);
-      expect(metadata.format.chapters![1].end, 2000);
-    });
+        expect(metadata.format.chapters, isNotNull);
+        expect(metadata.format.chapters, hasLength(2));
+        expect(metadata.format.chapters![0].title, 'Intro');
+        expect(metadata.format.chapters![0].start, 0);
+        expect(metadata.format.chapters![0].end, 1000);
+        expect(metadata.format.chapters![1].title, 'Outro');
+        expect(metadata.format.chapters![1].start, 1000);
+        expect(metadata.format.chapters![1].end, 2000);
+      },
+    );
 
     test(
-        'parses MP4 chapter track when stsz uses uniform sample size and multiple samples share one chunk',
-        () async {
-      final bytes =
-          _buildSyntheticMp4WithUniformSampleSizeMultiSampleChunk();
+      'parses MP4 chapter track when multiple chapter samples share one chunk',
+      () async {
+        final bytes = _buildSyntheticMp4WithMultiSampleChapterChunk();
 
-      final loader = Mp4Loader();
-      final metadata = await loader.parse(
-        BytesTokenizer(
-          Uint8List.fromList(bytes),
-          fileInfo: FileInfo(size: bytes.length),
-        ),
-        const ParseOptions(includeChapters: true),
-      );
+        final loader = Mp4Loader();
+        final metadata = await loader.parse(
+          BytesTokenizer(
+            Uint8List.fromList(bytes),
+            fileInfo: FileInfo(size: bytes.length),
+          ),
+          const ParseOptions(includeChapters: true),
+        );
 
-      expect(metadata.format.chapters, isNotNull);
-      expect(metadata.format.chapters, hasLength(2));
-      expect(metadata.format.chapters![0].title, 'Intro');
-      expect(metadata.format.chapters![0].start, 0);
-      expect(metadata.format.chapters![0].end, 1000);
-      expect(metadata.format.chapters![1].title, 'Outro');
-      expect(metadata.format.chapters![1].start, 1000);
-      expect(metadata.format.chapters![1].end, 2000);
-    });
+        expect(metadata.format.chapters, isNotNull);
+        expect(metadata.format.chapters, hasLength(2));
+        expect(metadata.format.chapters![0].title, 'Intro');
+        expect(metadata.format.chapters![0].start, 0);
+        expect(metadata.format.chapters![0].end, 1000);
+        expect(metadata.format.chapters![1].title, 'Outro');
+        expect(metadata.format.chapters![1].start, 1000);
+        expect(metadata.format.chapters![1].end, 2000);
+      },
+    );
+
+    test(
+      'parses MP4 chapter track when stsz uses uniform sample size and multiple samples share one chunk',
+      () async {
+        final bytes = _buildSyntheticMp4WithUniformSampleSizeMultiSampleChunk();
+
+        final loader = Mp4Loader();
+        final metadata = await loader.parse(
+          BytesTokenizer(
+            Uint8List.fromList(bytes),
+            fileInfo: FileInfo(size: bytes.length),
+          ),
+          const ParseOptions(includeChapters: true),
+        );
+
+        expect(metadata.format.chapters, isNotNull);
+        expect(metadata.format.chapters, hasLength(2));
+        expect(metadata.format.chapters![0].title, 'Intro');
+        expect(metadata.format.chapters![0].start, 0);
+        expect(metadata.format.chapters![0].end, 1000);
+        expect(metadata.format.chapters![1].title, 'Outro');
+        expect(metadata.format.chapters![1].start, 1000);
+        expect(metadata.format.chapters![1].end, 2000);
+      },
+    );
 
     test('parses co64 M4B-style chapters with 1/48000 timeline', () async {
       final bytes = _buildSyntheticM4bLikeMp4WithCo64Chapters();
@@ -1303,7 +1311,8 @@ List<int> _stszPayloadWithEntryCount(
   0,
   ..._u32(sampleSize),
   ..._u32(entryCount),
-  if (sampleSize == 0) for (final entry in entries) ..._u32(entry),
+  if (sampleSize == 0)
+    for (final entry in entries) ..._u32(entry),
 ];
 
 List<int> _stcoPayload(List<int> offsets) => <int>[

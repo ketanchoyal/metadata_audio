@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 50" width="120" height="50">
+  <defs>
+    <linearGradient id="bwfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5722" />
+      <stop offset="100%" stop-color="#FF9800" />
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="116" height="46" rx="8" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+  <path d="M12 25 L18 14 L24 36 L30 18 L36 32 L42 20 L48 28 L54 25" fill="none" stroke="url(#bwfGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="60" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="800" fill="#F8FAFC" letter-spacing="1">BWF</text>
+</svg>

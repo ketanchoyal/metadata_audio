@@ -1,16 +1,15 @@
-/// Fixture test asserting `format.trackInfo` for Ogg/Theora, mirroring
-/// upstream music-metadata's OggParser per-stream track behaviour.
+/// Fixture test asserting `format.trackInfo` for Ogg/Theora.
 library;
 
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:test/test.dart';
 
-import 'upstream_fixture_loader.dart';
+import 'remote_fixture_loader.dart';
 
 void main() {
-  group('upstream Ogg trackInfo fixtures', () {
+  group('Ogg trackInfo fixtures', () {
     test('short.ogv exposes Theora video and Vorbis audio tracks', () async {
-      final bytes = await fetchUpstreamFixtureOrSkip('ogg/short.ogv');
+      final bytes = await fetchRemoteFixtureOrSkip('ogg/short.ogv');
       if (bytes.isEmpty) return;
       final metadata = await parseBytes(
         bytes,

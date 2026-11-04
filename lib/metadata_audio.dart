@@ -1,6 +1,7 @@
 /// Audio metadata parser library for Dart.
 library;
 
+export 'src/common/allocation.dart';
 export 'src/core.dart';
 export 'src/model/types.dart';
 export 'src/parse_error.dart';

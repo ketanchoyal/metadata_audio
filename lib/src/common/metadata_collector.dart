@@ -3,9 +3,6 @@
 ///
 /// Collects metadata from various sources and resolves tag priorities.
 /// Higher-priority formats override lower-priority formats.
-///
-/// Based on upstream:
-/// https://github.com/Borewit/music-metadata/blob/master/lib/common/MetadataCollector.ts
 library;
 
 import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
@@ -154,7 +151,7 @@ class MetadataCollector {
     notify('trackInfo', trackInfo);
   }
 
-  /// Appends a single track to [Format.trackInfo] (upstream `addStreamInfo`).
+  /// Appends a single track to [Format.trackInfo].
   ///
   /// [setFormat]'s `trackInfo` argument replaces the whole list, so parsers
   /// that discover tracks one at a time should use this instead.

@@ -1,6 +1,9 @@
 library;
 
+import 'package:meta/meta.dart';
+
 /// ASF GUID wrapper with helpers to decode/encode ASF binary GUIDs.
+@immutable
 class AsfGuid {
   const AsfGuid(this.str);
 

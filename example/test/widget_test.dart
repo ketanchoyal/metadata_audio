@@ -175,7 +175,11 @@ void main() {
 
   test('common tag chips omit missing optional fields', () {
     final specs = buildCommonTagChipSpecs(
-      const CommonTags(track: TrackNo(), disk: TrackNo(), movementIndex: TrackNo()),
+      const CommonTags(
+        track: TrackNo(),
+        disk: TrackNo(),
+        movementIndex: TrackNo(),
+      ),
     );
     final labels = specs.map((spec) => spec.$2).toList();
 
@@ -212,9 +216,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('short.ogv'), findsOneWidget);
-    expect(
-      find.textContaining('music-metadata/master/test/samples/ogg'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('test/samples/ogg'), findsOneWidget);
   });
 }

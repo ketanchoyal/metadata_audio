@@ -234,32 +234,30 @@ List<int> _filePropertiesBody({
   ..._u32le(192639),
 ];
 
-List<int> _streamPropertiesBody() {
-  // Layout per ASF spec / upstream AsfObject.StreamPropertiesObject:
+List<int> _streamPropertiesBody() => <int>[
+  // Layout per ASF spec:
   // 0-16 stream type GUID, 16-32 error-correction type GUID,
   // 32-40 time offset, 40-44 type-specific size, 44-48 correction size,
   // 48-50 flags (stream number), 50-54 reserved, then type-specific data
   // (WAVEFORMATEX: format tag, channels, sample rate, avg bytes/sec, block
   // align, bits per sample).
-  return <int>[
-    ...AsfGuid.audioMedia.toBytes(),
-    // Audio Spread error-correction GUID (75B22636-668E-11CF-A6D9-00AA0062CE6C)
-    ...const AsfGuid('75B22636-668E-11CF-A6D9-00AA0062CE6C').toBytes(),
-    ...List<int>.filled(8, 0), // time offset
-    ..._uint32(16), // type-specific size
-    ..._uint32(0), // correction size
-    ..._uint16(1), // flags: stream number 1
-    ...List<int>.filled(4, 0), // reserved
-    ..._uint16(0x0161), // format tag: Windows Media Audio 9.1
-    ..._uint16(2), // channels
-    ..._uint32(44100), // samples/sec
-    ..._uint32(24080), // avg bytes/sec -> 192639 b/s? (24080 * 8 = 192640)
-    ..._uint16(2000), // block align
-    ..._uint16(16), // bits per sample
-    ..._uint16(10), // codec-specific data size
-    ...List<int>.filled(10, 0),
-  ];
-}
+  ...AsfGuid.audioMedia.toBytes(),
+  // Audio Spread error-correction GUID (75B22636-668E-11CF-A6D9-00AA0062CE6C)
+  ...const AsfGuid('75B22636-668E-11CF-A6D9-00AA0062CE6C').toBytes(),
+  ...List<int>.filled(8, 0), // time offset
+  ..._uint32(16), // type-specific size
+  ..._uint32(0), // correction size
+  ..._uint16(1), // flags: stream number 1
+  ...List<int>.filled(4, 0), // reserved
+  ..._uint16(0x0161), // format tag: Windows Media Audio 9.1
+  ..._uint16(2), // channels
+  ..._uint32(44100), // samples/sec
+  ..._uint32(24080), // avg bytes/sec -> 192639 b/s? (24080 * 8 = 192640)
+  ..._uint16(2000), // block align
+  ..._uint16(16), // bits per sample
+  ..._uint16(10), // codec-specific data size
+  ...List<int>.filled(10, 0),
+];
 
 List<int> _uint16(int value) => [value & 0xff, (value >> 8) & 0xff];
 

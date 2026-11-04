@@ -287,7 +287,11 @@ class AtomToken {
     return descriptions;
   }
 
-  static _AudioSpecificConfig? _parseEsds(List<int> bytes, int startOffset, int limitOffset) {
+  static _AudioSpecificConfig? _parseEsds(
+    List<int> bytes,
+    int startOffset,
+    int limitOffset,
+  ) {
     var offset = startOffset + 8;
     if (offset + 4 > limitOffset) return null;
     offset += 4; // Skip version and flags
@@ -357,7 +361,7 @@ class AtomToken {
     int readBits(int n) {
       while (bitCount < n) {
         if (byteOffset >= bytes.length) {
-          bitBuffer = (bitBuffer << 8);
+          bitBuffer = bitBuffer << 8;
         } else {
           bitBuffer = (bitBuffer << 8) | (bytes[byteOffset++] & 0xFF);
         }
@@ -392,20 +396,34 @@ class AtomToken {
 
   static int _getSampleRateFromIndex(int index) {
     switch (index) {
-      case 0: return 96000;
-      case 1: return 88200;
-      case 2: return 64000;
-      case 3: return 48000;
-      case 4: return 44100;
-      case 5: return 32000;
-      case 6: return 24000;
-      case 7: return 22050;
-      case 8: return 16000;
-      case 9: return 12000;
-      case 10: return 11025;
-      case 11: return 8000;
-      case 12: return 7350;
-      default: return 0;
+      case 0:
+        return 96000;
+      case 1:
+        return 88200;
+      case 2:
+        return 64000;
+      case 3:
+        return 48000;
+      case 4:
+        return 44100;
+      case 5:
+        return 32000;
+      case 6:
+        return 24000;
+      case 7:
+        return 22050;
+      case 8:
+        return 16000;
+      case 9:
+        return 12000;
+      case 10:
+        return 11025;
+      case 11:
+        return 8000;
+      case 12:
+        return 7350;
+      default:
+        return 0;
     }
   }
 
@@ -622,13 +640,12 @@ class AtomToken {
 }
 
 class _AudioSpecificConfig {
-  final int audioObjectType;
-  final int sampleRate;
-  final int channelConfig;
-
   _AudioSpecificConfig({
     required this.audioObjectType,
     required this.sampleRate,
     required this.channelConfig,
   });
+  final int audioObjectType;
+  final int sampleRate;
+  final int channelConfig;
 }

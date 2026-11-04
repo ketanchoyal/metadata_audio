@@ -2,8 +2,6 @@
 ///
 /// Provides a map-like interface where keys are matched case-insensitively.
 /// All keys are normalized to lowercase internally.
-///
-/// Based on upstream: https://github.com/Borewit/music-metadata/blob/master/lib/common/CaseInsensitiveTagMap.ts
 library;
 
 /// A case-insensitive map for storing tag mappings.

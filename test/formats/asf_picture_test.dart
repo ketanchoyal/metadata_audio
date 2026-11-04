@@ -1,5 +1,4 @@
-/// Unit tests for ASF `WM/Picture` decoding parity with upstream
-/// music-metadata:
+/// Unit tests for ASF `WM/Picture` decoding:
 /// - Fields are read at their exact offsets (type byte, declared size, two
 ///   NUL-terminated UTF-16LE strings, then image data).
 /// - Payloads shorter than 5 bytes are rejected as truncated headers.

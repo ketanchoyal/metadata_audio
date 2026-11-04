@@ -1,10 +1,10 @@
-/// CAF (Core Audio File) metadata parser, ported 1:1 from upstream
-/// `lib/caf/CafParser.ts` (Borewit/music-metadata).
+/// CAF (Core Audio File) metadata parser.
 ///
 /// Ref: https://developer.apple.com/library/archive/documentation/MusicAudio/Reference/CAFSpec/CAF_spec/CAF_spec.html
 library;
 
 import 'package:metadata_audio/src/caf/caf_token.dart';
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
@@ -13,7 +13,7 @@ const int _editCountLength = 4;
 const int _numEntriesLength = 4;
 
 class _CodecInfo {
-  const _CodecInfo(this.codec, this.lossless);
+  const _CodecInfo(this.codec, {required this.lossless});
 
   final String codec;
   final bool lossless;
@@ -21,22 +21,22 @@ class _CodecInfo {
 
 // Unrecognised mFormatID values are reported as-is, without claiming losslessness.
 const Map<String, _CodecInfo> _codecByFormatId = <String, _CodecInfo>{
-  'lpcm': _CodecInfo('PCM', true),
-  'ima4': _CodecInfo('IMA4 ADPCM', false),
-  'alac': _CodecInfo('ALAC', true),
-  'flac': _CodecInfo('FLAC', true),
-  'ulaw': _CodecInfo('ITU-T G.711 mu-law', false),
-  'alaw': _CodecInfo('ITU-T G.711 A-law', false),
-  '.mp1': _CodecInfo('MPEG-1 Layer I', false),
-  '.mp2': _CodecInfo('MPEG-1 Layer II', false),
-  '.mp3': _CodecInfo('MPEG-1 Layer III', false),
-  'aac ': _CodecInfo('AAC', false),
-  'aace': _CodecInfo('AAC', false),
-  'aacf': _CodecInfo('AAC', false),
-  'aacg': _CodecInfo('AAC', false),
-  'aach': _CodecInfo('AAC', false),
-  'aacl': _CodecInfo('AAC', false),
-  'aacp': _CodecInfo('AAC', false),
+  'lpcm': _CodecInfo('PCM', lossless: true),
+  'ima4': _CodecInfo('IMA4 ADPCM', lossless: false),
+  'alac': _CodecInfo('ALAC', lossless: true),
+  'flac': _CodecInfo('FLAC', lossless: true),
+  'ulaw': _CodecInfo('ITU-T G.711 mu-law', lossless: false),
+  'alaw': _CodecInfo('ITU-T G.711 A-law', lossless: false),
+  '.mp1': _CodecInfo('MPEG-1 Layer I', lossless: false),
+  '.mp2': _CodecInfo('MPEG-1 Layer II', lossless: false),
+  '.mp3': _CodecInfo('MPEG-1 Layer III', lossless: false),
+  'aac ': _CodecInfo('AAC', lossless: false),
+  'aace': _CodecInfo('AAC', lossless: false),
+  'aacf': _CodecInfo('AAC', lossless: false),
+  'aacg': _CodecInfo('AAC', lossless: false),
+  'aach': _CodecInfo('AAC', lossless: false),
+  'aacl': _CodecInfo('AAC', lossless: false),
+  'aacp': _CodecInfo('AAC', lossless: false),
 };
 
 class CafParser {
@@ -57,7 +57,9 @@ class CafParser {
   bool _reachedEndOfFile = false;
 
   Future<void> parse() async {
-    final header = CafFileHeader.parse(tokenizer.readBytes(CafFileHeader.length));
+    final header = CafFileHeader.parse(
+      tokenizer.readBytes(CafFileHeader.length),
+    );
     if (header.fileType != 'caff') {
       throw CafContentError(
         "Invalid file-type, expected 'caff', found '${header.fileType}'",
@@ -81,7 +83,7 @@ class CafParser {
         _expectedFirstChunk = false;
         if (chunkHeader.chunkType != 'desc') {
           throw CafContentError(
-            "Expected an Audio Description chunk, found "
+            'Expected an Audio Description chunk, found '
             "'${chunkHeader.chunkType}'",
           );
         }
@@ -216,8 +218,9 @@ class CafParser {
       );
     }
     final body = await _readChunkBody(chunkSize, 'Information');
-    for (final (:key, :value)
-        in parseInfoEntries(body).map((e) => (key: e.key, value: e.value))) {
+    for (final (:key, :value) in parseInfoEntries(
+      body,
+    ).map((e) => (key: e.key, value: e.value))) {
       metadata.addNativeTag('CAF', key, value);
     }
   }
@@ -283,6 +286,7 @@ class CafParser {
   /// Reads a chunk body without trusting its declared size.
   Future<List<int>> _readChunkBody(int chunkSize, String chunkType) async {
     _validateChunkAvailability(chunkSize, chunkType);
+    validateAllocation(chunkSize, options, CafContentError.new);
     return tokenizer.readBytes(chunkSize);
   }
 

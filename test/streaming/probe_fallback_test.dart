@@ -2,16 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 List<int> _buildFrame({int bitrateIndex = 9}) {
   const sampleRate = 44100;
   const samplesPerFrame = 1152;
-  final bitrateKbps = <int, int>{
-    9: 128,
-    10: 160,
-  }[bitrateIndex]!;
+  final bitrateKbps = <int, int>{9: 128, 10: 160}[bitrateIndex]!;
   final bitrate = bitrateKbps * 1000;
   final frameLength = (samplesPerFrame / 8.0 * bitrate / sampleRate).floor();
   final header = <int>[0xFF, 0xFB, (bitrateIndex << 4), 0x40];

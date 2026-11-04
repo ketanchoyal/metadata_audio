@@ -532,7 +532,7 @@ AsfNativeTag _postProcessTag(String name, int valueType, List<int> data) {
 }
 
 Picture parseWmPicture(List<int> bytes) {
-  // type (1) + declared size (4) — matches upstream's minimum header check.
+  // type (1) + declared size (4) minimum header check.
   if (bytes.length < 5) {
     throw AsfContentParseError('Truncated ASF picture header: ${bytes.length}');
   }
@@ -555,8 +555,8 @@ Picture parseWmPicture(List<int> bytes) {
   offset = descTerm + 2;
 
   // The declared size is kept as reported; the image data is everything
-  // after the description, mirroring upstream behaviour where a wrong or
-  // zero declared size must not truncate the payload.
+  // after the description, ensuring a wrong or zero declared size does
+  // not truncate the payload.
   final imageData = bytes.sublist(offset);
 
   return Picture(

@@ -1,16 +1,12 @@
+@Tags(['network'])
+library;
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/aiff/aiff_loader.dart';
-import 'package:metadata_audio/src/flac/flac_loader.dart';
-import 'package:metadata_audio/src/mp4/mp4_loader.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
-import 'package:metadata_audio/src/ogg/ogg_loader.dart';
-import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:path/path.dart' as p;
-import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 Future<HttpServer> _startBytesServer(
@@ -141,118 +137,57 @@ Future<String?> _validateUrl(String url) async {
 /// NOTE: These tests require a real HTTP URL to test against.
 /// Set [testUrl] below to an audio file URL that supports HTTP Range requests.
 /// The file should be at least 5MB to properly test the strategies.
-@Tags(['network'])
 void main() {
   // Unit tests for detectStrategy logic (no network required)
   group('detectStrategy logic', () {
-    test('returns fullDownload for small files (<= 5MB)', () {
-      const fileSize = 1024 * 1024; // 1MB
+    ParseStrategy selectStrategy(int fileSize, {required bool supportsRange}) {
       const largeFileThreshold = 5 * 1024 * 1024;
-
-      late ParseStrategy strategy;
-      const supportsRange = true;
-
       if (fileSize <= largeFileThreshold) {
-        strategy = ParseStrategy.fullDownload;
+        return ParseStrategy.fullDownload;
       } else if (supportsRange) {
         if (fileSize > 50 * 1024 * 1024) {
-          strategy = ParseStrategy.randomAccess;
+          return ParseStrategy.randomAccess;
         } else {
-          strategy = ParseStrategy.probe;
+          return ParseStrategy.probe;
         }
       } else {
-        strategy = ParseStrategy.fullDownload;
+        return ParseStrategy.fullDownload;
       }
+    }
 
-      expect(strategy, equals(ParseStrategy.fullDownload));
+    test('returns fullDownload for small files (<= 5MB)', () {
+      expect(
+        selectStrategy(1024 * 1024, supportsRange: true),
+        equals(ParseStrategy.fullDownload),
+      );
     });
 
     test('returns probe for medium files (5MB < size <= 50MB)', () {
-      const fileSize = 10 * 1024 * 1024; // 10MB
-      const largeFileThreshold = 5 * 1024 * 1024;
-
-      late ParseStrategy strategy;
-      const supportsRange = true;
-
-      if (fileSize <= largeFileThreshold) {
-        strategy = ParseStrategy.fullDownload;
-      } else if (supportsRange) {
-        if (fileSize > 50 * 1024 * 1024) {
-          strategy = ParseStrategy.randomAccess;
-        } else {
-          strategy = ParseStrategy.probe;
-        }
-      } else {
-        strategy = ParseStrategy.fullDownload;
-      }
-
-      expect(strategy, equals(ParseStrategy.probe));
+      expect(
+        selectStrategy(10 * 1024 * 1024, supportsRange: true),
+        equals(ParseStrategy.probe),
+      );
     });
 
     test('returns probe for files exactly 50MB', () {
-      const fileSize = 50 * 1024 * 1024; // 50MB exactly
-      const largeFileThreshold = 5 * 1024 * 1024;
-
-      late ParseStrategy strategy;
-      const supportsRange = true;
-
-      if (fileSize <= largeFileThreshold) {
-        strategy = ParseStrategy.fullDownload;
-      } else if (supportsRange) {
-        if (fileSize > 50 * 1024 * 1024) {
-          strategy = ParseStrategy.randomAccess;
-        } else {
-          strategy = ParseStrategy.probe;
-        }
-      } else {
-        strategy = ParseStrategy.fullDownload;
-      }
-
-      expect(strategy, equals(ParseStrategy.probe));
+      expect(
+        selectStrategy(50 * 1024 * 1024, supportsRange: true),
+        equals(ParseStrategy.probe),
+      );
     });
 
     test('returns randomAccess for large files (> 50MB)', () {
-      const fileSize = 100 * 1024 * 1024; // 100MB
-      const largeFileThreshold = 5 * 1024 * 1024;
-
-      late ParseStrategy strategy;
-      const supportsRange = true;
-
-      if (fileSize <= largeFileThreshold) {
-        strategy = ParseStrategy.fullDownload;
-      } else if (supportsRange) {
-        if (fileSize > 50 * 1024 * 1024) {
-          strategy = ParseStrategy.randomAccess;
-        } else {
-          strategy = ParseStrategy.probe;
-        }
-      } else {
-        strategy = ParseStrategy.fullDownload;
-      }
-
-      expect(strategy, equals(ParseStrategy.randomAccess));
+      expect(
+        selectStrategy(100 * 1024 * 1024, supportsRange: true),
+        equals(ParseStrategy.randomAccess),
+      );
     });
 
     test('returns fullDownload when Range not supported', () {
-      const fileSize = 10 * 1024 * 1024; // 10MB
-      const largeFileThreshold = 5 * 1024 * 1024;
-
-      late ParseStrategy strategy;
-      const supportsRange = false;
-
-      if (fileSize <= largeFileThreshold) {
-        strategy = ParseStrategy.fullDownload;
-      } else if (supportsRange) {
-        if (fileSize > 50 * 1024 * 1024) {
-          strategy = ParseStrategy.randomAccess;
-        } else {
-          strategy = ParseStrategy.probe;
-        }
-      } else {
-        strategy = ParseStrategy.fullDownload;
-      }
-
-      expect(strategy, equals(ParseStrategy.fullDownload));
+      expect(
+        selectStrategy(10 * 1024 * 1024, supportsRange: false),
+        equals(ParseStrategy.fullDownload),
+      );
     });
   });
 

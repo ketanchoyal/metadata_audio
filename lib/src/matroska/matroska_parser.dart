@@ -4,8 +4,8 @@ library;
 
 import 'dart:typed_data';
 
-import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/common/js_safe_numbers.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/ebml/ebml_iterator.dart';
 import 'package:metadata_audio/src/ebml/types.dart';
 import 'package:metadata_audio/src/matroska/matroska_dtd.dart';
@@ -34,7 +34,7 @@ class MatroskaParser {
 
   Future<void> parse() async {
     final containerSize = tokenizer.fileInfo?.size ?? maxSafeJsInt;
-    final iterator = EbmlIterator(tokenizer);
+    final iterator = EbmlIterator(tokenizer, options);
 
     await iterator.iterate(
       matroskaDtd,
@@ -44,6 +44,11 @@ class MatroskaParser {
           switch (element.id) {
             case 0x1C53BB6B:
               return ParseAction.ignoreElement;
+            case 0x1941A469:
+              if (options.skipCovers) {
+                return ParseAction.skipElement;
+              }
+              return ParseAction.readNext;
             case 0x1F43B675:
               if (options.mkvUseIndex && _seekHead != null) {
                 final seekEntries = _asTreeList(_seekHead!['seek']);

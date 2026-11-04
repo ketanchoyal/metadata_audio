@@ -1,5 +1,4 @@
-/// CAF (Core Audio File) tokens, ported 1:1 from upstream
-/// `lib/caf/CafToken.ts` (Borewit/music-metadata).
+/// CAF (Core Audio File) tokens.
 ///
 /// CAF is fully big-endian. The file header is `'caff'` + 2-byte version +
 /// 2-byte flags. Every chunk is a latin1 4CC type plus a signed 64-bit body
@@ -10,7 +9,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import '../parse_error.dart';
+import 'package:metadata_audio/src/parse_error.dart';
 
 class CafContentError extends UnexpectedFileContentError {
   CafContentError(String message) : super('CAF', message);
@@ -62,7 +61,7 @@ class CafChunkHeader {
     final view = ByteData.sublistView(Uint8List.fromList(bytes));
     return CafChunkHeader(
       chunkType: _decodeFourCC(bytes, 0),
-      chunkSize: view.getInt64(4, Endian.big),
+      chunkSize: view.getInt64(4),
     );
   }
 }
@@ -93,13 +92,13 @@ class AudioDescription {
     _expectLength(bytes, length, 'CAF Audio Description');
     final view = ByteData.sublistView(Uint8List.fromList(bytes));
     return AudioDescription(
-      sampleRate: view.getFloat64(0, Endian.big),
+      sampleRate: view.getFloat64(0),
       formatId: _decodeFourCC(bytes, 8),
-      formatFlags: view.getUint32(12, Endian.big),
-      bytesPerPacket: view.getUint32(16, Endian.big),
-      framesPerPacket: view.getUint32(20, Endian.big),
-      channelsPerFrame: view.getUint32(24, Endian.big),
-      bitsPerChannel: view.getUint32(28, Endian.big),
+      formatFlags: view.getUint32(12),
+      bytesPerPacket: view.getUint32(16),
+      framesPerPacket: view.getUint32(20),
+      channelsPerFrame: view.getUint32(24),
+      bitsPerChannel: view.getUint32(28),
     );
   }
 }
@@ -124,10 +123,10 @@ class PacketTableHeader {
     _expectLength(bytes, length, 'CAF Packet Table header');
     final view = ByteData.sublistView(Uint8List.fromList(bytes));
     return PacketTableHeader(
-      numberPackets: view.getInt64(0, Endian.big),
-      numberValidFrames: view.getInt64(8, Endian.big),
-      primingFrames: view.getInt32(16, Endian.big),
-      remainderFrames: view.getInt32(20, Endian.big),
+      numberPackets: view.getInt64(0),
+      numberValidFrames: view.getInt64(8),
+      primingFrames: view.getInt32(16),
+      remainderFrames: view.getInt32(20),
     );
   }
 }
@@ -195,9 +194,9 @@ class ChannelLayoutHeader {
     _expectLength(bytes, length, 'CAF Channel Layout header');
     final view = ByteData.sublistView(Uint8List.fromList(bytes));
     return ChannelLayoutHeader(
-      channelLayoutTag: view.getUint32(0, Endian.big),
-      channelBitmap: view.getUint32(4, Endian.big),
-      numberChannelDescriptions: view.getUint32(8, Endian.big),
+      channelLayoutTag: view.getUint32(0),
+      channelBitmap: view.getUint32(4),
+      numberChannelDescriptions: view.getUint32(8),
     );
   }
 }
@@ -231,12 +230,12 @@ List<ChannelDescription> parseChannelDescriptions(List<int> body, int count) {
     final offset = i * channelDescriptionLength;
     descriptions.add(
       ChannelDescription(
-        channelLabel: view.getUint32(offset, Endian.big),
-        channelFlags: view.getUint32(offset + 4, Endian.big),
+        channelLabel: view.getUint32(offset),
+        channelFlags: view.getUint32(offset + 4),
         coordinates: <double>[
-          view.getFloat32(offset + 8, Endian.big),
-          view.getFloat32(offset + 12, Endian.big),
-          view.getFloat32(offset + 16, Endian.big),
+          view.getFloat32(offset + 8),
+          view.getFloat32(offset + 12),
+          view.getFloat32(offset + 16),
         ],
       ),
     );
@@ -259,14 +258,16 @@ List<CafInfoEntry> parseInfoEntries(List<int> body) {
   }
 
   final view = ByteData.sublistView(Uint8List.fromList(body));
-  final numEntries = view.getUint32(0, Endian.big);
+  final numEntries = view.getUint32(0);
 
   /// Reads a NUL-terminated UTF-8 string starting at [from] and returns the
   /// decoded string plus the offset just past its terminator.
   (String, int) readString(int from) {
     final end = body.indexOf(0, from);
     if (end < 0) {
-      throw CafContentError('Information chunk contains an unterminated string');
+      throw CafContentError(
+        'Information chunk contains an unterminated string',
+      );
     }
     final value = utf8.decode(body.sublist(from, end), allowMalformed: true);
     return (value, end + 1);

@@ -24,6 +24,7 @@
 /// * FLAC / OGG               → `headerOnly`
 /// * M4B                      → `mp4Optimized` + large-file handling
 /// * Very large FLAC / WAV    → `headerOnly` on 600 MB+ files
+@Tags(['network'])
 library;
 
 import 'dart:async';
@@ -273,7 +274,6 @@ class _LocalAudioServer {
 // Tests
 // =============================================================================
 
-@Tags(['network'])
 void main() {
   // ---------------------------------------------------------------------------
   // Register all parsers once for the entire test file.
@@ -748,89 +748,81 @@ void main() {
         }
       });
 
-      test(
-        'strategy=probe, probe=headerAndTail, format=mpeg',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
+      test('strategy=probe, probe=headerAndTail, format=mpeg', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
+
+        ParseStrategy? gotStrategy;
+        ProbeStrategy? gotProbe;
+
+        final info = await detectStrategy(_mp3MediumUrl);
+
+        // Record what was actually selected so the test output is informative.
+        gotStrategy = info.strategy;
+        gotProbe = info.probeStrategy;
+
+        // ignore: avoid_print
+        print('Medium MP3 detectStrategy:');
+        // ignore: avoid_print
+        print(
+          '  size=${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}'
+          '  rangeSupport=${info.supportsRange}'
+          '  strategy=$gotStrategy  probe=$gotProbe  format=${info.detectedFormat}',
+        );
+
+        expect(info.detectedFormat, equals('mpeg'));
+        expect(info.supportsRange, isTrue);
+
+        if (info.fileSize != null) {
+          final sizeBytes = info.fileSize!;
+          if (sizeBytes <= 5 * 1024 * 1024) {
+            expect(gotStrategy, equals(ParseStrategy.fullDownload));
+          } else if (sizeBytes > 50 * 1024 * 1024) {
+            expect(gotStrategy, equals(ParseStrategy.randomAccess));
+          } else {
+            expect(gotStrategy, equals(ParseStrategy.probe));
+            expect(gotProbe, equals(ProbeStrategy.headerAndTail));
           }
+        }
+      }, timeout: const Timeout(Duration(seconds: 30)));
 
-          ParseStrategy? gotStrategy;
-          ProbeStrategy? gotProbe;
+      test('parseUrl extracts MP3 metadata', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
 
-          final info = await detectStrategy(_mp3MediumUrl);
+        ParseStrategy? selectedStrategy;
 
-          // Record what was actually selected so the test output is informative.
-          gotStrategy = info.strategy;
-          gotProbe = info.probeStrategy;
+        final metadata = await parseUrl(
+          _mp3MediumUrl,
+          timeout: const Duration(seconds: 60),
+          onStrategySelected: (s, _) => selectedStrategy = s,
+        );
 
-          // ignore: avoid_print
-          print('Medium MP3 detectStrategy:');
-          // ignore: avoid_print
-          print(
-            '  size=${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}'
-            '  rangeSupport=${info.supportsRange}'
-            '  strategy=$gotStrategy  probe=$gotProbe  format=${info.detectedFormat}',
-          );
+        // ignore: avoid_print
+        print('Medium MP3 parseUrl:');
+        // ignore: avoid_print
+        print('  strategy=$selectedStrategy');
+        // ignore: avoid_print
+        print('  container=${metadata.format.container}');
+        // ignore: avoid_print
+        print('  codec=${metadata.format.codec}');
+        // ignore: avoid_print
+        print('  title=${metadata.common.title}');
+        // ignore: avoid_print
+        print('  artist=${metadata.common.artist}');
+        // ignore: avoid_print
+        print('  album=${metadata.common.album}');
 
-          expect(info.detectedFormat, equals('mpeg'));
-          expect(info.supportsRange, isTrue);
-
-          if (info.fileSize != null) {
-            final sizeBytes = info.fileSize!;
-            if (sizeBytes <= 5 * 1024 * 1024) {
-              expect(gotStrategy, equals(ParseStrategy.fullDownload));
-            } else if (sizeBytes > 50 * 1024 * 1024) {
-              expect(gotStrategy, equals(ParseStrategy.randomAccess));
-            } else {
-              expect(gotStrategy, equals(ParseStrategy.probe));
-              expect(gotProbe, equals(ProbeStrategy.headerAndTail));
-            }
-          }
-        },
-        timeout: const Timeout(Duration(seconds: 30)),
-      );
-
-      test(
-        'parseUrl extracts MP3 metadata',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
-          }
-
-          ParseStrategy? selectedStrategy;
-
-          final metadata = await parseUrl(
-            _mp3MediumUrl,
-            timeout: const Duration(seconds: 60),
-            onStrategySelected: (s, _) => selectedStrategy = s,
-          );
-
-          // ignore: avoid_print
-          print('Medium MP3 parseUrl:');
-          // ignore: avoid_print
-          print('  strategy=$selectedStrategy');
-          // ignore: avoid_print
-          print('  container=${metadata.format.container}');
-          // ignore: avoid_print
-          print('  codec=${metadata.format.codec}');
-          // ignore: avoid_print
-          print('  title=${metadata.common.title}');
-          // ignore: avoid_print
-          print('  artist=${metadata.common.artist}');
-          // ignore: avoid_print
-          print('  album=${metadata.common.album}');
-
-          expect(metadata.format.container, equals('MPEG'));
-          expect(metadata.format.codec, startsWith('MPEG'));
-          // Tagged LibriVox files always have a title and creator.
-          expect(metadata.common.title, isNotNull);
-          expect(metadata.common.artist, isNotNull);
-        },
-        timeout: const Timeout(Duration(seconds: 120)),
-      );
+        expect(metadata.format.container, equals('MPEG'));
+        expect(metadata.format.codec, startsWith('MPEG'));
+        // Tagged LibriVox files always have a title and creator.
+        expect(metadata.common.title, isNotNull);
+        expect(metadata.common.artist, isNotNull);
+      }, timeout: const Timeout(Duration(seconds: 120)));
     });
 
     // -------------------------------------------------------------------------
@@ -847,61 +839,53 @@ void main() {
         }
       });
 
-      test(
-        'strategy=randomAccess, format=mpeg',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
-          }
+      test('strategy=randomAccess, format=mpeg', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
 
-          final info = await detectStrategy(_mp3LargeUrl);
+        final info = await detectStrategy(_mp3LargeUrl);
 
-          // ignore: avoid_print
-          print('Large MP3 detectStrategy:');
-          // ignore: avoid_print
-          print(
-            '  size=${info.fileSize != null ? "${info.fileSize! ~/ (1024 * 1024)}MB" : "unknown"}'
-            '  rangeSupport=${info.supportsRange}'
-            '  strategy=${info.strategy}  format=${info.detectedFormat}',
-          );
+        // ignore: avoid_print
+        print('Large MP3 detectStrategy:');
+        // ignore: avoid_print
+        print(
+          '  size=${info.fileSize != null ? "${info.fileSize! ~/ (1024 * 1024)}MB" : "unknown"}'
+          '  rangeSupport=${info.supportsRange}'
+          '  strategy=${info.strategy}  format=${info.detectedFormat}',
+        );
 
-          expect(info.detectedFormat, equals('mpeg'));
+        expect(info.detectedFormat, equals('mpeg'));
 
-          if (info.fileSize != null && info.fileSize! > 50 * 1024 * 1024) {
-            expect(info.strategy, equals(ParseStrategy.randomAccess));
-          }
-        },
-        timeout: const Timeout(Duration(seconds: 30)),
-      );
+        if (info.fileSize != null && info.fileSize! > 50 * 1024 * 1024) {
+          expect(info.strategy, equals(ParseStrategy.randomAccess));
+        }
+      }, timeout: const Timeout(Duration(seconds: 30)));
 
-      test(
-        'parseUrl extracts MP3 metadata from large file',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
-          }
+      test('parseUrl extracts MP3 metadata from large file', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
 
-          ParseStrategy? selectedStrategy;
+        ParseStrategy? selectedStrategy;
 
-          final metadata = await parseUrl(
-            _mp3LargeUrl,
-            timeout: const Duration(seconds: 90),
-            onStrategySelected: (s, _) => selectedStrategy = s,
-          );
+        final metadata = await parseUrl(
+          _mp3LargeUrl,
+          timeout: const Duration(seconds: 90),
+          onStrategySelected: (s, _) => selectedStrategy = s,
+        );
 
-          // ignore: avoid_print
-          print(
-            'Large MP3 parseUrl: strategy=$selectedStrategy'
-            '  title=${metadata.common.title}',
-          );
+        // ignore: avoid_print
+        print(
+          'Large MP3 parseUrl: strategy=$selectedStrategy'
+          '  title=${metadata.common.title}',
+        );
 
-          expect(metadata.format.container, equals('MPEG'));
-          expect(metadata.common.title, isNotNull);
-        },
-        timeout: const Timeout(Duration(seconds: 120)),
-      );
+        expect(metadata.format.container, equals('MPEG'));
+        expect(metadata.common.title, isNotNull);
+      }, timeout: const Timeout(Duration(seconds: 120)));
     });
 
     // -------------------------------------------------------------------------
@@ -918,56 +902,48 @@ void main() {
         }
       });
 
-      test(
-        'strategy=headerOnly, format=header-only',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
-          }
+      test('strategy=headerOnly, format=header-only', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
 
-          final info = await detectStrategy(_flacUrl);
+        final info = await detectStrategy(_flacUrl);
 
-          // ignore: avoid_print
-          print(
-            'FLAC detectStrategy: size=${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}'
-            '  strategy=${info.strategy}  format=${info.detectedFormat}',
-          );
+        // ignore: avoid_print
+        print(
+          'FLAC detectStrategy: size=${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}'
+          '  strategy=${info.strategy}  format=${info.detectedFormat}',
+        );
 
-          expect(info.detectedFormat, equals('header-only'));
-          expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
+        expect(info.detectedFormat, equals('header-only'));
+        expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
 
-          if (info.fileSize != null && info.fileSize! > 5 * 1024 * 1024) {
-            expect(info.strategy, equals(ParseStrategy.headerOnly));
-          }
-        },
-        timeout: const Timeout(Duration(seconds: 30)),
-      );
+        if (info.fileSize != null && info.fileSize! > 5 * 1024 * 1024) {
+          expect(info.strategy, equals(ParseStrategy.headerOnly));
+        }
+      }, timeout: const Timeout(Duration(seconds: 30)));
 
-      test(
-        'parseUrl parses FLAC metadata',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
-          }
+      test('parseUrl parses FLAC metadata', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
 
-          final metadata = await parseUrl(
-            _flacUrl,
-            timeout: const Duration(seconds: 60),
-          );
+        final metadata = await parseUrl(
+          _flacUrl,
+          timeout: const Duration(seconds: 60),
+        );
 
-          // ignore: avoid_print
-          print(
-            'FLAC parseUrl: container=${metadata.format.container}'
-            '  title=${metadata.common.title}',
-          );
+        // ignore: avoid_print
+        print(
+          'FLAC parseUrl: container=${metadata.format.container}'
+          '  title=${metadata.common.title}',
+        );
 
-          expect(metadata.format.container, equals('FLAC'));
-          expect(metadata.format.lossless, isTrue);
-        },
-        timeout: const Timeout(Duration(seconds: 120)),
-      );
+        expect(metadata.format.container, equals('FLAC'));
+        expect(metadata.format.lossless, isTrue);
+      }, timeout: const Timeout(Duration(seconds: 120)));
     });
 
     // -------------------------------------------------------------------------
@@ -984,52 +960,44 @@ void main() {
         }
       });
 
-      test(
-        'strategy=headerOnly for large OGG, format=header-only',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
-          }
+      test('strategy=headerOnly for large OGG, format=header-only', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
 
-          final info = await detectStrategy(_oggUrl);
+        final info = await detectStrategy(_oggUrl);
 
-          // ignore: avoid_print
-          print(
-            'OGG detectStrategy: size=${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}'
-            '  strategy=${info.strategy}  format=${info.detectedFormat}',
-          );
+        // ignore: avoid_print
+        print(
+          'OGG detectStrategy: size=${info.fileSize != null ? "${info.fileSize! ~/ 1024}KB" : "unknown"}'
+          '  strategy=${info.strategy}  format=${info.detectedFormat}',
+        );
 
-          expect(info.detectedFormat, equals('header-only'));
-          expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
+        expect(info.detectedFormat, equals('header-only'));
+        expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
 
-          if (info.fileSize != null && info.fileSize! > 5 * 1024 * 1024) {
-            expect(info.strategy, equals(ParseStrategy.headerOnly));
-          }
-        },
-        timeout: const Timeout(Duration(seconds: 30)),
-      );
+        if (info.fileSize != null && info.fileSize! > 5 * 1024 * 1024) {
+          expect(info.strategy, equals(ParseStrategy.headerOnly));
+        }
+      }, timeout: const Timeout(Duration(seconds: 30)));
 
-      test(
-        'parseUrl parses OGG metadata',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
-          }
+      test('parseUrl parses OGG metadata', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
 
-          final metadata = await parseUrl(
-            _oggUrl,
-            timeout: const Duration(seconds: 60),
-          );
+        final metadata = await parseUrl(
+          _oggUrl,
+          timeout: const Duration(seconds: 60),
+        );
 
-          // ignore: avoid_print
-          print('OGG parseUrl: container=${metadata.format.container}');
+        // ignore: avoid_print
+        print('OGG parseUrl: container=${metadata.format.container}');
 
-          expect(metadata.format.container, equals('Ogg'));
-        },
-        timeout: const Timeout(Duration(seconds: 120)),
-      );
+        expect(metadata.format.container, equals('Ogg'));
+      }, timeout: const Timeout(Duration(seconds: 120)));
     });
 
     // -------------------------------------------------------------------------
@@ -1079,35 +1047,31 @@ void main() {
         timeout: const Timeout(Duration(seconds: 30)),
       );
 
-      test(
-        'parseUrl parses M4B metadata with chapters',
-        () async {
-          if (_skipReason != null) {
-            markTestSkipped(_skipReason!);
-            return;
-          }
+      test('parseUrl parses M4B metadata with chapters', () async {
+        if (_skipReason != null) {
+          markTestSkipped(_skipReason!);
+          return;
+        }
 
-          final metadata = await parseUrl(
-            _m4bUrl,
-            options: const ParseOptions(includeChapters: true),
-            timeout: const Duration(seconds: 60),
-          );
+        final metadata = await parseUrl(
+          _m4bUrl,
+          options: const ParseOptions(includeChapters: true),
+          timeout: const Duration(seconds: 60),
+        );
 
-          // ignore: avoid_print
-          print(
-            'M4B parseUrl: container=${metadata.format.container}'
-            '  chapters=${metadata.format.chapters?.length}',
-          );
+        // ignore: avoid_print
+        print(
+          'M4B parseUrl: container=${metadata.format.container}'
+          '  chapters=${metadata.format.chapters?.length}',
+        );
 
-          expect(
-            metadata.format.container,
-            anyOf(contains('M4'), contains('MP4')),
-          );
-          expect(metadata.format.chapters, isNotNull);
-          expect(metadata.format.chapters!.length, greaterThanOrEqualTo(1));
-        },
-        timeout: const Timeout(Duration(seconds: 120)),
-      );
+        expect(
+          metadata.format.container,
+          anyOf(contains('M4'), contains('MP4')),
+        );
+        expect(metadata.format.chapters, isNotNull);
+        expect(metadata.format.chapters!.length, greaterThanOrEqualTo(1));
+      }, timeout: const Timeout(Duration(seconds: 120)));
     });
 
     // -------------------------------------------------------------------------
@@ -1198,162 +1162,144 @@ void main() {
         }
       });
 
-      test(
-        'very large FLAC uses headerOnly strategy',
-        () async {
-          final skipReason =
-              _hugeFlacSkipReason ?? await _probeUrl(_flacHugeUrl);
-          if (skipReason != null) {
-            markTestSkipped(skipReason);
+      test('very large FLAC uses headerOnly strategy', () async {
+        final skipReason = _hugeFlacSkipReason ?? await _probeUrl(_flacHugeUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason);
+          return;
+        }
+
+        final StrategyInfo info;
+        try {
+          info = await detectStrategy(_flacHugeUrl);
+        } on FileDownloadError catch (e) {
+          if (e.message.contains('500')) {
+            markTestSkipped('Archive.org backend returned HTTP 500: $e');
             return;
           }
+          rethrow;
+        }
 
-          final StrategyInfo info;
-          try {
-            info = await detectStrategy(_flacHugeUrl);
-          } on FileDownloadError catch (e) {
-            if (e.message.contains('500')) {
-              markTestSkipped('Archive.org backend returned HTTP 500: $e');
-              return;
-            }
-            rethrow;
-          }
+        // ignore: avoid_print
+        print(
+          'Huge FLAC detectStrategy: size=${info.fileSize != null ? "${info.fileSize! ~/ (1024 * 1024)}MB" : "unknown"}'
+          '  strategy=${info.strategy}  probe=${info.probeStrategy}'
+          '  format=${info.detectedFormat}',
+        );
 
-          // ignore: avoid_print
-          print(
-            'Huge FLAC detectStrategy: size=${info.fileSize != null ? "${info.fileSize! ~/ (1024 * 1024)}MB" : "unknown"}'
-            '  strategy=${info.strategy}  probe=${info.probeStrategy}'
-            '  format=${info.detectedFormat}',
+        if (info.fileSize == null) {
+          markTestSkipped('Archive.org redirect returned no content length');
+          return;
+        }
+
+        expect(info.fileSize, isNotNull);
+        expect(info.fileSize!, greaterThan(600 * 1024 * 1024));
+        expect(info.detectedFormat, equals('header-only'));
+        expect(info.strategy, equals(ParseStrategy.headerOnly));
+        expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
+      }, timeout: const Timeout(Duration(seconds: 30)));
+
+      test('parseUrl parses very large FLAC metadata', () async {
+        final skipReason = _hugeFlacSkipReason ?? await _probeUrl(_flacHugeUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason);
+          return;
+        }
+
+        final AudioMetadata metadata;
+        try {
+          metadata = await parseUrl(
+            _flacHugeUrl,
+            timeout: const Duration(seconds: 90),
           );
-
-          if (info.fileSize == null) {
-            markTestSkipped('Archive.org redirect returned no content length');
+        } on FileDownloadError catch (e) {
+          if (e.message.contains('500')) {
+            markTestSkipped('Archive.org backend returned HTTP 500: $e');
             return;
           }
+          rethrow;
+        } on TimeoutException {
+          markTestSkipped('Timed out fetching 1.2 GB FLAC from archive.org');
+          return;
+        }
 
-          expect(info.fileSize, isNotNull);
-          expect(info.fileSize!, greaterThan(600 * 1024 * 1024));
-          expect(info.detectedFormat, equals('header-only'));
-          expect(info.strategy, equals(ParseStrategy.headerOnly));
-          expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
-        },
-        timeout: const Timeout(Duration(seconds: 30)),
-      );
+        // ignore: avoid_print
+        print(
+          'Huge FLAC parseUrl: container=${metadata.format.container}'
+          '  title=${metadata.common.title}',
+        );
 
-      test(
-        'parseUrl parses very large FLAC metadata',
-        () async {
-          final skipReason =
-              _hugeFlacSkipReason ?? await _probeUrl(_flacHugeUrl);
-          if (skipReason != null) {
-            markTestSkipped(skipReason);
+        expect(metadata.format.container, equals('FLAC'));
+        expect(metadata.format.lossless, isTrue);
+      }, timeout: const Timeout(Duration(seconds: 150)));
+
+      test('very large WAV uses headerOnly strategy', () async {
+        final skipReason = _hugeWavSkipReason ?? await _probeUrl(_wavHugeUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason);
+          return;
+        }
+
+        final StrategyInfo info;
+        try {
+          info = await detectStrategy(_wavHugeUrl);
+        } on FileDownloadError catch (e) {
+          if (e.message.contains('500')) {
+            markTestSkipped('Archive.org backend returned HTTP 500: $e');
             return;
           }
+          rethrow;
+        }
 
-          final AudioMetadata metadata;
-          try {
-            metadata = await parseUrl(
-              _flacHugeUrl,
-              timeout: const Duration(seconds: 90),
-            );
-          } on FileDownloadError catch (e) {
-            if (e.message.contains('500')) {
-              markTestSkipped('Archive.org backend returned HTTP 500: $e');
-              return;
-            }
-            rethrow;
-          } on TimeoutException {
-            markTestSkipped('Timed out fetching 1.2 GB FLAC from archive.org');
-            return;
-          }
+        // ignore: avoid_print
+        print(
+          'Huge WAV detectStrategy: size=${info.fileSize != null ? "${info.fileSize! ~/ (1024 * 1024)}MB" : "unknown"}'
+          '  strategy=${info.strategy}  probe=${info.probeStrategy}'
+          '  format=${info.detectedFormat}',
+        );
 
-          // ignore: avoid_print
-          print(
-            'Huge FLAC parseUrl: container=${metadata.format.container}'
-            '  title=${metadata.common.title}',
+        if (info.fileSize == null) {
+          markTestSkipped('Archive.org redirect returned no content length');
+          return;
+        }
+
+        expect(info.fileSize, isNotNull);
+        expect(info.fileSize!, greaterThan(600 * 1024 * 1024));
+        expect(info.detectedFormat, equals('header-only'));
+        expect(info.strategy, equals(ParseStrategy.headerOnly));
+        expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
+      }, timeout: const Timeout(Duration(seconds: 30)));
+
+      test('parseUrl parses very large WAV metadata', () async {
+        final skipReason = _hugeWavSkipReason ?? await _probeUrl(_wavHugeUrl);
+        if (skipReason != null) {
+          markTestSkipped(skipReason);
+          return;
+        }
+
+        final AudioMetadata metadata;
+        try {
+          metadata = await parseUrl(
+            _wavHugeUrl,
+            timeout: const Duration(seconds: 90),
           );
-
-          expect(metadata.format.container, equals('FLAC'));
-          expect(metadata.format.lossless, isTrue);
-        },
-        timeout: const Timeout(Duration(seconds: 150)),
-      );
-
-      test(
-        'very large WAV uses headerOnly strategy',
-        () async {
-          final skipReason = _hugeWavSkipReason ?? await _probeUrl(_wavHugeUrl);
-          if (skipReason != null) {
-            markTestSkipped(skipReason);
+        } on FileDownloadError catch (e) {
+          if (e.message.contains('500')) {
+            markTestSkipped('Archive.org backend returned HTTP 500: $e');
             return;
           }
+          rethrow;
+        }
 
-          final StrategyInfo info;
-          try {
-            info = await detectStrategy(_wavHugeUrl);
-          } on FileDownloadError catch (e) {
-            if (e.message.contains('500')) {
-              markTestSkipped('Archive.org backend returned HTTP 500: $e');
-              return;
-            }
-            rethrow;
-          }
+        // ignore: avoid_print
+        print(
+          'Huge WAV parseUrl: container=${metadata.format.container}'
+          '  codec=${metadata.format.codec}',
+        );
 
-          // ignore: avoid_print
-          print(
-            'Huge WAV detectStrategy: size=${info.fileSize != null ? "${info.fileSize! ~/ (1024 * 1024)}MB" : "unknown"}'
-            '  strategy=${info.strategy}  probe=${info.probeStrategy}'
-            '  format=${info.detectedFormat}',
-          );
-
-          if (info.fileSize == null) {
-            markTestSkipped('Archive.org redirect returned no content length');
-            return;
-          }
-
-          expect(info.fileSize, isNotNull);
-          expect(info.fileSize!, greaterThan(600 * 1024 * 1024));
-          expect(info.detectedFormat, equals('header-only'));
-          expect(info.strategy, equals(ParseStrategy.headerOnly));
-          expect(info.probeStrategy, equals(ProbeStrategy.headerOnly));
-        },
-        timeout: const Timeout(Duration(seconds: 30)),
-      );
-
-      test(
-        'parseUrl parses very large WAV metadata',
-        () async {
-          final skipReason = _hugeWavSkipReason ?? await _probeUrl(_wavHugeUrl);
-          if (skipReason != null) {
-            markTestSkipped(skipReason);
-            return;
-          }
-
-          final AudioMetadata metadata;
-          try {
-            metadata = await parseUrl(
-              _wavHugeUrl,
-              timeout: const Duration(seconds: 90),
-            );
-          } on FileDownloadError catch (e) {
-            if (e.message.contains('500')) {
-              markTestSkipped('Archive.org backend returned HTTP 500: $e');
-              return;
-            }
-            rethrow;
-          }
-
-          // ignore: avoid_print
-          print(
-            'Huge WAV parseUrl: container=${metadata.format.container}'
-            '  codec=${metadata.format.codec}',
-          );
-
-          expect(metadata.format.container, equals('WAVE'));
-          expect(metadata.format.lossless, isTrue);
-        },
-        timeout: const Timeout(Duration(seconds: 150)),
-      );
+        expect(metadata.format.container, equals('WAVE'));
+        expect(metadata.format.lossless, isTrue);
+      }, timeout: const Timeout(Duration(seconds: 150)));
     });
   });
 }

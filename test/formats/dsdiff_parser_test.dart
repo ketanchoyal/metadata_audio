@@ -230,9 +230,7 @@ List<int> _u32le(int value) => <int>[
   (value >> 24) & 0xFF,
 ];
 
-List<int> _i64be(int value) {
-  return _u64be(value);
-}
+List<int> _i64be(int value) => _u64be(value);
 
 List<int> _u64be(int value) => <int>[
   (value >> 56) & 0xFF,

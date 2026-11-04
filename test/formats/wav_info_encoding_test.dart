@@ -1,6 +1,6 @@
 /// Integration tests for RIFF LIST/INFO tag character encoding.
 ///
-/// Matches upstream music-metadata behaviour:
+/// RIFF LIST/INFO tag character encoding:
 /// - Default decoding is ISO 8859-1 (Latin-1), not ASCII/Windows-1252.
 /// - A `CSET` chunk overrides the encoding for the whole file, including
 ///   INFO chunks that precede it (they are queued until the code page is
@@ -20,7 +20,9 @@ void main() {
   group('WAV LIST/INFO character encoding', () {
     test('latin1 is the default when no CSET chunk is present', () async {
       final wav = _buildWav(
-        infoEntries: [('INAM', [0x4D, 0xF6, 0x74, 0x6C, 0x65, 0x79])],
+        infoEntries: [
+          ('INAM', [0x4D, 0xF6, 0x74, 0x6C, 0x65, 0x79]),
+        ],
       );
 
       final metadata = await parseBytes(wav);
@@ -30,10 +32,7 @@ void main() {
     test('value truncates at the first NUL', () async {
       final wav = _buildWav(
         infoEntries: [
-          (
-            'INAM',
-            <int>[0x4D, 0xF6, 0x74, 0x6C, 0x65, 0x79, 0x00, 0x61, 0x6C],
-          ),
+          ('INAM', <int>[0x4D, 0xF6, 0x74, 0x6C, 0x65, 0x79, 0x00, 0x61, 0x6C]),
         ],
       );
 
@@ -77,7 +76,9 @@ void main() {
 
     test('unsupported CSET code page omits INFO tags with a warning', () async {
       final wav = _buildWav(
-        infoEntries: [('INAM', [0x4D, 0xF6, 0x74, 0x6C, 0x65, 0x79])],
+        infoEntries: [
+          ('INAM', [0x4D, 0xF6, 0x74, 0x6C, 0x65, 0x79]),
+        ],
         csetCodePage: 1251,
         csetFirst: true,
       );
@@ -95,7 +96,9 @@ void main() {
 
     test('explicit latin1 CSET code page 28591 keeps latin1', () async {
       final wav = _buildWav(
-        infoEntries: [('INAM', [0x4D, 0xF6, 0x74, 0x6C, 0x65, 0x79])],
+        infoEntries: [
+          ('INAM', [0x4D, 0xF6, 0x74, 0x6C, 0x65, 0x79]),
+        ],
         csetCodePage: 28591,
         csetFirst: true,
       );
@@ -106,12 +109,10 @@ void main() {
 
     test('INFO before CSET is decoded with the CSET encoding', () async {
       // Queued INFO value decodes with the CSET encoding once the code page
-      // is known (upstream cest_utf8-after-info behaviour): send UTF-8 bytes
-      // before the CSET chunk declares code page 65001.
+      // is known: send UTF-8 bytes before the CSET chunk declares code page 65001.
       final wav = _buildWav(
         infoEntries: [('INAM', utf8.encode('Mötley'))],
         csetCodePage: 65001,
-        csetFirst: false,
       );
 
       final metadata = await parseBytes(wav);
@@ -139,12 +140,7 @@ Uint8List _buildWav({
     ..._u16le(1), // block align
     ..._u16le(8), // bits per sample
   ];
-  final data = <int>[
-    ..._ascii('data'),
-    ..._u32le(2),
-    0x00,
-    0x00,
-  ];
+  final data = <int>[..._ascii('data'), ..._u32le(2), 0x00, 0x00];
 
   final infoSubChunks = <int>[];
   for (final (id, valueBytes) in infoEntries) {

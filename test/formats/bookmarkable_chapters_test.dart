@@ -13,7 +13,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 /// Bookmarkable M4B from archive.org with companion `.afpk` derivative.
@@ -86,53 +85,47 @@ void main() {
       }
     });
 
-    test(
-      'parses chapter list from M4B with bookmarkable+afpk atoms',
-      () async {
-        if (urlSkip != null) {
-          markTestSkipped(urlSkip!);
+    test('parses chapter list from M4B with bookmarkable+afpk atoms', () async {
+      if (urlSkip != null) {
+        markTestSkipped(urlSkip!);
+        return;
+      }
+
+      late final dynamic info;
+      try {
+        info = await detectStrategy(_bookmarkableAfpkChapterUrl);
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('remote URL transient failure: $e');
           return;
         }
-
-        late final dynamic info;
-        try {
-          info = await detectStrategy(_bookmarkableAfpkChapterUrl);
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped('remote URL transient failure: $e');
-            return;
-          }
-          rethrow;
-        }
-        late final AudioMetadata metadata;
-        try {
-          metadata = await parseUrl(
-            _bookmarkableAfpkChapterUrl,
-            options: const ParseOptions(includeChapters: true),
-            timeout: const Duration(seconds: 120),
-          );
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped(
-              'bookmarkable+afpk URL transient remote failure: $e',
-            );
-            return;
-          }
-          rethrow;
-        }
-
-        expect(info.detectedFormat, equals('mp4'));
-        expect(info.supportsRange, isTrue);
-        expect(
-          (metadata.format.container ?? '').toLowerCase(),
-          anyOf(contains('m4'), contains('mp4')),
+        rethrow;
+      }
+      late final AudioMetadata metadata;
+      try {
+        metadata = await parseUrl(
+          _bookmarkableAfpkChapterUrl,
+          options: const ParseOptions(includeChapters: true),
+          timeout: const Duration(seconds: 120),
         );
-        expect(metadata.format.chapters, isNotNull);
-        expect(metadata.format.chapters!.length, greaterThanOrEqualTo(10));
-        expect(metadata.format.chapters!.first.title, isNotEmpty);
-      },
-      timeout: const Timeout(Duration(seconds: 180)),
-    );
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('bookmarkable+afpk URL transient remote failure: $e');
+          return;
+        }
+        rethrow;
+      }
+
+      expect(info.detectedFormat, equals('mp4'));
+      expect(info.supportsRange, isTrue);
+      expect(
+        (metadata.format.container ?? '').toLowerCase(),
+        anyOf(contains('m4'), contains('mp4')),
+      );
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters!.length, greaterThanOrEqualTo(10));
+      expect(metadata.format.chapters!.first.title, isNotEmpty);
+    }, timeout: const Timeout(Duration(seconds: 180)));
 
     test(
       'chapter metadata is accessible for bookmarkable+afpk atoms',

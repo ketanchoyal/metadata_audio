@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -253,15 +252,15 @@ void main() {
       test('handles empty stream gracefully', () async {
         final mockParser = _MockParser(
           mimeType: ['audio/test'],
-          onParse: (tokenizer, _) async {
-            // Parser receives empty bytes or small buffer
-            return _createMockMetadata();
-          },
+          onParse: (tokenizer, _) async => _createMockMetadata(),
         );
         registry.register(mockParser);
 
         final stream = Stream.fromIterable(<List<int>>[]);
-        await parseStream(stream, fileInfo: const FileInfo(mimeType: 'audio/test'));
+        await parseStream(
+          stream,
+          fileInfo: const FileInfo(mimeType: 'audio/test'),
+        );
 
         // Should complete without error
         expect(true, isTrue);
@@ -297,7 +296,10 @@ void main() {
         }
 
         final stream = Stream.fromIterable(chunks);
-        await parseStream(stream, fileInfo: const FileInfo(mimeType: 'audio/test'));
+        await parseStream(
+          stream,
+          fileInfo: const FileInfo(mimeType: 'audio/test'),
+        );
 
         // Should have received all bytes
         expect(totalBytesReceived, testBytes.length);
@@ -410,29 +412,28 @@ void main() {
 
 // Helper function to create mock metadata
 AudioMetadata _createMockMetadata() => const AudioMetadata(
-    format: Format(
-      container: 'mp3',
-      duration: 3.5,
-      bitrate: 320000,
-      sampleRate: 44100,
-      numberOfChannels: 2,
-      codec: 'MP3',
-    ),
-    native: {},
-    common: CommonTags(
-      track: TrackNo(no: 1, of: 10),
-      disk: TrackNo(no: 1, of: 1),
-      movementIndex: TrackNo(),
-      title: 'Test Title',
-      artist: 'Test Artist',
-      album: 'Test Album',
-    ),
-    quality: QualityInformation(),
-  );
+  format: Format(
+    container: 'mp3',
+    duration: 3.5,
+    bitrate: 320000,
+    sampleRate: 44100,
+    numberOfChannels: 2,
+    codec: 'MP3',
+  ),
+  native: {},
+  common: CommonTags(
+    track: TrackNo(no: 1, of: 10),
+    disk: TrackNo(no: 1, of: 1),
+    movementIndex: TrackNo(),
+    title: 'Test Title',
+    artist: 'Test Artist',
+    album: 'Test Album',
+  ),
+  quality: QualityInformation(),
+);
 
 // Mock parser implementation
 class _MockParser implements ParserLoader {
-
   _MockParser({
     this.extension = const [],
     this.mimeType = const [],
@@ -466,7 +467,6 @@ class _MockParser implements ParserLoader {
 
 // Non-seekable tokenizer for testing
 class _NonSeekableTokenizer implements Tokenizer {
-
   _NonSeekableTokenizer(this._bytes);
   final Uint8List _bytes;
   int _position = 0;

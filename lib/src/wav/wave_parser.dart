@@ -32,7 +32,7 @@ class WaveParser {
   /// RIFF CSET code page. Null until a CSET chunk is seen.
   ///
   /// CSET applies to the whole file, including INFO chunks preceding it, so
-  /// LIST/INFO tags are queued until the code page is known (upstream parity).
+  /// LIST/INFO tags are queued until the code page is known.
   int? _codePage;
   final List<({RiffChunkHeader header, List<int> bytes})> _pendingInfoTags =
       <({RiffChunkHeader header, List<int> bytes})>[];
@@ -131,17 +131,21 @@ class WaveParser {
         await _parseListTag(chunkSize);
         return;
       case 'cue ':
+        validateAllocation(chunkSize, options, WaveContentError.new);
         _cueChunk = CueChunk.fromBytes(tokenizer.readBytes(chunkSize));
         return;
       case 'fact':
+        validateAllocation(chunkSize, options, WaveContentError.new);
         metadata.setFormat(lossless: false);
         _fact = FactChunk.fromBytes(tokenizer.readBytes(chunkSize));
         return;
       case 'fmt ':
+        validateAllocation(chunkSize, options, WaveContentError.new);
         _parseFmtChunk(tokenizer.readBytes(chunkSize));
         return;
       case 'id3 ':
       case 'ID3 ':
+        validateAllocation(chunkSize, options, WaveContentError.new);
         await _parseId3Chunk(tokenizer.readBytes(chunkSize));
         return;
       case 'data':
@@ -149,9 +153,11 @@ class WaveParser {
         tokenizer.skip(chunkSize);
         return;
       case 'CSET':
+        validateAllocation(chunkSize, options, WaveContentError.new);
         await _parseCsetChunk(chunkSize);
         return;
       case 'bext':
+        validateAllocation(chunkSize, options, WaveContentError.new);
         _parseBextChunk(chunkSize);
         return;
       case '\x00\x00\x00\x00':
@@ -203,6 +209,7 @@ class WaveParser {
         throw WaveContentError('Illegal remaining size: $remaining');
       }
 
+      validateAllocation(header.chunkSize, options, WaveContentError.new);
       final payload = tokenizer.readBytes(header.chunkSize);
       if (header.chunkId == 'labl' && payload.length >= 4) {
         final cueId = RiffChunk.readUint32Le(payload, 0);
@@ -259,9 +266,12 @@ class WaveParser {
         );
       }
       if (valueToken.tagHeader.chunkSize > remaining - RiffChunk.headerLength) {
-        throw WaveContentError('RIFF INFO tag size exceeds remaining LIST data');
+        throw WaveContentError(
+          'RIFF INFO tag size exceeds remaining LIST data',
+        );
       }
 
+      validateAllocation(header.chunkSize, options, WaveContentError.new);
       final valueBytes = tokenizer.readBytes(header.chunkSize);
       if (_codePage == null) {
         // Code page not yet known; queue until the CSET chunk (or end of file).
@@ -475,9 +485,11 @@ class WaveParser {
     }
   }
 
-  static String _decodeAscii(List<int> bytes) => ascii.decode(bytes, allowInvalid: true);
+  static String _decodeAscii(List<int> bytes) =>
+      ascii.decode(bytes, allowInvalid: true);
 
-  static String _stripNulls(String value) => value.replaceAll(RegExp(r'\x00+$'), '');
+  static String _stripNulls(String value) =>
+      value.replaceAll(RegExp(r'\x00+$'), '');
 
   void _applyCueChapters() {
     if (!options.includeChapters) {

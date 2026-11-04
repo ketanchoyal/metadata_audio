@@ -49,7 +49,7 @@ final Map<String, String> _mp4TagMap = <String, String>{
   '©mvn': 'movement',
   '©mvi': 'movementIndex',
   '©mvc': 'movementTotal',
-  // iTunes freeform movement tags (upstream parity, #2835).
+  // iTunes freeform movement tags.
   '----:com.apple.itunes:movement name': 'movement',
   '----:com.apple.itunes:movement': 'movementIndex',
   '----:com.apple.itunes:movement total': 'movementTotal',

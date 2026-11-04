@@ -5,6 +5,7 @@
 ///
 /// This test validates that our parser correctly extracts chapters from
 /// M4B files using the co64 atom structure.
+@Tags(['network'])
 library;
 
 import 'dart:async';
@@ -57,7 +58,6 @@ bool _isSkippableRemoteError(Object e) {
       msg.contains('HTTP 500');
 }
 
-@Tags(["network"])
 void main() {
   setUpAll(() {
     final registry = ParserRegistry()
@@ -81,51 +81,47 @@ void main() {
       }
     });
 
-    test(
-      'parses rich chapter list from large M4B with co64 atoms',
-      () async {
-        if (urlSkip != null) {
-          markTestSkipped(urlSkip!);
+    test('parses rich chapter list from large M4B with co64 atoms', () async {
+      if (urlSkip != null) {
+        markTestSkipped(urlSkip!);
+        return;
+      }
+
+      late final dynamic info;
+      try {
+        info = await detectStrategy(_co64ChapterUrl);
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('remote URL transient failure: $e');
           return;
         }
-
-        late final dynamic info;
-        try {
-          info = await detectStrategy(_co64ChapterUrl);
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped('remote URL transient failure: $e');
-            return;
-          }
-          rethrow;
-        }
-        late final AudioMetadata metadata;
-        try {
-          metadata = await parseUrl(
-            _co64ChapterUrl,
-            options: const ParseOptions(includeChapters: true),
-            timeout: const Duration(seconds: 120),
-          );
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped('co64 URL transient remote failure: $e');
-            return;
-          }
-          rethrow;
-        }
-
-        expect(info.detectedFormat, equals('mp4'));
-        expect(info.supportsRange, isTrue);
-        expect(
-          (metadata.format.container ?? '').toLowerCase(),
-          anyOf(contains('m4'), contains('mp4')),
+        rethrow;
+      }
+      late final AudioMetadata metadata;
+      try {
+        metadata = await parseUrl(
+          _co64ChapterUrl,
+          options: const ParseOptions(includeChapters: true),
+          timeout: const Duration(seconds: 120),
         );
-        expect(metadata.format.chapters, isNotNull);
-        expect(metadata.format.chapters!.length, greaterThanOrEqualTo(20));
-        expect(metadata.format.chapters!.first.title, isNotEmpty);
-      },
-      timeout: const Timeout(Duration(seconds: 180)),
-    );
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('co64 URL transient remote failure: $e');
+          return;
+        }
+        rethrow;
+      }
+
+      expect(info.detectedFormat, equals('mp4'));
+      expect(info.supportsRange, isTrue);
+      expect(
+        (metadata.format.container ?? '').toLowerCase(),
+        anyOf(contains('m4'), contains('mp4')),
+      );
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters!.length, greaterThanOrEqualTo(20));
+      expect(metadata.format.chapters!.first.title, isNotEmpty);
+    }, timeout: const Timeout(Duration(seconds: 180)));
 
     test(
       'chapter metadata is accessible and complete for co64 atoms',
@@ -161,29 +157,25 @@ void main() {
       timeout: const Timeout(Duration(seconds: 180)),
     );
 
-    test(
-      'validates file format detection for co64-based M4B',
-      () async {
-        if (urlSkip != null) {
-          markTestSkipped(urlSkip!);
+    test('validates file format detection for co64-based M4B', () async {
+      if (urlSkip != null) {
+        markTestSkipped(urlSkip!);
+        return;
+      }
+
+      late final dynamic info;
+      try {
+        info = await detectStrategy(_co64ChapterUrl);
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('co64 URL transient remote failure: $e');
           return;
         }
+        rethrow;
+      }
 
-        late final dynamic info;
-        try {
-          info = await detectStrategy(_co64ChapterUrl);
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped('co64 URL transient remote failure: $e');
-            return;
-          }
-          rethrow;
-        }
-
-        expect(info.detectedFormat, equals('mp4'));
-        expect(info.supportsRange, isTrue);
-      },
-      timeout: const Timeout(Duration(seconds: 30)),
-    );
+      expect(info.detectedFormat, equals('mp4'));
+      expect(info.supportsRange, isTrue);
+    }, timeout: const Timeout(Duration(seconds: 30)));
   });
 }

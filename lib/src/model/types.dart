@@ -394,8 +394,7 @@ class Ratio {
   /// Ratio value [0..1]
   final double ratio;
 
-  /// Decibel value, `null` when the source value did not carry a `dB` suffix
-  /// (upstream parity, where `IRatio.dB` is `number | null`).
+  /// Decibel value, `null` when the source value did not carry a `dB` suffix.
   final double? dB;
 
   @override
@@ -549,34 +548,32 @@ class Format {
     List<TrackInfo>? trackInfo,
     double? containerDuration,
     num? overallBitrate,
-  }) {
-    return Format(
-      container: container ?? this.container,
-      tagTypes: tagTypes ?? this.tagTypes,
-      duration: duration ?? this.duration,
-      bitrate: bitrate ?? this.bitrate,
-      sampleRate: sampleRate ?? this.sampleRate,
-      bitsPerSample: bitsPerSample ?? this.bitsPerSample,
-      tool: tool ?? this.tool,
-      codec: codec ?? this.codec,
-      codecProfile: codecProfile ?? this.codecProfile,
-      lossless: lossless ?? this.lossless,
-      numberOfChannels: numberOfChannels ?? this.numberOfChannels,
-      numberOfSamples: numberOfSamples ?? this.numberOfSamples,
-      audioMD5: audioMD5 ?? this.audioMD5,
-      chapters: chapters ?? this.chapters,
-      creationTime: creationTime ?? this.creationTime,
-      modificationTime: modificationTime ?? this.modificationTime,
-      trackGain: trackGain ?? this.trackGain,
-      trackPeakLevel: trackPeakLevel ?? this.trackPeakLevel,
-      albumGain: albumGain ?? this.albumGain,
-      hasAudio: hasAudio ?? this.hasAudio,
-      hasVideo: hasVideo ?? this.hasVideo,
-      trackInfo: trackInfo ?? this.trackInfo,
-      containerDuration: containerDuration ?? this.containerDuration,
-      overallBitrate: overallBitrate ?? this.overallBitrate,
-    );
-  }
+  }) => Format(
+    container: container ?? this.container,
+    tagTypes: tagTypes ?? this.tagTypes,
+    duration: duration ?? this.duration,
+    bitrate: bitrate ?? this.bitrate,
+    sampleRate: sampleRate ?? this.sampleRate,
+    bitsPerSample: bitsPerSample ?? this.bitsPerSample,
+    tool: tool ?? this.tool,
+    codec: codec ?? this.codec,
+    codecProfile: codecProfile ?? this.codecProfile,
+    lossless: lossless ?? this.lossless,
+    numberOfChannels: numberOfChannels ?? this.numberOfChannels,
+    numberOfSamples: numberOfSamples ?? this.numberOfSamples,
+    audioMD5: audioMD5 ?? this.audioMD5,
+    chapters: chapters ?? this.chapters,
+    creationTime: creationTime ?? this.creationTime,
+    modificationTime: modificationTime ?? this.modificationTime,
+    trackGain: trackGain ?? this.trackGain,
+    trackPeakLevel: trackPeakLevel ?? this.trackPeakLevel,
+    albumGain: albumGain ?? this.albumGain,
+    hasAudio: hasAudio ?? this.hasAudio,
+    hasVideo: hasVideo ?? this.hasVideo,
+    trackInfo: trackInfo ?? this.trackInfo,
+    containerDuration: containerDuration ?? this.containerDuration,
+    overallBitrate: overallBitrate ?? this.overallBitrate,
+  );
 }
 
 /// Common tags (standardized metadata)
@@ -1069,7 +1066,7 @@ class QualityInformation {
 /// Map of native tags by type
 typedef NativeTags = Map<String, List<Tag>>;
 
-/// Track type constants, matching upstream `TrackType`.
+/// Track type constants.
 abstract final class TrackType {
   const TrackType._();
 
@@ -1133,16 +1130,48 @@ class ParseOptions {
   });
 
   /// Create ParseOptions with all parsing enabled
-  factory ParseOptions.all({MetadataObserver? observer}) =>
-      ParseOptions(includeChapters: true, duration: true, observer: observer);
+  factory ParseOptions.all({
+    MetadataObserver? observer,
+    int? maxMemoryAllocation,
+    int? maxMetadataEntries,
+    int? maxChapterCount,
+    String? cacheKey,
+    bool useCache = false,
+  }) => ParseOptions(
+    includeChapters: true,
+    duration: true,
+    observer: observer,
+    maxMemoryAllocation: maxMemoryAllocation ?? 67108864,
+    maxMetadataEntries: maxMetadataEntries,
+    maxChapterCount: maxChapterCount,
+    cacheKey: cacheKey,
+    useCache: useCache,
+  );
 
   /// Create ParseOptions for minimal parsing (fast mode)
-  factory ParseOptions.minimal() =>
-      const ParseOptions(skipCovers: true, skipPostHeaders: true);
+  factory ParseOptions.minimal({
+    int? maxMemoryAllocation,
+    String? cacheKey,
+    bool useCache = false,
+  }) => ParseOptions(
+    skipCovers: true,
+    skipPostHeaders: true,
+    maxMemoryAllocation: maxMemoryAllocation ?? 67108864,
+    cacheKey: cacheKey,
+    useCache: useCache,
+  );
 
   /// Create ParseOptions for metadata-only parsing
-  factory ParseOptions.metadataOnly() =>
-      const ParseOptions(skipPostHeaders: true);
+  factory ParseOptions.metadataOnly({
+    int? maxMemoryAllocation,
+    String? cacheKey,
+    bool useCache = false,
+  }) => ParseOptions(
+    skipPostHeaders: true,
+    maxMemoryAllocation: maxMemoryAllocation ?? 67108864,
+    cacheKey: cacheKey,
+    useCache: useCache,
+  );
 
   /// Skip reading cover art / picture tags
   ///
@@ -1171,20 +1200,15 @@ class ParseOptions {
   /// Called as metadata is discovered during parsing
   final MetadataObserver? observer;
 
-  /// Maximum bytes buffered for a single metadata payload.
-  ///
-  /// Matches upstream `maxMemoryAllocation` option.
+  /// Maximum bytes buffered for a single metadata payload or read.
   final int? maxMemoryAllocation;
 
   /// Maximum number of entries in an individual decoded list or table,
-  /// independently of byte-buffer limits.
-  ///
-  /// Matches upstream `maxMetadataEntries` option (default: 100,000).
+  /// independently of byte-buffer limits (default: 100,000).
   final int? maxMetadataEntries;
 
-  /// Maximum number of chapters returned by supported chapter parsers.
-  ///
-  /// Matches upstream `maxChapterCount` option (default: 1,000).
+  /// Maximum number of chapters returned by supported chapter parsers
+  /// (default: 1,000).
   final int? maxChapterCount;
 
   /// Whether to use the SeekHead index when parsing Matroska files.
@@ -1200,6 +1224,33 @@ class ParseOptions {
   /// Enable automatic caching using a key derived from the source file name
   /// (or URL). When true and [cacheKey] is null, a default key is derived.
   final bool useCache;
+
+  /// Creates a copy of this [ParseOptions] with the given fields replaced.
+  ParseOptions copyWith({
+    bool? skipCovers,
+    bool? skipPostHeaders,
+    bool? includeChapters,
+    bool? duration,
+    MetadataObserver? observer,
+    int? maxMemoryAllocation,
+    int? maxMetadataEntries,
+    int? maxChapterCount,
+    bool? mkvUseIndex,
+    String? cacheKey,
+    bool? useCache,
+  }) => ParseOptions(
+    skipCovers: skipCovers ?? this.skipCovers,
+    skipPostHeaders: skipPostHeaders ?? this.skipPostHeaders,
+    includeChapters: includeChapters ?? this.includeChapters,
+    duration: duration ?? this.duration,
+    observer: observer ?? this.observer,
+    maxMemoryAllocation: maxMemoryAllocation ?? this.maxMemoryAllocation,
+    maxMetadataEntries: maxMetadataEntries ?? this.maxMetadataEntries,
+    maxChapterCount: maxChapterCount ?? this.maxChapterCount,
+    mkvUseIndex: mkvUseIndex ?? this.mkvUseIndex,
+    cacheKey: cacheKey ?? this.cacheKey,
+    useCache: useCache ?? this.useCache,
+  );
 }
 
 /// Complete audio metadata including format, native tags, and common tags

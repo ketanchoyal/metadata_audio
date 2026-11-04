@@ -1,16 +1,15 @@
-/// Fixture test asserting `format.trackInfo` for ASF files, mirroring
-/// upstream music-metadata's AsfParser stream/codec behaviour.
+/// Fixture test asserting `format.trackInfo` for ASF files.
 library;
 
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:test/test.dart';
 
-import 'upstream_fixture_loader.dart';
+import 'remote_fixture_loader.dart';
 
 void main() {
-  group('upstream ASF trackInfo fixtures', () {
+  group('ASF trackInfo fixtures', () {
     test('asf.wma exposes one audio track from the codec list', () async {
-      final bytes = await fetchUpstreamFixtureOrSkip('asf/asf.wma');
+      final bytes = await fetchRemoteFixtureOrSkip('asf/asf.wma');
       if (bytes.isEmpty) return;
       final metadata = await parseBytes(
         bytes,
@@ -40,7 +39,7 @@ void main() {
 
     test('asf-video-audio-no-codec-list.asf yields audio and video tracks '
         'without codec names', () async {
-      final bytes = await fetchUpstreamFixtureOrSkip(
+      final bytes = await fetchRemoteFixtureOrSkip(
         'asf/asf-video-audio-no-codec-list.asf',
       );
       if (bytes.isEmpty) return;

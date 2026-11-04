@@ -21,7 +21,8 @@ class SpeexHeader {
 class SpeexDecoder {
   static const int headerLength = 80;
 
-  static bool isHeader(List<int> data) => data.length >= 8 && _ascii(data, 0, 8) == 'Speex   ';
+  static bool isHeader(List<int> data) =>
+      data.length >= 8 && _ascii(data, 0, 8) == 'Speex   ';
 
   static SpeexHeader parseHeader(List<int> data) {
     if (!isHeader(data) || data.length < headerLength) {

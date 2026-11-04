@@ -1,40 +1,63 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:meta/meta.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/atom_token.dart';
 import 'package:metadata_audio/src/mp4/mp4_parser.dart';
 import 'package:metadata_audio/src/utils/audio_metadata_json.dart';
 
-/// A disk-backed cache for parsed MP4/M4B audio-track metadata.
+/// A persistent cache for parsed audio metadata and MP4/M4B audio track tables.
 ///
-/// Stores [CachedAudioTrack] entries in the OS temp directory under
-/// `metadata_audio_cache/`. The OS can evict these files at any time;
-/// [clearCache] removes them explicitly.
-///
-/// **Cache key**: A sanitised version of the source URL/path, so the
-/// same file is never re-parsed within the same or subsequent app runs.
-import 'package:meta/meta.dart';
-
+/// On platforms with file system access (native IO), entries are stored in
+/// the OS temporary directory under `metadata_audio_cache/` without keeping
+/// parsed objects in memory.
+/// On platforms without file system access (such as web), an in-memory cache
+/// is used instead with bounded size.
 class AudioMetadataCache {
   AudioMetadataCache._();
 
+  static const bool _hasIoEnvironment = bool.fromEnvironment('dart.library.io');
+
+  /// Override whether IO is available, primarily for testing web behavior.
+  @visibleForTesting
+  static bool? overrideHasIoForTesting;
+
+  /// Whether IO operations (file system access) are available.
+  static bool get hasIo => overrideHasIoForTesting ?? _hasIoEnvironment;
+
   /// When true, [parseFromTokenizer] derives a default cache key for every
   /// parse, even if [ParseOptions.useCache] is false. Intended for test
-  /// sessions that want to exercise the caching path across all tests.
-  @visibleForTesting
-  static bool enabled = Platform.environment['METADATA_CACHE_ENABLED'] == '1';
+  /// sessions or environments that want to exercise caching across all operations.
+  static bool enabled =
+      _hasIoEnvironment &&
+      Platform.environment['METADATA_CACHE_ENABLED'] == '1';
 
   static const String _cacheDir = 'metadata_audio_cache';
   static const String _cacheVersion = '2';
 
-  // In-memory cache (simple map – sufficient for typical audiobook usage).
+  // In-memory cache used ONLY when IO is unavailable (e.g. web).
   static final Map<String, CachedAudioTrack> _memCache = {};
+  static final Map<String, AudioMetadata> _metaMemCache = {};
+
+  /// Maximum number of in-memory cached entries when in web/memory mode.
+  static const int maxMemoryCacheEntries = 100;
+
+  @visibleForTesting
+  static int get memCacheSize => _memCache.length;
+
+  @visibleForTesting
+  static int get metaMemCacheSize => _metaMemCache.length;
 
   /// Returns the directory where cache files are written.
-  static Directory get _dir => Directory(
-        '${Directory.systemTemp.path}${Platform.pathSeparator}$_cacheDir',
-      );
+  static Directory get _dir {
+    if (!hasIo) {
+      throw UnsupportedError('IO is not available on this platform');
+    }
+    return Directory(
+      '${Directory.systemTemp.path}${Platform.pathSeparator}$_cacheDir',
+    );
+  }
 
   // ── public API ─────────────────────────────────────────────────────────────
 
@@ -43,13 +66,13 @@ class AudioMetadataCache {
   static Future<CachedAudioTrack?> get(String url) async {
     final key = _keyFor(url);
 
-    // 1. Memory hit
-    if (_memCache.containsKey(key)) return _memCache[key];
+    // In-memory cache for web/no-IO platforms
+    if (!hasIo) {
+      return _memCache[key];
+    }
 
-    // 2. Disk hit
-    final file = File(
-      '${_dir.path}${Platform.pathSeparator}$key.json',
-    );
+    // Disk cache for IO platforms (no in-memory caching)
+    final file = File('${_dir.path}${Platform.pathSeparator}$key.json');
     if (!file.existsSync()) return null;
 
     try {
@@ -59,9 +82,7 @@ class AudioMetadataCache {
         await file.delete();
         return null;
       }
-      final entry = CachedAudioTrack.fromJson(map);
-      _memCache[key] = entry;
-      return entry;
+      return CachedAudioTrack.fromJson(map);
     } on Object catch (_) {
       // Corrupt file – delete and ignore.
       try {
@@ -74,13 +95,20 @@ class AudioMetadataCache {
   /// Writes [entry] to the cache for [url].
   static Future<void> put(String url, CachedAudioTrack entry) async {
     final key = _keyFor(url);
-    _memCache[key] = entry;
 
+    // In-memory cache for web/no-IO platforms
+    if (!hasIo) {
+      _memCache[key] = entry;
+      if (_memCache.length > maxMemoryCacheEntries) {
+        _memCache.remove(_memCache.keys.first);
+      }
+      return;
+    }
+
+    // Disk cache for IO platforms (no in-memory caching)
     try {
       await _dir.create(recursive: true);
-      final file = File(
-        '${_dir.path}${Platform.pathSeparator}$key.json',
-      );
+      final file = File('${_dir.path}${Platform.pathSeparator}$key.json');
       final map = entry.toJson();
       map['v'] = _cacheVersion;
       map['url'] = url;
@@ -92,14 +120,18 @@ class AudioMetadataCache {
 
   // ── general metadata cache (all formats) ───────────────────────────────
 
-  static final Map<String, AudioMetadata> _metaMemCache = {};
-
   /// Reads a cached [AudioMetadata] for [key], or `null` if absent/corrupt.
   static Future<AudioMetadata?> getMetadata(String key) async {
-    if (_metaMemCache.containsKey(key)) return _metaMemCache[key];
+    final fileKey = _keyFor(key);
 
+    // In-memory cache for web/no-IO platforms
+    if (!hasIo) {
+      return _metaMemCache[fileKey];
+    }
+
+    // Disk cache for IO platforms (no in-memory caching)
     final file = File(
-      '${_dir.path}${Platform.pathSeparator}${_keyFor(key)}_meta.json',
+      '${_dir.path}${Platform.pathSeparator}${fileKey}_meta.json',
     );
     if (!file.existsSync()) return null;
     try {
@@ -114,64 +146,94 @@ class AudioMetadataCache {
         await file.delete();
         return null;
       }
-      _metaMemCache[key] = entry;
       return entry;
     } on Object catch (_) {
-      try { await file.delete(); } on Object catch (_) {}
+      try {
+        await file.delete();
+      } on Object catch (_) {}
       return null;
     }
   }
 
   /// Writes [metadata] to the cache for [key].
-  static Future<void> putMetadata(String key, AudioMetadata metadata) async {
-    // Guard against excessive memory/disk use on memory-constrained devices
-    // (e.g. phones): skip caching when the payload would be too large.
+  static Future<void> putMetadata(
+    String key,
+    AudioMetadata metadata, {
+    int? maxMemoryAllocation,
+  }) async {
+    // Guard against excessive memory/disk use by capping cache payload
+    // based on maxMemoryAllocation (default: 64 MiB).
+    final maxAlloc = maxMemoryAllocation ?? (64 * 1024 * 1024);
     final data = audioMetadataToJson(metadata);
     final encoded = jsonEncode({'v': _cacheVersion, 'key': key, 'data': data});
-    if (encoded.length > 4 * 1024 * 1024) {
+    if (encoded.length > maxAlloc) {
       return;
     }
-    _metaMemCache[key] = metadata;
+
+    final fileKey = _keyFor(key);
+
+    // In-memory cache for web/no-IO platforms
+    if (!hasIo) {
+      _metaMemCache[fileKey] = metadata;
+      if (_metaMemCache.length > maxMemoryCacheEntries) {
+        _metaMemCache.remove(_metaMemCache.keys.first);
+      }
+      return;
+    }
+
+    // Disk cache for IO platforms (no in-memory caching)
     try {
       await _dir.create(recursive: true);
       final file = File(
-        '${_dir.path}${Platform.pathSeparator}${_keyFor(key)}_meta.json',
+        '${_dir.path}${Platform.pathSeparator}${fileKey}_meta.json',
       );
       await file.writeAsString(encoded);
     } on Object catch (_) {}
   }
 
-  /// Evicts a single entry from memory and disk for [url].
-  static Future<void> evict(String url) async {
-    final key = _keyFor(url);
+  /// Evicts a single entry from memory and disk for [urlOrKey].
+  static Future<void> evict(String urlOrKey) async {
+    final key = _keyFor(urlOrKey);
     _memCache.remove(key);
-    final file = File(
-      '${_dir.path}${Platform.pathSeparator}$key.json',
-    );
-    if (file.existsSync()) {
-      try {
-        await file.delete();
-      } on Object catch (_) {}
+    _metaMemCache.remove(key);
+
+    if (hasIo) {
+      final trackFile = File('${_dir.path}${Platform.pathSeparator}$key.json');
+      if (trackFile.existsSync()) {
+        try {
+          await trackFile.delete();
+        } on Object catch (_) {}
+      }
+      final metaFile = File(
+        '${_dir.path}${Platform.pathSeparator}${key}_meta.json',
+      );
+      if (metaFile.existsSync()) {
+        try {
+          await metaFile.delete();
+        } on Object catch (_) {}
+      }
     }
   }
 
   /// Deletes **all** cached metadata files and clears the in-memory cache.
-  ///
-  /// Call this when the user explicitly triggers "Clear Cache" in the UI.
   static Future<void> clearCache() async {
     _memCache.clear();
-    final dir = _dir;
-    if (dir.existsSync()) {
-      try {
-        await dir.delete(recursive: true);
-      } on Object catch (_) {}
+    _metaMemCache.clear();
+    if (hasIo) {
+      final dir = _dir;
+      if (dir.existsSync()) {
+        try {
+          await dir.delete(recursive: true);
+        } on Object catch (_) {}
+      }
     }
   }
 
   /// Returns the total size of all cache files on disk in bytes.
   ///
-  /// Returns `0` if the cache directory does not yet exist.
+  /// Returns `0` if in web mode or if the cache directory does not exist.
   static int getCacheSize() {
+    if (!hasIo) return 0;
     final dir = _dir;
     if (!dir.existsSync()) return 0;
     var total = 0;
@@ -226,57 +288,55 @@ class CachedAudioTrack {
     required Mp4TrackInfo trackInfo,
     required List<StscEntry> sampleToChunkTable,
     required List<int> chunkOffsetTable,
-  }) =>
-      CachedAudioTrack(
-        trackId: trackInfo.trackId,
-        timeScale: trackInfo.timeScale,
-        sampleRate: trackInfo.sampleRate,
-        numberOfChannels: trackInfo.numberOfChannels,
-        sampleSize: trackInfo.sampleSize,
-        sampleSizeTable: List<int>.unmodifiable(trackInfo.sampleSizeTable),
-        timeToSampleTable: List<SttsEntry>.unmodifiable(
-          trackInfo.timeToSampleTable,
-        ),
-        sampleToChunkTable: List<StscEntry>.unmodifiable(sampleToChunkTable),
-        chunkOffsetTable: List<int>.unmodifiable(chunkOffsetTable),
-        rawStsdBox: trackInfo.rawStsdBox != null
-            ? List<int>.unmodifiable(trackInfo.rawStsdBox!)
-            : null,
-      );
+  }) => CachedAudioTrack(
+    trackId: trackInfo.trackId,
+    timeScale: trackInfo.timeScale,
+    sampleRate: trackInfo.sampleRate,
+    numberOfChannels: trackInfo.numberOfChannels,
+    sampleSize: trackInfo.sampleSize,
+    sampleSizeTable: List<int>.unmodifiable(trackInfo.sampleSizeTable),
+    timeToSampleTable: List<SttsEntry>.unmodifiable(
+      trackInfo.timeToSampleTable,
+    ),
+    sampleToChunkTable: List<StscEntry>.unmodifiable(sampleToChunkTable),
+    chunkOffsetTable: List<int>.unmodifiable(chunkOffsetTable),
+    rawStsdBox: trackInfo.rawStsdBox != null
+        ? List<int>.unmodifiable(trackInfo.rawStsdBox!)
+        : null,
+  );
 
-  factory CachedAudioTrack.fromJson(Map<String, dynamic> m) =>
-      CachedAudioTrack(
-        trackId: m['trackId'] as int,
-        timeScale: m['timeScale'] as int?,
-        sampleRate: m['sampleRate'] as int?,
-        numberOfChannels: m['numberOfChannels'] as int?,
-        sampleSize: m['sampleSize'] as int?,
-        sampleSizeTable: (m['sampleSizeTable'] as List<dynamic>)
-            .map((e) => e as int)
-            .toList(),
-        timeToSampleTable: (m['timeToSampleTable'] as List<dynamic>)
-            .map(
-              (e) => SttsEntry(
-                count: (e as Map<String, dynamic>)['count'] as int,
-                duration: e['duration'] as int,
-              ),
-            )
-            .toList(),
-        sampleToChunkTable: (m['sampleToChunkTable'] as List<dynamic>)
-            .map(
-              (e) => StscEntry(
-                firstChunk: (e as Map<String, dynamic>)['firstChunk'] as int,
-                samplesPerChunk: e['samplesPerChunk'] as int,
-              ),
-            )
-            .toList(),
-        chunkOffsetTable: (m['chunkOffsetTable'] as List<dynamic>)
-            .map((e) => e as int)
-            .toList(),
-        rawStsdBox: m['rawStsdBox'] == null
-            ? null
-            : (m['rawStsdBox'] as List<dynamic>).map((e) => e as int).toList(),
-      );
+  factory CachedAudioTrack.fromJson(Map<String, dynamic> m) => CachedAudioTrack(
+    trackId: m['trackId'] as int,
+    timeScale: m['timeScale'] as int?,
+    sampleRate: m['sampleRate'] as int?,
+    numberOfChannels: m['numberOfChannels'] as int?,
+    sampleSize: m['sampleSize'] as int?,
+    sampleSizeTable: (m['sampleSizeTable'] as List<dynamic>)
+        .map((e) => e as int)
+        .toList(),
+    timeToSampleTable: (m['timeToSampleTable'] as List<dynamic>)
+        .map(
+          (e) => SttsEntry(
+            count: (e as Map<String, dynamic>)['count'] as int,
+            duration: e['duration'] as int,
+          ),
+        )
+        .toList(),
+    sampleToChunkTable: (m['sampleToChunkTable'] as List<dynamic>)
+        .map(
+          (e) => StscEntry(
+            firstChunk: (e as Map<String, dynamic>)['firstChunk'] as int,
+            samplesPerChunk: e['samplesPerChunk'] as int,
+          ),
+        )
+        .toList(),
+    chunkOffsetTable: (m['chunkOffsetTable'] as List<dynamic>)
+        .map((e) => e as int)
+        .toList(),
+    rawStsdBox: m['rawStsdBox'] == null
+        ? null
+        : (m['rawStsdBox'] as List<dynamic>).map((e) => e as int).toList(),
+  );
 
   /// The MP4 track ID (usually 1 or 2).
   final int trackId;
@@ -359,8 +419,8 @@ class CachedAudioTrack {
     while (true) {
       final nextRunFirstChunk =
           (chunkIndexInTable + 1 < sampleToChunkTable.length)
-              ? sampleToChunkTable[chunkIndexInTable + 1].firstChunk
-              : chunkOffsetTable.length + 1;
+          ? sampleToChunkTable[chunkIndexInTable + 1].firstChunk
+          : chunkOffsetTable.length + 1;
 
       final chunksInRun = nextRunFirstChunk - currentChunkId;
       final totalSamplesInRun = chunksInRun * samplesPerChunk;
@@ -402,24 +462,24 @@ class CachedAudioTrack {
   // ── serialisation ──────────────────────────────────────────────────────────
 
   Map<String, dynamic> toJson() => {
-        'trackId': trackId,
-        'timeScale': timeScale,
-        'sampleRate': sampleRate,
-        'numberOfChannels': numberOfChannels,
-        'sampleSize': sampleSize,
-        'sampleSizeTable': sampleSizeTable,
-        'timeToSampleTable': timeToSampleTable
-            .map((e) => {'count': e.count, 'duration': e.duration})
-            .toList(),
-        'sampleToChunkTable': sampleToChunkTable
-            .map(
-              (e) => {
-                'firstChunk': e.firstChunk,
-                'samplesPerChunk': e.samplesPerChunk,
-              },
-            )
-            .toList(),
-        'chunkOffsetTable': chunkOffsetTable,
-        'rawStsdBox': rawStsdBox,
-      };
+    'trackId': trackId,
+    'timeScale': timeScale,
+    'sampleRate': sampleRate,
+    'numberOfChannels': numberOfChannels,
+    'sampleSize': sampleSize,
+    'sampleSizeTable': sampleSizeTable,
+    'timeToSampleTable': timeToSampleTable
+        .map((e) => {'count': e.count, 'duration': e.duration})
+        .toList(),
+    'sampleToChunkTable': sampleToChunkTable
+        .map(
+          (e) => {
+            'firstChunk': e.firstChunk,
+            'samplesPerChunk': e.samplesPerChunk,
+          },
+        )
+        .toList(),
+    'chunkOffsetTable': chunkOffsetTable,
+    'rawStsdBox': rawStsdBox,
+  };
 }

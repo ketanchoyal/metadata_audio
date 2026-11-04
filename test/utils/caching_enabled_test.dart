@@ -1,5 +1,4 @@
 import 'package:metadata_audio/src/core.dart';
-import 'package:metadata_audio/src/model/types.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -18,8 +17,14 @@ void main() {
       final path = entry.value;
 
       test('$format: second parse is served from cache and matches', () async {
-        final first = await parseFile(path, options: ParseOptions(useCache: true));
-        final second = await parseFile(path, options: ParseOptions(useCache: true));
+        final first = await parseFile(
+          path,
+          options: const ParseOptions(useCache: true),
+        );
+        final second = await parseFile(
+          path,
+          options: const ParseOptions(useCache: true),
+        );
 
         expect(second.format.container, first.format.container);
         expect(second.common.title, first.common.title);
@@ -29,7 +34,10 @@ void main() {
       });
 
       test('$format: cached result equals a fresh (uncached) parse', () async {
-        final cached = await parseFile(path, options: ParseOptions(useCache: true));
+        final cached = await parseFile(
+          path,
+          options: const ParseOptions(useCache: true),
+        );
         final fresh = await parseFile(path); // useCache false by default
 
         expect(cached.format.container, fresh.format.container);

@@ -71,8 +71,7 @@ final _id3v2TagMap = {
 };
 
 class Id3v2TagMapper extends GenericTagMapper {
-  /// ID3v2 frames carrying role-to-people credit maps, parsed by
-  /// [FrameParser] (upstream `functionList`).
+  /// ID3v2 frames carrying role-to-people credit maps, parsed by [FrameParser].
   static const _creditsFrameIds = {'IPL', 'IPLS', 'TMCL', 'TIPL'};
 
   @override
@@ -94,9 +93,7 @@ class Id3v2TagMapper extends GenericTagMapper {
 
       // Involved-person credits (TMCL/TIPL/IPL/IPLS) are neither mapped
       // wholesale nor replicated as synthetic native tags; each role is
-      // expanded to `<frameId>:<role>` lookups instead (upstream parity,
-      // #2862: "Expand involved-person roles for mapping without adding
-      // synthetic native tags").
+      // expanded to `<frameId>:<role>` lookups instead.
       if (_creditsFrameIds.contains(entry.key) &&
           rawValue is Map<String, dynamic>) {
         rawValue.forEach((role, people) {
@@ -118,8 +115,7 @@ class Id3v2TagMapper extends GenericTagMapper {
             if (normalizedPeople is! List) {
               continue;
             }
-            // Multiple people per role must aggregate (upstream emits one
-            // mapped tag per person).
+            // Multiple people per role must aggregate.
             final existing = result[mappedRole];
             if (existing is List<String>) {
               for (final normalizedPerson in normalizedPeople) {

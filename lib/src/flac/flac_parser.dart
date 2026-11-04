@@ -3,6 +3,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/flac/flac_token.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
@@ -66,12 +67,14 @@ class FlacParser {
         await _readStreamInfo(blockHeader.length);
         return;
       case FlacBlockType.vorbisComment:
+        validateAllocation(blockHeader.length, options, FlacContentError.new);
         await _readVorbisComment(blockHeader.length);
         return;
       case FlacBlockType.picture:
         await _readPicture(blockHeader.length);
         return;
       case FlacBlockType.cueSheet:
+        validateAllocation(blockHeader.length, options, FlacContentError.new);
         await _readCueSheet(blockHeader.length);
         return;
       case FlacBlockType.padding:
@@ -125,6 +128,7 @@ class FlacParser {
       return;
     }
 
+    validateAllocation(dataLength, options, FlacContentError.new);
     final picture = FlacToken.parsePicture(tokenizer.readBytes(dataLength));
     metadata.addNativeTag('vorbis', 'METADATA_BLOCK_PICTURE', picture);
   }

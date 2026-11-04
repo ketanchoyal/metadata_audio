@@ -3,7 +3,6 @@ library;
 import 'dart:convert';
 
 class XingInfoTag {
-
   const XingInfoTag({
     required this.numFrames,
     required this.streamSize,
@@ -20,10 +19,11 @@ class XingInfoTag {
   final int? lameMusicLengthMs;
 }
 
-int _readUint32Be(List<int> data, int offset) => (data[offset] << 24) |
-      (data[offset + 1] << 16) |
-      (data[offset + 2] << 8) |
-      data[offset + 3];
+int _readUint32Be(List<int> data, int offset) =>
+    (data[offset] << 24) |
+    (data[offset + 1] << 16) |
+    (data[offset + 2] << 8) |
+    data[offset + 3];
 
 String _asciiTrimNull(List<int> bytes) {
   final text = ascii.decode(bytes, allowInvalid: true);

@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
-import 'package:metadata_audio/src/mp4/mp4_loader.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -74,86 +72,95 @@ void main() {
       },
     );
 
-    test('parses video_chapters.mp4 with QuickTime chapters on video & audio tracks', () async {
-      final file = File(p.join(samplePath, 'mp4', 'video_chapters.mp4'));
-      if (!file.existsSync()) {
-        markTestSkipped('Sample file not found: ${file.path}');
-        return;
-      }
+    test(
+      'parses video_chapters.mp4 with QuickTime chapters on video & audio tracks',
+      () async {
+        final file = File(p.join(samplePath, 'mp4', 'video_chapters.mp4'));
+        if (!file.existsSync()) {
+          markTestSkipped('Sample file not found: ${file.path}');
+          return;
+        }
 
-      final metadata = await parseFile(
-        file.path,
-        options: const ParseOptions(includeChapters: true),
-      );
+        final metadata = await parseFile(
+          file.path,
+          options: const ParseOptions(includeChapters: true),
+        );
 
-      expect(metadata.format.hasAudio, isTrue);
-      expect(metadata.format.hasVideo, isTrue);
-      expect(metadata.format.duration, closeTo(4.0, 0.05));
+        expect(metadata.format.hasAudio, isTrue);
+        expect(metadata.format.hasVideo, isTrue);
+        expect(metadata.format.duration, closeTo(4.0, 0.05));
 
-      final chapters = metadata.format.chapters;
-      expect(chapters, isNotNull);
-      expect(chapters!.length, 2);
-      expect(chapters[0].title, 'Intro');
-      expect(chapters[0].start, 0);
-      expect(chapters[0].end, 2000);
-      expect(chapters[1].title, 'Ending');
-      expect(chapters[1].start, 2000);
-      expect(chapters[1].end, 4000);
-    });
+        final chapters = metadata.format.chapters;
+        expect(chapters, isNotNull);
+        expect(chapters!.length, 2);
+        expect(chapters[0].title, 'Intro');
+        expect(chapters[0].start, 0);
+        expect(chapters[0].end, 2000);
+        expect(chapters[1].title, 'Ending');
+        expect(chapters[1].start, 2000);
+        expect(chapters[1].end, 4000);
+      },
+    );
 
-    test('parses video_chapters.mov with QuickTime chapters on MOV container', () async {
-      final file = File(p.join(samplePath, 'mp4', 'video_chapters.mov'));
-      if (!file.existsSync()) {
-        markTestSkipped('Sample file not found: ${file.path}');
-        return;
-      }
+    test(
+      'parses video_chapters.mov with QuickTime chapters on MOV container',
+      () async {
+        final file = File(p.join(samplePath, 'mp4', 'video_chapters.mov'));
+        if (!file.existsSync()) {
+          markTestSkipped('Sample file not found: ${file.path}');
+          return;
+        }
 
-      final metadata = await parseFile(
-        file.path,
-        options: const ParseOptions(includeChapters: true),
-      );
+        final metadata = await parseFile(
+          file.path,
+          options: const ParseOptions(includeChapters: true),
+        );
 
-      expect(metadata.format.hasAudio, isTrue);
-      expect(metadata.format.hasVideo, isTrue);
-      expect(metadata.format.duration, closeTo(4.0, 0.05));
+        expect(metadata.format.hasAudio, isTrue);
+        expect(metadata.format.hasVideo, isTrue);
+        expect(metadata.format.duration, closeTo(4.0, 0.05));
 
-      final chapters = metadata.format.chapters;
-      expect(chapters, isNotNull);
-      expect(chapters!.length, 2);
-      expect(chapters[0].title, 'Intro');
-      expect(chapters[0].start, 0);
-      expect(chapters[0].end, 2000);
-      expect(chapters[1].title, 'Ending');
-      expect(chapters[1].start, 2000);
-      expect(chapters[1].end, 4000);
-    });
+        final chapters = metadata.format.chapters;
+        expect(chapters, isNotNull);
+        expect(chapters!.length, 2);
+        expect(chapters[0].title, 'Intro');
+        expect(chapters[0].start, 0);
+        expect(chapters[0].end, 2000);
+        expect(chapters[1].title, 'Ending');
+        expect(chapters[1].start, 2000);
+        expect(chapters[1].end, 4000);
+      },
+    );
 
-    test('parses video_chapters_tmcd.mp4 ignoring tmcd timecode track', () async {
-      final file = File(p.join(samplePath, 'mp4', 'video_chapters_tmcd.mp4'));
-      if (!file.existsSync()) {
-        markTestSkipped('Sample file not found: ${file.path}');
-        return;
-      }
+    test(
+      'parses video_chapters_tmcd.mp4 ignoring tmcd timecode track',
+      () async {
+        final file = File(p.join(samplePath, 'mp4', 'video_chapters_tmcd.mp4'));
+        if (!file.existsSync()) {
+          markTestSkipped('Sample file not found: ${file.path}');
+          return;
+        }
 
-      final metadata = await parseFile(
-        file.path,
-        options: const ParseOptions(includeChapters: true),
-      );
+        final metadata = await parseFile(
+          file.path,
+          options: const ParseOptions(includeChapters: true),
+        );
 
-      expect(metadata.format.hasAudio, isTrue);
-      expect(metadata.format.hasVideo, isTrue);
-      expect(metadata.format.duration, closeTo(4.0, 0.05));
+        expect(metadata.format.hasAudio, isTrue);
+        expect(metadata.format.hasVideo, isTrue);
+        expect(metadata.format.duration, closeTo(4.0, 0.05));
 
-      final chapters = metadata.format.chapters;
-      expect(chapters, isNotNull);
-      expect(chapters!.length, 2);
-      expect(chapters[0].title, 'Intro');
-      expect(chapters[0].start, 0);
-      expect(chapters[0].end, 2000);
-      expect(chapters[1].title, 'Ending');
-      expect(chapters[1].start, 2000);
-      expect(chapters[1].end, 4000);
-    });
+        final chapters = metadata.format.chapters;
+        expect(chapters, isNotNull);
+        expect(chapters!.length, 2);
+        expect(chapters[0].title, 'Intro');
+        expect(chapters[0].start, 0);
+        expect(chapters[0].end, 2000);
+        expect(chapters[1].title, 'Ending');
+        expect(chapters[1].start, 2000);
+        expect(chapters[1].end, 4000);
+      },
+    );
   });
 }
 

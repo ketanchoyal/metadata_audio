@@ -91,6 +91,7 @@ class AiffParser {
   Future<int> _readData(String chunkId, int chunkSize) async {
     switch (chunkId) {
       case 'COMM':
+        validateAllocation(chunkSize, options, AiffContentError.new);
         if (_isCompressed == null) {
           throw AiffContentError(
             'Failed to parse AIFF.COMM chunk when compression type is unknown',
@@ -123,6 +124,7 @@ class AiffParser {
         return chunkSize;
 
       case 'ID3 ':
+        validateAllocation(chunkSize, options, AiffContentError.new);
         final id3Bytes = tokenizer.readBytes(chunkSize);
         final id3Tokenizer = BytesTokenizer(
           Uint8List.fromList(id3Bytes),
@@ -147,6 +149,7 @@ class AiffParser {
       case 'AUTH':
       case '(c) ':
       case 'ANNO':
+        validateAllocation(chunkSize, options, AiffContentError.new);
         return _readTextChunk(chunkId, chunkSize);
 
       default:
@@ -161,9 +164,11 @@ class AiffParser {
       allowInvalid: true,
     );
     var valueCount = 1;
-    for (var offset = text.indexOf('\x00');
-        offset >= 0;
-        offset = text.indexOf('\x00', offset + 1)) {
+    for (
+      var offset = text.indexOf('\x00');
+      offset >= 0;
+      offset = text.indexOf('\x00', offset + 1)
+    ) {
       valueCount++;
     }
     if (valueCount > getMaxMetadataEntries(options)) {

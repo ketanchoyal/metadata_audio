@@ -3,6 +3,7 @@
 ///
 /// This file keeps per-format URL cases separate from the broader
 /// `url_integration_test.dart` suite.
+@Tags(['network'])
 library;
 
 import 'dart:async';
@@ -80,7 +81,6 @@ bool _isSkippableRemoteError(Object e) {
       msg.contains('HTTP 500');
 }
 
-@Tags(["network"])
 void main() {
   setUpAll(() {
     final registry = ParserRegistry()
@@ -117,42 +117,38 @@ void main() {
       }
     });
 
-    test(
-      'type=co64: parses rich chapter list from large M4B URL',
-      () async {
-        if (co64Skip != null) {
-          markTestSkipped(co64Skip!);
+    test('type=co64: parses rich chapter list from large M4B URL', () async {
+      if (co64Skip != null) {
+        markTestSkipped(co64Skip!);
+        return;
+      }
+
+      final info = await detectStrategy(_co64ChapterUrl);
+      late final AudioMetadata metadata;
+      try {
+        metadata = await parseUrl(
+          _co64ChapterUrl,
+          options: const ParseOptions(includeChapters: true),
+          timeout: const Duration(seconds: 120),
+        );
+      } catch (e) {
+        if (_isSkippableRemoteError(e)) {
+          markTestSkipped('co64 URL transient remote failure: $e');
           return;
         }
+        rethrow;
+      }
 
-        final info = await detectStrategy(_co64ChapterUrl);
-        late final AudioMetadata metadata;
-        try {
-          metadata = await parseUrl(
-            _co64ChapterUrl,
-            options: const ParseOptions(includeChapters: true),
-            timeout: const Duration(seconds: 120),
-          );
-        } catch (e) {
-          if (_isSkippableRemoteError(e)) {
-            markTestSkipped('co64 URL transient remote failure: $e');
-            return;
-          }
-          rethrow;
-        }
-
-        expect(info.detectedFormat, equals('mp4'));
-        expect(info.supportsRange, isTrue);
-        expect(
-          (metadata.format.container ?? '').toLowerCase(),
-          anyOf(contains('m4'), contains('mp4')),
-        );
-        expect(metadata.format.chapters, isNotNull);
-        expect(metadata.format.chapters!.length, greaterThanOrEqualTo(20));
-        expect(metadata.format.chapters!.first.title, isNotEmpty);
-      },
-      timeout: const Timeout(Duration(seconds: 180)),
-    );
+      expect(info.detectedFormat, equals('mp4'));
+      expect(info.supportsRange, isTrue);
+      expect(
+        (metadata.format.container ?? '').toLowerCase(),
+        anyOf(contains('m4'), contains('mp4')),
+      );
+      expect(metadata.format.chapters, isNotNull);
+      expect(metadata.format.chapters!.length, greaterThanOrEqualTo(20));
+      expect(metadata.format.chapters!.first.title, isNotEmpty);
+    }, timeout: const Timeout(Duration(seconds: 180)));
 
     test(
       'type=bookmarkable+afpk: parses chapter list from companion set',

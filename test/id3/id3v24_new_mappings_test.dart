@@ -1,5 +1,4 @@
-/// Tests for ID3v2.4 extended mappings with upstream-parity camelCase
-/// common-tag ids: PCNT (playCounter), MVNM (movement), MVIN
+/// Tests for ID3v2.4 extended mappings with camelCase common-tag ids: PCNT (playCounter), MVNM (movement), MVIN
 /// (movementIndex), TGID/PCS (podcastId), TDES/TCAT/TKWD, WFED, TDRL and
 /// PRIV:AverageLevel / PRIV:PeakValue (Windows Media Player levels).
 library;

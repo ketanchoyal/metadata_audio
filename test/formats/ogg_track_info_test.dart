@@ -1,5 +1,5 @@
 /// TrackInfo tests for Ogg parsers: every identified logical audio/video
-/// stream must surface a `format.trackInfo` entry (upstream parity).
+/// stream must surface a `format.trackInfo` entry.
 library;
 
 import 'dart:typed_data';
@@ -97,7 +97,7 @@ void main() {
         payload: pageNoBytes,
       );
 
-      final samples = 9000;
+      const samples = 9000;
       final secondPayload = <int>[0x00];
       final secondPage = _buildOggPage(
         headerTypeFlags: 0x04, // last page

@@ -3,8 +3,9 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/js_safe_numbers.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/dsdiff/dsdiff_token.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
 import 'package:metadata_audio/src/model/types.dart';
@@ -82,7 +83,9 @@ class DsdiffParser {
         break;
 
       case 'ID3':
-        final id3Data = tokenizer.readBytes(_safeToInt(header.chunkSize));
+        final size = _safeToInt(header.chunkSize);
+        validateAllocation(size, options, DsdiffContentError.new);
+        final id3Data = tokenizer.readBytes(size);
         final id3Tokenizer = BytesTokenizer(
           Uint8List.fromList(id3Data),
           fileInfo: FileInfo(size: id3Data.length),
@@ -220,6 +223,7 @@ class DsdiffParser {
   }
 
   void _readCommentChunk(int chunkSize) {
+    validateAllocation(chunkSize, options, DsdiffContentError.new);
     final bytes = tokenizer.readBytes(chunkSize);
     if (bytes.length < 2) {
       return;

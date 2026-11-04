@@ -2,6 +2,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:metadata_audio/src/common/allocation.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/id3v2/frame_header.dart';
@@ -9,7 +10,6 @@ import 'package:metadata_audio/src/id3v2/frame_parser.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_token.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
-import 'package:collection/collection.dart';
 
 class Id3v2ChapterInfo {
   const Id3v2ChapterInfo({
@@ -63,7 +63,7 @@ class Id3v2Parser {
   final ParseOptions options;
 
   /// PRIV owner identifiers recognized as Windows Media Player level fields
-  /// (upstream parity, #2859; `PeakLevel` accepts the WMP composite name).
+  /// (`PeakLevel` accepts the WMP composite name).
   static const _priviligeOwners = {'AverageLevel', 'PeakValue', 'PeakLevel'};
 
   Future<void> parse() async {
@@ -109,6 +109,8 @@ class Id3v2Parser {
       metadata.addWarning('Invalid ID3v2 extended header size');
       return;
     }
+
+    validateAllocation(dataLen, options, Id3v2ContentError.new);
 
     final payloadStart = tokenizer.position;
     var data = tokenizer.readBytes(dataLen);
@@ -207,8 +209,8 @@ class Id3v2Parser {
         warningCollector: metadata.addWarning,
       );
 
-      // Mirrors upstream `parseMetadata`: bound the number of frames per tag
-      // independently of byte limits (maxMetadataEntries).
+      // Bound the number of frames per tag independently of byte limits
+      // (maxMetadataEntries).
       if (++frameCount > getMaxMetadataEntries(options)) {
         throw const Id3v2ContentError('Frame count exceeds entry limit');
       }
@@ -256,8 +258,7 @@ class Id3v2Parser {
           continue;
         }
         if (!_priviligeOwners.contains(priv.owner)) {
-          // Upstream caps the echoed owner identifier at 128 characters
-          // (upstream parity, #2859).
+          // Caps the echoed owner identifier at 128 characters.
           final owner = priv.owner;
           final truncatedOwner = owner.length > 128
               ? owner.substring(0, 128)
@@ -616,7 +617,7 @@ class Id3v2Parser {
         .where((toc) => toc.flags.topLevel)
         .firstOrNull;
     // Without a CTOC, return the earliest chapters even if CHAP frames
-    // arrive out of order (upstream parity).
+    // arrive out of order.
     final List<String> sourceIds;
     if (topLevelToc != null && topLevelToc.childElementIds.isNotEmpty) {
       sourceIds = topLevelToc.childElementIds;

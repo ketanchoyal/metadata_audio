@@ -15,8 +15,8 @@ import 'package:metadata_audio/src/flac/flac_loader.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_loader.dart';
 import 'package:metadata_audio/src/matroska/matroska_loader.dart';
 import 'package:metadata_audio/src/model/types.dart';
-import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/mp4/mp4_loader.dart';
+import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/musepack/musepack_loader.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
 import 'package:metadata_audio/src/parse_error.dart';
@@ -41,8 +41,8 @@ export 'package:metadata_audio/src/matroska/matroska_loader.dart';
 export 'package:metadata_audio/src/matroska/matroska_parser.dart';
 export 'package:metadata_audio/src/matroska/matroska_tag_mapper.dart';
 export 'package:metadata_audio/src/model/types.dart';
-export 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 export 'package:metadata_audio/src/mp4/mp4_loader.dart';
+export 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 export 'package:metadata_audio/src/musepack/musepack_loader.dart';
 export 'package:metadata_audio/src/ogg/ogg_loader.dart';
 export 'package:metadata_audio/src/parse_error.dart';
@@ -159,15 +159,20 @@ void _ensureInitialized() {
 /// print(metadata.common.title);
 /// ```
 Future<AudioMetadata> parseFile(String path, {ParseOptions? options}) async {
-  final entityType = await FileSystemEntity.type(path, followLinks: true);
+  final effectiveOptions = options ?? const ParseOptions();
+  final maxAllocation = getMaxMemoryAllocation(effectiveOptions);
+  getMaxMetadataEntries(effectiveOptions);
+  getMaxChapterCount(effectiveOptions);
+
+  final entityType = await FileSystemEntity.type(path);
   if (entityType != FileSystemEntityType.notFound &&
       entityType != FileSystemEntityType.file) {
     throw NotRegularFileError('Not a regular file: $path');
   }
 
-  final tokenizer = FileTokenizer.fromPath(path);
+  final tokenizer = FileTokenizer.fromPath(path, maxBufferSize: maxAllocation);
   try {
-    return await parseFromTokenizer(tokenizer, options: options);
+    return await parseFromTokenizer(tokenizer, options: effectiveOptions);
   } finally {
     tokenizer.close();
   }
@@ -197,8 +202,17 @@ Future<AudioMetadata> parseBytes(
   FileInfo? fileInfo,
   ParseOptions? options,
 }) async {
-  final tokenizer = BytesTokenizer(bytes, fileInfo: fileInfo);
-  return parseFromTokenizer(tokenizer, options: options);
+  final effectiveOptions = options ?? const ParseOptions();
+  final maxAllocation = getMaxMemoryAllocation(effectiveOptions);
+  getMaxMetadataEntries(effectiveOptions);
+  getMaxChapterCount(effectiveOptions);
+
+  final tokenizer = BytesTokenizer(
+    bytes,
+    fileInfo: fileInfo,
+    maxBufferSize: maxAllocation,
+  );
+  return parseFromTokenizer(tokenizer, options: effectiveOptions);
 }
 
 /// Parse audio metadata from a stream of bytes.
@@ -227,14 +241,21 @@ Future<AudioMetadata> parseStream(
   FileInfo? fileInfo,
   ParseOptions? options,
 }) async {
+  final effectiveOptions = options ?? const ParseOptions();
+  final maxAllocation = getMaxMemoryAllocation(effectiveOptions);
   final chunks = <int>[];
   await for (final chunk in stream) {
+    if (chunks.length + chunk.length > maxAllocation) {
+      throw TokenizerException(
+        'Stream size exceeds maxMemoryAllocation ($maxAllocation bytes)',
+      );
+    }
     chunks.addAll(chunk);
   }
   return parseBytes(
     Uint8List.fromList(chunks),
     fileInfo: fileInfo,
-    options: options,
+    options: effectiveOptions,
   );
 }
 
@@ -274,7 +295,7 @@ Future<AudioMetadata> parseFromTokenizer(
   // General metadata cache. An explicit ParseOptions.cacheKey always wins.
   // When ParseOptions.useCache is true and no key is given, derive one from
   // the source file name / URL.
-  String? cacheKey = options.cacheKey;
+  var cacheKey = options.cacheKey;
   if (cacheKey == null && (options.useCache || AudioMetadataCache.enabled)) {
     final derived = _defaultCacheKey(tokenizer, options);
     if (derived.isNotEmpty) cacheKey = derived;
@@ -289,10 +310,9 @@ Future<AudioMetadata> parseFromTokenizer(
   // Get file info from tokenizer, or create minimal info if not available
   final fileInfo = tokenizer.fileInfo ?? const FileInfo();
 
-  // Apply upstream-style allocation cap to tokenizers that support it.
+  // Apply allocation cap to tokenizers that support it.
   final maxBufferSize = getMaxMemoryAllocation(options);
-  // Validate the remaining resource limits up front, like upstream
-  // ParserFactory.parseFromTokenizer does (mirrors constructor validation).
+  // Validate resource limits up front.
   getMaxMetadataEntries(options);
   getMaxChapterCount(options);
   if (tokenizer is FileTokenizer) {
@@ -308,7 +328,7 @@ Future<AudioMetadata> parseFromTokenizer(
 
   // Verify parser supports tokenizer capabilities
   if (!parser.supports(tokenizer)) {
-    throw UnsupportedFileTypeError(
+    throw const UnsupportedFileTypeError(
       'Parser requires random access, but tokenizer does not support seeking',
     );
   }
@@ -323,7 +343,7 @@ Future<AudioMetadata> parseFromTokenizer(
   final fileSize = tokenizer.fileInfo?.size;
   final baseDuration =
       metadata.format.containerDuration ?? metadata.format.duration;
-  num? overallBitrate = metadata.format.overallBitrate;
+  var overallBitrate = metadata.format.overallBitrate;
   if (overallBitrate == null &&
       fileSize != null &&
       baseDuration != null &&
@@ -351,7 +371,13 @@ Future<AudioMetadata> parseFromTokenizer(
 
   // Persist to general metadata cache if opted in.
   if (cacheKey != null) {
-    unawaited(AudioMetadataCache.putMetadata(cacheKey, result));
+    unawaited(
+      AudioMetadataCache.putMetadata(
+        cacheKey,
+        result,
+        maxMemoryAllocation: getMaxMemoryAllocation(options),
+      ),
+    );
   }
 
   return result;
@@ -420,7 +446,7 @@ Future<void> scanPostHeaders(Tokenizer tokenizer, ParseOptions options) async {
 /// **Parameters:**
 /// - `tags`: List of tags to organize
 ///
-/// **Returns:** Map<String, List<dynamic>> where keys are tag IDs
+/// **Returns:** `Map<String, List<dynamic>>` where keys are tag IDs
 ///
 /// **Example:**
 /// ```dart

@@ -51,13 +51,19 @@ class OggParser {
           tokenizer.readBytes(header.pageSegments),
           header.pageSegments,
         );
+        validateAllocation(
+          segmentTable.totalPageSize,
+          options,
+          OggContentError.new,
+        );
         final pageData = tokenizer.readBytes(segmentTable.totalPageSize);
 
         final existing = _streams[header.streamSerialNumber];
         if (existing == null && _streams.length >= maxLogicalStreams) {
           throw OggContentError('Logical stream count exceeds entry limit');
         }
-        final stream = existing ??
+        final stream =
+            existing ??
             _OggStreamState(streamSerial: header.streamSerialNumber);
         _streams[header.streamSerialNumber] = stream;
         stream.payloadBytes += pageData.length;
@@ -241,6 +247,11 @@ class OggParser {
       if (stream.pageSegments.isEmpty) {
         throw OggContentError('Cannot continue on previous page');
       }
+      validateAllocation(
+        stream.bufferedPageLength + pageData.length,
+        options,
+        OggContentError.new,
+      );
       if (stream.pageSegments.length >= getMaxMetadataEntries(options)) {
         throw OggContentError('Buffered Ogg page count exceeds entry limit');
       }
@@ -249,16 +260,28 @@ class OggParser {
     }
     if (header.headerType.lastPage || !header.headerType.continued) {
       if (stream.pageSegments.isNotEmpty) {
+        final totalSize = stream.pageSegments.fold<int>(
+          0,
+          (sum, seg) => sum + seg.length,
+        );
+        validateAllocation(totalSize, options, OggContentError.new);
         final merged = <int>[];
         for (final segment in stream.pageSegments) {
           merged.addAll(segment);
         }
         _parseVorbisFamilyFullPage(stream, merged);
       }
-      stream.bufferedPageLength =
-          header.headerType.lastPage ? 0 : pageData.length;
-      stream.pageSegments =
-          header.headerType.lastPage ? <List<int>>[] : <List<int>>[pageData];
+      stream.bufferedPageLength = header.headerType.lastPage
+          ? 0
+          : pageData.length;
+      validateAllocation(
+        stream.bufferedPageLength,
+        options,
+        OggContentError.new,
+      );
+      stream.pageSegments = header.headerType.lastPage
+          ? <List<int>>[]
+          : <List<int>>[pageData];
     }
   }
 
@@ -288,8 +311,7 @@ class OggParser {
           break;
       }
     } else if (codec == 'Opus') {
-      if (pageData.length >= 8 &&
-          _ascii(pageData, 0, 8) == 'OpusTags') {
+      if (pageData.length >= 8 && _ascii(pageData, 0, 8) == 'OpusTags') {
         final comments = OpusDecoder.parseTags(
           pageData,
           maxComments: getMaxMetadataEntries(options),
@@ -327,8 +349,7 @@ class OggParser {
     }
     var offset = 0;
     for (final length in lacing) {
-      if (stream.packetLength + length >
-          getMaxMemoryAllocation(options)) {
+      if (stream.packetLength + length > getMaxMemoryAllocation(options)) {
         throw OggContentError(
           'Metadata size ${stream.packetLength + length} exceeds allocation limit ${getMaxMemoryAllocation(options)} (buffering limit)',
         );
@@ -375,7 +396,9 @@ class OggParser {
       throw OggContentError('Unexpected repeated Ogg/FLAC STREAMINFO');
     }
     if (header.length != packet.length - FlacToken.blockHeaderLength) {
-      throw OggContentError('Ogg/FLAC metadata block length does not match packet');
+      throw OggContentError(
+        'Ogg/FLAC metadata block length does not match packet',
+      );
     }
     if (header.type == FlacBlockType.picture && !options.skipCovers) {
       _validateFlacPicture(packet.sublist(FlacToken.blockHeaderLength));
@@ -384,13 +407,16 @@ class OggParser {
       final block = OggFlacStream.parseMetadataBlock(packet);
       _applyFlacMetadataBlock(stream, block);
     } on FormatException catch (error) {
-      throw OggContentError('Invalid Ogg/FLAC metadata block: ${error.message}');
+      throw OggContentError(
+        'Invalid Ogg/FLAC metadata block: ${error.message}',
+      );
     }
     stream.flacMetadataComplete = header.lastBlock;
   }
 
   void _parseFlacFirstPacket(_OggStreamState stream, List<int> packet) {
-    if (packet.length != 13 + FlacToken.blockHeaderLength + FlacToken.blockStreamInfoLength) {
+    if (packet.length !=
+        13 + FlacToken.blockHeaderLength + FlacToken.blockStreamInfoLength) {
       throw OggContentError('Invalid Ogg/FLAC identification packet length');
     }
     if (packet[0] != 0x7F ||
@@ -411,7 +437,9 @@ class OggParser {
       final block = OggFlacStream.parseMetadataBlock(packet.sublist(13));
       _applyFlacMetadataBlock(stream, block);
     } on FormatException catch (error) {
-      throw OggContentError('Invalid Ogg/FLAC metadata block: ${error.message}');
+      throw OggContentError(
+        'Invalid Ogg/FLAC metadata block: ${error.message}',
+      );
     }
     stream.flacMetadataComplete = header.lastBlock;
   }
@@ -421,17 +449,21 @@ class OggParser {
       throw OggContentError('Truncated Ogg/FLAC picture');
     }
     final view = ByteData.sublistView(Uint8List.fromList(data));
-    final mimeLength = view.getUint32(4, Endian.big);
+    final mimeLength = view.getUint32(4);
     if (mimeLength > data.length - 32) {
       throw OggContentError('Ogg/FLAC picture MIME length exceeds block');
     }
-    final descriptionLength = view.getUint32(8 + mimeLength, Endian.big);
+    final descriptionLength = view.getUint32(8 + mimeLength);
     if (descriptionLength > data.length - 32 - mimeLength) {
-      throw OggContentError('Ogg/FLAC picture description length exceeds block');
+      throw OggContentError(
+        'Ogg/FLAC picture description length exceeds block',
+      );
     }
     final headerLength = 32 + mimeLength + descriptionLength;
-    if (view.getUint32(headerLength - 4, Endian.big) != data.length - headerLength) {
-      throw OggContentError('Ogg/FLAC picture data length does not match block');
+    if (view.getUint32(headerLength - 4) != data.length - headerLength) {
+      throw OggContentError(
+        'Ogg/FLAC picture data length does not match block',
+      );
     }
   }
 
@@ -441,6 +473,7 @@ class OggParser {
       throw OggContentError('Truncated Ogg/FLAC metadata packet');
     }
   }
+
   void _applyFlacMetadataBlock(
     _OggStreamState stream,
     OggFlacMetadataBlock block,
@@ -644,7 +677,7 @@ class OggParser {
         metadata.addWarning(
           'End-of-stream reached before last page in Ogg stream serial=${stream.streamSerial}',
         );
-        // Flush any buffered packet segments (upstream parity, #2861).
+        // Flush any buffered packet segments.
         if (stream.codec == 'Vorbis I' ||
             stream.codec == 'Opus' ||
             stream.codec == 'Speex') {
@@ -709,7 +742,7 @@ class OggParser {
     _applyVorbisChapters();
   }
 
-  /// Adds a [TrackInfo] per logical stream (upstream parity: each
+  /// Adds a [TrackInfo] per logical stream (each
   /// discovered audio/video stream becomes its own `format.trackInfo`
   /// entry with the Ogg stream serial as `id`).
   void _addStreamTracks() {
@@ -913,7 +946,7 @@ class _OggStreamState {
   int? sampleRate;
   int? numberOfChannels;
 
-  /// Sum of payload bytes carried by this stream's pages (upstream tracks
+  /// Sum of payload bytes carried by this stream's pages (tracks
   /// per-stream payload to compute an independent track bitrate)
   int payloadBytes = 0;
   int? bitsPerSample;
