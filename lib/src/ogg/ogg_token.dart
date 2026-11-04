@@ -106,12 +106,13 @@ class OggToken {
   }
 
   static int _granulePosition(List<int> bytes, int offset) {
-    final value = uint64Le(bytes, offset);
+    final low = uint32Le(bytes, offset);
+    final high = uint32Le(bytes, offset + 4);
     // Unknown granule positions are encoded as all bits set (-1).
-    if (value == 0xFFFFFFFFFFFFFFFF) {
+    if (low == 0xFFFFFFFF && high == 0xFFFFFFFF) {
       return -1;
     }
-    return value;
+    return low + (high << 32);
   }
 
   static void _expectLength(

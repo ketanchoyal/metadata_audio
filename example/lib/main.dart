@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:metadata_audio/metadata_audio.dart';
@@ -139,7 +140,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: kIsWeb ? 1 : 2, vsync: this);
   }
 
   @override
@@ -472,10 +473,14 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                       indicatorColor: Theme.of(context).colorScheme.primary,
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.grey,
-                      tabs: const [
-                        Tab(text: 'Local File', icon: Icon(Icons.file_open_rounded, size: 20)),
-                        Tab(text: 'Remote URL', icon: Icon(Icons.cloud_rounded, size: 20)),
-                      ],
+                      tabs: kIsWeb
+                          ? const [
+                              Tab(text: 'Local File', icon: Icon(Icons.file_open_rounded, size: 20)),
+                            ]
+                          : const [
+                              Tab(text: 'Local File', icon: Icon(Icons.file_open_rounded, size: 20)),
+                              Tab(text: 'Remote URL', icon: Icon(Icons.cloud_rounded, size: 20)),
+                            ],
                     ),
                     const SizedBox(height: 16),
 
@@ -512,8 +517,9 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                             ],
                           ),
 
-                          // Remote URL tab content
-                          SingleChildScrollView(
+                          // Remote URL tab content (desktop/native only)
+                          if (!kIsWeb)
+                            SingleChildScrollView(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
