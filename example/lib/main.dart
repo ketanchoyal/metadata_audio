@@ -73,7 +73,7 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       home: _showWebAnalyzer
-          ? WebAnalyzerScreen(onSwitchToDesktop: _toggleScreen)
+          ? WebAnalyzerScreen(onSwitchToDesktop: kIsWeb ? null : _toggleScreen)
           : DesktopScreen(onSwitchToAnalyzer: _toggleScreen),
       debugShowCheckedModeBanner: false,
     );

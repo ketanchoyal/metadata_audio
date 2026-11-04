@@ -14,6 +14,9 @@ class _StubPlatformHelper implements WebPlatformHelper {
   void revokeAudioUrl(String url) {}
 
   @override
+  void openUrl(String url) {}
+
+  @override
   AudioPlayerService createAudioPlayer() => _StubAudioPlayer();
 }
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:metadata_audio/metadata_audio.dart';
@@ -40,6 +41,9 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
   // Search queries
   String _commonSearch = '';
   String _nativeSearch = '';
+
+  // Playback speed
+  double _playbackSpeed = 1.0;
 
   @override
   void initState() {
@@ -201,6 +205,20 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     }
   }
 
+  void _cyclePlaybackSpeed() {
+    setState(() {
+      if (_playbackSpeed == 1.0) {
+        _playbackSpeed = 1.25;
+      } else if (_playbackSpeed == 1.25) {
+        _playbackSpeed = 1.5;
+      } else if (_playbackSpeed == 1.5) {
+        _playbackSpeed = 2.0;
+      } else {
+        _playbackSpeed = 1.0;
+      }
+    });
+  }
+
   void _exportJson(AnalyzedFile file) {
     final metadata = file.metadata;
     if (metadata == null) return;
@@ -221,18 +239,29 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
   void _downloadArtwork(Picture pic, int index) {
     final extension = pic.format.split('/').last;
-    final filename = 'artwork_$index.$extension';
+    final filename = 'artwork_${index + 1}.$extension';
     WebPlatformHelper.instance.downloadFile(pic.data, filename, pic.format);
     _showSnackbar('Downloaded $filename');
+  }
+
+  void _copyToClipboard(String text, String label) {
+    Clipboard.setData(ClipboardData(text: text));
+    _showSnackbar('Copied $label to clipboard');
   }
 
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.redAccent : const Color(0xFF10B981),
+        content: Text(
+          message,
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        backgroundColor: isError ? Colors.redAccent : const Color(0xFF06B6D4),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -242,7 +271,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     final isWide = MediaQuery.of(context).size.width >= 960;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Slate 900
+      backgroundColor: const Color(0xFF090D16), // Ultra dark slate
       appBar: _buildAppBar(),
       body: DropTarget(
         onDragEntered: (_) => setState(() => _isDragging = true),
@@ -262,20 +291,31 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF0B0F19),
+      backgroundColor: const Color(0xFF0D131F),
       elevation: 0,
       titleSpacing: 24,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(color: const Color(0xFF1E293B), height: 1),
+      ),
       title: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(7),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF6366F1), Color(0xFF06B6D4)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF06B6D4).withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.graphic_eq_rounded,
@@ -283,22 +323,49 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
               size: 22,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Audio Tag Analyzer',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                  color: Colors.white,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    'Audio Tag Analyzer',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: const Color(0xFF6366F1).withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: const Text(
+                      'v1.0',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF818CF8),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 2),
               Text(
-                'Browser-based audio metadata explorer',
+                'Private in-browser metadata explorer · Powered by metadata_audio',
                 style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
               ),
             ],
@@ -306,45 +373,70 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
         ],
       ),
       actions: [
-        // Privacy Badge
+        // Privacy Badge with pulsing dot
         Container(
           margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
+            color: const Color(0xFF131D2E),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF334155)),
+            border: Border.all(color: const Color(0xFF223049)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.shield_outlined,
-                size: 14,
-                color: Color(0xFF10B981),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF10B981),
+                  shape: BoxShape.circle,
+                ),
               ),
-              const SizedBox(width: 6),
-              Text(
-                '100% Client-Side',
+              const SizedBox(width: 8),
+              const Text(
+                '100% Client-Side · Private',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey.shade300,
+                  color: Color(0xFFE2E8F0),
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
         ),
-        if (widget.onSwitchToDesktop != null)
+        // GitHub button
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.code_rounded, size: 16),
+            label: const Text('GitHub', style: TextStyle(fontSize: 12)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white70,
+              side: const BorderSide(color: Color(0xFF223049)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            onPressed: () => WebPlatformHelper.instance.openUrl(
+              'https://github.com/ketanchoyal/metadata_audio',
+            ),
+          ),
+        ),
+        // Desktop Switcher is ONLY shown on Desktop (hidden on Web)
+        if (!kIsWeb && widget.onSwitchToDesktop != null) ...[
+          const SizedBox(width: 6),
           IconButton(
-            tooltip: 'Switch to Desktop Test Suite',
+            tooltip: 'Switch to Desktop Suite',
             icon: const Icon(
               Icons.desktop_windows_outlined,
               color: Colors.white70,
             ),
             onPressed: widget.onSwitchToDesktop,
           ),
-        const SizedBox(width: 8),
+        ],
+        const SizedBox(width: 16),
       ],
     );
   }
@@ -354,8 +446,8 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Left Sidebar: Files & Dropzone
-        SizedBox(width: 340, child: _buildSidebar()),
-        const VerticalDivider(width: 1, thickness: 1, color: Color(0xFF1E293B)),
+        SizedBox(width: 350, child: _buildSidebar()),
+        Container(width: 1, color: const Color(0xFF1E293B)),
         // Right Main Panel
         Expanded(child: _buildMainPanel()),
       ],
@@ -370,12 +462,15 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: const Color(0xFF1E293B),
+          color: const Color(0xFF131D2E),
           child: Row(
             children: [
               TextButton.icon(
-                icon: const Icon(Icons.arrow_back, size: 18),
+                icon: const Icon(Icons.arrow_back_rounded, size: 18),
                 label: const Text('Back to files'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF06B6D4),
+                ),
                 onPressed: () => setState(() => _selectedIndex = -1),
               ),
               const Spacer(),
@@ -393,7 +488,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
   Widget _buildSidebar() {
     return Container(
-      color: const Color(0xFF0F172A),
+      color: const Color(0xFF0D131F),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -403,44 +498,76 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
             child: InkWell(
               onTap: _pickFiles,
               borderRadius: BorderRadius.circular(16),
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(
                   vertical: 28,
                   horizontal: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: _isDragging
-                      ? const Color(0xFF0E7490).withValues(alpha: 0.25)
-                      : const Color(0xFF1E293B),
+                  gradient: LinearGradient(
+                    colors: _isDragging
+                        ? [
+                            const Color(0xFF06B6D4).withValues(alpha: 0.15),
+                            const Color(0xFF6366F1).withValues(alpha: 0.15),
+                          ]
+                        : [const Color(0xFF141C2B), const Color(0xFF111724)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: _isDragging
                         ? const Color(0xFF06B6D4)
-                        : const Color(0xFF334155),
-                    width: _isDragging ? 2 : 1,
+                        : const Color(0xFF223049),
+                    width: _isDragging ? 2 : 1.2,
                   ),
+                  boxShadow: _isDragging
+                      ? [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF06B6D4,
+                            ).withValues(alpha: 0.25),
+                            blurRadius: 16,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF06B6D4)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF6366F1,
+                            ).withValues(alpha: 0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: const Icon(
                         Icons.cloud_upload_outlined,
-                        color: Color(0xFF818CF8),
-                        size: 32,
+                        color: Colors.white,
+                        size: 28,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     const Text(
                       'Drop audio files here',
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
@@ -452,29 +579,42 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                         color: Colors.grey.shade400,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Wrap(
                       spacing: 4,
                       runSpacing: 4,
                       alignment: WrapAlignment.center,
                       children:
-                          ['MP3', 'FLAC', 'M4A', 'WAV', 'OGG', 'OPUS', 'AAC']
+                          [
+                                'MP3',
+                                'FLAC',
+                                'M4A',
+                                'WAV',
+                                'OGG',
+                                'OPUS',
+                                'AAC',
+                                'WMA',
+                                'CAF',
+                              ]
                               .map(
                                 (ext) => Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 6,
-                                    vertical: 2,
+                                    vertical: 2.5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF0B0F19),
-                                    borderRadius: BorderRadius.circular(4),
+                                    color: const Color(0xFF090D16),
+                                    borderRadius: BorderRadius.circular(5),
+                                    border: Border.all(
+                                      color: const Color(0xFF1E293B),
+                                    ),
                                   ),
                                   child: Text(
                                     ext,
                                     style: TextStyle(
                                       fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade400,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.cyan.shade300,
                                     ),
                                   ),
                                 ),
@@ -492,27 +632,31 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
             child: Row(
               children: [
                 const Text(
-                  'Files',
+                  'FILES',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
                     color: Colors.grey,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1,
+                    horizontal: 7,
+                    vertical: 1.5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: const Color(0xFF1C2638),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '${_files.length}',
-                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
                   ),
                 ),
                 const Spacer(),
@@ -529,9 +673,12 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(50, 24),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Clear all',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade500,
+                      ),
                     ),
                   ),
               ],
@@ -541,12 +688,23 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           Expanded(
             child: _files.isEmpty
                 ? Center(
-                    child: Text(
-                      'No files analyzed yet',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 13,
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.library_music_outlined,
+                          size: 36,
+                          color: Colors.grey.shade700,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No files loaded',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : ListView.builder(
@@ -560,34 +718,54 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       return Container(
                         margin: const EdgeInsets.only(bottom: 6),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF1E293B)
-                              : Colors.transparent,
+                          gradient: isSelected
+                              ? LinearGradient(
+                                  colors: [
+                                    const Color(0xFF1E293B),
+                                    const Color(0xFF162133),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFF6366F1)
-                                : Colors.transparent,
-                            width: 1.5,
+                                ? const Color(0xFF06B6D4)
+                                : const Color(0xFF1E293B),
+                            width: isSelected ? 1.5 : 1,
                           ),
                         ),
                         child: ListTile(
                           onTap: () => _selectFile(index),
                           dense: true,
                           leading: Container(
-                            width: 42,
-                            height: 42,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0B0F19),
-                              borderRadius: BorderRadius.circular(8),
+                              color: isSelected
+                                  ? const Color(
+                                      0xFF06B6D4,
+                                    ).withValues(alpha: 0.15)
+                                  : const Color(0xFF090D16),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(
+                                        0xFF06B6D4,
+                                      ).withValues(alpha: 0.5)
+                                    : const Color(0xFF1E293B),
+                              ),
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               ext.length <= 4 ? ext : ext.substring(0, 4),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF38BDF8),
+                                fontWeight: FontWeight.w800,
+                                color: isSelected
+                                    ? const Color(0xFF38BDF8)
+                                    : Colors.grey.shade400,
                               ),
                             ),
                           ),
@@ -595,9 +773,11 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                             file.metadata?.common.title ?? file.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               color: Colors.white,
                             ),
                           ),
@@ -605,11 +785,13 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                             '${_formatBytes(file.size)}${file.metadata?.format.duration != null ? " · ${_formatDuration(file.metadata!.format.duration!)}" : ""}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey.shade400,
+                              color: isSelected
+                                  ? Colors.cyan.shade200
+                                  : Colors.grey.shade400,
                             ),
                           ),
                           trailing: IconButton(
-                            icon: const Icon(Icons.close, size: 16),
+                            icon: const Icon(Icons.close_rounded, size: 16),
                             color: Colors.grey.shade500,
                             tooltip: 'Remove',
                             onPressed: () => _removeFile(index),
@@ -636,11 +818,22 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: Color(0xFF06B6D4)),
-            SizedBox(height: 16),
+            SizedBox(
+              width: 44,
+              height: 44,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: Color(0xFF06B6D4),
+              ),
+            ),
+            SizedBox(height: 18),
             Text(
               'Analyzing audio metadata...',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -650,23 +843,34 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     if (file.error != null) {
       return Center(
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(28),
           margin: const EdgeInsets.all(24),
-          constraints: const Duration(milliseconds: 500) == Duration.zero
-              ? null
-              : const BoxConstraints(maxWidth: 500),
+          constraints: const BoxConstraints(maxWidth: 520),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
+            color: const Color(0xFF1A1A27),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.redAccent.withValues(alpha: 0.1),
+                blurRadius: 20,
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 48,
-                color: Colors.redAccent,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  size: 36,
+                  color: Colors.redAccent,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -681,7 +885,11 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
               Text(
                 file.error!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade300, fontSize: 13),
+                style: TextStyle(
+                  color: Colors.grey.shade300,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -725,77 +933,110 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 90,
-              height: 90,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFF6366F1).withValues(alpha: 0.2),
-                    const Color(0xFF06B6D4).withValues(alpha: 0.2),
+                    const Color(0xFF6366F1).withValues(alpha: 0.25),
+                    const Color(0xFF06B6D4).withValues(alpha: 0.25),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: const Color(0xFF38BDF8).withValues(alpha: 0.3),
+                  color: const Color(0xFF38BDF8).withValues(alpha: 0.4),
+                  width: 1.5,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF06B6D4).withValues(alpha: 0.2),
+                    blurRadius: 30,
+                    spreadRadius: 4,
+                  ),
+                ],
               ),
               child: const Icon(
-                Icons.music_note_rounded,
-                size: 46,
+                Icons.album_rounded,
+                size: 52,
                 color: Color(0xFF38BDF8),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             const Text(
-              'Drop an audio file to analyze',
+              'Decode your audio files',
               style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
                 color: Colors.white,
-                letterSpacing: -0.5,
+                letterSpacing: -0.6,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
-              'Choose an audio file to uncover its full story, from artist and album\nto the smallest technical detail.',
+              'Drop an audio file to explore metadata, cover art, chapters, format specs,\nand raw native tags in private, client-side detail.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade400,
-                height: 1.5,
+                height: 1.6,
               ),
             ),
-            const SizedBox(height: 24),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                _buildFeatureChip(Icons.tag_rounded, 'Every tag'),
-                _buildFeatureChip(Icons.image_outlined, 'Cover artwork'),
-                _buildFeatureChip(Icons.play_circle_outline, 'Audio playback'),
-                _buildFeatureChip(
-                  Icons.speed_rounded,
-                  'Chapters & technical specs',
-                ),
-              ],
-            ),
             const SizedBox(height: 32),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
+                children: [
+                  _buildFeatureCard(
+                    Icons.tag_rounded,
+                    'Every Tag',
+                    'ID3v1, ID3v2, Vorbis, QuickTime, ASF, APE, RIFF, EBML',
+                    const Color(0xFF6366F1),
+                  ),
+                  _buildFeatureCard(
+                    Icons.image_outlined,
+                    'Cover Artwork',
+                    'Extract full-resolution images, format details & download',
+                    const Color(0xFF06B6D4),
+                  ),
+                  _buildFeatureCard(
+                    Icons.play_circle_outline,
+                    'In-Browser Playback',
+                    'Listen to your audio file immediately without uploading',
+                    const Color(0xFF10B981),
+                  ),
+                  _buildFeatureCard(
+                    Icons.speed_rounded,
+                    'Chapters & Specs',
+                    'Bitrates, sample rates, multi-streams & chapter timestamps',
+                    const Color(0xFFF59E0B),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 36),
             ElevatedButton.icon(
               onPressed: _pickFiles,
-              icon: const Icon(Icons.file_open_outlined, size: 18),
-              label: const Text('Browse audio file'),
+              icon: const Icon(Icons.file_open_outlined, size: 20),
+              label: const Text(
+                'Browse Audio File',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6366F1),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
+                  horizontal: 28,
+                  vertical: 16,
                 ),
+                elevation: 4,
+                shadowColor: const Color(0xFF6366F1).withValues(alpha: 0.5),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ),
@@ -805,22 +1046,54 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     );
   }
 
-  Widget _buildFeatureChip(IconData icon, String label) {
+  Widget _buildFeatureCard(
+    IconData icon,
+    String title,
+    String subtitle,
+    Color color,
+  ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      width: 320,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF334155)),
+        color: const Color(0xFF111726),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF1E293B)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: const Color(0xFF38BDF8)),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: Colors.white70),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade400,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -836,7 +1109,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
-        color: Color(0xFF0B0F19),
+        color: Color(0xFF0D131F),
         border: Border(bottom: BorderSide(color: Color(0xFF1E293B))),
       ),
       child: Column(
@@ -844,43 +1117,49 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cover Art
-              GestureDetector(
-                onTap: firstPicture != null
-                    ? () => _showImageDialog(firstPicture)
-                    : null,
-                child: Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: firstPicture != null
-                      ? Image.memory(
-                          Uint8List.fromList(firstPicture.data),
-                          fit: BoxFit.cover,
-                          errorBuilder: (ctx, err, stack) => const Icon(
-                            Icons.broken_image,
-                            color: Colors.grey,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.album_rounded,
-                          size: 48,
-                          color: Color(0xFF475569),
+              // Cover Art with 3D shadow and zoom cursor
+              MouseRegion(
+                cursor: firstPicture != null
+                    ? SystemMouseCursors.click
+                    : SystemMouseCursors.basic,
+                child: GestureDetector(
+                  onTap: firstPicture != null
+                      ? () => _showImageDialog(firstPicture)
+                      : null,
+                  child: Container(
+                    width: 104,
+                    height: 104,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF161F30),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF24334C)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
                         ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: firstPicture != null
+                        ? Image.memory(
+                            Uint8List.fromList(firstPicture.data),
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.album_rounded,
+                            size: 52,
+                            color: Color(0xFF475569),
+                          ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 22),
               // Track Details
               Expanded(
                 child: Column(
@@ -890,31 +1169,44 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       'YOUR AUDIO, DECODED',
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.4,
                         color: Colors.cyan.shade400,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 5),
                     Text(
                       common.title?.isNotEmpty == true
                           ? common.title!
                           : file.name,
                       style: const TextStyle(
                         fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w800,
                         color: Colors.white,
+                        letterSpacing: -0.4,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${common.artist ?? "Unknown artist"} · ${common.album ?? "Unknown album"}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade400,
-                      ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.music_note_rounded,
+                          size: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${common.artist ?? "Unknown artist"} · ${common.album ?? "Unknown album"}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Wrap(
                       spacing: 8,
                       runSpacing: 6,
@@ -929,6 +1221,9 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                             format.lossless!
                                 ? const Color(0xFF10B981)
                                 : const Color(0xFFF59E0B),
+                            icon: format.lossless!
+                                ? Icons.check_circle_rounded
+                                : Icons.compress_rounded,
                           ),
                         _buildBadge(
                           _formatBytes(file.size),
@@ -938,11 +1233,17 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                           _buildBadge(
                             _formatDuration(format.duration!),
                             const Color(0xFF0284C7),
+                            icon: Icons.timer_outlined,
                           ),
                         if (format.bitrate != null)
                           _buildBadge(
                             '${(format.bitrate! / 1000).round()} kbps',
                             const Color(0xFF7C3AED),
+                          ),
+                        if (format.sampleRate != null)
+                          _buildBadge(
+                            '${(format.sampleRate! / 1000).toStringAsFixed(1)} kHz',
+                            const Color(0xFF0D9488),
                           ),
                       ],
                     ),
@@ -950,18 +1251,29 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                 ),
               ),
               // Export JSON Button
-              IconButton.filledTonal(
-                icon: const Icon(Icons.download_rounded, size: 20),
-                tooltip: 'Export metadata as JSON',
-                style: IconButton.styleFrom(
+              FilledButton.icon(
+                icon: const Icon(Icons.download_rounded, size: 17),
+                label: const Text(
+                  'Export JSON',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF1E293B),
                   foregroundColor: Colors.white,
+                  side: const BorderSide(color: Color(0xFF334155)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () => _exportJson(file),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           // Audio Player Control Bar
           _buildPlayerBar(file),
         ],
@@ -971,11 +1283,11 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
   Widget _buildPlayerBar(AnalyzedFile file) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF334155)),
+        color: const Color(0xFF131D2E),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF223049)),
       ),
       child: ValueListenableBuilder<bool>(
         valueListenable: _audioPlayer.isPlaying,
@@ -995,32 +1307,54 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
                   return Row(
                     children: [
-                      IconButton(
-                        icon: Icon(
-                          isPlaying
-                              ? Icons.pause_circle_filled_rounded
-                              : Icons.play_circle_fill_rounded,
-                          size: 32,
-                          color: const Color(0xFF06B6D4),
+                      // Play/Pause button
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6366F1), Color(0xFF06B6D4)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFF06B6D4,
+                              ).withValues(alpha: 0.35),
+                              blurRadius: 10,
+                            ),
+                          ],
                         ),
-                        onPressed: () {
-                          if (isPlaying) {
-                            _audioPlayer.pause();
-                          } else {
-                            _audioPlayer.play();
-                          }
-                        },
+                        child: IconButton(
+                          icon: Icon(
+                            isPlaying
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            size: 26,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            if (isPlaying) {
+                              _audioPlayer.pause();
+                            } else {
+                              _audioPlayer.play();
+                            }
+                          },
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 14),
+                      // Time display
                       Text(
                         _formatSeconds(currentPos),
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                           fontFamily: 'monospace',
-                          color: Colors.white70,
+                          color: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
+                      // Seek Slider
                       Expanded(
                         child: SliderTheme(
                           data: SliderTheme.of(context).copyWith(
@@ -1029,8 +1363,11 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                               enabledThumbRadius: 6,
                             ),
                             activeTrackColor: const Color(0xFF06B6D4),
-                            inactiveTrackColor: const Color(0xFF334155),
+                            inactiveTrackColor: const Color(0xFF1E293B),
                             thumbColor: Colors.white,
+                            overlayColor: const Color(
+                              0xFF06B6D4,
+                            ).withValues(alpha: 0.2),
                           ),
                           child: Slider(
                             value: progress,
@@ -1042,13 +1379,38 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Text(
                         _formatSeconds(duration),
-                        style: const TextStyle(
-                          fontSize: 12,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                           fontFamily: 'monospace',
-                          color: Colors.white70,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Speed toggle button
+                      TextButton(
+                        onPressed: _cyclePlaybackSpeed,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: const Size(40, 28),
+                          backgroundColor: const Color(0xFF1C2638),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          '${_playbackSpeed}x',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF38BDF8),
+                          ),
                         ),
                       ),
                     ],
@@ -1062,21 +1424,30 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     );
   }
 
-  Widget _buildBadge(String label, Color color) {
+  Widget _buildBadge(String label, Color color, {IconData? icon}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: color.withValues(alpha: 0.95),
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color.withValues(alpha: 0.95),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1086,7 +1457,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0B0F19),
+        color: Color(0xFF0D131F),
         border: Border(bottom: BorderSide(color: Color(0xFF1E293B))),
       ),
       child: TabBar(
@@ -1095,8 +1466,13 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
         indicatorColor: const Color(0xFF06B6D4),
         indicatorWeight: 3,
         labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey,
+        unselectedLabelColor: Colors.grey.shade400,
         tabAlignment: TabAlignment.start,
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
         tabs: [
           const Tab(
             icon: Icon(Icons.dashboard_outlined, size: 18),
@@ -1120,17 +1496,21 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                   const SizedBox(width: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 1,
+                      horizontal: 6,
+                      vertical: 1.5,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF06B6D4).withValues(alpha: 0.2),
+                      color: const Color(0xFF06B6D4).withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF06B6D4).withValues(alpha: 0.5),
+                      ),
                     ),
                     child: Text(
                       '$artworkCount',
                       style: const TextStyle(
                         fontSize: 10,
+                        fontWeight: FontWeight.bold,
                         color: Color(0xFF38BDF8),
                       ),
                     ),
@@ -1160,52 +1540,77 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Technical summary
-          const Text(
-            'Technical Summary',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          const Row(
+            children: [
+              Icon(
+                Icons.analytics_outlined,
+                size: 18,
+                color: Color(0xFF06B6D4),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Technical Summary',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Wrap(
             spacing: 12,
             runSpacing: 12,
             children: [
               _buildMetricCard(
+                Icons.timer_outlined,
                 'Duration',
                 format.duration != null
                     ? '${_formatDuration(format.duration!)} (${format.duration!.toStringAsFixed(2)}s)'
                     : '—',
               ),
               _buildMetricCard(
+                Icons.speed_rounded,
                 'Bitrate',
                 format.bitrate != null
                     ? '${(format.bitrate! / 1000).round()} kbps'
                     : '—',
               ),
-              _buildMetricCard('Container', format.container ?? '—'),
-              _buildMetricCard('Codec', format.codec ?? '—'),
               _buildMetricCard(
+                Icons.inventory_2_outlined,
+                'Container',
+                format.container ?? '—',
+              ),
+              _buildMetricCard(
+                Icons.audiotrack_outlined,
+                'Codec',
+                format.codec ?? '—',
+              ),
+              _buildMetricCard(
+                Icons.surround_sound_outlined,
                 'Channels',
                 format.numberOfChannels != null
                     ? '${format.numberOfChannels} ${_channelName(format.numberOfChannels!)}'
                     : '—',
               ),
               _buildMetricCard(
+                Icons.waves_rounded,
                 'Sample rate',
                 format.sampleRate != null
                     ? '${(format.sampleRate! / 1000).toStringAsFixed(1)} kHz'
                     : '—',
               ),
               _buildMetricCard(
+                Icons.high_quality_outlined,
                 'Bit depth',
                 format.bitsPerSample != null
                     ? '${format.bitsPerSample}-bit'
                     : '—',
               ),
               _buildMetricCard(
+                Icons.verified_outlined,
                 'Lossless',
                 format.lossless != null
                     ? (format.lossless! ? 'Yes' : 'No')
@@ -1213,17 +1618,24 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 32),
           // Track information
-          const Text(
-            'Track Information',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          const Row(
+            children: [
+              Icon(Icons.info_outline, size: 18, color: Color(0xFF6366F1)),
+              SizedBox(width: 8),
+              Text(
+                'Track Information',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _buildInfoTable([
             ('Title', common.title),
             ('Artist', common.artist),
@@ -1245,19 +1657,19 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
             ('Genre', common.genre?.join(', ')),
             ('Composer', common.composer?.join(', ')),
           ]),
-          const SizedBox(height: 28),
+          const SizedBox(height: 32),
           // Quality & Warnings
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: warnings.isNotEmpty
                   ? const Color(0xFFF59E0B).withValues(alpha: 0.1)
                   : const Color(0xFF10B981).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: warnings.isNotEmpty
-                    ? const Color(0xFFF59E0B).withValues(alpha: 0.3)
-                    : const Color(0xFF10B981).withValues(alpha: 0.3),
+                    ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
+                    : const Color(0xFF10B981).withValues(alpha: 0.35),
               ),
             ),
             child: Column(
@@ -1272,29 +1684,32 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       color: warnings.isNotEmpty
                           ? const Color(0xFFF59E0B)
                           : const Color(0xFF10B981),
+                      size: 20,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Text(
                       warnings.isNotEmpty
                           ? '${warnings.length} parser warning${warnings.length == 1 ? "" : "s"}'
-                          : 'Analysis complete · Clean parsing',
+                          : 'Analysis complete · Clean metadata extraction',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
+                        fontSize: 14,
                         color: Colors.white,
                       ),
                     ),
                   ],
                 ),
                 if (warnings.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   ...warnings.map(
                     (w) => Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.only(top: 5),
                       child: Text(
                         '• ${w.message}',
                         style: TextStyle(
                           color: Colors.grey.shade300,
                           fontSize: 13,
+                          height: 1.3,
                         ),
                       ),
                     ),
@@ -1308,28 +1723,40 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     );
   }
 
-  Widget _buildMetricCard(String label, String value) {
+  Widget _buildMetricCard(IconData icon, String label, String value) {
     return Container(
-      width: 160,
-      padding: const EdgeInsets.all(12),
+      width: 175,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF334155)),
+        color: const Color(0xFF141C2B),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF223049)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+          Row(
+            children: [
+              Icon(icon, size: 14, color: const Color(0xFF06B6D4)),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
               color: Colors.white,
             ),
           ),
@@ -1345,20 +1772,26 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF334155)),
+        color: const Color(0xFF141C2B),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF223049)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: filtered.length,
         separatorBuilder: (_, _) =>
-            const Divider(height: 1, color: Color(0xFF334155)),
+            const Divider(height: 1, color: Color(0xFF1E293B)),
         itemBuilder: (context, index) {
           final row = filtered[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          final isEven = index.isEven;
+
+          return Container(
+            color: isEven
+                ? Colors.transparent
+                : Colors.white.withValues(alpha: 0.015),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1366,11 +1799,15 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                   width: 140,
                   child: Text(
                     row.$1,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade400,
+                    ),
                   ),
                 ),
                 Expanded(
-                  child: Text(
+                  child: SelectableText(
                     row.$2!,
                     style: const TextStyle(
                       fontSize: 13,
@@ -1378,6 +1815,14 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       color: Colors.white,
                     ),
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy_rounded, size: 14),
+                  color: Colors.grey.shade600,
+                  tooltip: 'Copy',
+                  onPressed: () => _copyToClipboard(row.$2!, row.$1),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
               ],
             ),
@@ -1459,8 +1904,13 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           padding: const EdgeInsets.all(16),
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Search common tags...',
-              prefixIcon: const Icon(Icons.search, size: 18),
+              hintText: 'Search ${entries.length} common tags...',
+              hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+              prefixIcon: const Icon(
+                Icons.search,
+                size: 18,
+                color: Color(0xFF06B6D4),
+              ),
               suffixIcon: _commonSearch.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear, size: 16),
@@ -1475,7 +1925,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           child: filtered.isEmpty
               ? Center(
                   child: Text(
-                    'No common tags match query',
+                    'No common tags match "$_commonSearch"',
                     style: TextStyle(color: Colors.grey.shade500),
                   ),
                 )
@@ -1487,18 +1937,19 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                   itemBuilder: (context, index) {
                     final item = filtered[index];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(
-                            width: 180,
-                            child: Text(
+                            width: 190,
+                            child: SelectableText(
                               item.$1,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 13,
-                                color: Colors.cyan.shade300,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF38BDF8),
                               ),
                             ),
                           ),
@@ -1508,8 +1959,15 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.white,
+                                height: 1.4,
                               ),
                             ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy_rounded, size: 14),
+                            color: Colors.grey.shade600,
+                            tooltip: 'Copy',
+                            onPressed: () => _copyToClipboard(item.$2, item.$1),
                           ),
                         ],
                       ),
@@ -1531,15 +1989,21 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Container & Codec Properties',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          const Row(
+            children: [
+              Icon(Icons.tune_rounded, size: 18, color: Color(0xFF06B6D4)),
+              SizedBox(width: 8),
+              Text(
+                'Container & Codec Properties',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _buildInfoTable([
             ('Container', format.container),
             ('Codec', format.codec),
@@ -1589,20 +2053,44 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
             ),
           ]),
           if (trackInfo.isNotEmpty) ...[
-            const SizedBox(height: 28),
-            Text(
-              'Tracks (${trackInfo.length})',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                const Icon(
+                  Icons.layers_outlined,
+                  size: 18,
+                  color: Color(0xFF6366F1),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Tracks (${trackInfo.length})',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             ...trackInfo.map(
               (track) => Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      track.type == TrackType.video
+                          ? Icons.videocam_outlined
+                          : Icons.audiotrack_outlined,
+                      color: const Color(0xFF818CF8),
+                      size: 20,
+                    ),
+                  ),
                   title: Text(
                     '${track.type ?? "Track"} · ${track.codecName ?? "Unknown Codec"}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -1616,28 +2104,39 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
             ),
           ],
           if (chapters != null && chapters.isNotEmpty) ...[
-            const SizedBox(height: 28),
-            Text(
-              'Chapters (${chapters.length})',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                const Icon(
+                  Icons.bookmarks_outlined,
+                  size: 18,
+                  color: Color(0xFFF59E0B),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Chapters (${chapters.length})',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF334155)),
+                color: const Color(0xFF141C2B),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF223049)),
               ),
+              clipBehavior: Clip.antiAlias,
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: chapters.length,
                 separatorBuilder: (_, _) =>
-                    const Divider(height: 1, color: Color(0xFF334155)),
+                    const Divider(height: 1, color: Color(0xFF1E293B)),
                 itemBuilder: (context, i) {
                   final ch = chapters[i];
                   final start = _formatSeconds(ch.start / 1000.0);
@@ -1656,6 +2155,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                         '${i + 1}',
                         style: const TextStyle(
                           fontSize: 11,
+                          fontWeight: FontWeight.bold,
                           color: Color(0xFF38BDF8),
                         ),
                       ),
@@ -1672,7 +2172,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       style: TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 12,
-                        color: Colors.grey.shade400,
+                        color: Colors.cyan.shade300,
                       ),
                     ),
                   );
@@ -1695,13 +2195,13 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           children: [
             Icon(
               Icons.image_not_supported_outlined,
-              size: 48,
+              size: 52,
               color: Colors.grey.shade600,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
               'No embedded artwork found in this file',
-              style: TextStyle(color: Colors.grey.shade500),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
             ),
           ],
         ),
@@ -1712,9 +2212,9 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
       padding: const EdgeInsets.all(24),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 320,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 0.78,
+        mainAxisSpacing: 18,
+        crossAxisSpacing: 18,
+        childAspectRatio: 0.76,
       ),
       itemCount: pictures.length,
       itemBuilder: (context, index) {
@@ -1722,27 +2222,37 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
+            color: const Color(0xFF141C2B),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF334155)),
+            border: Border.all(color: const Color(0xFF223049)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () => _showImageDialog(pic),
-                  child: Container(
-                    color: Colors.black26,
-                    child: Image.memory(
-                      Uint8List.fromList(pic.data),
-                      fit: BoxFit.contain,
-                      errorBuilder: (ctx, err, stack) => const Center(
-                        child: Icon(
-                          Icons.broken_image,
-                          size: 48,
-                          color: Colors.grey,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => _showImageDialog(pic),
+                    child: Container(
+                      color: Colors.black26,
+                      child: Image.memory(
+                        Uint8List.fromList(pic.data),
+                        fit: BoxFit.contain,
+                        errorBuilder: (ctx, err, stack) => const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ),
@@ -1750,7 +2260,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1760,6 +2270,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
+                        fontSize: 13,
                         color: Colors.white,
                       ),
                     ),
@@ -1771,14 +2282,24 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                         color: Colors.grey.shade400,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.download, size: 14),
                         label: const Text(
-                          'Download',
-                          style: TextStyle(fontSize: 12),
+                          'Download Image',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF06B6D4),
+                          side: const BorderSide(color: Color(0xFF223049)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         onPressed: () => _downloadArtwork(pic, index),
                       ),
@@ -1812,7 +2333,12 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           child: TextField(
             decoration: InputDecoration(
               hintText: 'Search native tags...',
-              prefixIcon: const Icon(Icons.search, size: 18),
+              hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+              prefixIcon: const Icon(
+                Icons.search,
+                size: 18,
+                color: Color(0xFF06B6D4),
+              ),
               suffixIcon: _nativeSearch.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear, size: 16),
@@ -1840,34 +2366,67 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
 
               if (filtered.isEmpty) return const SizedBox.shrink();
 
-              return Card(
+              return Container(
                 margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF141C2B),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFF223049)),
+                ),
                 child: ExpansionTile(
                   initiallyExpanded: true,
-                  title: Text(
-                    groupName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF38BDF8),
-                    ),
+                  shape: const Border(),
+                  title: Row(
+                    children: [
+                      Text(
+                        groupName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFF38BDF8),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF06B6D4,
+                          ).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${filtered.length}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF38BDF8),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   children: filtered
                       .map(
                         (tag) => Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 8,
+                            vertical: 9,
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               SizedBox(
-                                width: 140,
-                                child: Text(
+                                width: 160,
+                                child: SelectableText(
                                   tag.id,
                                   style: TextStyle(
                                     fontFamily: 'monospace',
                                     fontSize: 12,
+                                    fontWeight: FontWeight.bold,
                                     color: Colors.grey.shade400,
                                   ),
                                 ),
@@ -1880,6 +2439,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.white,
+                                    height: 1.3,
                                   ),
                                 ),
                               ),
@@ -1907,13 +2467,28 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              Text(
+                'Full Metadata JSON Tree',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+              const Spacer(),
               OutlinedButton.icon(
                 icon: const Icon(Icons.copy, size: 14),
                 label: const Text('Copy JSON'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white70,
+                  side: const BorderSide(color: Color(0xFF223049)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: jsonString));
                   _showSnackbar('Copied JSON to clipboard');
@@ -1923,6 +2498,12 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
               FilledButton.icon(
                 icon: const Icon(Icons.download, size: 14),
                 label: const Text('Download .json'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
                 onPressed: () => _exportJson(file),
               ),
             ],
@@ -1931,10 +2512,10 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
         Expanded(
           child: Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF0B0F19),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF070A12),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: const Color(0xFF1E293B)),
             ),
             child: SingleChildScrollView(
@@ -1942,9 +2523,9 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                 jsonString,
                 style: const TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 12,
+                  fontSize: 12.5,
                   color: Color(0xFFE2E8F0),
-                  height: 1.4,
+                  height: 1.45,
                 ),
               ),
             ),
@@ -1959,21 +2540,69 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.memory(
-                Uint8List.fromList(pic.data),
-                fit: BoxFit.contain,
+        insetPadding: const EdgeInsets.all(24),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 800, maxHeight: 800),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFF334155)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.7),
+                blurRadius: 30,
               ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      pic.type ?? pic.description ?? 'Artwork',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '(${pic.format} · ${_formatBytes(pic.data.length)})',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: Container(
+                  color: Colors.black45,
+                  child: Image.memory(
+                    Uint8List.fromList(pic.data),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

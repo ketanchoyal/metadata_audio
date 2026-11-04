@@ -40,6 +40,11 @@ class _WebPlatformHelper implements WebPlatformHelper {
   }
 
   @override
+  void openUrl(String url) {
+    web.window.open(url, '_blank');
+  }
+
+  @override
   AudioPlayerService createAudioPlayer() => _WebAudioPlayer();
 }
 

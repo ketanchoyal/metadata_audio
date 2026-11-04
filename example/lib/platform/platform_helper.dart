@@ -8,6 +8,7 @@ abstract class WebPlatformHelper {
   void downloadFile(List<int> bytes, String filename, String mimeType);
   String? createAudioUrl(List<int> bytes, String mimeType);
   void revokeAudioUrl(String url);
+  void openUrl(String url);
 
   AudioPlayerService createAudioPlayer();
 }
