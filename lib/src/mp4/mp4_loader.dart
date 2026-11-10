@@ -8,8 +8,9 @@ import 'package:metadata_audio/src/mp4/mp4_tag_mapper.dart';
 import 'package:metadata_audio/src/parser_factory.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
+import 'package:metadata_audio/src/utils/cache_types.dart';
 
-class Mp4Loader extends ParserLoader {
+class Mp4Loader extends ParserLoader with HintProvidingParserLoader {
   @override
   List<String> get extension => const <String>[
     'mp4',
@@ -33,7 +34,14 @@ class Mp4Loader extends ParserLoader {
   bool get hasRandomAccessRequirements => true;
 
   @override
-  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
+  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async =>
+      (await parseWithHints(tokenizer, options)).metadata;
+
+  @override
+  Future<({AudioMetadata metadata, CachedParseHints? hints})> parseWithHints(
+    Tokenizer tokenizer,
+    ParseOptions options,
+  ) async {
     final mapper = CombinedTagMapper()
       ..registerMapper('iTunes', Mp4TagMapper());
 
@@ -60,11 +68,21 @@ class Mp4Loader extends ParserLoader {
           trackInfo: audioTrack,
           sampleToChunkTable: stsc,
           chunkOffsetTable: stco,
+          rawUdtaBox: parser.rawUdtaBox,
+          rawMetaBox: parser.rawMetaBox,
+          metadataChecked: !options.skipCovers,
         );
         unawaited(AudioMetadataCache.put(source, cached));
       }
     }
 
-    return metadata.toAudioMetadata();
+    final hints = CachedParseHints(
+      fileSize: tokenizer.fileInfo?.size,
+      moovOffset: parser.moovOffset,
+      moovSize: parser.moovSize,
+      mp4Chapters: parser.getCachedChapterInfo(),
+    );
+
+    return (metadata: metadata.toAudioMetadata(), hints: hints);
   }
 }

@@ -239,12 +239,12 @@ class _DesktopScreenState extends State<DesktopScreen>
   }
 
   Future<void> _testPartialDownload(Chapter chapter) async {
-    final url = _parsedSource;
-    if (url == null || !url.startsWith('http')) {
+    final source = _parsedSource;
+    if (kIsWeb || source == null || source.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Partial downloads require a parsed remote URL source.',
+            'Chapter extraction requires a parsed local file or remote URL.',
           ),
         ),
       );
@@ -258,7 +258,7 @@ class _DesktopScreenState extends State<DesktopScreen>
             : (chapter.start + 180000));
 
     await _testCustomRangeDownload(
-      url,
+      source,
       chapter.start,
       endMs,
       title: chapter.title,
@@ -266,14 +266,19 @@ class _DesktopScreenState extends State<DesktopScreen>
   }
 
   Future<void> _testCustomRangeDownload(
-    String url,
+    String source,
     int startMs,
     int endMs, {
     String? title,
   }) async {
+    final isRemote =
+        source.startsWith('http://') || source.startsWith('https://');
     final isMp3 =
-        url.toLowerCase().contains('.mp3') ||
-        url.toLowerCase().contains('/mp3/');
+        source.toLowerCase().endsWith('.mp3') ||
+        source.toLowerCase().contains('.mp3?') ||
+        source.toLowerCase().contains('/mp3/') ||
+        (source == _parsedSource &&
+            _metadata?.format.container?.toUpperCase() == 'MPEG');
     final ext = isMp3 ? 'mp3' : 'm4a';
 
     final cleanTitle = title != null
@@ -282,7 +287,9 @@ class _DesktopScreenState extends State<DesktopScreen>
     final defaultFileName = 'chapter_$cleanTitle.$ext';
 
     final savePath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Save partial chapter download to:',
+      dialogTitle: isRemote
+          ? 'Save partial chapter download to:'
+          : 'Save extracted chapter to:',
       fileName: defaultFileName,
       type: FileType.custom,
       allowedExtensions: [ext],
@@ -302,13 +309,17 @@ class _DesktopScreenState extends State<DesktopScreen>
     String phaseLabel(ChapterDownloadPhase phase) {
       switch (phase) {
         case ChapterDownloadPhase.connecting:
-          return 'Connecting to source...';
+          return isRemote
+              ? 'Connecting to source...'
+              : 'Opening local audio file...';
         case ChapterDownloadPhase.analyzing:
           return 'Analyzing audio structure...';
         case ChapterDownloadPhase.resolvingSamples:
           return 'Resolving chapter samples...';
         case ChapterDownloadPhase.downloading:
-          return 'Downloading chapter audio...';
+          return isRemote
+              ? 'Downloading chapter audio...'
+              : 'Reading chapter audio...';
         case ChapterDownloadPhase.writing:
           return isMp3
               ? 'Writing playable MP3 file...'
@@ -375,10 +386,11 @@ class _DesktopScreenState extends State<DesktopScreen>
     );
 
     final result = await ChapterDownloader.downloadChapter(
-      originalUrl: url,
+      originalUrl: source,
       chapterStartMs: startMs,
       chapterEndMs: endMs,
       outputPath: savePath,
+      metadata: source == _parsedSource ? _metadata : null,
       onProgress: (progress) {
         progressNotifier.value = progress;
       },
@@ -400,7 +412,9 @@ class _DesktopScreenState extends State<DesktopScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Playable chapter downloaded successfully to:\n${result.outputPath}',
+            isRemote
+                ? 'Playable chapter downloaded successfully to:\n${result.outputPath}'
+                : 'Playable chapter extracted successfully to:\n${result.outputPath}',
           ),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 4),
@@ -409,7 +423,9 @@ class _DesktopScreenState extends State<DesktopScreen>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Download failed: ${result.error}'),
+          content: Text(
+            '${isRemote ? 'Download' : 'Extraction'} failed: ${result.error}',
+          ),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -813,9 +829,10 @@ class _DesktopScreenState extends State<DesktopScreen>
                         Expanded(
                           child: TextField(
                             controller: _startMsController,
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.text,
                             decoration: const InputDecoration(
                               labelText: 'Start (ms)',
+                              hintText: '0 or 00:00',
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 8,
@@ -827,9 +844,10 @@ class _DesktopScreenState extends State<DesktopScreen>
                         Expanded(
                           child: TextField(
                             controller: _endMsController,
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.text,
                             decoration: const InputDecoration(
                               labelText: 'End (ms)',
+                              hintText: '5000 or 00:05',
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 8,
@@ -838,6 +856,11 @@ class _DesktopScreenState extends State<DesktopScreen>
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Supports ms (15000), seconds (15.5s), or HH:MM:SS.mmm',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -853,22 +876,49 @@ class _DesktopScreenState extends State<DesktopScreen>
                           ),
                         ),
                         onPressed: () {
-                          final url = _urlController.text.trim();
-                          if (url.isEmpty) {
+                          final source = _tabController.index == 0
+                              ? (_parsedSource != null &&
+                                        !_parsedSource!.startsWith('http')
+                                    ? _parsedSource!
+                                    : '')
+                              : _urlController.text.trim();
+                          if (source.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                              SnackBar(
                                 content: Text(
-                                  'Please enter a remote URL first.',
+                                  _tabController.index == 0
+                                      ? 'Please select a local audio file first.'
+                                      : 'Please enter a remote URL first.',
                                 ),
                               ),
                             );
                             return;
                           }
-                          final start =
-                              int.tryParse(_startMsController.text) ?? 0;
-                          final end =
-                              int.tryParse(_endMsController.text) ?? 5000;
-                          _testCustomRangeDownload(url, start, end);
+                          final start = parseCustomRangeMs(
+                            _startMsController.text,
+                          );
+                          final end = parseCustomRangeMs(_endMsController.text);
+                          if (start == null || end == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Invalid range. Enter ms (e.g. 15000), seconds with "s" (e.g. 15.5s), or HH:MM:SS.mmm.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          if (end <= start) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'End time must be greater than Start time.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          _testCustomRangeDownload(source, start, end);
                         },
                         icon: const Icon(Icons.cut_rounded, size: 16),
                         label: const Text(
@@ -1714,7 +1764,9 @@ class _DesktopScreenState extends State<DesktopScreen>
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          if (isRemote) ...[
+                          if (!kIsWeb &&
+                              _parsedSource != null &&
+                              _parsedSource!.isNotEmpty) ...[
                             ElevatedButton.icon(
                               onPressed: () => _testPartialDownload(ch),
                               style: ElevatedButton.styleFrom(
@@ -1735,9 +1787,9 @@ class _DesktopScreenState extends State<DesktopScreen>
                                 Icons.download_rounded,
                                 size: 14,
                               ),
-                              label: const Text(
-                                'Download',
-                                style: TextStyle(
+                              label: Text(
+                                isRemote ? 'Download' : 'Extract',
+                                style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -2319,4 +2371,50 @@ String _formatShortDuration(double seconds) {
   if (h > 0) return '${h}h ${m}m ${sec}s';
   if (m > 0) return '${m}m ${sec}s';
   return '${sec}s';
+}
+
+/// Parses a custom range endpoint entered in milliseconds (`15000`, `15,000`,
+/// `15000ms`), seconds (`15.5s`), or `MM:SS(.mmm)` / `HH:MM:SS(.mmm)`.
+///
+/// Returns `null` when [raw] cannot be parsed cleanly rather than falling back
+/// to a default value.
+int? parseCustomRangeMs(String raw) {
+  final text = raw.trim();
+  if (text.isEmpty) return null;
+
+  if (text.contains(':')) {
+    final parts = text.split(':');
+    if (parts.length < 2 || parts.length > 3) return null;
+    final hasHours = parts.length == 3;
+    final hours = hasHours ? int.tryParse(parts[0].trim()) : 0;
+    final minutes = int.tryParse(parts[hasHours ? 1 : 0].trim());
+    final seconds = double.tryParse(parts.last.trim());
+    if (hours == null || minutes == null || seconds == null) return null;
+    if (hours < 0 || minutes < 0 || minutes >= 60 || seconds < 0 || seconds >= 60) {
+      return null;
+    }
+    return (((hours * 3600) + (minutes * 60) + seconds) * 1000).round();
+  }
+
+  final secondsMatch = RegExp(
+    r'^(\d+(?:[_,]\d+)*(?:\.\d+)?)\s*(?:s|sec|secs)$',
+    caseSensitive: false,
+  ).firstMatch(text);
+  if (secondsMatch != null) {
+    final cleaned = secondsMatch.group(1)!.replaceAll(RegExp(r'[_,]'), '');
+    final sec = double.tryParse(cleaned);
+    if (sec == null || sec < 0) return null;
+    return (sec * 1000).round();
+  }
+
+  final msMatch = RegExp(
+    r'^(\d+(?:[_,]\d+)*)(?:\s*ms)?$',
+    caseSensitive: false,
+  ).firstMatch(text);
+  if (msMatch != null) {
+    final cleaned = msMatch.group(1)!.replaceAll(RegExp(r'[_,]'), '');
+    return int.tryParse(cleaned);
+  }
+
+  return null;
 }

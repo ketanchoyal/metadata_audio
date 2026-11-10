@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/utils/cache_types.dart';
 
 /// Contract for lazily loading and invoking an audio metadata parser.
 ///
@@ -31,6 +32,16 @@ abstract class ParserLoader {
 
   /// Parse metadata from [tokenizer] using [options].
   Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options);
+}
+
+/// Optional mixin for [ParserLoader] implementations that can also emit
+/// [CachedParseHints] for incremental cached parsing.
+mixin HintProvidingParserLoader on ParserLoader {
+  /// Parses metadata along with optional format-specific cache hints.
+  Future<({AudioMetadata metadata, CachedParseHints? hints})> parseWithHints(
+    Tokenizer tokenizer,
+    ParseOptions options,
+  );
 }
 
 /// Registry that maintains a map of parser loaders by extension and MIME type.

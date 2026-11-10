@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:metadata_audio/metadata_audio.dart';
+import 'desktop_screen.dart' show parseCustomRangeMs;
 import 'platform/platform_helper.dart';
 
 /// Design tokens matching the clean studio aesthetic of Audio Tag Analyzer
@@ -62,6 +63,13 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
   bool _isDragging = false;
   late TabController _tabController;
   late final AudioPlayerService _audioPlayer;
+  final TextEditingController _customStartController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _customEndController = TextEditingController(
+    text: '5000',
+  );
+  bool _isExtractingChapter = false;
 
   // Search queries
   String _commonSearch = '';
@@ -77,6 +85,8 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _customStartController.dispose();
+    _customEndController.dispose();
     _audioPlayer.dispose();
     for (final file in _files) {
       if (file.audioUrl != null) {
@@ -272,6 +282,75 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
       filename,
       'application/json',
     );
+  }
+
+  bool _supportsChapterDownload(AnalyzedFile file, AudioMetadata metadata) {
+    final container = metadata.format.container?.toLowerCase() ?? '';
+    final lowerName = file.name.toLowerCase();
+    return container.contains('mp4') ||
+        container.contains('m4a') ||
+        container.contains('m4b') ||
+        container.contains('quicktime') ||
+        container.contains('isom') ||
+        container == 'mpeg' ||
+        container == 'mp3' ||
+        lowerName.endsWith('.mp3') ||
+        lowerName.endsWith('.m4a') ||
+        lowerName.endsWith('.m4b') ||
+        lowerName.endsWith('.mp4') ||
+        lowerName.endsWith('.mov');
+  }
+
+  Future<void> _downloadChapterFromWeb(
+    AnalyzedFile file,
+    int startMs,
+    int endMs, {
+    String? title,
+  }) async {
+    if (_isExtractingChapter) return;
+    setState(() => _isExtractingChapter = true);
+    try {
+      final result = await ChapterDownloader.extractChapterBytes(
+        sourceBytes: file.bytes,
+        chapterStartMs: startMs,
+        chapterEndMs: endMs,
+        fileName: file.name,
+        includeMetadata: true,
+        metadata: file.metadata,
+      );
+
+      if (!result.isSuccess ||
+          result.bytes == null ||
+          result.extension == null ||
+          result.mimeType == null) {
+        _showSnackbar(
+          result.error ?? 'Failed to extract chapter audio',
+          isError: true,
+        );
+        return;
+      }
+
+      final cleanTitle = (title != null && title.trim().isNotEmpty)
+          ? title.trim().replaceAll(RegExp(r'[^\w\-\.]'), '_')
+          : 'range_${startMs}_$endMs';
+      final filename = 'chapter_$cleanTitle.${result.extension}';
+
+      final savedTarget = await WebPlatformHelper.instance.downloadFile(
+        result.bytes!,
+        filename,
+        result.mimeType!,
+      );
+      if (savedTarget == null) return;
+      _showSnackbar(
+        'Saved $savedTarget (${_formatFileSize(result.bytes!.length)})',
+      );
+    } catch (e) {
+      _showSnackbar('Failed to extract chapter: $e', isError: true);
+    } finally {
+      if (mounted) {
+        setState(() => _isExtractingChapter = false);
+      }
+    }
   }
 
   @override
@@ -1408,7 +1487,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
             case 1:
               return _buildCommonTagsTab(metadata);
             case 2:
-              return _buildMediaDetailsTab(metadata);
+              return _buildMediaDetailsTab(file, metadata);
             case 3:
               return _buildArtworkTab(metadata);
             case 4:
@@ -1717,10 +1796,11 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
   // ==========================================
   // Tab 3: Media Details
   // ==========================================
-  Widget _buildMediaDetailsTab(AudioMetadata metadata) {
+  Widget _buildMediaDetailsTab(AnalyzedFile file, AudioMetadata metadata) {
     final format = metadata.format;
     final chapters = format.chapters ?? [];
     final tracks = format.trackInfo;
+    final supportsExtract = _supportsChapterDownload(file, metadata);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1825,6 +1905,136 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           }),
         ],
 
+        // Custom Range Download (MP4/M4B/M4A/MOV & MP3)
+        if (supportsExtract) ...[
+          const SizedBox(height: 24),
+          const Text(
+            'Custom Range Download',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textDark,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppTheme.playerBg,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.playerBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _customStartController,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textDark,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Start (ms / s / MM:SS)',
+                          hintText: '0 or 00:00',
+                          isDense: true,
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: const BorderSide(
+                              color: AppTheme.cardBorder,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _customEndController,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textDark,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'End (ms / s / MM:SS)',
+                          hintText: '5000 or 00:05',
+                          isDense: true,
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: const BorderSide(
+                              color: AppTheme.cardBorder,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: _isExtractingChapter
+                          ? null
+                          : () {
+                              final start = parseCustomRangeMs(
+                                _customStartController.text,
+                              );
+                              final end = parseCustomRangeMs(
+                                _customEndController.text,
+                              );
+                              if (start == null || end == null) {
+                                _showSnackbar(
+                                  'Invalid range. Enter ms (15000), seconds (15.5s), or HH:MM:SS.mmm.',
+                                  isError: true,
+                                );
+                                return;
+                              }
+                              if (end <= start) {
+                                _showSnackbar(
+                                  'End time must be greater than Start time.',
+                                  isError: true,
+                                );
+                                return;
+                              }
+                              _downloadChapterFromWeb(file, start, end);
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryButton,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      icon: const Icon(Icons.download_rounded, size: 15),
+                      label: Text(
+                        _isExtractingChapter
+                            ? 'Preparing...'
+                            : 'Download Range',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Extracts a standalone playable chapter with preserved cover art & metadata.',
+                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                ),
+              ],
+            ),
+          ),
+        ],
+
         // Chapters
         if (chapters.isNotEmpty) ...[
           const SizedBox(height: 24),
@@ -1839,6 +2049,15 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           const SizedBox(height: 10),
           ...chapters.map((ch) {
             final startSec = ch.start / 1000.0;
+            final endMs =
+                ch.end ??
+                (format.duration != null
+                    ? (format.duration! * 1000).round()
+                    : (ch.start + 180000));
+            final endSec = ch.end != null ? ch.end! / 1000.0 : null;
+            final sizeBytes = (ch.byteOffset != null && ch.endByteOffset != null)
+                ? ch.endByteOffset! - ch.byteOffset!
+                : null;
             return Container(
               margin: const EdgeInsets.only(bottom: 6),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1850,7 +2069,9 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
               child: Row(
                 children: [
                   Text(
-                    _formatSeconds(startSec),
+                    endSec != null
+                        ? '${_formatSeconds(startSec)} - ${_formatSeconds(endSec)}'
+                        : _formatSeconds(startSec),
                     style: const TextStyle(
                       fontSize: 11,
                       fontFamily: 'monospace',
@@ -1868,6 +2089,51 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       ),
                     ),
                   ),
+                  if (sizeBytes != null && sizeBytes >= 0) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      _formatFileSize(sizeBytes),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                        color: AppTheme.textMuted,
+                      ),
+                    ),
+                  ],
+                  if (supportsExtract) ...[
+                    const SizedBox(width: 10),
+                    OutlinedButton.icon(
+                      onPressed: _isExtractingChapter
+                          ? null
+                          : () => _downloadChapterFromWeb(
+                              file,
+                              ch.start,
+                              endMs,
+                              title: ch.title,
+                            ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primaryPurple,
+                        side: const BorderSide(color: AppTheme.purpleBorder),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      icon: const Icon(Icons.download_rounded, size: 13),
+                      label: const Text(
+                        'Download',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );

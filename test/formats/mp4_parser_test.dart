@@ -73,6 +73,50 @@ void main() {
       expect(tags.any((tag) => tag.id == 'covr'), isFalse);
     });
 
+    test(
+      'decodes covr data atoms with type 0 (reserved) by sniffing JPEG and PNG signatures',
+      () async {
+        final ftyp = _atom('ftyp', <int>[
+          ...latin1.encode('M4A '),
+          ...latin1.encode('isom'),
+        ]);
+        final mvhd = _atom('mvhd', _mvhdPayload(timeScale: 1000, duration: 1000));
+        final jpegBytes = <int>[0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10];
+        final pngBytes = <int>[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+        for (final entry in <(List<int>, String)>[
+          (jpegBytes, 'image/jpeg'),
+          (pngBytes, 'image/png'),
+        ]) {
+          final ilst = _atom('ilst', _metadataItem('covr', _dataAtom(0, entry.$1)));
+          final meta = _atom('meta', <int>[0, 0, 0, 0, ...ilst]);
+          final udta = _atom('udta', meta);
+          final moov = _atom('moov', <int>[...mvhd, ...udta]);
+          final bytes = <int>[...ftyp, ...moov];
+
+          final metadata = await Mp4Loader().parse(
+            BytesTokenizer(
+              Uint8List.fromList(bytes),
+              fileInfo: FileInfo(size: bytes.length),
+            ),
+            const ParseOptions(),
+          );
+          expect(metadata.common.picture, hasLength(1));
+          expect(metadata.common.picture!.first.format, equals(entry.$2));
+          expect(metadata.common.picture!.first.data, equals(entry.$1));
+
+          final skipped = await Mp4Loader().parse(
+            BytesTokenizer(
+              Uint8List.fromList(bytes),
+              fileInfo: FileInfo(size: bytes.length),
+            ),
+            const ParseOptions(skipCovers: true),
+          );
+          expect(skipped.common.picture, isNull);
+        }
+      },
+    );
+
     test('parses MP4 chapter track into format.chapters', () async {
       final bytes = _buildSyntheticMp4WithChapters();
 
@@ -140,6 +184,37 @@ void main() {
       expect(ch2.byteOffset, equals(expectedAudio2Offset));
       expect(ch2.endByteOffset, equals(bytes.length));
     });
+
+    test(
+      'converts chapter track timescale to audio track timescale for byteOffset (both mdat-first and moov-first)',
+      () async {
+        // Audio track at 22050 Hz, 40 samples of duration 1102 (~2.0s total).
+        // Chapter 1: 0..1000ms -> audio sample 0; Chapter 2: 1000..2000ms -> audio sample 20.
+        for (final moovFirst in [true, false]) {
+          final bytes = _buildMismatchedTimescaleMp4(moovFirst: moovFirst);
+          final metadata = await Mp4Loader().parse(
+            BytesTokenizer(
+              Uint8List.fromList(bytes),
+              fileInfo: FileInfo(size: bytes.length),
+            ),
+            const ParseOptions(includeChapters: true),
+          );
+
+          final chapters = metadata.format.chapters!;
+          expect(chapters, hasLength(2));
+          expect(chapters[0].start, equals(0));
+          expect(chapters[1].start, equals(1000));
+
+          final ch1Size = chapters[0].endByteOffset! - chapters[0].byteOffset!;
+          final ch2Size = chapters[1].endByteOffset! - chapters[1].byteOffset!;
+          // 20 audio samples of 100 bytes each = 2000 bytes for chapter 1
+          expect(ch1Size, equals(2000));
+          // Last chapter ends at EOF (includes 2000 bytes of audio + trailing atoms if any)
+          expect(chapters[1].byteOffset, equals(chapters[0].byteOffset! + 2000));
+          expect(ch2Size, greaterThanOrEqualTo(2000));
+        }
+      },
+    );
 
     test('parses MP4 chapter track when offsets are stored in co64', () async {
       final bytes = _buildSyntheticMp4WithCo64Chapters();
@@ -548,6 +623,126 @@ List<int> _buildSyntheticMp4WithChapters() {
   _patchU32(file, audioStcoOffset + 20, audio2Offset);
   _patchU32(file, chapterStcoOffset + 16, chapter1Offset);
   _patchU32(file, chapterStcoOffset + 20, chapter2Offset);
+
+  return file;
+}
+
+List<int> _buildMismatchedTimescaleMp4({required bool moovFirst}) {
+  final ftyp = _atom('ftyp', <int>[
+    ...latin1.encode('M4B '),
+    ...latin1.encode('isom'),
+  ]);
+  final mvhd = _atom('mvhd', _mvhdPayload(timeScale: 1000, duration: 2000));
+
+  // Audio track: timeScale = 22050, 40 samples x 1102 ticks = 44080 ticks (~2s)
+  // Chunk 1: samples 0..19 (20 x 100 bytes = 2000 bytes)
+  // Chunk 2: samples 20..39 (20 x 100 bytes = 2000 bytes)
+  final audioTkhd = _atom('tkhd', _tkhdPayload(trackId: 1));
+  final audioMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 22050, duration: 44080),
+  );
+  final audioHdlr = _atom('hdlr', _hdlrPayload('soun'));
+  final chapRef = _atom('tref', _atom('chap', _u32(2)));
+  final audioStsd = _atom('stsd', _stsdPayloadMp4a());
+  final audioStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[40, 1102],
+    ]),
+  );
+  final audioStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 20],
+    ]),
+  );
+  final audioStsz = _atom('stsz', _stszPayload(100, const []));
+  final audioStco = _atom('stco', _stcoPayload(<int>[0, 0]));
+  final audioStbl = _atom('stbl', <int>[
+    ...audioStsd,
+    ...audioStts,
+    ...audioStsc,
+    ...audioStsz,
+    ...audioStco,
+  ]);
+  final audioMdia = _atom('mdia', <int>[
+    ...audioMdhd,
+    ...audioHdlr,
+    ..._atom('minf', audioStbl),
+  ]);
+  final audioTrak = _atom('trak', <int>[
+    ...audioTkhd,
+    ...audioMdia,
+    ...chapRef,
+  ]);
+
+  // Chapter track: timeScale = 1000 (ms), 2 chapters x 1000ms each
+  final chapterTkhd = _atom('tkhd', _tkhdPayload(trackId: 2));
+  final chapterMdhd = _atom(
+    'mdhd',
+    _mdhdPayload(timeScale: 1000, duration: 2000),
+  );
+  final chapterHdlr = _atom('hdlr', _hdlrPayload('text'));
+  final ch1 = _chapterTextSample('Chapter 1');
+  final ch2 = _chapterTextSample('Chapter 2');
+  final chapterStts = _atom(
+    'stts',
+    _sttsPayload(<List<int>>[
+      <int>[2, 1000],
+    ]),
+  );
+  final chapterStsc = _atom(
+    'stsc',
+    _stscPayload(<List<int>>[
+      <int>[1, 1],
+    ]),
+  );
+  final chapterStsz = _atom(
+    'stsz',
+    _stszPayload(0, <int>[ch1.length, ch2.length]),
+  );
+  final chapterStco = _atom('stco', _stcoPayload(<int>[0, 0]));
+  final chapterStbl = _atom('stbl', <int>[
+    ...chapterStts,
+    ...chapterStsc,
+    ...chapterStsz,
+    ...chapterStco,
+  ]);
+  final chapterMdia = _atom('mdia', <int>[
+    ...chapterMdhd,
+    ...chapterHdlr,
+    ..._atom('minf', chapterStbl),
+  ]);
+  final chapterTrak = _atom('trak', <int>[...chapterTkhd, ...chapterMdia]);
+
+  final moov = _atom('moov', <int>[...mvhd, ...audioTrak, ...chapterTrak]);
+  final mdatPayload = <int>[
+    ...ch1,
+    ...ch2,
+    ...List<int>.filled(2000, 0x11),
+    ...List<int>.filled(2000, 0x22),
+  ];
+  final mdat = _atom('mdat', mdatPayload);
+
+  final file = moovFirst
+      ? <int>[...ftyp, ...moov, ...mdat]
+      : <int>[...ftyp, ...mdat, ...moov];
+  final mdatDataOffset = moovFirst
+      ? ftyp.length + moov.length + 8
+      : ftyp.length + 8;
+
+  final ch1Offset = mdatDataOffset;
+  final ch2Offset = ch1Offset + ch1.length;
+  final audioChunk1Offset = ch2Offset + ch2.length;
+  final audioChunk2Offset = audioChunk1Offset + 2000;
+
+  final audioStcoOffset = _findSequence(file, audioStco);
+  final chapterStcoOffset = _findSequence(file, chapterStco, occurrence: 2);
+  _patchU32(file, audioStcoOffset + 16, audioChunk1Offset);
+  _patchU32(file, audioStcoOffset + 20, audioChunk2Offset);
+  _patchU32(file, chapterStcoOffset + 16, ch1Offset);
+  _patchU32(file, chapterStcoOffset + 20, ch2Offset);
 
   return file;
 }

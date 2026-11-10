@@ -4,12 +4,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/common/allocation.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/atom.dart';
 import 'package:metadata_audio/src/mp4/atom_token.dart';
 import 'package:metadata_audio/src/tokenizer/http_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/utils/cache_types.dart';
+import 'package:metadata_audio/src/utils/m4a_muxer.dart';
 
 class Mp4Parser {
   Mp4Parser({
@@ -75,9 +78,23 @@ class Mp4Parser {
 
   // Nero chapter list (chpl atom) chapters
   final List<_ChplChapter> _chplChapters = <_ChplChapter>[];
+  List<int>? _chplPayload;
 
-  Future<void> parse() async {
-    var remaining = tokenizer.fileInfo?.size;
+  /// Byte offset and size of the `moov` box, when encountered.
+  int? moovOffset;
+  int? moovSize;
+
+  /// Raw `moov.udta` box bytes (with `chpl` stripped) and `moov.meta` box bytes
+  /// captured when `!options.skipCovers` on a seekable tokenizer.
+  List<int>? rawUdtaBox;
+  List<int>? rawMetaBox;
+
+  Future<void> parse({int startOffset = 0, bool stopAfterMoov = false}) async {
+    if (startOffset > 0 && tokenizer.canSeek) {
+      tokenizer.seek(startOffset);
+    }
+    final totalSize = tokenizer.fileInfo?.size;
+    var remaining = totalSize != null ? (totalSize - startOffset) : null;
 
     while (remaining == null || remaining > 0) {
       try {
@@ -133,6 +150,19 @@ class Mp4Parser {
           null,
           remaining ?? 0x7FFFFFFF,
         );
+
+        if (atom.header.name == 'moov') {
+          moovOffset = atom.offset;
+          if (atom.header.length > 0) {
+            moovSize = atom.header.length;
+          }
+          if (tokenizer.canSeek && !options.skipCovers) {
+            _captureMoovMetadataBoxes(atom);
+          }
+          if (stopAfterMoov) {
+            break;
+          }
+        }
 
         if (remaining != null) {
           if (atom.header.length == 0) {
@@ -259,8 +289,18 @@ class Mp4Parser {
       case 'chpl':
         // Nero chapter list atom (inside udta)
         if (atom.parent?.header.name == 'udta') {
-          _validatePayloadLength(payloadLength);
-          _parseChpl(tokenizer.readBytes(payloadLength));
+          if (options.includeChapters) {
+            _validatePayloadLength(payloadLength);
+            final chplBytes = tokenizer.readBytes(payloadLength);
+            _chplPayload = List<int>.from(chplBytes);
+            _parseChpl(chplBytes);
+          } else if (payloadLength >= 9 &&
+              payloadLength <= getMaxMemoryAllocation(options)) {
+            final chplBytes = tokenizer.readBytes(payloadLength);
+            _chplPayload = List<int>.from(chplBytes);
+          } else {
+            tokenizer.skip(payloadLength);
+          }
         } else {
           tokenizer.skip(payloadLength);
         }
@@ -614,6 +654,11 @@ class Mp4Parser {
           return null;
         }
         return Picture(format: 'image/png', data: List<int>.from(value));
+      case 27:
+        if (options.skipCovers) {
+          return null;
+        }
+        return Picture(format: 'image/bmp', data: List<int>.from(value));
       case 21:
         return _readSignedBeInteger(value);
       case 22:
@@ -657,9 +702,52 @@ class Mp4Parser {
         return '$number/$total';
       case 'rate':
         return ascii.decode(value, allowInvalid: true).trim();
+      case 'covr':
+        if (options.skipCovers || value.isEmpty) {
+          return null;
+        }
+        return Picture(
+          format: _detectImageMimeType(value),
+          data: List<int>.from(value),
+        );
       default:
         return null;
     }
+  }
+
+  static String _detectImageMimeType(List<int> bytes) {
+    if (bytes.length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xD8) {
+      return 'image/jpeg';
+    }
+    if (bytes.length >= 4 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return 'image/png';
+    }
+    if (bytes.length >= 4 &&
+        bytes[0] == 0x47 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x38) {
+      return 'image/gif';
+    }
+    if (bytes.length >= 12 &&
+        bytes[0] == 0x52 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x46 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
+      return 'image/webp';
+    }
+    if (bytes.length >= 2 && bytes[0] == 0x42 && bytes[1] == 0x4D) {
+      return 'image/bmp';
+    }
+    return 'image/jpeg';
   }
 
   int? _readSignedBeInteger(List<int> bytes) {
@@ -908,33 +996,17 @@ class Mp4Parser {
         tokenizer.readBytes(sample.sampleSize),
       );
 
-      final chapterOffsetFromStts = _getSampleOffsetFromStts(
+      final resolved = _resolveChapterTimingAndOffset(
         chapterTrack,
-        sample.sampleIndex,
+        referencedTrack,
+        sample,
       );
-
-      int chapterOffset;
-      int startMs;
-      if (chapterOffsetFromStts != null &&
-          chapterTrack.timeScale != null &&
-          chapterTrack.timeScale! > 0) {
-        chapterOffset = chapterOffsetFromStts;
-        startMs = ((chapterOffset * 1000) / chapterTrack.timeScale!).round();
-      } else {
-        chapterOffset = _findSampleOffset(
-          referencedTrack,
-          sample.absoluteOffset,
-        );
-        startMs = ((chapterOffset * 1000) / referencedTrack.timeScale!).round();
-      }
-
-      final byteOffset = _getByteOffsetForTime(referencedTrack, chapterOffset);
 
       chapters.add(
         Chapter(
           title: title,
-          start: startMs,
-          byteOffset: byteOffset,
+          start: resolved.startMs,
+          byteOffset: resolved.byteOffset,
           timeScale: 1000,
         ),
       );
@@ -1216,36 +1288,17 @@ class Mp4Parser {
         tokenizer.readBytes(sample.sampleSize),
       );
 
-      // Prefer chapter track STTS timing when available. This is the canonical
-      // source for chapter sample timestamps in QuickTime chapter tracks.
-      final chapterOffsetFromStts = _getSampleOffsetFromStts(
+      final resolved = _resolveChapterTimingAndOffset(
         chapterTrack,
-        sample.sampleIndex,
+        referencedTrack,
+        sample,
       );
-
-      int chapterOffset;
-      int startMs;
-      if (chapterOffsetFromStts != null &&
-          chapterTrack.timeScale != null &&
-          chapterTrack.timeScale! > 0) {
-        chapterOffset = chapterOffsetFromStts;
-        startMs = ((chapterOffset * 1000) / chapterTrack.timeScale!).round();
-      } else {
-        // Fallback for files without chapter track timing tables.
-        chapterOffset = _findSampleOffset(
-          referencedTrack,
-          sample.absoluteOffset,
-        );
-        startMs = ((chapterOffset * 1000) / referencedTrack.timeScale!).round();
-      }
-
-      final byteOffset = _getByteOffsetForTime(referencedTrack, chapterOffset);
 
       chapters.add(
         Chapter(
           title: title,
-          start: startMs,
-          byteOffset: byteOffset,
+          start: resolved.startMs,
+          byteOffset: resolved.byteOffset,
           timeScale: 1000,
         ),
       );
@@ -1293,6 +1346,41 @@ class Mp4Parser {
 
     tokenizer.skip(remaining);
     return chapters;
+  }
+
+  ({int startMs, int? byteOffset}) _resolveChapterTimingAndOffset(
+    _TrackDescription chapterTrack,
+    _TrackDescription referencedTrack,
+    _ChapterSampleEntry sample,
+  ) {
+    final chapterOffsetFromStts = _getSampleOffsetFromStts(
+      chapterTrack,
+      sample.sampleIndex,
+    );
+
+    final int referencedOffset;
+    final int startMs;
+    if (chapterOffsetFromStts != null &&
+        chapterTrack.timeScale != null &&
+        chapterTrack.timeScale! > 0) {
+      startMs = ((chapterOffsetFromStts * 1000) / chapterTrack.timeScale!)
+          .round();
+      referencedOffset =
+          ((BigInt.from(chapterOffsetFromStts) *
+                      BigInt.from(referencedTrack.timeScale!)) ~/
+                  BigInt.from(chapterTrack.timeScale!))
+              .toInt();
+    } else {
+      referencedOffset = _findSampleOffset(
+        referencedTrack,
+        sample.absoluteOffset,
+      );
+      startMs = ((referencedOffset * 1000) / referencedTrack.timeScale!)
+          .round();
+    }
+
+    final byteOffset = _getByteOffsetForTime(referencedTrack, referencedOffset);
+    return (startMs: startMs, byteOffset: byteOffset);
   }
 
   int? _getSampleOffsetFromStts(_TrackDescription track, int sampleIndex) {
@@ -1591,6 +1679,179 @@ class Mp4Parser {
     final sampleIndex = _getSampleIndexForTime(track, timeOffset);
     if (sampleIndex == null) return null;
     return _getByteOffsetForSample(track, sampleIndex);
+  }
+
+  void _captureMoovMetadataBoxes(Mp4Atom moovAtom) {
+    final maxAlloc = getMaxMemoryAllocation(options);
+    final savedPos = tokenizer.position;
+    try {
+      for (final child in moovAtom.children) {
+        final len = child.header.length;
+        if (len <= 0 || len > maxAlloc) continue;
+        if (child.header.name == 'udta' && rawUdtaBox == null) {
+          tokenizer.seek(child.offset);
+          final bytes = tokenizer.readBytes(len);
+          rawUdtaBox = M4aMuxer.sanitizeUdtaForSlice(bytes);
+        } else if (child.header.name == 'meta' && rawMetaBox == null) {
+          tokenizer.seek(child.offset);
+          rawMetaBox = M4aMuxer.sanitizeMetaForSlice(tokenizer.readBytes(len));
+        }
+      }
+    } on Object catch (_) {
+      // Best-effort capture; never fail parsing if seeking back fails.
+    } finally {
+      try {
+        tokenizer.seek(savedPos);
+      } on Object catch (_) {}
+    }
+  }
+
+  /// Builds a [CachedMp4ChapterInfo] snapshot from parsed `moov` tables so
+  /// a later parse with `includeChapters: true` can resolve chapters without
+  /// re-fetching `moov` or other metadata.
+  CachedMp4ChapterInfo getCachedChapterInfo() {
+    final tracksWithChapters = _tracks.values
+        .where((track) => track.chapterTrackIds.isNotEmpty)
+        .toList();
+
+    _TrackDescription? chapterTrack;
+    _TrackDescription? ownerTrack;
+    if (tracksWithChapters.isNotEmpty) {
+      final chapterTrackIds = tracksWithChapters
+          .expand((track) => track.chapterTrackIds)
+          .toSet();
+      for (final id in chapterTrackIds) {
+        chapterTrack = _tracks[id];
+        if (chapterTrack != null) break;
+      }
+      if (chapterTrack != null) {
+        ownerTrack = tracksWithChapters.firstWhere(
+          (track) => track.isAudio,
+          orElse: () => tracksWithChapters.firstWhere(
+            (track) => track.isVideo,
+            orElse: () => tracksWithChapters.first,
+          ),
+        );
+      }
+    }
+
+    final audioFallback = _tracks.values.where((t) => t.isAudio).firstOrNull;
+    final refTrack = ownerTrack ?? audioFallback;
+
+    final hasSource =
+        _chplPayload != null ||
+        (chapterTrack != null && ownerTrack != null);
+
+    return CachedMp4ChapterInfo(
+      hasChapterSource: hasSource,
+      chplPayload: _chplPayload,
+      chapterTrack: chapterTrack == null ? null : _toCachedTrack(chapterTrack),
+      referencedTrack: refTrack == null ? null : _toCachedTrack(refTrack),
+    );
+  }
+
+  static CachedMp4TrackData _toCachedTrack(_TrackDescription t) =>
+      CachedMp4TrackData(
+        trackId: t.trackId,
+        timeScale: t.timeScale,
+        durationUnits: t.durationUnits,
+        sampleSize: t.sampleSize,
+        sampleSizeTable: List<int>.from(t.sampleSizeTable),
+        timeToSampleTable: List<SttsEntry>.from(t.timeToSampleTable),
+        sampleToChunkTable: List<StscEntry>.from(t.sampleToChunkTable),
+        chunkOffsetTable: List<int>.from(t.chunkOffsetTable),
+      );
+
+  static _TrackDescription _fromCachedTrack(
+    CachedMp4TrackData d, {
+    String? handlerType,
+  }) => _TrackDescription(d.trackId)
+    ..handlerType = handlerType
+    ..timeScale = d.timeScale
+    ..durationUnits = d.durationUnits
+    ..sampleSize = d.sampleSize
+    ..sampleSizeTable.addAll(d.sampleSizeTable)
+    ..timeToSampleTable.addAll(d.timeToSampleTable)
+    ..sampleToChunkTable.addAll(d.sampleToChunkTable)
+    ..chunkOffsetTable.addAll(d.chunkOffsetTable);
+
+  /// Resolves MP4 chapters from a cached [CachedMp4ChapterInfo] without
+  /// re-parsing `moov` or metadata tags.
+  ///
+  /// For Nero `chpl` chapters (or files without chapters) this requires zero
+  /// I/O. For QuickTime `chap` tracks it reads only the chapter text sample
+  /// byte ranges from [tokenizer].
+  static Future<({List<Chapter>? chapters, List<ParserWarning> warnings})>
+  resolveChaptersFromCache({
+    required CachedMp4ChapterInfo chapterInfo,
+    required Tokenizer tokenizer,
+    required ParseOptions options,
+    double? fileDuration,
+  }) async {
+    if (!chapterInfo.hasChapterSource) {
+      return (chapters: null, warnings: const <ParserWarning>[]);
+    }
+
+    final collector = MetadataCollector(
+      CombinedTagMapper(),
+      options.copyWith(includeChapters: true),
+    );
+    if (fileDuration != null) {
+      collector.setFormat(duration: fileDuration);
+    }
+
+    final parser = Mp4Parser(
+      metadata: collector,
+      tokenizer: tokenizer,
+      options: options.copyWith(includeChapters: true),
+    );
+
+    if (chapterInfo.referencedTrack != null) {
+      final ref = _fromCachedTrack(
+        chapterInfo.referencedTrack!,
+        handlerType: 'soun',
+      );
+      parser._tracks[ref.trackId] = ref;
+    }
+
+    if (chapterInfo.chapterTrack != null &&
+        chapterInfo.referencedTrack != null) {
+      final ct = _fromCachedTrack(chapterInfo.chapterTrack!);
+      final rt = parser._tracks[chapterInfo.referencedTrack!.trackId]!;
+      parser._tracks[ct.trackId] = ct;
+      try {
+        final chapters = await parser._parseChapterTrackByAbsoluteOffsets(
+          ct,
+          rt,
+        );
+        if (chapters != null && chapters.isNotEmpty) {
+          collector.setFormat(chapters: chapters);
+        }
+      } catch (e) {
+        if (chapterInfo.chplPayload == null) {
+          rethrow;
+        }
+        collector.addWarning('Cannot read QuickTime chapter track: $e');
+      }
+    }
+
+    final existingChapters = collector.toAudioMetadata().format.chapters;
+    final quickTimeHasTitles =
+        existingChapters != null &&
+        existingChapters.any((c) => c.title.trim().isNotEmpty);
+
+    if (!quickTimeHasTitles && chapterInfo.chplPayload != null) {
+      parser._parseChpl(chapterInfo.chplPayload!);
+      if (parser._chplChapters.isNotEmpty) {
+        parser._processChplChapters();
+      }
+    }
+
+    final resolved = collector.toAudioMetadata();
+    return (
+      chapters: resolved.format.chapters,
+      warnings: resolved.quality.warnings,
+    );
   }
 }
 

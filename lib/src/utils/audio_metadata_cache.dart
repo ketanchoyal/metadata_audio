@@ -5,7 +5,7 @@ import 'package:meta/meta.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/atom_token.dart';
 import 'package:metadata_audio/src/mp4/mp4_parser.dart';
-import 'package:metadata_audio/src/utils/audio_metadata_json.dart';
+import 'package:metadata_audio/src/utils/cache_types.dart';
 
 /// A persistent cache for parsed audio metadata and MP4/M4B audio track tables.
 ///
@@ -23,22 +23,30 @@ class AudioMetadataCache {
   @visibleForTesting
   static bool? overrideHasIoForTesting;
 
+  /// Override the disk cache directory path, primarily to isolate parallel
+  /// test suites that call [clearCache].
+  @visibleForTesting
+  static Directory? overrideDirForTesting;
+
   /// Whether IO operations (file system access) are available.
   static bool get hasIo => overrideHasIoForTesting ?? _hasIoEnvironment;
 
-  /// When true, [parseFromTokenizer] derives a default cache key for every
-  /// parse, even if [ParseOptions.useCache] is false. Intended for test
-  /// sessions or environments that want to exercise caching across all operations.
+  /// When true, metadata caching is globally enabled across all parse calls
+  /// (`parseFile`, `parseUrl`, `parseBytes`, `parseStream`, and
+  /// `parseFromTokenizer`), even when [ParseOptions.useCache] is `false`.
+  ///
+  /// Defaults to `true` when the `METADATA_CACHE_ENABLED=1` environment
+  /// variable is set on IO platforms.
   static bool enabled =
       _hasIoEnvironment &&
       Platform.environment['METADATA_CACHE_ENABLED'] == '1';
 
   static const String _cacheDir = 'metadata_audio_cache';
-  static const String _cacheVersion = '2';
+  static const String _cacheVersion = '5';
 
   // In-memory cache used ONLY when IO is unavailable (e.g. web).
   static final Map<String, CachedAudioTrack> _memCache = {};
-  static final Map<String, AudioMetadata> _metaMemCache = {};
+  static final Map<String, CachedMetadataEntry> _metaMemCache = {};
 
   /// Maximum number of in-memory cached entries when in web/memory mode.
   static const int maxMemoryCacheEntries = 100;
@@ -54,9 +62,10 @@ class AudioMetadataCache {
     if (!hasIo) {
       throw UnsupportedError('IO is not available on this platform');
     }
-    return Directory(
-      '${Directory.systemTemp.path}${Platform.pathSeparator}$_cacheDir',
-    );
+    return overrideDirForTesting ??
+        Directory(
+          '${Directory.systemTemp.path}${Platform.pathSeparator}$_cacheDir',
+        );
   }
 
   // ── public API ─────────────────────────────────────────────────────────────
@@ -120,8 +129,9 @@ class AudioMetadataCache {
 
   // ── general metadata cache (all formats) ───────────────────────────────
 
-  /// Reads a cached [AudioMetadata] for [key], or `null` if absent/corrupt.
-  static Future<AudioMetadata?> getMetadata(String key) async {
+  /// Reads a cached [CachedMetadataEntry] (metadata + option coverage + hints)
+  /// for [key], or `null` if absent/corrupt.
+  static Future<CachedMetadataEntry?> getEntry(String key) async {
     final fileKey = _keyFor(key);
 
     // In-memory cache for web/no-IO platforms
@@ -141,7 +151,7 @@ class AudioMetadataCache {
         await file.delete();
         return null;
       }
-      final entry = audioMetadataFromJson(map['data'] as Map<String, dynamic>);
+      final entry = CachedMetadataEntry.fromJson(map);
       if (entry == null) {
         await file.delete();
         return null;
@@ -155,17 +165,21 @@ class AudioMetadataCache {
     }
   }
 
-  /// Writes [metadata] to the cache for [key].
-  static Future<void> putMetadata(
+  /// Writes [entry] (metadata + option coverage + hints) to the cache for [key].
+  static Future<void> putEntry(
     String key,
-    AudioMetadata metadata, {
+    CachedMetadataEntry entry, {
     int? maxMemoryAllocation,
   }) async {
     // Guard against excessive memory/disk use by capping cache payload
     // based on maxMemoryAllocation (default: 64 MiB).
     final maxAlloc = maxMemoryAllocation ?? (64 * 1024 * 1024);
-    final data = audioMetadataToJson(metadata);
-    final encoded = jsonEncode({'v': _cacheVersion, 'key': key, 'data': data});
+    final payload = <String, dynamic>{
+      'v': _cacheVersion,
+      'key': key,
+      ...entry.toJson(),
+    };
+    final encoded = jsonEncode(payload);
     if (encoded.length > maxAlloc) {
       return;
     }
@@ -174,7 +188,7 @@ class AudioMetadataCache {
 
     // In-memory cache for web/no-IO platforms
     if (!hasIo) {
-      _metaMemCache[fileKey] = metadata;
+      _metaMemCache[fileKey] = entry;
       if (_metaMemCache.length > maxMemoryCacheEntries) {
         _metaMemCache.remove(_metaMemCache.keys.first);
       }
@@ -190,6 +204,24 @@ class AudioMetadataCache {
       await file.writeAsString(encoded);
     } on Object catch (_) {}
   }
+
+  /// Reads a cached [AudioMetadata] for [key], or `null` if absent/corrupt.
+  static Future<AudioMetadata?> getMetadata(String key) async =>
+      (await getEntry(key))?.metadata;
+
+  /// Writes [metadata] to the cache for [key].
+  static Future<void> putMetadata(
+    String key,
+    AudioMetadata metadata, {
+    int? maxMemoryAllocation,
+  }) => putEntry(
+    key,
+    CachedMetadataEntry(
+      metadata: metadata,
+      coverage: CachedParseCoverage.full(),
+    ),
+    maxMemoryAllocation: maxMemoryAllocation,
+  );
 
   /// Evicts a single entry from memory and disk for [urlOrKey].
   static Future<void> evict(String urlOrKey) async {
@@ -280,6 +312,9 @@ class CachedAudioTrack {
     required this.sampleToChunkTable,
     required this.chunkOffsetTable,
     this.rawStsdBox,
+    this.rawUdtaBox,
+    this.rawMetaBox,
+    this.metadataChecked = false,
   });
 
   /// Builds a [CachedAudioTrack] from a live [Mp4TrackInfo] plus the
@@ -288,6 +323,9 @@ class CachedAudioTrack {
     required Mp4TrackInfo trackInfo,
     required List<StscEntry> sampleToChunkTable,
     required List<int> chunkOffsetTable,
+    List<int>? rawUdtaBox,
+    List<int>? rawMetaBox,
+    bool metadataChecked = false,
   }) => CachedAudioTrack(
     trackId: trackInfo.trackId,
     timeScale: trackInfo.timeScale,
@@ -303,6 +341,9 @@ class CachedAudioTrack {
     rawStsdBox: trackInfo.rawStsdBox != null
         ? List<int>.unmodifiable(trackInfo.rawStsdBox!)
         : null,
+    rawUdtaBox: rawUdtaBox != null ? List<int>.unmodifiable(rawUdtaBox) : null,
+    rawMetaBox: rawMetaBox != null ? List<int>.unmodifiable(rawMetaBox) : null,
+    metadataChecked: metadataChecked,
   );
 
   factory CachedAudioTrack.fromJson(Map<String, dynamic> m) => CachedAudioTrack(
@@ -333,10 +374,18 @@ class CachedAudioTrack {
     chunkOffsetTable: (m['chunkOffsetTable'] as List<dynamic>)
         .map((e) => e as int)
         .toList(),
-    rawStsdBox: m['rawStsdBox'] == null
-        ? null
-        : (m['rawStsdBox'] as List<dynamic>).map((e) => e as int).toList(),
+    rawStsdBox: _decodeBytes(m['rawStsdBox']),
+    rawUdtaBox: _decodeBytes(m['rawUdtaBox']),
+    rawMetaBox: _decodeBytes(m['rawMetaBox']),
+    metadataChecked: m['metadataChecked'] as bool? ?? false,
   );
+
+  static List<int>? _decodeBytes(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is String) return base64Decode(raw);
+    if (raw is List) return raw.map((e) => e as int).toList();
+    return null;
+  }
 
   /// The MP4 track ID (usually 1 or 2).
   final int trackId;
@@ -367,6 +416,17 @@ class CachedAudioTrack {
 
   /// Raw `stsd` box bytes, used to build standalone M4A containers.
   final List<int>? rawStsdBox;
+
+  /// Raw `udta` box bytes (excluding `chpl`), used to preserve original
+  /// iTunes/MP4 metadata and cover art in sliced chapter `.m4a` files.
+  final List<int>? rawUdtaBox;
+
+  /// Raw top-level `moov.meta` box bytes (when present outside `udta`).
+  final List<int>? rawMetaBox;
+
+  /// Whether metadata boxes (`udta`/`meta`) were already checked/captured
+  /// without skipping cover art.
+  final bool metadataChecked;
 
   // ── sample index & byte offset lookup ──────────────────────────────────────
 
@@ -481,5 +541,8 @@ class CachedAudioTrack {
         .toList(),
     'chunkOffsetTable': chunkOffsetTable,
     'rawStsdBox': rawStsdBox,
+    if (rawUdtaBox != null) 'rawUdtaBox': base64Encode(rawUdtaBox!),
+    if (rawMetaBox != null) 'rawMetaBox': base64Encode(rawMetaBox!),
+    'metadataChecked': metadataChecked,
   };
 }

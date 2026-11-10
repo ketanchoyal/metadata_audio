@@ -219,4 +219,89 @@ void main() {
     expect(find.textContaining('short.ogv'), findsOneWidget);
     expect(find.textContaining('test/samples/ogg'), findsOneWidget);
   });
+
+  test('parseCustomRangeMs supports ms, seconds, and MM:SS / HH:MM:SS.mmm', () {
+    expect(parseCustomRangeMs('0'), equals(0));
+    expect(parseCustomRangeMs(' 15000 '), equals(15000));
+    expect(parseCustomRangeMs('10,000'), equals(10000));
+    expect(parseCustomRangeMs('25000ms'), equals(25000));
+    expect(parseCustomRangeMs('12.5s'), equals(12500));
+    expect(parseCustomRangeMs('01:30'), equals(90000));
+    expect(parseCustomRangeMs('19:08:47.642'), equals(68927642));
+
+    expect(parseCustomRangeMs(''), isNull);
+    expect(parseCustomRangeMs('abc'), isNull);
+    expect(parseCustomRangeMs('-5'), isNull);
+    expect(parseCustomRangeMs('12.5'), isNull);
+    expect(parseCustomRangeMs('01:75'), isNull);
+  });
+
+  testWidgets(
+    'Download Custom Range requires a local file on Local tab and validates range',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1400, 1100);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(const MyApp());
+      await tester.pumpAndSettle();
+
+      final downloadBtn = find.text('Download Custom Range');
+      await tester.ensureVisible(downloadBtn);
+      await tester.pumpAndSettle();
+      await tester.tap(downloadBtn);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Please select a local audio file first.'),
+        findsOneWidget,
+      );
+      ScaffoldMessenger.of(
+        tester.element(find.byType(DesktopScreen)),
+      ).clearSnackBars();
+      await tester.pumpAndSettle();
+
+      // Switch to Remote URL tab to test range validation without launching FilePicker.
+      await tester.ensureVisible(find.text('Remote URL'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Remote URL'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Start (ms)'),
+        'abc',
+      );
+      await tester.ensureVisible(downloadBtn);
+      await tester.pumpAndSettle();
+      await tester.tap(downloadBtn);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Invalid range. Enter ms (e.g. 15000), seconds with "s" (e.g. 15.5s), or HH:MM:SS.mmm.',
+        ),
+        findsOneWidget,
+      );
+      ScaffoldMessenger.of(
+        tester.element(find.byType(DesktopScreen)),
+      ).clearSnackBars();
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Start (ms)'),
+        '10000',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'End (ms)'),
+        '5000',
+      );
+      await tester.tap(downloadBtn);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('End time must be greater than Start time.'),
+        findsOneWidget,
+      );
+    },
+  );
 }
