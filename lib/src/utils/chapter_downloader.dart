@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:metadata_audio/metadata_audio.dart';
 import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_tag_map.dart';
 import 'package:metadata_audio/src/mp4/mp4_parser.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_parser.dart';
 import 'package:metadata_audio/src/mpeg/xing_tag.dart';
@@ -54,6 +57,49 @@ class ChapterDownloadResult {
   final String? error;
 }
 
+/// The result of an in-memory [ChapterDownloader.extractChapterBytes] operation.
+class ChapterBytesResult {
+  const ChapterBytesResult._({
+    required this.isSuccess,
+    this.bytes,
+    this.extension,
+    this.mimeType,
+    this.error,
+  });
+
+  /// Creates a successful result with extracted file [bytes], container
+  /// [extension] (without leading dot), and [mimeType].
+  const ChapterBytesResult.success({
+    required Uint8List bytes,
+    required String extension,
+    required String mimeType,
+  }) : this._(
+         isSuccess: true,
+         bytes: bytes,
+         extension: extension,
+         mimeType: mimeType,
+       );
+
+  /// Creates a failed result with the given [error] message.
+  const ChapterBytesResult.failure(String error)
+    : this._(isSuccess: false, error: error);
+
+  /// Whether the extraction succeeded.
+  final bool isSuccess;
+
+  /// The extracted standalone chapter bytes on success, `null` on failure.
+  final Uint8List? bytes;
+
+  /// The output file extension without leading dot (`'m4a'`, `'aac'`, `'mp3'`).
+  final String? extension;
+
+  /// The MIME type of [bytes] (`'audio/mp4'`, `'audio/aac'`, `'audio/mpeg'`).
+  final String? mimeType;
+
+  /// A human-readable error message on failure, `null` on success.
+  final String? error;
+}
+
 /// A utility class for downloading playable chapter files
 /// from audiobook range requests.
 class ChapterDownloader {
@@ -88,6 +134,10 @@ class ChapterDownloader {
   /// each time the operation transitions to a new phase.
   /// [parallelChunks] controls the number of parallel HTTP
   /// connections for remote downloads (default: 4).
+  /// [includeMetadata] copies all metadata tags and cover art from the
+  /// original file into the sliced chapter output (default: `true`).
+  /// [metadata] supplies fallback metadata for `.m4a` output if the original
+  /// container had no raw `udta`/`meta` box.
   static Future<ChapterDownloadResult> downloadChapter({
     required String originalUrl,
     required int chapterStartMs,
@@ -97,6 +147,8 @@ class ChapterDownloader {
     void Function(double progress)? onProgress,
     void Function(ChapterDownloadPhase phase)? onPhase,
     int parallelChunks = 4,
+    bool includeMetadata = true,
+    AudioMetadata? metadata,
   }) async {
     try {
       final isRemote =
@@ -164,6 +216,7 @@ class ChapterDownloader {
           onProgress: onProgress,
           onPhase: onPhase,
           parallelChunks: parallelChunks,
+          includeMetadata: includeMetadata,
         );
       }
 
@@ -178,10 +231,195 @@ class ChapterDownloader {
         onProgress: onProgress,
         onPhase: onPhase,
         parallelChunks: parallelChunks,
+        includeMetadata: includeMetadata,
+        fallbackMetadata: metadata,
       );
     } catch (e) {
       return ChapterDownloadResult.failure(e.toString());
     }
+  }
+
+  /// Extracts a standalone playable chapter or time range in memory from
+  /// [sourceBytes] without writing to the local file system.
+  ///
+  /// Ideal for browser/web environments (using Blob downloads) or in-memory
+  /// audio pipelines. Supports MP4/M4B/M4A/MOV containers (producing `.m4a`
+  /// by default, or `.aac` when [wantsAac] is `true`) and MP3 files (producing
+  /// `.mp3`).
+  ///
+  /// When [includeMetadata] is `true` (default), safe tags and cover art are
+  /// preserved in the output while whole-file chapters, total durations, and
+  /// file-wide seek tables are stripped.
+  static Future<ChapterBytesResult> extractChapterBytes({
+    required Uint8List sourceBytes,
+    required int chapterStartMs,
+    required int chapterEndMs,
+    String? fileName,
+    bool wantsAac = false,
+    void Function(double progress)? onProgress,
+    void Function(ChapterDownloadPhase phase)? onPhase,
+    bool includeMetadata = true,
+    AudioMetadata? metadata,
+  }) async {
+    try {
+      if (sourceBytes.isEmpty) {
+        return const ChapterBytesResult.failure('Source bytes are empty.');
+      }
+
+      onPhase?.call(ChapterDownloadPhase.connecting);
+
+      final isMp3 = _isMp3Bytes(
+        sourceBytes,
+        fileName: fileName,
+        metadata: metadata,
+      );
+
+      final tokenizer = BytesTokenizer(
+        sourceBytes,
+        fileInfo: FileInfo(size: sourceBytes.length),
+      );
+
+      if (isMp3) {
+        final slice = await _extractMp3SliceBytes(
+          tokenizer: tokenizer,
+          chapterStartMs: chapterStartMs,
+          chapterEndMs: chapterEndMs,
+          includeMetadata: includeMetadata,
+          readPayloadRange: (startByte, endByte) async {
+            if (startByte < 0 || endByte > sourceBytes.length) {
+              throw RangeError('Requested MP3 slice out of bounds.');
+            }
+            onProgress?.call(1);
+            return Uint8List.sublistView(sourceBytes, startByte, endByte);
+          },
+          onPhase: onPhase,
+        );
+        if (slice.error != null || slice.bytes == null) {
+          return ChapterBytesResult.failure(
+            slice.error ?? 'Failed to extract MP3 chapter bytes.',
+          );
+        }
+        return ChapterBytesResult.success(
+          bytes: slice.bytes!,
+          extension: 'mp3',
+          mimeType: 'audio/mpeg',
+        );
+      }
+
+      if (!_looksLikeMp4Container(
+        sourceBytes,
+        fileName: fileName,
+        metadata: metadata,
+      )) {
+        return const ChapterBytesResult.failure(
+          'Chapter extraction only supports MP4/M4A/M4B/MOV and MP3 audio.',
+        );
+      }
+
+      onPhase?.call(ChapterDownloadPhase.analyzing);
+      final parsed = await _parseMp4Track(
+        tokenizer,
+        includeMetadata: includeMetadata,
+      );
+      if (parsed.error != null || parsed.track == null) {
+        return ChapterBytesResult.failure(
+          parsed.error ?? 'Could not parse MP4 audio track.',
+        );
+      }
+
+      final slice = await _buildMp4ChapterBytes(
+        cached: parsed.track!,
+        chapterStartMs: chapterStartMs,
+        chapterEndMs: chapterEndMs,
+        wantsAac: wantsAac,
+        includeMetadata: includeMetadata,
+        fallbackMetadata: metadata,
+        readPayloadRange: (rangeStart, rangeEnd) async {
+          if (rangeStart < 0 || rangeEnd > sourceBytes.length) {
+            throw RangeError('Requested MP4 slice out of bounds.');
+          }
+          onProgress?.call(1);
+          return Uint8List.sublistView(sourceBytes, rangeStart, rangeEnd);
+        },
+        onPhase: onPhase,
+      );
+      if (slice.error != null || slice.bytes == null) {
+        return ChapterBytesResult.failure(
+          slice.error ?? 'Failed to build MP4 chapter bytes.',
+        );
+      }
+      return ChapterBytesResult.success(
+        bytes: slice.bytes!,
+        extension: wantsAac ? 'aac' : 'm4a',
+        mimeType: wantsAac ? 'audio/aac' : 'audio/mp4',
+      );
+    } catch (e) {
+      return ChapterBytesResult.failure(e.toString());
+    }
+  }
+
+  static bool _isMp3Bytes(
+    Uint8List sourceBytes, {
+    String? fileName,
+    AudioMetadata? metadata,
+  }) {
+    final container = metadata?.format.container?.toUpperCase();
+    if (container == 'MPEG' || container == 'MP3') return true;
+    final lowerName = fileName?.toLowerCase() ?? '';
+    if (lowerName.endsWith('.mp3')) return true;
+    if (sourceBytes.length >= 3 &&
+        sourceBytes[0] == 0x49 &&
+        sourceBytes[1] == 0x44 &&
+        sourceBytes[2] == 0x33) {
+      return true;
+    }
+    if (!_looksLikeMp4Container(
+          sourceBytes,
+          fileName: fileName,
+          metadata: metadata,
+        ) &&
+        sourceBytes.length >= 4 &&
+        sourceBytes[0] == 0xFF &&
+        (sourceBytes[1] & 0xE0) == 0xE0 &&
+        !MpegFrameHeader.isAdtsHeader(sourceBytes.sublist(0, 4)) &&
+        MpegFrameHeader.parse(sourceBytes.sublist(0, 4)) != null) {
+      return true;
+    }
+    return false;
+  }
+
+  static bool _looksLikeMp4Container(
+    Uint8List sourceBytes, {
+    String? fileName,
+    AudioMetadata? metadata,
+  }) {
+    final container = metadata?.format.container?.toLowerCase() ?? '';
+    if (container.contains('mp4') ||
+        container.contains('m4a') ||
+        container.contains('m4b') ||
+        container.contains('quicktime') ||
+        container.contains('isom')) {
+      return true;
+    }
+    final lowerName = fileName?.toLowerCase() ?? '';
+    if (lowerName.endsWith('.m4a') ||
+        lowerName.endsWith('.m4b') ||
+        lowerName.endsWith('.mp4') ||
+        lowerName.endsWith('.mov')) {
+      return true;
+    }
+    if (sourceBytes.length >= 8) {
+      final boxType = String.fromCharCodes(sourceBytes.sublist(4, 8));
+      if (boxType == 'ftyp' ||
+          boxType == 'moov' ||
+          boxType == 'mdat' ||
+          boxType == 'free' ||
+          boxType == 'wide' ||
+          boxType == 'skip') {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Clears all cached audiobook metadata written to the OS temp directory.
@@ -203,6 +441,8 @@ class ChapterDownloader {
     required bool wantsAac,
     required bool isRemote,
     required int parallelChunks,
+    required bool includeMetadata,
+    AudioMetadata? fallbackMetadata,
     HttpClient? httpClient,
     void Function(double progress)? onProgress,
     void Function(ChapterDownloadPhase phase)? onPhase,
@@ -212,7 +452,15 @@ class ChapterDownloader {
     // ── 1. Resolve audio-track metadata (cache-first) ─────────────────────
     var cached = await AudioMetadataCache.get(originalUrl);
 
-    if (cached == null) {
+    final needsMetadataRefresh =
+        cached != null &&
+        includeMetadata &&
+        !wantsAac &&
+        !cached.metadataChecked &&
+        cached.rawUdtaBox == null &&
+        cached.rawMetaBox == null;
+
+    if (cached == null || needsMetadataRefresh) {
       // Slow path: parse the container and populate the cache.
       final Tokenizer tokenizer;
       if (isRemote) {
@@ -229,34 +477,16 @@ class ChapterDownloader {
 
       try {
         onPhase?.call(ChapterDownloadPhase.analyzing);
-        final mapper = CombinedTagMapper();
-        final collector = MetadataCollector(
-          mapper,
-          const ParseOptions(includeChapters: true),
+        final parsed = await _parseMp4Track(
+          tokenizer,
+          includeMetadata: includeMetadata,
         );
-        final parser = Mp4Parser(
-          metadata: collector,
-          tokenizer: tokenizer,
-          options: const ParseOptions(includeChapters: true),
-        );
-        await parser.parse();
-
-        final tracks = parser.getTrackInfos();
-        final audioTrack = tracks.where((t) => t.isAudio).firstOrNull;
-        if (audioTrack == null) {
-          return const ChapterDownloadResult.failure(
-            'No audio track found in the original audiobook.',
+        if (parsed.error != null || parsed.track == null) {
+          return ChapterDownloadResult.failure(
+            parsed.error ?? 'No audio track found in the original audiobook.',
           );
         }
-
-        final stsc = parser.getSampleToChunkTable(audioTrack.trackId) ?? [];
-        final stco = parser.getChunkOffsetTable(audioTrack.trackId) ?? [];
-
-        cached = CachedAudioTrack.fromParser(
-          trackInfo: audioTrack,
-          sampleToChunkTable: stsc,
-          chunkOffsetTable: stco,
-        );
+        cached = parsed.track!;
 
         // Persist to disk asynchronously (non-blocking).
         unawaited(AudioMetadataCache.put(originalUrl, cached));
@@ -269,6 +499,97 @@ class ChapterDownloader {
       }
     }
 
+    final slice = await _buildMp4ChapterBytes(
+      cached: cached,
+      chapterStartMs: chapterStartMs,
+      chapterEndMs: chapterEndMs,
+      wantsAac: wantsAac,
+      includeMetadata: includeMetadata,
+      fallbackMetadata: fallbackMetadata,
+      readPayloadRange: (rangeStart, rangeEnd) {
+        final downloadSize = rangeEnd - rangeStart;
+        if (isRemote) {
+          return _downloadRangeParallel(
+            url: originalUrl,
+            rangeStart: rangeStart,
+            totalSize: downloadSize,
+            parallelChunks: parallelChunks,
+            httpClient: httpClient,
+            onProgress: onProgress,
+          );
+        }
+        return _readLocalFileRange(
+          originalUrl,
+          rangeStart,
+          rangeEnd,
+          downloadSize,
+          onProgress,
+        );
+      },
+      onPhase: onPhase,
+    );
+
+    if (slice.error != null || slice.bytes == null) {
+      return ChapterDownloadResult.failure(
+        slice.error ?? 'Could not build MP4 chapter output.',
+      );
+    }
+
+    await File(finalPath).writeAsBytes(slice.bytes!);
+    return ChapterDownloadResult.success(finalPath);
+  }
+
+  static Future<({CachedAudioTrack? track, String? error})> _parseMp4Track(
+    Tokenizer tokenizer, {
+    required bool includeMetadata,
+  }) async {
+    final parseOpts = ParseOptions(
+      includeChapters: true,
+      skipCovers: !includeMetadata,
+    );
+    final mapper = CombinedTagMapper();
+    final collector = MetadataCollector(mapper, parseOpts);
+    final parser = Mp4Parser(
+      metadata: collector,
+      tokenizer: tokenizer,
+      options: parseOpts,
+    );
+    await parser.parse();
+
+    final tracks = parser.getTrackInfos();
+    final audioTrack = tracks.where((t) => t.isAudio).firstOrNull;
+    if (audioTrack == null) {
+      return (
+        track: null,
+        error: 'No audio track found in the original audiobook.',
+      );
+    }
+
+    final stsc = parser.getSampleToChunkTable(audioTrack.trackId) ?? [];
+    final stco = parser.getChunkOffsetTable(audioTrack.trackId) ?? [];
+
+    final cached = CachedAudioTrack.fromParser(
+      trackInfo: audioTrack,
+      sampleToChunkTable: stsc,
+      chunkOffsetTable: stco,
+      rawUdtaBox: parser.rawUdtaBox,
+      rawMetaBox: parser.rawMetaBox,
+      metadataChecked: includeMetadata,
+    );
+    return (track: cached, error: null);
+  }
+
+  static Future<({Uint8List? bytes, String? error})> _buildMp4ChapterBytes({
+    required CachedAudioTrack cached,
+    required int chapterStartMs,
+    required int chapterEndMs,
+    required bool wantsAac,
+    required bool includeMetadata,
+    required Future<Uint8List> Function(int rangeStart, int rangeEnd)
+    readPayloadRange,
+    AudioMetadata? fallbackMetadata,
+    void Function(ChapterDownloadPhase phase)? onPhase,
+  }) async {
     // ── 2. Map chapter timestamps → sample indices & byte offsets ─────────
     onPhase?.call(ChapterDownloadPhase.resolvingSamples);
 
@@ -280,23 +601,26 @@ class ChapterDownloader {
     final endSampleIndex = cached.getSampleIndexForTime(endOffsetUnits);
 
     if (startSampleIndex == null || endSampleIndex == null) {
-      return const ChapterDownloadResult.failure(
-        'Could not map chapter timestamps to audio samples.',
+      return (
+        bytes: null,
+        error: 'Could not map chapter timestamps to audio samples.',
       );
     }
 
     final startByteOffset = cached.getByteOffsetForSample(startSampleIndex);
     if (startByteOffset == null) {
-      return const ChapterDownloadResult.failure(
-        'Could not resolve starting byte offset for chapter.',
+      return (
+        bytes: null,
+        error: 'Could not resolve starting byte offset for chapter.',
       );
     }
 
     final lastSampleIndex = endSampleIndex - 1;
     final lastSampleByteOffset = cached.getByteOffsetForSample(lastSampleIndex);
     if (lastSampleByteOffset == null) {
-      return const ChapterDownloadResult.failure(
-        'Could not resolve ending byte offset for chapter.',
+      return (
+        bytes: null,
+        error: 'Could not resolve ending byte offset for chapter.',
       );
     }
 
@@ -306,9 +630,7 @@ class ChapterDownloader {
     } else if (lastSampleIndex < cached.sampleSizeTable.length) {
       lastSampleSize = cached.sampleSizeTable[lastSampleIndex];
     } else {
-      return const ChapterDownloadResult.failure(
-        'Could not resolve ending sample size.',
-      );
+      return (bytes: null, error: 'Could not resolve ending sample size.');
     }
 
     final rangeStart = startByteOffset;
@@ -316,39 +638,17 @@ class ChapterDownloader {
     final downloadSize = rangeEnd - rangeStart;
 
     if (downloadSize <= 0) {
-      return const ChapterDownloadResult.failure(
-        'Chapter does not contain any audio samples.',
+      return (
+        bytes: null,
+        error: 'Chapter does not contain any audio samples.',
       );
     }
 
     // ── 3. Fetch raw payload bytes ────────────────────────────────────────
     onPhase?.call(ChapterDownloadPhase.downloading);
+    final payloadBytes = await readPayloadRange(rangeStart, rangeEnd);
 
-    final Uint8List payloadBytes;
-    if (isRemote) {
-      payloadBytes = await _downloadRangeParallel(
-        url: originalUrl,
-        rangeStart: rangeStart,
-        totalSize: downloadSize,
-        parallelChunks: parallelChunks,
-        httpClient: httpClient,
-        onProgress: onProgress,
-      );
-    } else {
-      final localFile = File(originalUrl);
-      final builder = BytesBuilder(copy: false);
-      var readBytes = 0;
-      await for (final chunk in localFile.openRead(rangeStart, rangeEnd)) {
-        builder.add(chunk);
-        readBytes += chunk.length;
-        if (onProgress != null && downloadSize > 0) {
-          onProgress((readBytes / downloadSize).clamp(0.0, 1.0));
-        }
-      }
-      payloadBytes = builder.takeBytes();
-    }
-
-    // ── 4. Write output file ──────────────────────────────────────────────
+    // ── 4. Write output bytes ─────────────────────────────────────────────
     onPhase?.call(ChapterDownloadPhase.writing);
 
     final sampleRate = cached.sampleRate ?? 44100;
@@ -386,16 +686,26 @@ class ChapterDownloader {
           ? cached.timeToSampleTable.first.duration
           : 1024;
 
+      var rawUdtaBox = includeMetadata ? cached.rawUdtaBox : null;
+      final rawMetaBox = includeMetadata ? cached.rawMetaBox : null;
+      if (includeMetadata &&
+          rawUdtaBox == null &&
+          rawMetaBox == null &&
+          fallbackMetadata != null) {
+        rawUdtaBox = M4aMuxer.buildUdtaFromMetadata(fallbackMetadata);
+      }
+
       final m4aBytes = M4aMuxer.buildM4a(
         rawStsdBox: cached.rawStsdBox!,
         sampleSizes: sampleSizes,
         timeScale: timeScale,
         sampleDuration: sampleDuration > 0 ? sampleDuration : 1024,
         rawAudioData: rawAudioBuilder.takeBytes(),
+        rawUdtaBox: rawUdtaBox,
+        rawMetaBox: rawMetaBox,
       );
 
-      await File(finalPath).writeAsBytes(m4aBytes);
-      return ChapterDownloadResult.success(finalPath);
+      return (bytes: m4aBytes, error: null);
     }
 
     // Legacy ADTS-wrapped output
@@ -429,8 +739,27 @@ class ChapterDownloader {
       );
     }
 
-    await File(finalPath).writeAsBytes(outputBuilder.takeBytes());
-    return ChapterDownloadResult.success(finalPath);
+    return (bytes: outputBuilder.takeBytes(), error: null);
+  }
+
+  static Future<Uint8List> _readLocalFileRange(
+    String path,
+    int rangeStart,
+    int rangeEnd,
+    int totalSize,
+    void Function(double progress)? onProgress,
+  ) async {
+    final localFile = File(path);
+    final builder = BytesBuilder(copy: false);
+    var readBytes = 0;
+    await for (final chunk in localFile.openRead(rangeStart, rangeEnd)) {
+      builder.add(chunk);
+      readBytes += chunk.length;
+      if (onProgress != null && totalSize > 0) {
+        onProgress((readBytes / totalSize).clamp(0.0, 1.0));
+      }
+    }
+    return builder.takeBytes();
   }
 
   static const int _maxRetries = 5;
@@ -663,6 +992,7 @@ class ChapterDownloader {
     required int chapterEndMs,
     required String outputPath,
     required bool isRemote,
+    required bool includeMetadata,
     HttpClient? httpClient,
     void Function(double progress)? onProgress,
     void Function(ChapterDownloadPhase phase)? onPhase,
@@ -683,122 +1013,41 @@ class ChapterDownloader {
     }
 
     try {
-      onPhase?.call(ChapterDownloadPhase.analyzing);
-      final mpegOffset = await _findMpegAudioOffset(tokenizer);
-
-      final header = await _findFirstMpegFrame(tokenizer, mpegOffset);
-      if (header == null) {
-        return const ChapterDownloadResult.failure(
-          'Could not parse first MPEG frame header in MP3 file.',
-        );
-      }
-
-      final xingInfo = await _findXingHeader(tokenizer, header, mpegOffset);
-
-      onPhase?.call(ChapterDownloadPhase.resolvingSamples);
-      int startByte;
-      int endByte;
-
-      final frameDurationMs =
-          (header.samplesPerFrame * 1000) / header.sampleRate;
-      if (xingInfo != null &&
-          xingInfo.toc != null &&
-          xingInfo.streamSize != null &&
-          xingInfo.numFrames != null) {
-        final totalDurationMs =
-            (xingInfo.numFrames! * header.samplesPerFrame * 1000) /
-            header.sampleRate;
-
-        final startPercent = (chapterStartMs / totalDurationMs) * 100;
-        final endPercent = (chapterEndMs / totalDurationMs) * 100;
-
-        final startOffsetNormalized = _interpolateToc(
-          xingInfo.toc!,
-          startPercent,
-        );
-        final endOffsetNormalized = _interpolateToc(xingInfo.toc!, endPercent);
-
-        startByte =
-            mpegOffset +
-            ((startOffsetNormalized / 256.0) * xingInfo.streamSize!).round();
-        endByte =
-            mpegOffset +
-            ((endOffsetNormalized / 256.0) * xingInfo.streamSize!).round();
-      } else {
-        final startFrame = chapterStartMs ~/ frameDurationMs;
-        final endFrame = (chapterEndMs / frameDurationMs).ceil();
-        startByte = mpegOffset + startFrame * header.frameLength;
-        endByte = mpegOffset + endFrame * header.frameLength;
-      }
-
-      final fileSize = tokenizer.fileInfo?.size;
-      if (fileSize != null) {
-        startByte = startByte.clamp(mpegOffset, fileSize);
-        endByte = endByte.clamp(mpegOffset, fileSize);
-      }
-
-      if (xingInfo != null && startByte == mpegOffset) {
-        startByte = (startByte + header.frameLength).clamp(
-          mpegOffset,
-          fileSize ?? (startByte + header.frameLength),
-        );
-      }
-
-      final downloadSize = endByte - startByte;
-      if (downloadSize <= 0) {
-        return const ChapterDownloadResult.failure(
-          'Calculated download byte size is zero.',
-        );
-      }
-
-      onPhase?.call(ChapterDownloadPhase.downloading);
-      final Uint8List payloadBytes;
-      if (isRemote) {
-        payloadBytes = await _downloadRangeParallel(
-          url: originalUrl,
-          rangeStart: startByte,
-          totalSize: downloadSize,
-          parallelChunks: parallelChunks,
-          httpClient: httpClient,
-          onProgress: onProgress,
-        );
-      } else {
-        final localFile = File(originalUrl);
-        final builder = BytesBuilder(copy: false);
-        var readBytes = 0;
-        await for (final chunk in localFile.openRead(startByte, endByte)) {
-          builder.add(chunk);
-          readBytes += chunk.length;
-          if (onProgress != null && downloadSize > 0) {
-            onProgress((readBytes / downloadSize).clamp(0.0, 1.0));
+      final slice = await _extractMp3SliceBytes(
+        tokenizer: tokenizer,
+        chapterStartMs: chapterStartMs,
+        chapterEndMs: chapterEndMs,
+        includeMetadata: includeMetadata,
+        readPayloadRange: (startByte, endByte) {
+          final downloadSize = endByte - startByte;
+          if (isRemote) {
+            return _downloadRangeParallel(
+              url: originalUrl,
+              rangeStart: startByte,
+              totalSize: downloadSize,
+              parallelChunks: parallelChunks,
+              httpClient: httpClient,
+              onProgress: onProgress,
+            );
           }
-        }
-        payloadBytes = builder.takeBytes();
+          return _readLocalFileRange(
+            originalUrl,
+            startByte,
+            endByte,
+            downloadSize,
+            onProgress,
+          );
+        },
+        onPhase: onPhase,
+      );
+
+      if (slice.error != null || slice.bytes == null) {
+        return ChapterDownloadResult.failure(
+          slice.error ?? 'Could not build MP3 chapter output.',
+        );
       }
 
-      onPhase?.call(ChapterDownloadPhase.writing);
-
-      // Find the first valid MPEG frame syncword in the downloaded bytes to align the start
-      var alignedStart = 0;
-      while (alignedStart < payloadBytes.length - 4) {
-        if (payloadBytes[alignedStart] == 0xFF &&
-            (payloadBytes[alignedStart + 1] & 0xE0) == 0xE0) {
-          final sync = payloadBytes.sublist(alignedStart, alignedStart + 4);
-          if (!MpegFrameHeader.isAdtsHeader(sync)) {
-            final header = MpegFrameHeader.parse(sync);
-            if (header != null) {
-              break;
-            }
-          }
-        }
-        alignedStart++;
-      }
-
-      final slicedBytes = alignedStart < payloadBytes.length
-          ? payloadBytes.sublist(alignedStart)
-          : payloadBytes;
-
-      await File(outputPath).writeAsBytes(slicedBytes);
+      await File(outputPath).writeAsBytes(slice.bytes!);
       return ChapterDownloadResult.success(outputPath);
     } catch (e) {
       return ChapterDownloadResult.failure(e.toString());
@@ -809,6 +1058,451 @@ class ChapterDownloader {
         (tokenizer as FileTokenizer).close();
       }
     }
+  }
+
+  static Future<({Uint8List? bytes, String? error})> _extractMp3SliceBytes({
+    required Tokenizer tokenizer,
+    required int chapterStartMs,
+    required int chapterEndMs,
+    required bool includeMetadata,
+    required Future<Uint8List> Function(int startByte, int endByte)
+    readPayloadRange,
+    void Function(ChapterDownloadPhase phase)? onPhase,
+  }) async {
+    onPhase?.call(ChapterDownloadPhase.analyzing);
+    final mpegOffset = await _findMpegAudioOffset(tokenizer);
+
+    final header = await _findFirstMpegFrame(tokenizer, mpegOffset);
+    if (header == null) {
+      return (
+        bytes: null,
+        error: 'Could not parse first MPEG frame header in MP3 file.',
+      );
+    }
+
+    final xingInfo = await _findXingHeader(tokenizer, header, mpegOffset);
+
+    List<int>? id3v2Bytes;
+    List<int>? id3v1Bytes;
+    final fileSize = tokenizer.fileInfo?.size;
+
+    if (includeMetadata) {
+      if (mpegOffset > 0) {
+        if (tokenizer is HttpBasedTokenizer) {
+          await tokenizer.prefetchRange(0, mpegOffset);
+        }
+        tokenizer.seek(0);
+        final rawId3v2 = tokenizer.readBytes(mpegOffset);
+        id3v2Bytes = await _sanitizeId3v2ForSlice(rawId3v2);
+      }
+
+      if (fileSize != null && fileSize >= 128) {
+        try {
+          if (tokenizer is HttpBasedTokenizer) {
+            await tokenizer.prefetchRange(fileSize - 128, fileSize);
+          }
+          tokenizer.seek(fileSize - 128);
+          final tail = tokenizer.readBytes(128);
+          if (tail.length == 128 &&
+              tail[0] == 0x54 && // 'T'
+              tail[1] == 0x41 && // 'A'
+              tail[2] == 0x47) {
+            // 'G'
+            id3v1Bytes = tail;
+          }
+        } catch (_) {}
+      }
+    }
+
+    onPhase?.call(ChapterDownloadPhase.resolvingSamples);
+    int startByte;
+    int endByte;
+
+    final frameDurationMs = (header.samplesPerFrame * 1000) / header.sampleRate;
+    if (xingInfo != null &&
+        xingInfo.toc != null &&
+        xingInfo.streamSize != null &&
+        xingInfo.numFrames != null) {
+      final totalDurationMs =
+          (xingInfo.numFrames! * header.samplesPerFrame * 1000) /
+          header.sampleRate;
+
+      final startPercent = (chapterStartMs / totalDurationMs) * 100;
+      final endPercent = (chapterEndMs / totalDurationMs) * 100;
+
+      final startOffsetNormalized = _interpolateToc(
+        xingInfo.toc!,
+        startPercent,
+      );
+      final endOffsetNormalized = _interpolateToc(xingInfo.toc!, endPercent);
+
+      startByte =
+          mpegOffset +
+          ((startOffsetNormalized / 256.0) * xingInfo.streamSize!).round();
+      endByte =
+          mpegOffset +
+          ((endOffsetNormalized / 256.0) * xingInfo.streamSize!).round();
+    } else {
+      final startFrame = chapterStartMs ~/ frameDurationMs;
+      final endFrame = (chapterEndMs / frameDurationMs).ceil();
+      startByte = mpegOffset + startFrame * header.frameLength;
+      endByte = mpegOffset + endFrame * header.frameLength;
+    }
+
+    final audioEndLimit = (fileSize != null && id3v1Bytes != null)
+        ? fileSize - 128
+        : fileSize;
+    if (audioEndLimit != null) {
+      startByte = startByte.clamp(mpegOffset, audioEndLimit);
+      endByte = endByte.clamp(mpegOffset, audioEndLimit);
+    }
+
+    if (xingInfo != null && startByte == mpegOffset) {
+      startByte = (startByte + header.frameLength).clamp(
+        mpegOffset,
+        audioEndLimit ?? (startByte + header.frameLength),
+      );
+    }
+
+    final downloadSize = endByte - startByte;
+    if (downloadSize <= 0) {
+      return (bytes: null, error: 'Calculated download byte size is zero.');
+    }
+
+    onPhase?.call(ChapterDownloadPhase.downloading);
+    final payloadBytes = await readPayloadRange(startByte, endByte);
+
+    onPhase?.call(ChapterDownloadPhase.writing);
+
+    // Find the first valid MPEG frame syncword (verified by the following
+    // frame boundary when available) to align the start cleanly.
+    var alignedStart = 0;
+    while (alignedStart < payloadBytes.length - 4) {
+      if (payloadBytes[alignedStart] == 0xFF &&
+          (payloadBytes[alignedStart + 1] & 0xE0) == 0xE0) {
+        final sync = payloadBytes.sublist(alignedStart, alignedStart + 4);
+        if (!MpegFrameHeader.isAdtsHeader(sync)) {
+          final candidate = MpegFrameHeader.parse(sync);
+          if (candidate != null && candidate.frameLength > 0) {
+            final nextOffset = alignedStart + candidate.frameLength;
+            if (nextOffset + 4 > payloadBytes.length) {
+              break;
+            }
+            final nextSync = payloadBytes.sublist(nextOffset, nextOffset + 4);
+            if (nextSync[0] == 0xFF &&
+                (nextSync[1] & 0xE0) == 0xE0 &&
+                !MpegFrameHeader.isAdtsHeader(nextSync) &&
+                MpegFrameHeader.parse(nextSync) != null) {
+              break;
+            }
+          }
+        }
+      }
+      alignedStart++;
+    }
+
+    // Walk complete MPEG frames from alignedStart to trim any truncated
+    // trailing frame.
+    var alignedEnd = alignedStart;
+    while (alignedEnd + 4 <= payloadBytes.length) {
+      final sync = payloadBytes.sublist(alignedEnd, alignedEnd + 4);
+      if (sync[0] != 0xFF ||
+          (sync[1] & 0xE0) != 0xE0 ||
+          MpegFrameHeader.isAdtsHeader(sync)) {
+        break;
+      }
+      final frame = MpegFrameHeader.parse(sync);
+      if (frame == null || frame.frameLength <= 0) {
+        break;
+      }
+      if (alignedEnd + frame.frameLength > payloadBytes.length) {
+        break;
+      }
+      alignedEnd += frame.frameLength;
+    }
+
+    final slicedBytes = alignedEnd > alignedStart
+        ? payloadBytes.sublist(alignedStart, alignedEnd)
+        : (alignedStart < payloadBytes.length
+              ? payloadBytes.sublist(alignedStart)
+              : payloadBytes);
+
+    if (includeMetadata && (id3v2Bytes != null || id3v1Bytes != null)) {
+      final out = BytesBuilder(copy: false);
+      if (id3v2Bytes != null) out.add(id3v2Bytes);
+      out.add(slicedBytes);
+      if (id3v1Bytes != null) out.add(id3v1Bytes);
+      return (bytes: out.takeBytes(), error: null);
+    }
+    return (bytes: slicedBytes, error: null);
+  }
+
+  static const Set<String> _unsafeId3v23V24Frames = <String>{
+    'CHAP', // Whole-file chapter markers & offsets
+    'CTOC', // Whole-file table of contents
+    'TLEN', // Whole-file duration in ms (misleads players on sliced chapters)
+    'SYLT', // Synchronized lyrics tied to original file timestamps
+    'ETCO', // Event timing codes tied to original file timestamps
+    'MLLT', // MPEG location lookup table tied to original file bytes
+    'SYTC', // Synchronized tempo codes tied to original file timestamps
+    'ASPI', // Audio seek point index tied to original file bytes
+    'SEEK', // Next tag offset in original file
+    'RBUF', // Buffer size hint for original stream
+  };
+
+  static const Set<String> _unsafeId3v22Frames = <String>{
+    'TLE', // ID3v2.2 TLEN
+    'SLT', // ID3v2.2 SYLT
+    'ETC', // ID3v2.2 ETCO
+    'MLL', // ID3v2.2 MLLT
+    'STC', // ID3v2.2 SYTC
+    'BUF', // ID3v2.2 RBUF
+  };
+
+  /// Sanitizes an ID3v2 tag for a standalone sliced MP3 chapter: removes
+  /// chapter frames (`CHAP`/`CTOC`), whole-file duration (`TLEN`/`TLE`),
+  /// seek/offset tables (`MLLT`, `ASPI`, `SEEK`), and time-synced frames
+  /// (`SYLT`, `ETCO`, `SYTC`), while always retaining cover art (`APIC`/`PIC`)
+  /// and safe descriptive tags.
+  static Future<List<int>?> _sanitizeId3v2ForSlice(List<int> rawTag) async {
+    if (rawTag.length < 10) return null;
+    if (rawTag[0] != 0x49 || rawTag[1] != 0x44 || rawTag[2] != 0x33) {
+      return null;
+    }
+    final major = rawTag[3];
+    final flags = rawTag[5];
+    final hasUnsync = (flags & 0x80) != 0;
+    final hasExtHeader = (flags & 0x40) != 0;
+    final hasFooter = (flags & 0x10) != 0;
+    final tagSize =
+        ((rawTag[6] & 0x7F) << 21) |
+        ((rawTag[7] & 0x7F) << 14) |
+        ((rawTag[8] & 0x7F) << 7) |
+        (rawTag[9] & 0x7F);
+
+    if (major == 2 && !hasUnsync && 10 + tagSize == rawTag.length) {
+      final keptFrames = BytesBuilder(copy: false);
+      var offset = 10;
+      var strippedAny = false;
+      while (offset + 6 <= rawTag.length) {
+        if (rawTag[offset] == 0 &&
+            rawTag[offset + 1] == 0 &&
+            rawTag[offset + 2] == 0) {
+          break;
+        }
+        final frameId = String.fromCharCodes(
+          rawTag.sublist(offset, offset + 3),
+        );
+        final frameLen =
+            ((rawTag[offset + 3] & 0xFF) << 16) |
+            ((rawTag[offset + 4] & 0xFF) << 8) |
+            (rawTag[offset + 5] & 0xFF);
+        final totalFrameLen = 6 + frameLen;
+        if (frameLen < 0 || offset + totalFrameLen > rawTag.length) {
+          return _rebuildSafeId3v23Tag(rawTag);
+        }
+        if (_unsafeId3v22Frames.contains(frameId)) {
+          strippedAny = true;
+        } else {
+          keptFrames.add(rawTag.sublist(offset, offset + totalFrameLen));
+        }
+        offset += totalFrameLen;
+      }
+      if (!strippedAny) return rawTag;
+      final body = keptFrames.takeBytes();
+      if (body.isEmpty) return null;
+      return _wrapId3v2Header(rawTag.sublist(0, 6), body);
+    }
+
+    if ((major == 3 || major == 4) &&
+        !hasUnsync &&
+        !hasExtHeader &&
+        !hasFooter &&
+        10 + tagSize == rawTag.length) {
+      final keptFrames = BytesBuilder(copy: false);
+      var offset = 10;
+      var strippedAny = false;
+
+      while (offset + 10 <= rawTag.length) {
+        if (rawTag[offset] == 0 &&
+            rawTag[offset + 1] == 0 &&
+            rawTag[offset + 2] == 0 &&
+            rawTag[offset + 3] == 0) {
+          break;
+        }
+        final frameId = String.fromCharCodes(
+          rawTag.sublist(offset, offset + 4),
+        );
+        final frameLen = major == 4
+            ? ((rawTag[offset + 4] & 0x7F) << 21) |
+                  ((rawTag[offset + 5] & 0x7F) << 14) |
+                  ((rawTag[offset + 6] & 0x7F) << 7) |
+                  (rawTag[offset + 7] & 0x7F)
+            : ((rawTag[offset + 4] & 0xFF) << 24) |
+                  ((rawTag[offset + 5] & 0xFF) << 16) |
+                  ((rawTag[offset + 6] & 0xFF) << 8) |
+                  (rawTag[offset + 7] & 0xFF);
+        final totalFrameLen = 10 + frameLen;
+        if (frameLen < 0 || offset + totalFrameLen > rawTag.length) {
+          return _rebuildSafeId3v23Tag(rawTag);
+        }
+        final isUnsafe =
+            _unsafeId3v23V24Frames.contains(frameId) ||
+            (frameId == 'TXXX' &&
+                _isUnsafeTxxxFrame(rawTag, offset + 10, frameLen));
+        if (isUnsafe) {
+          strippedAny = true;
+        } else {
+          keptFrames.add(rawTag.sublist(offset, offset + totalFrameLen));
+        }
+        offset += totalFrameLen;
+      }
+
+      if (!strippedAny) return rawTag;
+      final body = keptFrames.takeBytes();
+      if (body.isEmpty) return null;
+      return _wrapId3v2Header(rawTag.sublist(0, 6), body);
+    }
+
+    // Fallback for unsynchronised, extended-header, footer, or concatenated
+    // ID3v2 tags: parse safely and rebuild a clean ID3v2.3 tag containing
+    // cover art and safe metadata without any chapter/duration/seek frames.
+    return _rebuildSafeId3v23Tag(rawTag);
+  }
+
+  static bool _isUnsafeTxxxFrame(List<int> buf, int start, int len) {
+    if (len < 2) return false;
+    final encoding = buf[start];
+    final pos = start + 1;
+    final end = start + len;
+    if (encoding == 1 || encoding == 2) {
+      // UTF-16: look for 0x00 0x00 on 2-byte boundary
+      var descEnd = end;
+      for (var i = pos; i + 1 < end; i += 2) {
+        if (buf[i] == 0 && buf[i + 1] == 0) {
+          descEnd = i;
+          break;
+        }
+      }
+      final rawDesc = buf.sublist(pos, descEnd);
+      final desc = latin1
+          .decode(rawDesc.where((b) => b != 0).toList())
+          .trim()
+          .toLowerCase();
+      return _isUnsafeCustomDesc(desc);
+    }
+    var descEnd = end;
+    for (var i = pos; i < end; i++) {
+      if (buf[i] == 0) {
+        descEnd = i;
+        break;
+      }
+    }
+    final desc = utf8
+        .decode(buf.sublist(pos, descEnd), allowMalformed: true)
+        .trim()
+        .toLowerCase();
+    return _isUnsafeCustomDesc(desc);
+  }
+
+  static bool _isUnsafeCustomDesc(String desc) =>
+      desc == 'itunsmpb' ||
+      desc == 'itunpgap' ||
+      desc.contains('chapter') ||
+      desc.contains('mediamarkers');
+
+  static List<int> _wrapId3v2Header(List<int> headerPrefix6, List<int> body) {
+    final newSize = body.length;
+    final out = Uint8List(10 + newSize);
+    out.setRange(0, 6, headerPrefix6);
+    out[6] = (newSize >> 21) & 0x7F;
+    out[7] = (newSize >> 14) & 0x7F;
+    out[8] = (newSize >> 7) & 0x7F;
+    out[9] = newSize & 0x7F;
+    out.setRange(10, 10 + newSize, body);
+    return out;
+  }
+
+  static Future<List<int>?> _rebuildSafeId3v23Tag(List<int> rawTag) async {
+    try {
+      final mapper = CombinedTagMapper()
+        ..registerMapper('ID3v2.2', Id3v2TagMapper())
+        ..registerMapper('ID3v2.3', Id3v2TagMapper())
+        ..registerMapper('ID3v2.4', Id3v2TagMapper());
+      const opts = ParseOptions();
+      final collector = MetadataCollector(mapper, opts);
+      await Id3v2Parser(
+        metadata: collector,
+        tokenizer: BytesTokenizer(Uint8List.fromList(rawTag)),
+        options: opts,
+      ).parse();
+      final meta = collector.toAudioMetadata();
+      final c = meta.common;
+
+      final frames = BytesBuilder(copy: false);
+      void addTextFrame(String id, String? text) {
+        if (text == null || text.isEmpty) return;
+        // ID3v2.3 UTF-16LE with BOM (0x01) or Latin1 if pure ASCII
+        final encoded = utf8.encode(text);
+        final payload = <int>[0x03, ...encoded]; // ID3v2.4-style UTF-8 or v2.4
+        frames.add(_buildId3v24Frame(id, payload));
+      }
+
+      addTextFrame('TIT2', c.title);
+      addTextFrame('TPE1', c.artist);
+      addTextFrame('TALB', c.album);
+      addTextFrame('TPE2', c.albumartist);
+      if (c.genre != null && c.genre!.isNotEmpty) {
+        addTextFrame('TCON', c.genre!.join(', '));
+      }
+      addTextFrame('TDRC', c.date ?? c.year?.toString());
+      if (c.composer != null && c.composer!.isNotEmpty) {
+        addTextFrame('TCOM', c.composer!.join(', '));
+      }
+      addTextFrame('TCOP', c.copyright);
+
+      // Retain cover art from native APIC/PIC tags or common.picture
+      final pictures = <Picture>[...?c.picture];
+      for (final tagList in meta.native.values) {
+        for (final tag in tagList) {
+          if ((tag.id == 'APIC' || tag.id == 'PIC') && tag.value is Picture) {
+            final pic = tag.value as Picture;
+            if (pic.data.isNotEmpty) pictures.add(pic);
+          }
+        }
+      }
+      for (final pic in pictures) {
+        if (pic.data.isEmpty) continue;
+        final apicPayload = BytesBuilder(copy: false)
+          ..addByte(0x00) // Latin-1
+          ..add(ascii.encode(pic.format))
+          ..addByte(0x00)
+          ..addByte(0x03) // Cover (front)
+          ..addByte(0x00)
+          ..add(pic.data);
+        frames.add(_buildId3v24Frame('APIC', apicPayload.takeBytes()));
+      }
+
+      final body = frames.takeBytes();
+      if (body.isEmpty) return null;
+      return _wrapId3v2Header(const [0x49, 0x44, 0x33, 4, 0, 0], body);
+    } on Object catch (_) {
+      return null;
+    }
+  }
+
+  static List<int> _buildId3v24Frame(String id, List<int> payload) {
+    final len = payload.length;
+    return <int>[
+      ...ascii.encode(id),
+      (len >> 21) & 0x7F,
+      (len >> 14) & 0x7F,
+      (len >> 7) & 0x7F,
+      len & 0x7F,
+      0,
+      0,
+      ...payload,
+    ];
   }
 
   static Future<int> _findMpegAudioOffset(Tokenizer tokenizer) async {

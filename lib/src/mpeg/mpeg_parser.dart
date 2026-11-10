@@ -31,12 +31,16 @@ class MpegParser {
 
   int _frameCount = 0;
   int? _mpegOffset;
+  int _id3v2EndOffset = 0;
   int? _frameSize;
   int? _samplesPerFrame;
   bool _calculateEofDuration = false;
   final List<int> _bitrates = <int>[];
   bool _hasId3v1 = false;
   int _adtsTotalDataLength = 0;
+
+  /// Byte offset immediately following any leading ID3v2 tags (`0` if none).
+  int get id3v2EndOffset => _id3v2EndOffset;
 
   Future<void> parse() async {
     metadata.setFormat(lossless: false, hasAudio: true, hasVideo: false);
@@ -47,6 +51,7 @@ class MpegParser {
       options: options,
     );
     await id3v2.parse();
+    _id3v2EndOffset = tokenizer.position;
 
     while (true) {
       final syncResult = await _syncToFrame();

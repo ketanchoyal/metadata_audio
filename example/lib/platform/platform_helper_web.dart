@@ -7,7 +7,11 @@ WebPlatformHelper getPlatformHelper() => _WebPlatformHelper();
 
 class _WebPlatformHelper implements WebPlatformHelper {
   @override
-  void downloadFile(List<int> bytes, String filename, String mimeType) {
+  Future<String?> downloadFile(
+    List<int> bytes,
+    String filename,
+    String mimeType,
+  ) async {
     final uint8List = bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
     final blob = web.Blob(
       [uint8List.toJS].toJS,
@@ -22,6 +26,7 @@ class _WebPlatformHelper implements WebPlatformHelper {
     anchor.click();
     anchor.remove();
     web.URL.revokeObjectURL(url);
+    return filename;
   }
 
   @override

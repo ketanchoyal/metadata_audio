@@ -1,3 +1,12 @@
+## 1.0.0-beta.2
+
+- **Feat**: Added global cache toggle via `cacheEnabled` (`AudioMetadataCache.enabled`) so caching can be enabled or disabled globally across `parseUrl`, `parseFile`, and `parseFromTokenizer`.
+- **Feat**: Switched cache keys to use only the source URL/path and added incremental `ParseOptions` coverage tracking & metadata merging, reusing cached data and fetching only newly enabled options (e.g. `includeChapters`, `duration`, `skipCovers: false`, `skipPostHeaders: false`, `mkvUseIndex`) on subsequent runs.
+- **Feat**: Preserved original metadata and cover art in sliced `.m4a` and `.mp3` chapters (`ChapterDownloader.downloadChapter` and in-memory `ChapterDownloader.extractChapterBytes`, with `includeMetadata: true`), while stripping chapter tables (`CHAP`/`CTOC`, `chpl`), whole-file duration tags (`TLEN`/`TLE`), and file-wide seek/timing frames/atoms (`MLLT`, `ASPI`, `iTunSMPB`, `pgap`, etc.) so standalone chapter files keep cover art and tags without playback issues.
+- **Fixed**: Converted QuickTime MP4/M4B chapter track STTS offsets from `chapterTrack.timeScale` to `referencedTrack.timeScale` before resolving sample byte offsets, fixing tiny intermediate chapter sizes and inflated final chapter sizes.
+- **Fixed**: Decoded MP4/M4A `covr` `data` atoms written with reserved data type `0` (such as files tagged by Chapter and Verse) by sniffing JPEG, PNG, GIF, WebP, and BMP signatures, plus explicit BMP type `27`.
+- **Example App**: Fixed the desktop Custom Range Downloader and per-chapter extraction to use the selected local file instead of the URL text field, enabled per-chapter `Extract` for local files, added `ms`/`s`/`HH:MM:SS.mmm` range parsing with validation, and added per-chapter + custom-range downloads to the Web Audio Tag Analyzer (`web_analyzer_screen.dart`) with desktop file-saving support via `platform_helper_io.dart`.
+
 ## 1.0.0-beta.1
 
 - **Feat**: General metadata cache for all formats (disk-backed JSON via `ParseOptions.useCache` / `cacheKey`).

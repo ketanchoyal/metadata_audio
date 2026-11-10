@@ -3,7 +3,7 @@ description: |
   A Dart-native audio metadata parser library that provides comprehensive 
   metadata extraction for various audio formats including MP3, FLAC, Ogg, MP4, 
   WAV, AIFF, APE, ASF, Matroska, and more.
-version: "1.0.0-beta.1"
+version: "1.0.0-beta.2"
 repository: https://github.com/ketanchoyal/metadata_audio
 homepage: https://github.com/ketanchoyal/metadata_audio
 issue_tracker: https://github.com/ketanchoyal/metadata_audio/issues

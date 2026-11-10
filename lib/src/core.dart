@@ -9,13 +9,20 @@ import 'package:metadata_audio/src/apev2/apev2_loader.dart';
 import 'package:metadata_audio/src/asf/asf_loader.dart';
 import 'package:metadata_audio/src/caf/caf_loader.dart';
 import 'package:metadata_audio/src/common/allocation.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/dsdiff/dsdiff_loader.dart';
 import 'package:metadata_audio/src/dsf/dsf_loader.dart';
 import 'package:metadata_audio/src/flac/flac_loader.dart';
+import 'package:metadata_audio/src/id3v1/id3v1_parser.dart';
+import 'package:metadata_audio/src/id3v1/id3v1_tag_map.dart';
 import 'package:metadata_audio/src/id3v2/id3v2_loader.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_tag_map.dart';
 import 'package:metadata_audio/src/matroska/matroska_loader.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/mp4_loader.dart';
+import 'package:metadata_audio/src/mp4/mp4_parser.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/musepack/musepack_loader.dart';
 import 'package:metadata_audio/src/ogg/ogg_loader.dart';
@@ -25,6 +32,8 @@ import 'package:metadata_audio/src/tokenizer/http_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_merge.dart';
+import 'package:metadata_audio/src/utils/cache_types.dart';
 import 'package:metadata_audio/src/wav/wave_loader.dart';
 import 'package:metadata_audio/src/wavpack/wavpack_loader.dart';
 
@@ -68,6 +77,21 @@ export 'tokenizer/http_tokenizers.dart'
 // Global parser factory instance
 ParserFactory? _parserFactory;
 bool _isInitialized = false;
+
+/// Whether metadata caching is globally enabled across all parse calls.
+///
+/// Mirrors [AudioMetadataCache.enabled].
+bool get cacheEnabled => AudioMetadataCache.enabled;
+
+/// Globally enables or disables metadata caching across all parse calls.
+///
+/// When `true`, `parseFile`, `parseUrl`, `parseBytes`, `parseStream`, and
+/// `parseFromTokenizer` cache and reuse parsed metadata by source URL/path
+/// (even when [ParseOptions.useCache] is `false`).
+// ignore: avoid_positional_boolean_parameters
+set cacheEnabled(bool enabled) {
+  AudioMetadataCache.enabled = enabled;
+}
 
 /// Initialize the parser factory for public API entrypoints.
 ///
@@ -292,27 +316,80 @@ Future<AudioMetadata> parseFromTokenizer(
 
   options ??= const ParseOptions();
 
-  // General metadata cache. An explicit ParseOptions.cacheKey always wins.
-  // When ParseOptions.useCache is true and no key is given, derive one from
-  // the source file name / URL.
-  var cacheKey = options.cacheKey;
-  if (cacheKey == null && (options.useCache || AudioMetadataCache.enabled)) {
-    final derived = _defaultCacheKey(tokenizer, options);
-    if (derived.isNotEmpty) cacheKey = derived;
-  }
-  if (cacheKey != null && cacheKey.isNotEmpty) {
-    final cached = await AudioMetadataCache.getMetadata(cacheKey);
-    if (cached != null) {
-      return cached;
+  // Validate resource limits up front.
+  final maxBufferSize = getMaxMemoryAllocation(options);
+  getMaxMetadataEntries(options);
+  getMaxChapterCount(options);
+
+  final cacheKey = resolveCacheKey(tokenizer, options);
+  if (cacheKey.isNotEmpty) {
+    final cachedEntry = await AudioMetadataCache.getEntry(cacheKey);
+    if (cachedEntry != null) {
+      if (cachedEntry.coverage.satisfies(options, cachedEntry.metadata)) {
+        final view = applyParseOptionsView(cachedEntry.metadata, options);
+        if (options.observer != null) {
+          emitCachedMetadataEvents(view, options.observer!);
+        }
+        return view;
+      }
+
+      // Partial cache hit: fetch only what is needed for newly enabled options
+      // and merge with the cached metadata.
+      final updatedEntry = await _resolveIncrementalFromTokenizer(
+        tokenizer: tokenizer,
+        cachedEntry: cachedEntry,
+        requestedOptions: options,
+        maxBufferSize: maxBufferSize,
+      );
+      await AudioMetadataCache.putEntry(
+        cacheKey,
+        updatedEntry,
+        maxMemoryAllocation: maxBufferSize,
+      );
+      final view = applyParseOptionsView(updatedEntry.metadata, options);
+      if (options.observer != null) {
+        emitCachedMetadataEvents(view, options.observer!);
+      }
+      return view;
     }
   }
+
+  final (:metadata, :hints) = await parseFromTokenizerWithHints(
+    tokenizer,
+    options: options,
+  );
+
+  // Persist to general metadata cache if opted in.
+  if (cacheKey.isNotEmpty) {
+    final entry = CachedMetadataEntry(
+      metadata: metadata,
+      coverage: CachedParseCoverage.fromOptions(options, metadata),
+      hints: hints,
+    );
+    await AudioMetadataCache.putEntry(
+      cacheKey,
+      entry,
+      maxMemoryAllocation: maxBufferSize,
+    );
+  }
+
+  return metadata;
+}
+
+/// Executes an uncached parse from [tokenizer] and returns both the finalized
+/// [AudioMetadata] and any [CachedParseHints] produced by the parser.
+Future<({AudioMetadata metadata, CachedParseHints? hints})>
+parseFromTokenizerWithHints(
+  Tokenizer tokenizer, {
+  required ParseOptions options,
+}) async {
+  _ensureInitialized();
 
   // Get file info from tokenizer, or create minimal info if not available
   final fileInfo = tokenizer.fileInfo ?? const FileInfo();
 
   // Apply allocation cap to tokenizers that support it.
   final maxBufferSize = getMaxMemoryAllocation(options);
-  // Validate resource limits up front.
   getMaxMetadataEntries(options);
   getMaxChapterCount(options);
   if (tokenizer is FileTokenizer) {
@@ -334,13 +411,29 @@ Future<AudioMetadata> parseFromTokenizer(
   }
 
   // Parse metadata using selected parser
-  final metadata = await parser.parse(tokenizer, options);
+  final parsed = parser is HintProvidingParserLoader
+      ? await parser.parseWithHints(tokenizer, options)
+      : (metadata: await parser.parse(tokenizer, options), hints: null);
+  final metadata = parsed.metadata;
 
   // Scan for post-headers if applicable
   await scanPostHeaders(tokenizer, options);
 
   // Finalize container-level duration/bitrate information when possible.
   final fileSize = tokenizer.fileInfo?.size;
+  final result = finalizeContainerFormat(metadata, fileSize: fileSize);
+  final hints =
+      parsed.hints ??
+      (fileSize != null ? CachedParseHints(fileSize: fileSize) : null);
+
+  return (metadata: result, hints: hints);
+}
+
+/// Applies container-level `containerDuration` and `overallBitrate` fallbacks.
+AudioMetadata finalizeContainerFormat(
+  AudioMetadata metadata, {
+  int? fileSize,
+}) {
   final baseDuration =
       metadata.format.containerDuration ?? metadata.format.duration;
   var overallBitrate = metadata.format.overallBitrate;
@@ -352,71 +445,285 @@ Future<AudioMetadata> parseFromTokenizer(
   }
   final containerDuration = metadata.format.containerDuration ?? baseDuration;
 
-  AudioMetadata result;
   if (containerDuration != metadata.format.containerDuration ||
       overallBitrate != metadata.format.overallBitrate) {
     final updatedFormat = metadata.format.copyWith(
       containerDuration: containerDuration,
       overallBitrate: overallBitrate,
     );
-    result = AudioMetadata(
+    return AudioMetadata(
       format: updatedFormat,
       native: metadata.native,
       common: metadata.common,
       quality: metadata.quality,
     );
-  } else {
-    result = metadata;
+  }
+  return metadata;
+}
+
+Future<CachedMetadataEntry> _resolveIncrementalFromTokenizer({
+  required Tokenizer tokenizer,
+  required CachedMetadataEntry cachedEntry,
+  required ParseOptions requestedOptions,
+  required int maxBufferSize,
+}) async {
+  final missing = cachedEntry.coverage.missingRequirements(
+    requestedOptions,
+    cachedEntry.metadata,
+  );
+  final hints = cachedEntry.hints;
+  final container = cachedEntry.metadata.format.container?.toLowerCase() ?? '';
+  final isMpeg = container == 'mp3' || container == 'mpeg' || container == 'adts';
+  final isMp4 =
+      container.contains('mp4') ||
+      container.contains('m4a') ||
+      container.contains('m4b') ||
+      container.contains('qt') ||
+      container.contains('isom');
+
+  // 1. Targeted MP4 chapter-only resolution using cached chapter track / chpl.
+  if (missing.chapters &&
+      !missing.covers &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      isMp4 &&
+      hints?.mp4Chapters != null) {
+    final mp4Chap = hints!.mp4Chapters!;
+    if (!mp4Chap.hasChapterSource ||
+        mp4Chap.chplPayload != null ||
+        tokenizer.canSeek) {
+      final resolved = await Mp4Parser.resolveChaptersFromCache(
+        chapterInfo: mp4Chap,
+        tokenizer: tokenizer,
+        options: requestedOptions,
+        fileDuration: cachedEntry.metadata.format.duration,
+      );
+      final mergedFormat = Format(
+        container: cachedEntry.metadata.format.container,
+        tagTypes: cachedEntry.metadata.format.tagTypes,
+        duration: cachedEntry.metadata.format.duration,
+        bitrate: cachedEntry.metadata.format.bitrate,
+        sampleRate: cachedEntry.metadata.format.sampleRate,
+        bitsPerSample: cachedEntry.metadata.format.bitsPerSample,
+        tool: cachedEntry.metadata.format.tool,
+        codec: cachedEntry.metadata.format.codec,
+        codecProfile: cachedEntry.metadata.format.codecProfile,
+        lossless: cachedEntry.metadata.format.lossless,
+        numberOfChannels: cachedEntry.metadata.format.numberOfChannels,
+        numberOfSamples: cachedEntry.metadata.format.numberOfSamples,
+        audioMD5: cachedEntry.metadata.format.audioMD5,
+        chapters: resolved.chapters,
+        creationTime: cachedEntry.metadata.format.creationTime,
+        modificationTime: cachedEntry.metadata.format.modificationTime,
+        trackGain: cachedEntry.metadata.format.trackGain,
+        trackPeakLevel: cachedEntry.metadata.format.trackPeakLevel,
+        albumGain: cachedEntry.metadata.format.albumGain,
+        hasAudio: cachedEntry.metadata.format.hasAudio,
+        hasVideo: cachedEntry.metadata.format.hasVideo,
+        trackInfo: cachedEntry.metadata.format.trackInfo,
+        containerDuration: cachedEntry.metadata.format.containerDuration,
+        overallBitrate: cachedEntry.metadata.format.overallBitrate,
+      );
+      final merged = AudioMetadata(
+        format: mergedFormat,
+        native: cachedEntry.metadata.native,
+        common: cachedEntry.metadata.common,
+        quality: QualityInformation(
+          warnings: [
+            ...cachedEntry.metadata.quality.warnings,
+            ...resolved.warnings,
+          ],
+        ),
+      );
+      final updatedCoverage = cachedEntry.coverage.merge(
+        CachedParseCoverage(
+          hasChapters: true,
+          hasPostHeaders: missing.postHeaders,
+          maxChapterCount: getMaxChapterCount(requestedOptions),
+        ),
+        merged,
+      );
+      return CachedMetadataEntry(
+        metadata: merged,
+        coverage: updatedCoverage,
+        hints: hints,
+      );
+    }
   }
 
-  // Persist to general metadata cache if opted in.
-  if (cacheKey != null) {
-    unawaited(
-      AudioMetadataCache.putMetadata(
-        cacheKey,
-        result,
-        maxMemoryAllocation: getMaxMemoryAllocation(options),
+  // 2. Post-headers only on non-MPEG formats requires no extra reads.
+  if (missing.postHeaders &&
+      !missing.chapters &&
+      !missing.covers &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      !isMpeg) {
+    return CachedMetadataEntry(
+      metadata: cachedEntry.metadata,
+      coverage: cachedEntry.coverage.merge(
+        const CachedParseCoverage(hasPostHeaders: true),
+        cachedEntry.metadata,
       ),
+      hints: hints,
     );
   }
 
-  return result;
+  // 3. Targeted ID3v1 post-header scan on seekable MPEG tokenizer.
+  final fileSize = hints?.fileSize ?? tokenizer.fileInfo?.size;
+  if (missing.postHeaders &&
+      !missing.chapters &&
+      !missing.covers &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      isMpeg &&
+      tokenizer.canSeek &&
+      fileSize != null &&
+      fileSize >= 128) {
+    final mapper = CombinedTagMapper()
+      ..registerMapper('ID3v1', Id3v1TagMapper());
+    final collector = MetadataCollector(mapper, requestedOptions);
+    final id3v1 = Id3v1Parser(metadata: collector, tokenizer: tokenizer);
+    await id3v1.parse();
+    final deltaMeta = collector.toAudioMetadata();
+    final merged = mergeAudioMetadata(
+      existing: cachedEntry.metadata,
+      delta: deltaMeta,
+      preferExistingCommon: true,
+    );
+    return CachedMetadataEntry(
+      metadata: merged,
+      coverage: cachedEntry.coverage.merge(
+        const CachedParseCoverage(hasPostHeaders: true),
+        merged,
+      ),
+      hints: hints,
+    );
+  }
+
+  // 4. Targeted ID3v2 header-only delta on seekable MPEG tokenizer.
+  if ((missing.chapters || missing.covers) &&
+      !missing.postHeaders &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      isMpeg &&
+      hints?.id3v2Size != null &&
+      tokenizer.canSeek) {
+    final id3v2Size = hints!.id3v2Size!;
+    if (id3v2Size == 0) {
+      return CachedMetadataEntry(
+        metadata: cachedEntry.metadata,
+        coverage: cachedEntry.coverage.merge(
+          CachedParseCoverage(
+            hasChapters: missing.chapters,
+            hasCovers: missing.covers,
+            maxChapterCount: getMaxChapterCount(requestedOptions),
+          ),
+          cachedEntry.metadata,
+        ),
+        hints: hints,
+      );
+    }
+    tokenizer.seek(0);
+    final headerBytes = Uint8List.fromList(tokenizer.readBytes(id3v2Size));
+    final headerTokenizer = BytesTokenizer(
+      headerBytes,
+      fileInfo: tokenizer.fileInfo,
+      maxBufferSize: maxBufferSize,
+    );
+    final deltaOpts = missing.toDeltaOptions(requestedOptions);
+    final mapper = CombinedTagMapper()
+      ..registerMapper('ID3v2.2', Id3v2TagMapper())
+      ..registerMapper('ID3v2.3', Id3v2TagMapper())
+      ..registerMapper('ID3v2.4', Id3v2TagMapper());
+    final collector = MetadataCollector(mapper, deltaOpts);
+    await Id3v2Parser(
+      metadata: collector,
+      tokenizer: headerTokenizer,
+      options: deltaOpts,
+    ).parse();
+    final merged = mergeAudioMetadata(
+      existing: cachedEntry.metadata,
+      delta: collector.toAudioMetadata(),
+      replaceChapters: missing.chapters,
+      replaceCovers: missing.covers,
+    );
+    return CachedMetadataEntry(
+      metadata: merged,
+      coverage: cachedEntry.coverage.merge(
+        CachedParseCoverage.fromOptions(deltaOpts, merged),
+        merged,
+      ),
+      hints: hints,
+    );
+  }
+
+  // 5. General delta parse for any remaining format/option combination.
+  final deltaOptions = (missing.higherEntryLimit || missing.mkvFullScan)
+      ? requestedOptions
+      : missing.toDeltaOptions(requestedOptions);
+  if (tokenizer.canSeek && tokenizer.position != 0) {
+    tokenizer.seek(0);
+  }
+  final (:metadata, hints: newHints) = await parseFromTokenizerWithHints(
+    tokenizer,
+    options: deltaOptions,
+  );
+  final merged = mergeAudioMetadata(
+    existing: cachedEntry.metadata,
+    delta: metadata,
+    replaceChapters: missing.chapters || missing.higherEntryLimit,
+    replaceCovers: missing.covers || missing.higherEntryLimit,
+    replaceDuration: missing.duration || missing.higherEntryLimit,
+  );
+  final mergedHints = (hints ?? const CachedParseHints()).merge(newHints);
+  final updatedCoverage = cachedEntry.coverage.merge(
+    CachedParseCoverage.fromOptions(deltaOptions, metadata),
+    merged,
+  );
+  return CachedMetadataEntry(
+    metadata: merged,
+    coverage: updatedCoverage,
+    hints: mergedHints,
+  );
 }
 
-/// Scans for appending headers at the end of the audio file
+/// Resolves the cache key for [tokenizer] when caching is enabled, or returns
+/// `''` if caching is disabled / no source identifier is available.
 ///
-/// When [skipPostHeaders] is false and the tokenizer supports random access,
-/// this function scans the end of the file for post-headers (e.g., ID3v1 tags).
-///
-/// **Parameters:**
-/// - `tokenizer`: The tokenizer providing access to file data
-/// - `skipPostHeaders`: If true, skips the post-header scan entirely
-///
-/// **Behavior:**
-/// - If `skipPostHeaders` is true: Returns immediately without scanning
-/// - If tokenizer doesn't support seek (canSeek=false): Continues without post-scan
-/// - If tokenizer supports seek: Performs post-header scan (actual detection delegated to format parsers)
-///
-/// **Returns:** null (placeholder for future return value if needed)
-
-/// Derives a default cache key from the tokenizer source and the options that
-/// affect parsed output, so caching is always on even without an explicit
-/// [ParseOptions.cacheKey].
-String _defaultCacheKey(Tokenizer tokenizer, ParseOptions options) {
-  final info = tokenizer.fileInfo;
-  String base;
-  if (info?.path != null && info!.path!.isNotEmpty) {
-    base = 'path:${info.path}';
-  } else if (info?.url != null && info!.url!.isNotEmpty) {
-    base = 'url:${info.url}';
-  } else {
-    // No file name available: disable default caching. Callers can still
-    // opt in by passing an explicit ParseOptions.cacheKey.
+/// The key uses only the explicit [ParseOptions.cacheKey] or the source
+/// URL/path (never [ParseOptions] flags), enabling incremental reuse across
+/// different option sets.
+String resolveCacheKey(Tokenizer tokenizer, ParseOptions options) {
+  if (options.cacheKey != null && options.cacheKey!.isNotEmpty) {
+    return options.cacheKey!;
+  }
+  if (!options.useCache && !AudioMetadataCache.enabled) {
     return '';
   }
-  final optSig =
-      'ic=${options.includeChapters}|dur=${options.duration}|sc=${options.skipCovers}|sph=${options.skipPostHeaders}|ch=${options.maxChapterCount}';
-  return '$base|$optSig';
+  final info = tokenizer.fileInfo;
+  if (info?.url != null && info!.url!.isNotEmpty) {
+    return 'url:${info.url}';
+  }
+  if (info?.path != null && info!.path!.isNotEmpty) {
+    return 'path:${info.path}';
+  }
+  return '';
+}
+
+/// Resolves the cache key for a remote [url] when caching is enabled, or
+/// returns `''` if caching is disabled.
+String resolveUrlCacheKey(String url, ParseOptions options) {
+  if (options.cacheKey != null && options.cacheKey!.isNotEmpty) {
+    return options.cacheKey!;
+  }
+  if (!options.useCache && !AudioMetadataCache.enabled) {
+    return '';
+  }
+  return 'url:$url';
 }
 
 Future<void> scanPostHeaders(Tokenizer tokenizer, ParseOptions options) async {

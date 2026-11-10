@@ -1,14 +1,34 @@
+import 'dart:io';
+
 import 'package:metadata_audio/src/core.dart';
 import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
 import 'package:test/test.dart';
 
 void main() {
+  late Directory testCacheDir;
+
+  setUpAll(() async {
+    testCacheDir = await Directory.systemTemp.createTemp(
+      'metadata_audio_cache_unit_',
+    );
+    AudioMetadataCache.overrideDirForTesting = testCacheDir;
+  });
+
+  tearDownAll(() async {
+    AudioMetadataCache.overrideDirForTesting = null;
+    if (testCacheDir.existsSync()) {
+      await testCacheDir.delete(recursive: true);
+    }
+  });
+
   setUp(() async {
+    AudioMetadataCache.enabled = false;
     AudioMetadataCache.overrideHasIoForTesting = null;
     await AudioMetadataCache.clearCache();
   });
 
   tearDown(() async {
+    AudioMetadataCache.enabled = false;
     AudioMetadataCache.overrideHasIoForTesting = null;
     await AudioMetadataCache.clearCache();
   });

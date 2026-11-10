@@ -117,7 +117,7 @@ Add `metadata_audio` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  metadata_audio: ^1.0.0-beta.1
+  metadata_audio: ^1.0.0-beta.2
 ```
 
 Or run:
@@ -358,16 +358,30 @@ final metadata = await parseFile(
 
 ### 8. Metadata Caching (Disk & Web)
 
-Avoid re-parsing unchanged files with disk-backed caching:
+Avoid re-parsing unchanged files or remote URLs with disk-backed (IO) and in-memory (Web) caching:
 
 ```dart
-// Auto-key derived from file path and modification time
+// Enable caching globally across all parseFile / parseUrl / parseBytes calls:
+cacheEnabled = true; // or AudioMetadataCache.enabled = true
+
+// First run: parses without chapters and caches under the URL/path key
+final initial = await parseUrl(
+  'https://example.com/audiobook.m4b',
+  options: const ParseOptions(includeChapters: false),
+);
+
+// Second run on the same URL with chapters enabled:
+// reuses the cached metadata and fetches only what is needed for chapters!
+final withChapters = await parseUrl(
+  'https://example.com/audiobook.m4b',
+  options: const ParseOptions(includeChapters: true),
+);
+
+// Or opt in per call / supply your own cache key:
 final metadata = await parseFile(
   '/path/to/music.flac',
   options: const ParseOptions(useCache: true),
 );
-
-// Or supply your own cache key:
 final metadata2 = await parseFile(
   '/path/to/music.flac',
   options: const ParseOptions(cacheKey: 'user-audio-12345'),
@@ -376,7 +390,8 @@ final metadata2 = await parseFile(
 
 - **IO Platforms (macOS, Windows, Linux, Android, iOS)**: Metadata is cached directly to local temporary storage with zero in-memory retention.
 - **Web**: Automatically switches to an in-memory LRU cache bounded by `maxMemoryCacheEntries`.
-- **Programmatic Control**: Use `AudioMetadataCache.invalidate(key)` or `AudioMetadataCache.clear()` to manage cached entries.
+- **Incremental `ParseOptions` Reuse**: Cache keys use only the source URL/path (or custom `cacheKey`), so enabling additional `ParseOptions` (`includeChapters`, `skipCovers: false`, `skipPostHeaders: false`, `duration`, `maxChapterCount`, etc.) on a subsequent run reuses cached metadata and fetches only the newly requested parts.
+- **Programmatic Control**: Use `AudioMetadataCache.evict(key)` or `AudioMetadataCache.clearCache()` to manage cached entries.
 
 ---
 

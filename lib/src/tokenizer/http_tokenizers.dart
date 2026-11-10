@@ -5,7 +5,19 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:metadata_audio/src/common/allocation.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
 import 'package:metadata_audio/src/core.dart';
+import 'package:metadata_audio/src/id3v1/id3v1_parser.dart';
+import 'package:metadata_audio/src/id3v1/id3v1_tag_map.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_tag_map.dart';
+import 'package:metadata_audio/src/mp4/mp4_parser.dart';
+import 'package:metadata_audio/src/mp4/mp4_tag_mapper.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_cache.dart';
+import 'package:metadata_audio/src/utils/audio_metadata_merge.dart';
+import 'package:metadata_audio/src/utils/cache_types.dart';
 
 /// Error thrown when downloading a file from URL fails.
 class FileDownloadError extends ParseError {
@@ -1557,7 +1569,68 @@ Future<AudioMetadata> parseUrl(
   void Function(ParseStrategy strategy, String reason)? onStrategySelected,
 }) async {
   options ??= const ParseOptions();
+  final maxBufferSize = getMaxMemoryAllocation(options);
+  getMaxMetadataEntries(options);
+  getMaxChapterCount(options);
+
   final effectiveTimeout = timeout ?? const Duration(seconds: 30);
+  final cacheKey = resolveUrlCacheKey(url, options);
+
+  if (cacheKey.isNotEmpty) {
+    final cachedEntry = await AudioMetadataCache.getEntry(cacheKey);
+    if (cachedEntry != null) {
+      if (cachedEntry.coverage.satisfies(options, cachedEntry.metadata)) {
+        final view = applyParseOptionsView(cachedEntry.metadata, options);
+        if (options.observer != null) {
+          emitCachedMetadataEvents(view, options.observer!);
+        }
+        return view;
+      }
+
+      final updatedEntry = await _resolveUrlIncremental(
+        url: url,
+        cachedEntry: cachedEntry,
+        requestedOptions: options,
+        timeout: effectiveTimeout,
+        maxBufferSize: maxBufferSize,
+        strategy: strategy,
+        probeStrategy: probeStrategy,
+        onStrategySelected: onStrategySelected,
+      );
+      await AudioMetadataCache.putEntry(
+        cacheKey,
+        updatedEntry,
+        maxMemoryAllocation: maxBufferSize,
+      );
+      final view = applyParseOptionsView(updatedEntry.metadata, options);
+      if (options.observer != null) {
+        emitCachedMetadataEvents(view, options.observer!);
+      }
+      return view;
+    }
+  }
+
+  return _executeUrlParse(
+    url: url,
+    options: options,
+    effectiveTimeout: effectiveTimeout,
+    strategy: strategy,
+    probeStrategy: probeStrategy,
+    onStrategySelected: onStrategySelected,
+    useCacheFromTokenizer: true,
+  );
+}
+
+Future<AudioMetadata> _executeUrlParse({
+  required String url,
+  required ParseOptions options,
+  required Duration effectiveTimeout,
+  required ParseStrategy? strategy,
+  required ProbeStrategy? probeStrategy,
+  required void Function(ParseStrategy strategy, String reason)?
+      onStrategySelected,
+  required bool useCacheFromTokenizer,
+}) async {
   final autoSelectedStrategy = strategy == null;
 
   // If strategy not specified, detect it
@@ -1586,11 +1659,21 @@ Future<AudioMetadata> parseUrl(
   // Execute the selected strategy
   switch (strategy) {
     case ParseStrategy.fullDownload:
-      return _parseWithFullDownload(url, effectiveTimeout, options);
+      return _parseWithFullDownload(
+        url,
+        effectiveTimeout,
+        options,
+        useCache: useCacheFromTokenizer,
+      );
 
     case ParseStrategy.headerOnly:
       try {
-        return await _parseWithHeaderOnly(url, effectiveTimeout, options);
+        return await _parseWithHeaderOnly(
+          url,
+          effectiveTimeout,
+          options,
+          useCache: useCacheFromTokenizer,
+        );
       } on Object catch (error) {
         if (_shouldFallbackToFullDownload(
           autoSelectedStrategy: autoSelectedStrategy,
@@ -1598,7 +1681,12 @@ Future<AudioMetadata> parseUrl(
           info: info,
           error: error,
         )) {
-          return _parseWithFullDownload(url, effectiveTimeout, options);
+          return _parseWithFullDownload(
+            url,
+            effectiveTimeout,
+            options,
+            useCache: useCacheFromTokenizer,
+          );
         }
         rethrow;
       }
@@ -1610,6 +1698,7 @@ Future<AudioMetadata> parseUrl(
           effectiveTimeout,
           options,
           effectiveProbeStrategy,
+          useCache: useCacheFromTokenizer,
         );
       } on Object catch (error) {
         if (_shouldFallbackToFullDownload(
@@ -1618,14 +1707,24 @@ Future<AudioMetadata> parseUrl(
           info: info,
           error: error,
         )) {
-          return _parseWithFullDownload(url, effectiveTimeout, options);
+          return _parseWithFullDownload(
+            url,
+            effectiveTimeout,
+            options,
+            useCache: useCacheFromTokenizer,
+          );
         }
         rethrow;
       }
 
     case ParseStrategy.randomAccess:
       try {
-        return await _parseWithRandomAccess(url, effectiveTimeout, options);
+        return await _parseWithRandomAccess(
+          url,
+          effectiveTimeout,
+          options,
+          useCache: useCacheFromTokenizer,
+        );
       } on Object catch (error) {
         if (_shouldFallbackToFullDownload(
           autoSelectedStrategy: autoSelectedStrategy,
@@ -1633,10 +1732,427 @@ Future<AudioMetadata> parseUrl(
           info: info,
           error: error,
         )) {
-          return _parseWithFullDownload(url, effectiveTimeout, options);
+          return _parseWithFullDownload(
+            url,
+            effectiveTimeout,
+            options,
+            useCache: useCacheFromTokenizer,
+          );
         }
         rethrow;
       }
+  }
+}
+
+Future<CachedMetadataEntry> _resolveUrlIncremental({
+  required String url,
+  required CachedMetadataEntry cachedEntry,
+  required ParseOptions requestedOptions,
+  required Duration timeout,
+  required int maxBufferSize,
+  ParseStrategy? strategy,
+  ProbeStrategy? probeStrategy,
+  void Function(ParseStrategy strategy, String reason)? onStrategySelected,
+}) async {
+  final missing = cachedEntry.coverage.missingRequirements(
+    requestedOptions,
+    cachedEntry.metadata,
+  );
+  final hints = cachedEntry.hints;
+  final container = cachedEntry.metadata.format.container?.toLowerCase() ?? '';
+  final isMpeg = container == 'mp3' || container == 'mpeg' || container == 'adts';
+  final isMp4 =
+      container.contains('mp4') ||
+      container.contains('m4a') ||
+      container.contains('m4b') ||
+      container.contains('qt') ||
+      container.contains('isom');
+
+  // 1. Targeted MP4 chapter-only resolution using cached chpl / chap tables.
+  if (missing.chapters &&
+      !missing.covers &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      isMp4 &&
+      hints?.mp4Chapters != null) {
+    final mp4Chap = hints!.mp4Chapters!;
+    if (!mp4Chap.hasChapterSource || mp4Chap.chplPayload != null) {
+      final dummyTokenizer = BytesTokenizer(
+        Uint8List(0),
+        fileInfo: FileInfo(url: url, path: url, size: hints.fileSize),
+      );
+      final resolved = await Mp4Parser.resolveChaptersFromCache(
+        chapterInfo: mp4Chap,
+        tokenizer: dummyTokenizer,
+        options: requestedOptions,
+        fileDuration: cachedEntry.metadata.format.duration,
+      );
+      return _applyResolvedMp4Chapters(
+        cachedEntry: cachedEntry,
+        requestedOptions: requestedOptions,
+        chapters: resolved.chapters,
+        warnings: resolved.warnings,
+        includePostHeaders: missing.postHeaders,
+      );
+    }
+
+    if (mp4Chap.chapterTrack != null && mp4Chap.referencedTrack != null) {
+      final client = http.Client();
+      final raTokenizer = RandomAccessTokenizer(
+        url: url,
+        fileInfo: FileInfo(path: url, url: url, size: hints.fileSize),
+        client: client,
+        timeout: timeout,
+        chunkSize: 65536,
+        totalSize: hints.fileSize,
+      )..maxBufferSize = maxBufferSize;
+      try {
+        final resolved = await Mp4Parser.resolveChaptersFromCache(
+          chapterInfo: mp4Chap,
+          tokenizer: raTokenizer,
+          options: requestedOptions,
+          fileDuration: cachedEntry.metadata.format.duration,
+        );
+        return _applyResolvedMp4Chapters(
+          cachedEntry: cachedEntry,
+          requestedOptions: requestedOptions,
+          chapters: resolved.chapters,
+          warnings: resolved.warnings,
+          includePostHeaders: missing.postHeaders,
+        );
+      } on Object catch (_) {
+        // Fall through to broader delta strategy if targeted range fetch fails.
+      } finally {
+        raTokenizer.close();
+      }
+    }
+  }
+
+  // 2. Post-headers only on non-MPEG formats requires zero HTTP calls.
+  if (missing.postHeaders &&
+      !missing.chapters &&
+      !missing.covers &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      !isMpeg) {
+    return CachedMetadataEntry(
+      metadata: cachedEntry.metadata,
+      coverage: cachedEntry.coverage.merge(
+        const CachedParseCoverage(hasPostHeaders: true),
+        cachedEntry.metadata,
+      ),
+      hints: hints,
+    );
+  }
+
+  // 3. Targeted ID3v1 tail-only fetch (last 128 bytes) for MPEG.
+  final fileSize = hints?.fileSize;
+  if (missing.postHeaders &&
+      !missing.chapters &&
+      !missing.covers &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      isMpeg &&
+      fileSize != null &&
+      fileSize >= 128) {
+    try {
+      final tailBytes = await _fetchByteRangeWithRetry(
+        url,
+        fileSize - 128,
+        fileSize - 1,
+        timeout,
+      );
+      final tailTokenizer = BytesTokenizer(
+        tailBytes,
+        fileInfo: FileInfo(url: url, path: url, size: tailBytes.length),
+        maxBufferSize: maxBufferSize,
+      );
+      final mapper = CombinedTagMapper()
+        ..registerMapper('ID3v1', Id3v1TagMapper());
+      final collector = MetadataCollector(mapper, requestedOptions);
+      await Id3v1Parser(metadata: collector, tokenizer: tailTokenizer).parse();
+      final merged = mergeAudioMetadata(
+        existing: cachedEntry.metadata,
+        delta: collector.toAudioMetadata(),
+        preferExistingCommon: true,
+      );
+      return CachedMetadataEntry(
+        metadata: merged,
+        coverage: cachedEntry.coverage.merge(
+          const CachedParseCoverage(hasPostHeaders: true),
+          merged,
+        ),
+        hints: hints,
+      );
+    } on Object catch (_) {
+      // Fall back to strategy parse below.
+    }
+  }
+
+  // 4. Targeted ID3v2 header-only fetch for MPEG covers/chapters.
+  if ((missing.chapters || missing.covers) &&
+      !missing.postHeaders &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      isMpeg &&
+      hints?.id3v2Size != null) {
+    final id3v2Size = hints!.id3v2Size!;
+    if (id3v2Size == 0) {
+      return CachedMetadataEntry(
+        metadata: cachedEntry.metadata,
+        coverage: cachedEntry.coverage.merge(
+          CachedParseCoverage(
+            hasChapters: missing.chapters,
+            hasCovers: missing.covers,
+            maxChapterCount: getMaxChapterCount(requestedOptions),
+          ),
+          cachedEntry.metadata,
+        ),
+        hints: hints,
+      );
+    }
+    try {
+      final headerBytes = await _fetchByteRangeWithRetry(
+        url,
+        0,
+        id3v2Size - 1,
+        timeout,
+      );
+      final headerTokenizer = BytesTokenizer(
+        headerBytes,
+        fileInfo: FileInfo(url: url, path: url, size: headerBytes.length),
+        maxBufferSize: maxBufferSize,
+      );
+      final deltaOpts = missing.toDeltaOptions(requestedOptions);
+      final mapper = CombinedTagMapper()
+        ..registerMapper('ID3v2.2', Id3v2TagMapper())
+        ..registerMapper('ID3v2.3', Id3v2TagMapper())
+        ..registerMapper('ID3v2.4', Id3v2TagMapper());
+      final collector = MetadataCollector(mapper, deltaOpts);
+      await Id3v2Parser(
+        metadata: collector,
+        tokenizer: headerTokenizer,
+        options: deltaOpts,
+      ).parse();
+      final merged = mergeAudioMetadata(
+        existing: cachedEntry.metadata,
+        delta: collector.toAudioMetadata(),
+        replaceChapters: missing.chapters,
+        replaceCovers: missing.covers,
+      );
+      return CachedMetadataEntry(
+        metadata: merged,
+        coverage: cachedEntry.coverage.merge(
+          CachedParseCoverage.fromOptions(deltaOpts, merged),
+          merged,
+        ),
+        hints: hints,
+      );
+    } on Object catch (_) {
+      // Fall back to strategy parse below.
+    }
+  }
+
+  // 5. Targeted MP4 moov-only range fetch for covers / chapters.
+  if ((missing.covers || missing.chapters) &&
+      !missing.duration &&
+      !missing.higherEntryLimit &&
+      !missing.mkvFullScan &&
+      isMp4 &&
+      hints?.moovOffset != null &&
+      hints?.moovSize != null) {
+    final moovOffset = hints!.moovOffset!;
+    final moovSize = hints.moovSize!;
+    if (moovSize > 0 && moovSize <= maxBufferSize) {
+      final client = http.Client();
+      final raTokenizer = RandomAccessTokenizer(
+        url: url,
+        fileInfo: FileInfo(path: url, url: url, size: hints.fileSize),
+        client: client,
+        timeout: timeout,
+        chunkSize: 65536,
+        totalSize: hints.fileSize,
+      )..maxBufferSize = maxBufferSize;
+      try {
+        await raTokenizer.prefetchRange(moovOffset, moovOffset + moovSize);
+        final deltaOpts = missing.toDeltaOptions(requestedOptions);
+        final mapper = CombinedTagMapper()
+          ..registerMapper('iTunes', Mp4TagMapper());
+        final collector = MetadataCollector(mapper, deltaOpts);
+        collector.setFormat(container: cachedEntry.metadata.format.container);
+        final parser = Mp4Parser(
+          metadata: collector,
+          tokenizer: raTokenizer,
+          options: deltaOpts,
+        );
+        await parser.parse(startOffset: moovOffset, stopAfterMoov: true);
+        final deltaMeta = finalizeContainerFormat(
+          collector.toAudioMetadata(),
+          fileSize: hints.fileSize,
+        );
+        final merged = mergeAudioMetadata(
+          existing: cachedEntry.metadata,
+          delta: deltaMeta,
+          replaceChapters: missing.chapters,
+          replaceCovers: missing.covers,
+        );
+        final updatedHints = hints.merge(
+          CachedParseHints(
+            mp4Chapters: parser.getCachedChapterInfo(),
+          ),
+        );
+        return CachedMetadataEntry(
+          metadata: merged,
+          coverage: cachedEntry.coverage.merge(
+            CachedParseCoverage.fromOptions(deltaOpts, deltaMeta),
+            merged,
+          ),
+          hints: updatedHints,
+        );
+      } on Object catch (_) {
+        // Fall back to strategy parse below.
+      } finally {
+        raTokenizer.close();
+      }
+    }
+  }
+
+  // 6. General fallback: execute URL strategy uncached with delta options and
+  // merge into cached metadata.
+  final deltaOptions = (missing.higherEntryLimit || missing.mkvFullScan)
+      ? requestedOptions
+      : missing.toDeltaOptions(requestedOptions);
+  final effectiveStrategy =
+      strategy ??
+      (missing.duration && isMpeg ? ParseStrategy.fullDownload : null);
+
+  final deltaMeta = await _executeUrlParse(
+    url: url,
+    options: deltaOptions,
+    effectiveTimeout: timeout,
+    strategy: effectiveStrategy,
+    probeStrategy: probeStrategy,
+    onStrategySelected: onStrategySelected,
+    useCacheFromTokenizer: false,
+  );
+
+  final merged = mergeAudioMetadata(
+    existing: cachedEntry.metadata,
+    delta: deltaMeta,
+    replaceChapters: missing.chapters || missing.higherEntryLimit,
+    replaceCovers: missing.covers || missing.higherEntryLimit,
+    replaceDuration: missing.duration || missing.higherEntryLimit,
+  );
+  return CachedMetadataEntry(
+    metadata: merged,
+    coverage: cachedEntry.coverage.merge(
+      CachedParseCoverage.fromOptions(deltaOptions, deltaMeta),
+      merged,
+    ),
+    hints: hints,
+  );
+}
+
+CachedMetadataEntry _applyResolvedMp4Chapters({
+  required CachedMetadataEntry cachedEntry,
+  required ParseOptions requestedOptions,
+  required List<Chapter>? chapters,
+  required List<ParserWarning> warnings,
+  required bool includePostHeaders,
+}) {
+  final f = cachedEntry.metadata.format;
+  final mergedFormat = Format(
+    container: f.container,
+    tagTypes: f.tagTypes,
+    duration: f.duration,
+    bitrate: f.bitrate,
+    sampleRate: f.sampleRate,
+    bitsPerSample: f.bitsPerSample,
+    tool: f.tool,
+    codec: f.codec,
+    codecProfile: f.codecProfile,
+    lossless: f.lossless,
+    numberOfChannels: f.numberOfChannels,
+    numberOfSamples: f.numberOfSamples,
+    audioMD5: f.audioMD5,
+    chapters: chapters,
+    creationTime: f.creationTime,
+    modificationTime: f.modificationTime,
+    trackGain: f.trackGain,
+    trackPeakLevel: f.trackPeakLevel,
+    albumGain: f.albumGain,
+    hasAudio: f.hasAudio,
+    hasVideo: f.hasVideo,
+    trackInfo: f.trackInfo,
+    containerDuration: f.containerDuration,
+    overallBitrate: f.overallBitrate,
+  );
+  final merged = AudioMetadata(
+    format: mergedFormat,
+    native: cachedEntry.metadata.native,
+    common: cachedEntry.metadata.common,
+    quality: QualityInformation(
+      warnings: [...cachedEntry.metadata.quality.warnings, ...warnings],
+    ),
+  );
+  final updatedCoverage = cachedEntry.coverage.merge(
+    CachedParseCoverage(
+      hasChapters: true,
+      hasPostHeaders: includePostHeaders,
+      maxChapterCount: getMaxChapterCount(requestedOptions),
+    ),
+    merged,
+  );
+  return CachedMetadataEntry(
+    metadata: merged,
+    coverage: updatedCoverage,
+    hints: cachedEntry.hints,
+  );
+}
+
+Future<Uint8List> _fetchByteRangeWithRetry(
+  String url,
+  int start,
+  int endInclusive,
+  Duration timeout,
+) async {
+  final client = http.Client();
+  try {
+    const maxRetries = 3;
+    for (var attempt = 0; attempt < maxRetries; attempt++) {
+      final response = await client
+          .get(
+            Uri.parse(url),
+            headers: {
+              'User-Agent': 'metadata_audio/0.9.4',
+              'Range': 'bytes=$start-$endInclusive',
+            },
+          )
+          .timeout(timeout);
+      if (response.statusCode == 429 && attempt < maxRetries - 1) {
+        var delaySec = 1 << attempt;
+        final retryAfter = response.headers['retry-after'];
+        if (retryAfter != null) {
+          final parsed = int.tryParse(retryAfter.trim());
+          if (parsed != null && parsed > 0) delaySec = parsed;
+        }
+        await Future<void>.delayed(Duration(seconds: delaySec));
+        continue;
+      }
+      if (response.statusCode != 206 && response.statusCode != 200) {
+        throw FileDownloadError(
+          'Range request failed with status ${response.statusCode}',
+        );
+      }
+      return response.bodyBytes;
+    }
+    throw FileDownloadError('Range request failed after retries');
+  } finally {
+    client.close();
   }
 }
 
@@ -1675,19 +2191,36 @@ bool _shouldFallbackToFullDownload({
   return true;
 }
 
+Future<AudioMetadata> _parseTokenizerRespectingCache(
+  Tokenizer tokenizer,
+  ParseOptions options, {
+  required bool useCache,
+}) async {
+  if (useCache) {
+    return parseFromTokenizer(tokenizer, options: options);
+  }
+  return (await parseFromTokenizerWithHints(tokenizer, options: options))
+      .metadata;
+}
+
 /// Parse using full download.
 Future<AudioMetadata> _parseWithFullDownload(
   String url,
   Duration timeout,
-  ParseOptions options,
-) async {
+  ParseOptions options, {
+  bool useCache = true,
+}) async {
   final tokenizer = await HttpTokenizer.fromUrl(
     url,
     timeout: timeout,
     maxBufferSize: options.maxMemoryAllocation,
   );
   try {
-    return await parseFromTokenizer(tokenizer, options: options);
+    return await _parseTokenizerRespectingCache(
+      tokenizer,
+      options,
+      useCache: useCache,
+    );
   } finally {
     tokenizer.close();
   }
@@ -1697,18 +2230,23 @@ Future<AudioMetadata> _parseWithFullDownload(
 Future<AudioMetadata> _parseWithHeaderOnly(
   String url,
   Duration timeout,
-  ParseOptions options,
-) async {
+  ParseOptions options, {
+  bool useCache = true,
+}) async {
   try {
     final tokenizer = await RangeTokenizer.fromUrl(url, timeout: timeout);
     try {
-      return await parseFromTokenizer(tokenizer, options: options);
+      return await _parseTokenizerRespectingCache(
+        tokenizer,
+        options,
+        useCache: useCache,
+      );
     } finally {
       tokenizer.close();
     }
   } on FileDownloadError {
     // Header-only failed, fall back to full download
-    return _parseWithFullDownload(url, timeout, options);
+    return _parseWithFullDownload(url, timeout, options, useCache: useCache);
   }
 }
 
@@ -1717,8 +2255,9 @@ Future<AudioMetadata> _parseWithProbe(
   String url,
   Duration timeout,
   ParseOptions options,
-  ProbeStrategy probeStrategy,
-) async {
+  ProbeStrategy probeStrategy, {
+  bool useCache = true,
+}) async {
   final tokenizer = await ProbingRangeTokenizer.fromUrl(
     url,
     timeout: timeout,
@@ -1726,9 +2265,18 @@ Future<AudioMetadata> _parseWithProbe(
   );
 
   try {
-    final metadata = await parseFromTokenizer(tokenizer, options: options);
+    final metadata = await _parseTokenizerRespectingCache(
+      tokenizer,
+      options,
+      useCache: useCache,
+    );
     if (_shouldRetryWithFullDownload(metadata)) {
-      return await _parseWithFullDownload(url, timeout, options);
+      return await _parseWithFullDownload(
+        url,
+        timeout,
+        options,
+        useCache: useCache,
+      );
     }
     return metadata;
   } finally {
@@ -1754,8 +2302,9 @@ bool _shouldRetryWithFullDownload(AudioMetadata metadata) {
 Future<AudioMetadata> _parseWithRandomAccess(
   String url,
   Duration timeout,
-  ParseOptions options,
-) async {
+  ParseOptions options, {
+  bool useCache = true,
+}) async {
   final tokenizer = await RandomAccessTokenizer.fromUrl(url, timeout: timeout);
   final totalSize = tokenizer.totalSize;
 
@@ -1776,7 +2325,11 @@ Future<AudioMetadata> _parseWithRandomAccess(
       await tokenizer.prefetchRange(tailStart, totalSize);
     }
 
-    return await parseFromTokenizer(tokenizer, options: options);
+    return await _parseTokenizerRespectingCache(
+      tokenizer,
+      options,
+      useCache: useCache,
+    );
   } finally {
     tokenizer.close();
   }

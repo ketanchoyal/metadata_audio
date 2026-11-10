@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:metadata_audio/src/caf/caf_token.dart';
 import 'package:metadata_audio/src/flac/flac_token.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
 // ── helpers ────────────────────────────────────────────────────────────────
@@ -297,6 +298,27 @@ dynamic _encodeValue(dynamic v) {
   if (v is LyricsTag) return {'__t': 'LyricsTag', ..._lyricsTagToJson(v)};
   if (v is LyricsText) return {'__t': 'LyricsText', ..._lyricsTextToJson(v)};
   if (v is Ratio) return {'__t': 'Ratio', ..._ratioToJson(v)};
+  if (v is Id3v2ChapterFrame) {
+    return {
+      '__t': 'Id3v2ChapterFrame',
+      'label': v.label,
+      'info': {
+        'startTime': v.info.startTime,
+        'endTime': v.info.endTime,
+        'startOffset': v.info.startOffset,
+        'endOffset': v.info.endOffset,
+      },
+      'frames': v.frames.map((k, val) => MapEntry(k, _encodeValue(val))),
+    };
+  }
+  if (v is Id3v2TocFrame) {
+    return {
+      '__t': 'Id3v2TocFrame',
+      'label': v.label,
+      'flags': {'topLevel': v.flags.topLevel, 'ordered': v.flags.ordered},
+      'childElementIds': v.childElementIds,
+    };
+  }
   if (v is DateTime) return {'__t': 'DateTime', 'v': v.toIso8601String()};
   if (v is List<int>) return {'__t': 'bytes', 'v': _b64Encode(v)};
   if (v is List) return v.map(_encodeValue).toList();
@@ -321,6 +343,33 @@ dynamic _decodeValue(dynamic v) {
     if (t == 'LyricsTag') return _lyricsTagFromJson(m);
     if (t == 'LyricsText') return _lyricsTextFromJson(m);
     if (t == 'Ratio') return _ratioFromJson(m);
+    if (t == 'Id3v2ChapterFrame') {
+      final infoMap = m['info'] as Map<String, dynamic>;
+      final framesMap = (m['frames'] as Map<String, dynamic>?) ?? const {};
+      return Id3v2ChapterFrame(
+        label: m['label'] as String,
+        info: Id3v2ChapterInfo(
+          startTime: infoMap['startTime'] as int,
+          endTime: infoMap['endTime'] as int,
+          startOffset: infoMap['startOffset'] as int?,
+          endOffset: infoMap['endOffset'] as int?,
+        ),
+        frames: framesMap.map((k, val) => MapEntry(k, _decodeValue(val))),
+      );
+    }
+    if (t == 'Id3v2TocFrame') {
+      final flagsMap = m['flags'] as Map<String, dynamic>;
+      return Id3v2TocFrame(
+        label: m['label'] as String,
+        flags: Id3v2TocFlags(
+          topLevel: flagsMap['topLevel'] as bool,
+          ordered: flagsMap['ordered'] as bool,
+        ),
+        childElementIds: (m['childElementIds'] as List<dynamic>)
+            .map((e) => e as String)
+            .toList(),
+      );
+    }
     if (t == 'DateTime') return DateTime.tryParse(m['v'] as String);
     if (t == 'bytes') return _b64Decode(m['v'] as String);
     // plain map (e.g. native tag values that were maps) — decode recursively

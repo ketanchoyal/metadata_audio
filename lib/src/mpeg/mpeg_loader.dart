@@ -8,8 +8,9 @@ import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_parser.dart';
 import 'package:metadata_audio/src/parser_factory.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
+import 'package:metadata_audio/src/utils/cache_types.dart';
 
-class MpegLoader extends ParserLoader {
+class MpegLoader extends ParserLoader with HintProvidingParserLoader {
   @override
   List<String> get extension => const <String>[
     'mp2',
@@ -31,7 +32,14 @@ class MpegLoader extends ParserLoader {
   bool get hasRandomAccessRequirements => false;
 
   @override
-  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async {
+  Future<AudioMetadata> parse(Tokenizer tokenizer, ParseOptions options) async =>
+      (await parseWithHints(tokenizer, options)).metadata;
+
+  @override
+  Future<({AudioMetadata metadata, CachedParseHints? hints})> parseWithHints(
+    Tokenizer tokenizer,
+    ParseOptions options,
+  ) async {
     final mapper = CombinedTagMapper()
       ..registerMapper('ID3v1', Id3v1TagMapper())
       ..registerMapper('ID3v2.2', Id3v2TagMapper())
@@ -48,6 +56,12 @@ class MpegLoader extends ParserLoader {
     );
     await parser.parse();
 
-    return metadata.toAudioMetadata();
+    return (
+      metadata: metadata.toAudioMetadata(),
+      hints: CachedParseHints(
+        fileSize: tokenizer.fileInfo?.size,
+        id3v2Size: parser.id3v2EndOffset,
+      ),
+    );
   }
 }
