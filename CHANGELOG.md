@@ -1,3 +1,10 @@
+## 1.0.0-beta.3
+
+- **Fixed**: Eliminated `OutOfMemoryError` (`List._grow`) in `FileTokenizer.readBytes` by returning compact `Uint8List` buffers directly from `RandomAccessFile.readSync` (and `Uint8List.setRange` when a peeked byte is buffered) instead of copying into a growable `<int>[]` list.
+- **Fixed**: Avoided eagerly buffering multi-megabyte audio/video `stbl` sample tables (`stts`, `stsc`, `stsz`, `stco`, `co64`) in `Mp4Parser` during metadata and chapter parsing (`parseFile` / `parseUrl`), preventing `OutOfMemoryError` and `BufferSizeError` on long `.m4b` audiobooks regardless of `includeChapters`. When `includeChapters` is enabled on seekable local files, `Mp4Parser` reads only the 12-byte `stsz` header and resolves needed chunk-local sample offsets lazily; `ChapterDownloader` opts into full table collection via `collectSampleTables: true` and `Mp4Loader` only caches `CachedAudioTrack` when complete sample tables were collected.
+- **Fixed**: Prevented `RandomAccessTokenizer` and `Mp4Parser` from downloading unused multi-megabyte `moov` `stsz` boxes and blind `16 MB` tail `mdat` ranges over HTTP, and replaced `[for (final c in chunks) ...c]` stream expansion in `HttpTokenizer.fromUrl` and `RandomAccessTokenizer._fetchAndSplitRange` with `BytesBuilder(copy: false)`.
+- **Improved**: Updated `AtomToken` sample-table parsers (`parseStsz`, `parseStco`, `parseCo64`, `parseStts`, `parseStsc`) and MP4 `covr` / `chpl` payload handling to use `Uint32List` / `Uint8List` and fixed-length lists instead of growable `<int>[]` allocations.
+
 ## 1.0.0-beta.2
 
 - **Feat**: Added global cache toggle via `cacheEnabled` (`AudioMetadataCache.enabled`) so caching can be enabled or disabled globally across `parseUrl`, `parseFile`, and `parseFromTokenizer`.

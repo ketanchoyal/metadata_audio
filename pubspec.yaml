@@ -3,7 +3,7 @@ description: |
   A Dart-native audio metadata parser library that provides comprehensive 
   metadata extraction for various audio formats including MP3, FLAC, Ogg, MP4, 
   WAV, AIFF, APE, ASF, Matroska, and more.
-version: "1.0.0-beta.2"
+version: "1.0.0-beta.3"
 repository: https://github.com/ketanchoyal/metadata_audio
 homepage: https://github.com/ketanchoyal/metadata_audio
 issue_tracker: https://github.com/ketanchoyal/metadata_audio/issues
@@ -22,14 +22,14 @@ dev_dependencies:
   test: ^1.25.6
 
 screenshots:
-  - description: 'Local file parsing with chapter byte offsets'
+  - description: "Local file parsing with chapter byte offsets"
     path: screenshots/screenshot_1.png
-  - description: 'Remote URL parsing with chapter downloads'
+  - description: "Remote URL parsing with chapter downloads"
     path: screenshots/screenshot_2.png
 
 topics:
   - audio
   - metadata
-  - cross-platform
+  - music-analyzer
   - parser
   - chapter-downloader

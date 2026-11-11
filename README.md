@@ -117,7 +117,7 @@ Add `metadata_audio` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  metadata_audio: ^1.0.0-beta.2
+  metadata_audio: ^1.0.0-beta.3
 ```
 
 Or run:
