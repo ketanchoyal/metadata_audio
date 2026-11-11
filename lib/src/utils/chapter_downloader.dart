@@ -452,6 +452,13 @@ class ChapterDownloader {
     // ── 1. Resolve audio-track metadata (cache-first) ─────────────────────
     var cached = await AudioMetadataCache.get(originalUrl);
 
+    final needsSampleTables =
+        cached != null &&
+        (cached.timeToSampleTable.isEmpty ||
+            cached.chunkOffsetTable.isEmpty ||
+            cached.sampleToChunkTable.isEmpty ||
+            ((cached.sampleSize ?? 0) == 0 && cached.sampleSizeTable.isEmpty));
+
     final needsMetadataRefresh =
         cached != null &&
         includeMetadata &&
@@ -460,7 +467,7 @@ class ChapterDownloader {
         cached.rawUdtaBox == null &&
         cached.rawMetaBox == null;
 
-    if (cached == null || needsMetadataRefresh) {
+    if (cached == null || needsSampleTables || needsMetadataRefresh) {
       // Slow path: parse the container and populate the cache.
       final Tokenizer tokenizer;
       if (isRemote) {
@@ -553,6 +560,7 @@ class ChapterDownloader {
       metadata: collector,
       tokenizer: tokenizer,
       options: parseOpts,
+      collectSampleTables: true,
     );
     await parser.parse();
 

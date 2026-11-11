@@ -116,42 +116,52 @@ class FileTokenizer extends Tokenizer {
     }
 
     if (length == 0) {
-      return [];
+      return Uint8List(0);
     }
 
-    final result = <int>[];
+    if (_position + length > _fileSize) {
+      throw TokenizerException(
+        'Not enough bytes available: requested $length, '
+        'only ${_fileSize - _position} available',
+      );
+    }
 
-    // If we have a peeked byte and length > 0, use it
+    // If we have a peeked byte and length > 0, prepend it into a Uint8List
     if (_hasPeekedByte) {
-      result.add(_peekedByte!);
+      final peeked = _peekedByte!;
       _hasPeekedByte = false;
       _peekedByte = null;
       _position++;
 
-      if (result.length == length) {
+      final result = Uint8List(length);
+      result[0] = peeked;
+      if (length == 1) {
         return result;
+      }
+
+      final remaining = length - 1;
+      try {
+        _file.setPositionSync(_position);
+        final bytes = _file.readSync(remaining);
+        _position += bytes.length;
+        result.setRange(1, 1 + bytes.length, bytes);
+        return bytes.length == remaining
+            ? result
+            : Uint8List.sublistView(result, 0, 1 + bytes.length);
+      } on FileSystemException catch (e) {
+        throw TokenizerException('Failed to read bytes: $e');
       }
     }
 
-    // Read remaining bytes
-    final remaining = length - result.length;
-    if (_position + remaining > _fileSize) {
-      throw TokenizerException(
-        'Not enough bytes available: requested $length, '
-        'only ${_fileSize - _position + result.length} available',
-      );
-    }
-
+    // Fast path: _file.readSync already returns a compact Uint8List
     try {
       _file.setPositionSync(_position);
-      final bytes = _file.readSync(remaining);
+      final bytes = _file.readSync(length);
       _position += bytes.length;
-      result.addAll(bytes);
+      return bytes;
     } on FileSystemException catch (e) {
       throw TokenizerException('Failed to read bytes: $e');
     }
-
-    return result;
   }
 
   @override

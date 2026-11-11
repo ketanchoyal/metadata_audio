@@ -64,15 +64,23 @@ class Mp4Loader extends ParserLoader with HintProvidingParserLoader {
       if (audioTrack != null) {
         final stsc = parser.getSampleToChunkTable(audioTrack.trackId) ?? [];
         final stco = parser.getChunkOffsetTable(audioTrack.trackId) ?? [];
-        final cached = CachedAudioTrack.fromParser(
-          trackInfo: audioTrack,
-          sampleToChunkTable: stsc,
-          chunkOffsetTable: stco,
-          rawUdtaBox: parser.rawUdtaBox,
-          rawMetaBox: parser.rawMetaBox,
-          metadataChecked: !options.skipCovers,
-        );
-        unawaited(AudioMetadataCache.put(source, cached));
+        final hasCompleteSampleTables =
+            stco.isNotEmpty &&
+            stsc.isNotEmpty &&
+            audioTrack.timeToSampleTable.isNotEmpty &&
+            ((audioTrack.sampleSize ?? 0) > 0 ||
+                audioTrack.sampleSizeTable.isNotEmpty);
+        if (hasCompleteSampleTables) {
+          final cached = CachedAudioTrack.fromParser(
+            trackInfo: audioTrack,
+            sampleToChunkTable: stsc,
+            chunkOffsetTable: stco,
+            rawUdtaBox: parser.rawUdtaBox,
+            rawMetaBox: parser.rawMetaBox,
+            metadataChecked: !options.skipCovers,
+          );
+          unawaited(AudioMetadataCache.put(source, cached));
+        }
       }
     }
 

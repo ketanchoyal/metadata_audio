@@ -1,6 +1,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:metadata_audio/src/common/js_safe_numbers.dart';
 import 'package:metadata_audio/src/parse_error.dart';
@@ -433,19 +434,17 @@ class AtomToken {
     }
 
     final entryCount = readUint32Be(bytes, 4);
-    final entries = <SttsEntry>[];
-    var offset = 8;
-    for (var i = 0; i < entryCount; i++) {
-      _ensureRange(bytes, offset, 8);
-      entries.add(
-        SttsEntry(
-          count: readUint32Be(bytes, offset),
-          duration: readUint32Be(bytes, offset + 4),
-        ),
-      );
-      offset += 8;
+    final requiredLength = 8 + (entryCount * 8);
+    if (requiredLength > bytes.length) {
+      throw Mp4ContentError('Requested token range is out of bounds');
     }
-    return entries;
+    return List<SttsEntry>.generate(entryCount, (i) {
+      final offset = 8 + i * 8;
+      return SttsEntry(
+        count: readUint32Be(bytes, offset),
+        duration: readUint32Be(bytes, offset + 4),
+      );
+    }, growable: false);
   }
 
   static List<StscEntry> parseStsc(List<int> bytes) {
@@ -454,19 +453,17 @@ class AtomToken {
     }
 
     final entryCount = readUint32Be(bytes, 4);
-    final entries = <StscEntry>[];
-    var offset = 8;
-    for (var i = 0; i < entryCount; i++) {
-      _ensureRange(bytes, offset, 12);
-      entries.add(
-        StscEntry(
-          firstChunk: readUint32Be(bytes, offset),
-          samplesPerChunk: readUint32Be(bytes, offset + 4),
-        ),
-      );
-      offset += 12;
+    final requiredLength = 8 + (entryCount * 12);
+    if (requiredLength > bytes.length) {
+      throw Mp4ContentError('Requested token range is out of bounds');
     }
-    return entries;
+    return List<StscEntry>.generate(entryCount, (i) {
+      final offset = 8 + i * 12;
+      return StscEntry(
+        firstChunk: readUint32Be(bytes, offset),
+        samplesPerChunk: readUint32Be(bytes, offset + 4),
+      );
+    }, growable: false);
   }
 
   static (int, int, List<int>) parseStsz(List<int> bytes) {
@@ -487,12 +484,18 @@ class AtomToken {
       );
     }
 
-    final entries = <int>[];
-    var offset = 12;
-    for (var i = 0; i < entryCount; i++) {
-      _ensureRange(bytes, offset, 4);
-      entries.add(readUint32Be(bytes, offset));
-      offset += 4;
+    final entries = Uint32List(entryCount);
+    if (bytes is Uint8List) {
+      final data = ByteData.sublistView(bytes);
+      for (var i = 0; i < entryCount; i++) {
+        entries[i] = data.getUint32(12 + i * 4);
+      }
+    } else {
+      var offset = 12;
+      for (var i = 0; i < entryCount; i++) {
+        entries[i] = readUint32Be(bytes, offset);
+        offset += 4;
+      }
     }
     return (sampleSize, entryCount, entries);
   }
@@ -503,12 +506,23 @@ class AtomToken {
     }
 
     final entryCount = readUint32Be(bytes, 4);
-    final entries = <int>[];
-    var offset = 8;
-    for (var i = 0; i < entryCount; i++) {
-      _ensureRange(bytes, offset, 4);
-      entries.add(readUint32Be(bytes, offset));
-      offset += 4;
+    final requiredLength = 8 + (entryCount * 4);
+    if (requiredLength > bytes.length) {
+      throw Mp4ContentError('Requested token range is out of bounds');
+    }
+
+    final entries = Uint32List(entryCount);
+    if (bytes is Uint8List) {
+      final data = ByteData.sublistView(bytes);
+      for (var i = 0; i < entryCount; i++) {
+        entries[i] = data.getUint32(8 + i * 4);
+      }
+    } else {
+      var offset = 8;
+      for (var i = 0; i < entryCount; i++) {
+        entries[i] = readUint32Be(bytes, offset);
+        offset += 4;
+      }
     }
     return entries;
   }
@@ -519,14 +533,15 @@ class AtomToken {
     }
 
     final entryCount = readUint32Be(bytes, 4);
-    final entries = <int>[];
-    var offset = 8;
-    for (var i = 0; i < entryCount; i++) {
-      _ensureRange(bytes, offset, 8);
-      entries.add(readUint64Be(bytes, offset));
-      offset += 8;
+    final requiredLength = 8 + (entryCount * 8);
+    if (requiredLength > bytes.length) {
+      throw Mp4ContentError('Requested token range is out of bounds');
     }
-    return entries;
+    return List<int>.generate(
+      entryCount,
+      (i) => readUint64Be(bytes, 8 + i * 8),
+      growable: false,
+    );
   }
 
   static String parseChapterText(List<int> bytes) {

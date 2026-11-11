@@ -1,6 +1,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:math' show min;
 import 'dart:typed_data';
 
 import 'package:metadata_audio/src/common/allocation.dart';
@@ -19,7 +20,13 @@ class Mp4Parser {
     required this.metadata,
     required this.tokenizer,
     required this.options,
+    this.collectSampleTables = false,
   });
+
+  static const int _maxMoovPrefetchBytes = 2 * 1024 * 1024;
+  static const int _maxInlineAudioStszBytes = 256 * 1024;
+  static const int _maxAudioChapterSupportTableBytes = 1 * 1024 * 1024;
+  static const int _maxChapterHintTableBytes = 256 * 1024;
 
   List<Mp4TrackInfo> getTrackInfos() => _tracks.values.map((track) {
     final desc = track.sampleDescriptions.isEmpty
@@ -68,6 +75,7 @@ class Mp4Parser {
   final MetadataCollector metadata;
   final Tokenizer tokenizer;
   final ParseOptions options;
+  final bool collectSampleTables;
 
   final Map<int, _TrackDescription> _tracks = <int, _TrackDescription>{};
 
@@ -118,9 +126,10 @@ class Mp4Parser {
           break;
         }
 
-        // For HTTP-based tokenizers, prefetch the entire moov atom
-        // since it can be much larger than the initial prefetch window
-        // (e.g. audiobooks often have 5-10MB moov atoms)
+        // For HTTP-based tokenizers, prefetch small/moderate moov atoms up
+        // front so parsing takes a single Range request. Larger moov atoms
+        // (e.g. audiobooks with multi-megabyte audio stsz tables) are
+        // prefetched atom-by-atom so skipped sample tables are not downloaded.
         if (probeName == 'moov' && tokenizer is HttpBasedTokenizer) {
           var moovSize =
               (probe[0] << 24) | (probe[1] << 16) | (probe[2] << 8) | probe[3];
@@ -136,8 +145,12 @@ class Mp4Parser {
               moovSize = 0;
             }
           }
-          if (moovSize > 0) {
-            await (tokenizer as HttpBasedTokenizer).prefetchRange(
+          final maxPrefetch = min(
+            getMaxMemoryAllocation(options),
+            _maxMoovPrefetchBytes,
+          );
+          if (moovSize > 0 && moovSize <= maxPrefetch) {
+            await _prefetchRange(
               tokenizer.position,
               tokenizer.position + moovSize,
             );
@@ -149,6 +162,7 @@ class Mp4Parser {
           _handleAtom,
           null,
           remaining ?? 0x7FFFFFFF,
+          prefetchRange: tokenizer is HttpBasedTokenizer ? _prefetchRange : null,
         );
 
         if (atom.header.name == 'moov') {
@@ -156,7 +170,7 @@ class Mp4Parser {
           if (atom.header.length > 0) {
             moovSize = atom.header.length;
           }
-          if (tokenizer.canSeek && !options.skipCovers) {
+          if (collectSampleTables && tokenizer.canSeek && !options.skipCovers) {
             _captureMoovMetadataBoxes(atom);
           }
           if (stopAfterMoov) {
@@ -185,87 +199,214 @@ class Mp4Parser {
     validateAllocation(length, options, Mp4ContentError.new);
   }
 
+  Future<void> _prefetchRange(int start, int end) {
+    final t = tokenizer;
+    if (t is HttpBasedTokenizer && end > start) {
+      final total = t.fileInfo?.size;
+      final lastByte = total != null && end > total ? total - 1 : end - 1;
+      if (lastByte >= start) {
+        return t.prefetchRange(start, lastByte);
+      }
+    }
+    return Future<void>.value();
+  }
+
+  Future<List<int>> _readPayloadBytes(int payloadLength) async {
+    _validatePayloadLength(payloadLength);
+    await _prefetchRange(
+      tokenizer.position,
+      tokenizer.position + payloadLength,
+    );
+    return tokenizer.readBytes(payloadLength);
+  }
+
+  bool _isReferencedChapterTrack(int trackId) =>
+      _tracks.values.any((t) => t.chapterTrackIds.contains(trackId));
+
+  bool _shouldKeepNonMediaSampleTable(
+    _TrackDescription track,
+    int payloadLength,
+  ) {
+    final isChapterCandidate =
+        track.handlerType == 'text' ||
+        track.handlerType == 'sbtl' ||
+        track.handlerType == 'subt' ||
+        _isReferencedChapterTrack(track.trackId);
+    if (!isChapterCandidate) {
+      return false;
+    }
+    final limit = getMaxMemoryAllocation(options);
+    return payloadLength <= _maxChapterHintTableBytes && payloadLength <= limit;
+  }
+
+  bool _shouldParseSampleTableAtom(
+    _TrackDescription? track,
+    int payloadLength,
+  ) {
+    if (track == null) {
+      return false;
+    }
+    if (collectSampleTables) {
+      return true;
+    }
+    if (track.isAudio || track.isVideo) {
+      if (!options.includeChapters) {
+        return false;
+      }
+      final maxAlloc = getMaxMemoryAllocation(options);
+      return payloadLength <= maxAlloc &&
+          payloadLength <= _maxAudioChapterSupportTableBytes;
+    }
+    if (options.includeChapters) {
+      return true;
+    }
+    return _shouldKeepNonMediaSampleTable(track, payloadLength);
+  }
+
+  Future<void> _handleStszAtom(Mp4Atom atom, int payloadLength) async {
+    if (!_isTrackScopedAtom(atom)) {
+      tokenizer.skip(payloadLength);
+      return;
+    }
+    final track = _currentTrack;
+    if (track == null) {
+      tokenizer.skip(payloadLength);
+      return;
+    }
+    if (collectSampleTables) {
+      _parseStsz(await _readPayloadBytes(payloadLength));
+      return;
+    }
+    if (track.isAudio || track.isVideo) {
+      if (!options.includeChapters || payloadLength < 12) {
+        tokenizer.skip(payloadLength);
+        return;
+      }
+
+      // Read only the 12-byte stsz header (version/flags, sampleSize, entryCount)
+      // instead of buffering multi-megabyte audio sample tables into RAM.
+      await _prefetchRange(tokenizer.position, tokenizer.position + 12);
+      tokenizer.readUint32(); // version & flags
+      final sampleSize = tokenizer.readUint32();
+      final entryCount = tokenizer.readUint32();
+      track
+        ..sampleSize = sampleSize
+        ..sampleCount = entryCount;
+
+      final remaining = payloadLength - 12;
+      if (sampleSize != 0) {
+        tokenizer.skip(remaining);
+        return;
+      }
+
+      if (tokenizer.canSeek && tokenizer is! HttpBasedTokenizer) {
+        if (entryCount >= 0 && entryCount * 4 <= remaining) {
+          track
+            ..stszEntriesOffset = tokenizer.position
+            ..stszEntryCount = entryCount;
+        }
+        tokenizer.skip(remaining);
+        return;
+      }
+
+      final inlineLimit = min(
+        getMaxMemoryAllocation(options),
+        _maxInlineAudioStszBytes,
+      );
+      if (payloadLength <= inlineLimit &&
+          entryCount >= 0 &&
+          entryCount * 4 <= remaining) {
+        await _prefetchRange(
+          tokenizer.position,
+          tokenizer.position + remaining,
+        );
+        final entryBytes = tokenizer.readBytes(remaining);
+        final entries = _parseStszEntries(entryBytes, entryCount);
+        _assignSampleSizeTable(track, entries);
+      } else {
+        tokenizer.skip(remaining);
+      }
+      return;
+    }
+
+    if (!options.includeChapters &&
+        !_shouldKeepNonMediaSampleTable(track, payloadLength)) {
+      tokenizer.skip(payloadLength);
+      return;
+    }
+    _parseStsz(await _readPayloadBytes(payloadLength));
+  }
+
   Future<void> _handleAtom(Mp4Atom atom, int payloadLength) async {
     switch (atom.header.name) {
       case 'ftyp':
-        _validatePayloadLength(payloadLength);
-        _parseFtyp(tokenizer.readBytes(payloadLength));
+        _parseFtyp(await _readPayloadBytes(payloadLength));
         return;
       case 'mvhd':
-        _validatePayloadLength(payloadLength);
-        _parseMvhd(tokenizer.readBytes(payloadLength));
+        _parseMvhd(await _readPayloadBytes(payloadLength));
         return;
       case 'tkhd':
         if (!_isTrackScopedAtom(atom)) {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseTkhd(tokenizer.readBytes(payloadLength));
+        _parseTkhd(await _readPayloadBytes(payloadLength));
         return;
       case 'mdhd':
         if (!_isTrackScopedAtom(atom)) {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseMdhd(tokenizer.readBytes(payloadLength));
+        _parseMdhd(await _readPayloadBytes(payloadLength));
         return;
       case 'hdlr':
         if (!_isTrackScopedAtom(atom)) {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseHdlr(tokenizer.readBytes(payloadLength));
+        _parseHdlr(await _readPayloadBytes(payloadLength));
         return;
       case 'stsd':
         if (!_isTrackScopedAtom(atom)) {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseStsd(tokenizer.readBytes(payloadLength));
+        _parseStsd(await _readPayloadBytes(payloadLength));
         return;
       case 'stts':
-        if (!_isTrackScopedAtom(atom)) {
+        if (!_isTrackScopedAtom(atom) ||
+            !_shouldParseSampleTableAtom(_currentTrack, payloadLength)) {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseStts(tokenizer.readBytes(payloadLength));
+        _parseStts(await _readPayloadBytes(payloadLength));
         return;
       case 'stsc':
-        if (!_isTrackScopedAtom(atom)) {
+        if (!_isTrackScopedAtom(atom) ||
+            !_shouldParseSampleTableAtom(_currentTrack, payloadLength)) {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseStsc(tokenizer.readBytes(payloadLength));
+        _parseStsc(await _readPayloadBytes(payloadLength));
         return;
       case 'stsz':
-        if (!_isTrackScopedAtom(atom)) {
-          tokenizer.skip(payloadLength);
-          return;
-        }
-        _validatePayloadLength(payloadLength);
-        _parseStsz(tokenizer.readBytes(payloadLength));
+        await _handleStszAtom(atom, payloadLength);
         return;
       case 'stco':
-        if (!_isTrackScopedAtom(atom)) {
+        if (!_isTrackScopedAtom(atom) ||
+            !_shouldParseSampleTableAtom(_currentTrack, payloadLength)) {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseStco(tokenizer.readBytes(payloadLength));
+        _parseStco(await _readPayloadBytes(payloadLength));
         return;
       case 'co64':
-        if (!_isTrackScopedAtom(atom)) {
+        if (!_isTrackScopedAtom(atom) ||
+            !_shouldParseSampleTableAtom(_currentTrack, payloadLength)) {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseCo64(tokenizer.readBytes(payloadLength));
+        _parseCo64(await _readPayloadBytes(payloadLength));
         return;
       case 'chap':
         if (!_isTrackScopedAtom(atom)) {
@@ -277,8 +418,7 @@ class Mp4Parser {
           tokenizer.skip(payloadLength);
           return;
         }
-        _validatePayloadLength(payloadLength);
-        _parseChap(tokenizer.readBytes(payloadLength));
+        _parseChap(await _readPayloadBytes(payloadLength));
         return;
       case 'mdat':
         _audioLengthInBytes = payloadLength;
@@ -290,14 +430,17 @@ class Mp4Parser {
         // Nero chapter list atom (inside udta)
         if (atom.parent?.header.name == 'udta') {
           if (options.includeChapters) {
-            _validatePayloadLength(payloadLength);
-            final chplBytes = tokenizer.readBytes(payloadLength);
-            _chplPayload = List<int>.from(chplBytes);
+            final chplBytes = await _readPayloadBytes(payloadLength);
+            _chplPayload = chplBytes is Uint8List
+                ? chplBytes
+                : Uint8List.fromList(chplBytes);
             _parseChpl(chplBytes);
           } else if (payloadLength >= 9 &&
               payloadLength <= getMaxMemoryAllocation(options)) {
-            final chplBytes = tokenizer.readBytes(payloadLength);
-            _chplPayload = List<int>.from(chplBytes);
+            final chplBytes = await _readPayloadBytes(payloadLength);
+            _chplPayload = chplBytes is Uint8List
+                ? chplBytes
+                : Uint8List.fromList(chplBytes);
           } else {
             tokenizer.skip(payloadLength);
           }
@@ -424,7 +567,15 @@ class Mp4Parser {
     if (track == null) {
       return;
     }
-    track.timeToSampleTable.addAll(AtomToken.parseStts(payload));
+    final parsed = AtomToken.parseStts(payload);
+    if (track.timeToSampleTable.isEmpty) {
+      track.timeToSampleTable = parsed;
+    } else {
+      track.timeToSampleTable = <SttsEntry>[
+        ...track.timeToSampleTable,
+        ...parsed,
+      ];
+    }
   }
 
   void _parseStsc(List<int> payload) {
@@ -432,7 +583,15 @@ class Mp4Parser {
     if (track == null) {
       return;
     }
-    track.sampleToChunkTable.addAll(AtomToken.parseStsc(payload));
+    final parsed = AtomToken.parseStsc(payload);
+    if (track.sampleToChunkTable.isEmpty) {
+      track.sampleToChunkTable = parsed;
+    } else {
+      track.sampleToChunkTable = <StscEntry>[
+        ...track.sampleToChunkTable,
+        ...parsed,
+      ];
+    }
   }
 
   void _parseStsz(List<int> payload) {
@@ -443,8 +602,34 @@ class Mp4Parser {
     final stsz = AtomToken.parseStsz(payload);
     track
       ..sampleSize = stsz.$1
-      ..sampleCount = stsz.$2
-      ..sampleSizeTable.addAll(stsz.$3);
+      ..sampleCount = stsz.$2;
+    _assignSampleSizeTable(track, stsz.$3);
+  }
+
+  void _assignSampleSizeTable(_TrackDescription track, List<int> entries) {
+    if (entries.isEmpty) {
+      return;
+    }
+    if (track.sampleSizeTable.isEmpty) {
+      track.sampleSizeTable = entries;
+    } else {
+      track.sampleSizeTable = <int>[...track.sampleSizeTable, ...entries];
+    }
+  }
+
+  List<int> _parseStszEntries(List<int> bytes, int entryCount) {
+    final entries = Uint32List(entryCount);
+    if (bytes is Uint8List) {
+      final data = ByteData.sublistView(bytes);
+      for (var i = 0; i < entryCount; i++) {
+        entries[i] = data.getUint32(i * 4);
+      }
+    } else {
+      for (var i = 0; i < entryCount; i++) {
+        entries[i] = AtomToken.readUint32Be(bytes, i * 4);
+      }
+    }
+    return entries;
   }
 
   void _parseStco(List<int> payload) {
@@ -452,7 +637,12 @@ class Mp4Parser {
     if (track == null) {
       return;
     }
-    track.chunkOffsetTable.addAll(AtomToken.parseStco(payload));
+    final parsed = AtomToken.parseStco(payload);
+    if (track.chunkOffsetTable.isEmpty) {
+      track.chunkOffsetTable = parsed;
+    } else {
+      track.chunkOffsetTable = <int>[...track.chunkOffsetTable, ...parsed];
+    }
   }
 
   void _parseCo64(List<int> payload) {
@@ -460,7 +650,12 @@ class Mp4Parser {
     if (track == null) {
       return;
     }
-    track.chunkOffsetTable.addAll(AtomToken.parseCo64(payload));
+    final parsed = AtomToken.parseCo64(payload);
+    if (track.chunkOffsetTable.isEmpty) {
+      track.chunkOffsetTable = parsed;
+    } else {
+      track.chunkOffsetTable = <int>[...track.chunkOffsetTable, ...parsed];
+    }
   }
 
   void _parseChap(List<int> payload) {
@@ -580,9 +775,8 @@ class Mp4Parser {
               tokenizer.skip(atomPayloadLength);
               return;
             }
-            _validatePayloadLength(atomPayloadLength);
             final data = AtomToken.parseDataAtom(
-              tokenizer.readBytes(atomPayloadLength),
+              await _readPayloadBytes(atomPayloadLength),
             );
             final value = _decodeDataValue(itemAtom.header.name, data);
             if (value != null) {
@@ -592,17 +786,15 @@ class Mp4Parser {
           }
 
           if (atom.header.name == 'mean') {
-            _validatePayloadLength(atomPayloadLength);
             mean = AtomToken.parseNameAtom(
-              tokenizer.readBytes(atomPayloadLength),
+              await _readPayloadBytes(atomPayloadLength),
             );
             return;
           }
 
           if (atom.header.name == 'name') {
-            _validatePayloadLength(atomPayloadLength);
             name = AtomToken.parseNameAtom(
-              tokenizer.readBytes(atomPayloadLength),
+              await _readPayloadBytes(atomPayloadLength),
             );
             return;
           }
@@ -611,6 +803,7 @@ class Mp4Parser {
         },
         itemAtom,
         remaining,
+        prefetchRange: tokenizer is HttpBasedTokenizer ? _prefetchRange : null,
       );
 
       if (child.header.length == 0) {
@@ -648,17 +841,26 @@ class Mp4Parser {
         if (options.skipCovers) {
           return null;
         }
-        return Picture(format: 'image/jpeg', data: List<int>.from(value));
+        return Picture(
+          format: 'image/jpeg',
+          data: value is Uint8List ? value : Uint8List.fromList(value),
+        );
       case 14:
         if (options.skipCovers) {
           return null;
         }
-        return Picture(format: 'image/png', data: List<int>.from(value));
+        return Picture(
+          format: 'image/png',
+          data: value is Uint8List ? value : Uint8List.fromList(value),
+        );
       case 27:
         if (options.skipCovers) {
           return null;
         }
-        return Picture(format: 'image/bmp', data: List<int>.from(value));
+        return Picture(
+          format: 'image/bmp',
+          data: value is Uint8List ? value : Uint8List.fromList(value),
+        );
       case 21:
         return _readSignedBeInteger(value);
       case 22:
@@ -708,7 +910,7 @@ class Mp4Parser {
         }
         return Picture(
           format: _detectImageMimeType(value),
-          data: List<int>.from(value),
+          data: value is Uint8List ? value : Uint8List.fromList(value),
         );
       default:
         return null;
@@ -1654,12 +1856,30 @@ class Mp4Parser {
         final firstSampleInChunkIndex =
             currentSampleIndex + chunkOffsetInRun * samplesPerChunk;
 
-        for (var i = 0; i < sampleOffsetInChunk; i++) {
-          final idx = firstSampleInChunkIndex + i;
+        if (sampleOffsetInChunk > 0) {
           if (track.sampleSize != null && track.sampleSize! > 0) {
-            sampleByteOffset += track.sampleSize!;
-          } else if (idx < track.sampleSizeTable.length) {
-            sampleByteOffset += track.sampleSizeTable[idx];
+            sampleByteOffset = sampleOffsetInChunk * track.sampleSize!;
+          } else if (track.sampleSizeTable.isNotEmpty) {
+            for (var i = 0; i < sampleOffsetInChunk; i++) {
+              final idx = firstSampleInChunkIndex + i;
+              if (idx < track.sampleSizeTable.length) {
+                sampleByteOffset += track.sampleSizeTable[idx];
+              }
+            }
+          } else if (track.stszEntriesOffset != null &&
+              track.stszEntryCount != null &&
+              tokenizer.canSeek) {
+            final available = track.stszEntryCount! - firstSampleInChunkIndex;
+            final count = sampleOffsetInChunk < available
+                ? sampleOffsetInChunk
+                : available;
+            if (count > 0) {
+              sampleByteOffset = _sumStszEntries(
+                track.stszEntriesOffset!,
+                firstSampleInChunkIndex,
+                count,
+              );
+            }
           }
         }
         return chunkByteOffset + sampleByteOffset;
@@ -1673,6 +1893,36 @@ class Mp4Parser {
           track.sampleToChunkTable[chunkIndexInTable].samplesPerChunk;
     }
     return null;
+  }
+
+  int _sumStszEntries(int entriesOffset, int startIndex, int count) {
+    final savedPos = tokenizer.position;
+    try {
+      const batchEntries = 4096;
+      var sum = 0;
+      var remaining = count;
+      var cursor = startIndex;
+      while (remaining > 0) {
+        final take = remaining < batchEntries ? remaining : batchEntries;
+        tokenizer.seek(entriesOffset + cursor * 4);
+        final bytes = tokenizer.readBytes(take * 4);
+        if (bytes is Uint8List) {
+          final data = ByteData.sublistView(bytes);
+          for (var i = 0; i < take; i++) {
+            sum += data.getUint32(i * 4);
+          }
+        } else {
+          for (var i = 0; i < take; i++) {
+            sum += AtomToken.readUint32Be(bytes, i * 4);
+          }
+        }
+        cursor += take;
+        remaining -= take;
+      }
+      return sum;
+    } finally {
+      tokenizer.seek(savedPos);
+    }
   }
 
   int? _getByteOffsetForTime(_TrackDescription track, int timeOffset) {
@@ -1770,10 +2020,10 @@ class Mp4Parser {
     ..timeScale = d.timeScale
     ..durationUnits = d.durationUnits
     ..sampleSize = d.sampleSize
-    ..sampleSizeTable.addAll(d.sampleSizeTable)
-    ..timeToSampleTable.addAll(d.timeToSampleTable)
-    ..sampleToChunkTable.addAll(d.sampleToChunkTable)
-    ..chunkOffsetTable.addAll(d.chunkOffsetTable);
+    ..sampleSizeTable = d.sampleSizeTable
+    ..timeToSampleTable = d.timeToSampleTable
+    ..sampleToChunkTable = d.sampleToChunkTable
+    ..chunkOffsetTable = d.chunkOffsetTable;
 
   /// Resolves MP4 chapters from a cached [CachedMp4ChapterInfo] without
   /// re-parsing `moov` or metadata tags.
@@ -1865,10 +2115,12 @@ class _TrackDescription {
   int? sampleSize;
   int? sampleCount;
   final List<SampleDescription> sampleDescriptions = <SampleDescription>[];
-  final List<SttsEntry> timeToSampleTable = <SttsEntry>[];
-  final List<StscEntry> sampleToChunkTable = <StscEntry>[];
-  final List<int> sampleSizeTable = <int>[];
-  final List<int> chunkOffsetTable = <int>[];
+  List<SttsEntry> timeToSampleTable = const <SttsEntry>[];
+  List<StscEntry> sampleToChunkTable = const <StscEntry>[];
+  List<int> sampleSizeTable = const <int>[];
+  List<int> chunkOffsetTable = const <int>[];
+  int? stszEntriesOffset;
+  int? stszEntryCount;
   final List<int> chapterTrackIds = <int>[];
   List<int>? rawStsdBox;
 

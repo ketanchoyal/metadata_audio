@@ -107,8 +107,15 @@ class HttpTokenizer extends HttpBasedTokenizer {
         );
       }
 
-      final chunks = await response.stream.toList();
-      final bytes = Uint8List.fromList([for (final c in chunks) ...c]);
+      final builder = BytesBuilder(copy: false);
+      await for (final chunk in response.stream) {
+        if (maxBufferSize != null &&
+            builder.length + chunk.length > maxBufferSize) {
+          throw BufferSizeError(builder.length + chunk.length, maxBufferSize);
+        }
+        builder.add(chunk);
+      }
+      final bytes = builder.takeBytes();
 
       final fileInfo = FileInfo(
         path: url,
@@ -708,7 +715,7 @@ class ProbingRangeTokenizer extends HttpBasedTokenizer {
           rethrow;
         }
         await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
-      } catch (e) {
+      } on Exception catch (e) {
         if (attempt < maxRetries - 1) {
           await Future<void>.delayed(
             Duration(milliseconds: 200 * (attempt + 1)),
@@ -1188,8 +1195,11 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
           );
         }
 
-        final chunks = await response.stream.toList();
-        final data = Uint8List.fromList([for (final c in chunks) ...c]);
+        final builder = BytesBuilder(copy: false);
+        await for (final chunk in response.stream) {
+          builder.add(chunk);
+        }
+        final data = builder.takeBytes();
 
         // Split into chunk-sized pieces for the cache
         var offset = 0;
@@ -1220,7 +1230,7 @@ class RandomAccessTokenizer extends HttpBasedTokenizer {
           rethrow;
         }
         await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
-      } catch (e) {
+      } on Exception catch (e) {
         if (attempt < maxRetries - 1) {
           await Future<void>.delayed(
             Duration(milliseconds: 200 * (attempt + 1)),
@@ -2309,20 +2319,15 @@ Future<AudioMetadata> _parseWithRandomAccess(
   final totalSize = tokenizer.totalSize;
 
   try {
-    // For random access, we need to prefetch chunks as the parser reads
-    // Prefetch initial header (first 256KB)
-    await tokenizer.prefetchRange(0, 262144);
+    // Prefetch initial header (first 256KB) and tail post-header block (64KB).
+    // MP4 parsers prefetch moov / chapter ranges dynamically on demand, so we
+    // avoid blindly downloading multi-megabyte tail mdat audio payloads.
+    await tokenizer.prefetchRange(0, 262143);
 
-    // For MP4/M4A files with chapters, also prefetch the tail region
-    // as moov atom is often at the end of streaming-optimized files.
-    // Audiobooks can have very large moov atoms (5-10MB+) due to chapter data.
     if (totalSize != null && totalSize > 0) {
-      // Prefetch up to 16MB at the tail (or entire file if smaller)
-      final tailSize = totalSize < 16 * 1024 * 1024
-          ? totalSize
-          : 16 * 1024 * 1024;
+      final tailSize = totalSize < 65536 ? totalSize : 65536;
       final tailStart = totalSize - tailSize;
-      await tokenizer.prefetchRange(tailStart, totalSize);
+      await tokenizer.prefetchRange(tailStart, totalSize - 1);
     }
 
     return await _parseTokenizerRespectingCache(

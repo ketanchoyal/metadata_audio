@@ -6,6 +6,8 @@ import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
 typedef AtomDataHandler =
     Future<void> Function(Mp4Atom atom, int payloadLength);
 
+typedef AtomPrefetchRange = Future<void> Function(int start, int end);
+
 class Mp4Atom {
   Mp4Atom({
     required this.header,
@@ -42,9 +44,15 @@ class Mp4Atom {
     Tokenizer tokenizer,
     AtomDataHandler dataHandler,
     Mp4Atom? parent,
-    int remaining,
-  ) async {
+    int remaining, {
+    AtomPrefetchRange? prefetchRange,
+  }) async {
     final offset = tokenizer.position;
+
+    if (prefetchRange != null && remaining > 0) {
+      final headerRead = remaining < 16 ? remaining : 16;
+      await prefetchRange(offset, offset + headerRead);
+    }
 
     final baseHeader = tokenizer.readBytes(AtomToken.headerLength);
     var header = AtomToken.parseHeader(baseHeader);
@@ -68,19 +76,28 @@ class Mp4Atom {
       payloadLength: computedPayloadLength,
     );
 
-    await atom._readData(tokenizer, dataHandler, remaining);
+    await atom._readData(
+      tokenizer,
+      dataHandler,
+      remaining,
+      prefetchRange: prefetchRange,
+    );
     return atom;
   }
 
   Future<void> _readData(
     Tokenizer tokenizer,
     AtomDataHandler dataHandler,
-    int remaining,
-  ) async {
+    int remaining, {
+    AtomPrefetchRange? prefetchRange,
+  }) async {
     if (isContainer) {
       var payloadToRead = payloadLength;
 
       if (header.name == 'meta' && payloadToRead >= 4) {
+        if (prefetchRange != null && payloadToRead >= 8) {
+          await prefetchRange(tokenizer.position, tokenizer.position + 8);
+        }
         final peekHeader = tokenizer.peekBytes(8);
         final probeName = String.fromCharCodes(peekHeader.sublist(4, 8));
         if (probeName != 'hdlr') {
@@ -89,7 +106,12 @@ class Mp4Atom {
         }
       }
 
-      await readAtoms(tokenizer, dataHandler, payloadToRead);
+      await readAtoms(
+        tokenizer,
+        dataHandler,
+        payloadToRead,
+        prefetchRange: prefetchRange,
+      );
       return;
     }
 
@@ -99,8 +121,9 @@ class Mp4Atom {
   Future<void> readAtoms(
     Tokenizer tokenizer,
     AtomDataHandler dataHandler,
-    int size,
-  ) async {
+    int size, {
+    AtomPrefetchRange? prefetchRange,
+  }) async {
     var remaining = size;
     while (remaining > 0) {
       final child = await Mp4Atom.readAtom(
@@ -108,6 +131,7 @@ class Mp4Atom {
         dataHandler,
         this,
         remaining,
+        prefetchRange: prefetchRange,
       );
       children.add(child);
 
