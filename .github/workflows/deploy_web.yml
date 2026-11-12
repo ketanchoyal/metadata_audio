@@ -33,14 +33,16 @@ jobs:
           publish_branch: gh-pages
 
       - name: Build Web for Netlify
-        if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        if: env.NETLIFY_AUTH_TOKEN != ''
         run: |
           cd example
           flutter build web --release --base-href /
 
       - name: Deploy to Netlify
-        if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        if: env.NETLIFY_AUTH_TOKEN != ''
         run: |
           npx --yes netlify-cli deploy --prod --dir=./example/build/web --site=4b261629-1ab8-4db4-b5e4-4915d3ae47c3 --auth="$NETLIFY_AUTH_TOKEN"
