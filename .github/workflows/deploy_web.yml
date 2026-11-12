@@ -1,4 +1,4 @@
-name: Deploy Web Demo to GitHub Pages
+name: Deploy Web Demo (GitHub Pages & Netlify)
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         with:
           channel: stable
 
-      - name: Build Web
+      - name: Build Web for GitHub Pages
         run: |
           cd example
           flutter pub get
@@ -31,3 +31,16 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./example/build/web
           publish_branch: gh-pages
+
+      - name: Build Web for Netlify
+        if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' }}
+        run: |
+          cd example
+          flutter build web --release --base-href /
+
+      - name: Deploy to Netlify
+        if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          npx --yes netlify-cli deploy --prod --dir=./example/build/web --site=4b261629-1ab8-4db4-b5e4-4915d3ae47c3 --auth="$NETLIFY_AUTH_TOKEN"
