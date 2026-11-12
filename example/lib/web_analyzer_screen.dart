@@ -48,9 +48,14 @@ class AnalyzedFile {
 }
 
 class WebAnalyzerScreen extends StatefulWidget {
-  const WebAnalyzerScreen({super.key, this.onSwitchToDesktop});
+  const WebAnalyzerScreen({
+    super.key,
+    this.onSwitchToDesktop,
+    this.initialFiles,
+  });
 
   final VoidCallback? onSwitchToDesktop;
+  final List<AnalyzedFile>? initialFiles;
 
   @override
   State<WebAnalyzerScreen> createState() => _WebAnalyzerScreenState();
@@ -78,8 +83,12 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _audioPlayer = WebPlatformHelper.instance.createAudioPlayer();
+    if (widget.initialFiles != null && widget.initialFiles!.isNotEmpty) {
+      _files.addAll(widget.initialFiles!);
+      _selectedIndex = 0;
+    }
   }
 
   @override
@@ -285,20 +294,51 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
   }
 
   bool _supportsChapterDownload(AnalyzedFile file, AudioMetadata metadata) {
+    if (file.bytes.isEmpty) return false;
     final container = metadata.format.container?.toLowerCase() ?? '';
+    final codec = metadata.format.codec?.toLowerCase() ?? '';
     final lowerName = file.name.toLowerCase();
-    return container.contains('mp4') ||
+    if (container.contains('mp4') ||
         container.contains('m4a') ||
         container.contains('m4b') ||
         container.contains('quicktime') ||
         container.contains('isom') ||
-        container == 'mpeg' ||
-        container == 'mp3' ||
+        container.contains('3gp') ||
+        container.contains('mpeg') ||
+        container.contains('mp3') ||
+        container.contains('adts') ||
+        codec.contains('mp3') ||
+        codec.contains('aac') ||
+        codec.contains('alac') ||
         lowerName.endsWith('.mp3') ||
         lowerName.endsWith('.m4a') ||
         lowerName.endsWith('.m4b') ||
         lowerName.endsWith('.mp4') ||
-        lowerName.endsWith('.mov');
+        lowerName.endsWith('.mov') ||
+        lowerName.endsWith('.aac')) {
+      return true;
+    }
+    if (file.bytes.length >= 8) {
+      final boxType = String.fromCharCodes(file.bytes.sublist(4, 8));
+      if (boxType == 'ftyp' ||
+          boxType == 'moov' ||
+          boxType == 'mdat' ||
+          boxType == 'free' ||
+          boxType == 'wide' ||
+          boxType == 'skip') {
+        return true;
+      }
+      if (file.bytes[0] == 0xFF && (file.bytes[1] & 0xE0) == 0xE0) {
+        return true;
+      }
+      if (file.bytes.length >= 3 &&
+          file.bytes[0] == 0x49 &&
+          file.bytes[1] == 0x44 &&
+          file.bytes[2] == 0x33) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<void> _downloadChapterFromWeb(
@@ -308,7 +348,15 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     String? title,
   }) async {
     if (_isExtractingChapter) return;
+    if (file.bytes.isEmpty) {
+      _showSnackbar(
+        'File bytes are not available for chapter extraction.',
+        isError: true,
+      );
+      return;
+    }
     setState(() => _isExtractingChapter = true);
+    _showSnackbar('Extracting chapter audio slice...');
     try {
       final result = await ChapterDownloader.extractChapterBytes(
         sourceBytes: file.bytes,
@@ -342,7 +390,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
       );
       if (savedTarget == null) return;
       _showSnackbar(
-        'Saved $savedTarget (${_formatFileSize(result.bytes!.length)})',
+        'Downloaded $savedTarget (${_formatFileSize(result.bytes!.length)})',
       );
     } catch (e) {
       _showSnackbar('Failed to extract chapter: $e', isError: true);
@@ -1176,7 +1224,7 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
         children: [
           _buildTrackHeader(file, metadata),
           _buildAudioPlayerBar(file),
-          _buildTabBar(),
+          _buildTabBar(metadata),
           _buildTabContent(file, metadata),
         ],
       ),
@@ -1286,12 +1334,46 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       ),
                     if (format.lossless == true)
                       _buildHeaderChip('Lossless', isAccent: true),
+                    if (format.chapters != null && format.chapters!.isNotEmpty)
+                      InkWell(
+                        onTap: () => _tabController.animateTo(1),
+                        borderRadius: BorderRadius.circular(4),
+                        child: _buildHeaderChip(
+                          '${format.chapters!.length} Chapters',
+                          isAccent: true,
+                        ),
+                      ),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
+          if (format.chapters != null && format.chapters!.isNotEmpty) ...[
+            ElevatedButton.icon(
+              onPressed: () => _tabController.animateTo(1),
+              icon: const Icon(Icons.bookmarks_rounded, size: 14),
+              label: Text(
+                'Download Chapters (${format.chapters!.length})',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           // Export JSON button
           OutlinedButton.icon(
             onPressed: () => _downloadJson(file),
@@ -1428,6 +1510,19 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                   color: AppTheme.textMuted,
                 ),
               ),
+              if (file.metadata?.format.chapters != null &&
+                  file.metadata!.format.chapters!.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => _tabController.animateTo(1),
+                  icon: const Icon(Icons.bookmarks_outlined),
+                  iconSize: 18,
+                  color: AppTheme.primaryPurple,
+                  tooltip:
+                      'View Chapters (${file.metadata!.format.chapters!.length})',
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
             ],
           );
         },
@@ -1438,7 +1533,8 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
   // ==========================================
   // Tabs Bar
   // ==========================================
-  Widget _buildTabBar() {
+  Widget _buildTabBar(AudioMetadata metadata) {
+    final chapterCount = metadata.format.chapters?.length ?? 0;
     return Container(
       decoration: const BoxDecoration(
         border: Border(
@@ -1460,13 +1556,16 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
-        tabs: const [
-          Tab(text: 'Overview'),
-          Tab(text: 'Common tags'),
-          Tab(text: 'Media details'),
-          Tab(text: 'Artwork'),
-          Tab(text: 'Native tags'),
-          Tab(text: 'Raw JSON'),
+        tabs: [
+          const Tab(text: 'Overview'),
+          Tab(
+            text: chapterCount > 0 ? 'Chapters ($chapterCount)' : 'Chapters',
+          ),
+          const Tab(text: 'Common tags'),
+          const Tab(text: 'Media details'),
+          const Tab(text: 'Artwork'),
+          const Tab(text: 'Native tags'),
+          const Tab(text: 'Raw JSON'),
         ],
       ),
     );
@@ -1483,16 +1582,18 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
         builder: (context, _) {
           switch (_tabController.index) {
             case 0:
-              return _buildOverviewTab(metadata);
+              return _buildOverviewTab(file, metadata);
             case 1:
-              return _buildCommonTagsTab(metadata);
+              return _buildChaptersTab(file, metadata);
             case 2:
-              return _buildMediaDetailsTab(file, metadata);
+              return _buildCommonTagsTab(metadata);
             case 3:
-              return _buildArtworkTab(metadata);
+              return _buildMediaDetailsTab(file, metadata);
             case 4:
-              return _buildNativeTagsTab(metadata);
+              return _buildArtworkTab(metadata);
             case 5:
+              return _buildNativeTagsTab(metadata);
+            case 6:
               return _buildRawJsonTab(file);
             default:
               return const SizedBox.shrink();
@@ -1505,9 +1606,10 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
   // ==========================================
   // Tab 1: Overview
   // ==========================================
-  Widget _buildOverviewTab(AudioMetadata metadata) {
+  Widget _buildOverviewTab(AnalyzedFile file, AudioMetadata metadata) {
     final format = metadata.format;
     final common = metadata.common;
+    final chapters = format.chapters ?? [];
 
     final durationSec = format.duration ?? 0.0;
     final bitrate = format.bitrate != null
@@ -1548,6 +1650,235 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           ),
         ),
         const SizedBox(height: 24),
+
+        // Chapters & Slicing Highlight on Overview Tab
+        if (chapters.isNotEmpty) ...[
+          Row(
+            children: [
+              const Icon(
+                Icons.bookmarks_rounded,
+                size: 16,
+                color: AppTheme.primaryPurple,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'CHAPTERS & SLICING (${chapters.length})',
+                style: const TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => _tabController.animateTo(1),
+                icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+                label: Text(
+                  'View all ${chapters.length} chapters',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.primaryPurple,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.playerBg,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.playerBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'This audiobook contains ${chapters.length} chapters. Extract standalone playable .m4a/.mp3 chapters with preserved cover art & metadata.',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textDark,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: () => _tabController.animateTo(1),
+                      icon: const Icon(Icons.list_alt_rounded, size: 14),
+                      label: const Text(
+                        'Open Chapters Tab',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryPurple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                // Show first 3 chapters with direct download buttons
+                ...chapters.take(3).toList().asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final ch = entry.value;
+                  final startSec = ch.start / 1000.0;
+                  final endMs =
+                      ch.end ??
+                      (format.duration != null
+                          ? (format.duration! * 1000).round()
+                          : (ch.start + 180000));
+                  final endSec = ch.end != null ? ch.end! / 1000.0 : null;
+                  final sizeBytes =
+                      (ch.byteOffset != null && ch.endByteOffset != null)
+                          ? ch.endByteOffset! - ch.byteOffset!
+                          : null;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppTheme.divider),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0ECF8),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '#${index + 1}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryPurple,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          endSec != null
+                              ? '${_formatSeconds(startSec)} - ${_formatSeconds(endSec)}'
+                              : _formatSeconds(startSec),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryPurple,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            ch.title.isNotEmpty
+                                ? ch.title
+                                : 'Chapter ${index + 1}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textDark,
+                            ),
+                          ),
+                        ),
+                        if (sizeBytes != null && sizeBytes >= 0) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatFileSize(sizeBytes),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontFamily: 'monospace',
+                              color: AppTheme.textMuted,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 10),
+                        ElevatedButton.icon(
+                          onPressed: _isExtractingChapter
+                              ? null
+                              : () => _downloadChapterFromWeb(
+                                  file,
+                                  ch.start,
+                                  endMs,
+                                  title: ch.title,
+                                ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryButton,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          icon: const Icon(Icons.download_rounded, size: 13),
+                          label: Text(
+                            _isExtractingChapter ? 'Preparing...' : 'Download',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                if (chapters.length > 3) ...[
+                  const SizedBox(height: 6),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => _tabController.animateTo(1),
+                      child: Text(
+                        'View all ${chapters.length} chapters in Chapters tab →',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryPurple,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+
         // Tag rows
         const Text(
           'TAG SUMMARY',
@@ -1579,6 +1910,469 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           format.lossless != null ? (format.lossless! ? 'Yes' : 'No') : null,
         ),
       ],
+    );
+  }
+
+  // ==========================================
+  // Tab 2: Dedicated Chapters Tab
+  // ==========================================
+  Widget _buildChaptersTab(AnalyzedFile file, AudioMetadata metadata) {
+    final format = metadata.format;
+    final chapters = format.chapters ?? [];
+    final isSupported = _supportsChapterDownload(file, metadata);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!isSupported) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFBEB),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFFDE68A)),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: Color(0xFFD97706),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Chapter slicing & extraction is optimized for MP4, M4A, M4B, MOV, and MP3 audio files.',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF92400E)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+        // Hero Header Banner
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.playerBg,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.playerBorder),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: AppTheme.primaryPurple,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.bookmarks_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Audiobook Chapters & Slicing',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textDark,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE9E3F5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${chapters.length} ${chapters.length == 1 ? 'Chapter' : 'Chapters'}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primaryPurple,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Download any chapter or custom time range as a standalone playable .m4a or .mp3 file with preserved cover art & metadata.',
+                      style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Custom Range Slicing Card
+        _buildCustomRangeDownloadBox(file, format),
+        const SizedBox(height: 24),
+
+        // Chapters List Section
+        if (chapters.isEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.divider),
+            ),
+            child: const Column(
+              children: [
+                Icon(
+                  Icons.bookmark_outline_rounded,
+                  size: 40,
+                  color: AppTheme.textLight,
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'No Chapter Markers Found',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'This audio file does not contain embedded chapter atoms or ID3 CHAP frames.\nYou can still use the Custom Range Download above to extract and slice any portion of this track.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          Row(
+            children: [
+              Text(
+                'CHAPTERS (${chapters.length})',
+                style: const TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+              const Spacer(),
+              const Text(
+                'Click Download to save individual playable chapter files',
+                style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...chapters.asMap().entries.map((entry) {
+            final index = entry.key;
+            final ch = entry.value;
+            final startSec = ch.start / 1000.0;
+            final endMs =
+                ch.end ??
+                (format.duration != null
+                    ? (format.duration! * 1000).round()
+                    : (ch.start + 180000));
+            final endSec = ch.end != null ? ch.end! / 1000.0 : null;
+            final durationSec = endSec != null ? (endSec - startSec) : null;
+            final sizeBytes = (ch.byteOffset != null && ch.endByteOffset != null)
+                ? ch.endByteOffset! - ch.byteOffset!
+                : null;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.divider),
+              ),
+              child: Row(
+                children: [
+                  // Chapter Number Badge
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3EFFF),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFDFD5F5)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primaryPurple,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Title & Duration
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          ch.title.isNotEmpty
+                              ? ch.title
+                              : 'Chapter ${index + 1}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textDark,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Text(
+                              endSec != null
+                                  ? '${_formatSeconds(startSec)} - ${_formatSeconds(endSec)}'
+                                  : _formatSeconds(startSec),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontFamily: 'monospace',
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primaryPurple,
+                              ),
+                            ),
+                            if (durationSec != null) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                '(${_formatSeconds(durationSec)})',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontFamily: 'monospace',
+                                  color: AppTheme.textMuted,
+                                ),
+                              ),
+                            ],
+                            if (sizeBytes != null && sizeBytes >= 0) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                '• ${_formatFileSize(sizeBytes)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontFamily: 'monospace',
+                                  color: AppTheme.textMuted,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Play Chapter in Player
+                  IconButton(
+                    onPressed: () {
+                      _audioPlayer.seek(startSec);
+                      _audioPlayer.play();
+                    },
+                    icon: const Icon(Icons.play_circle_outline_rounded),
+                    iconSize: 22,
+                    color: AppTheme.primaryPurple,
+                    tooltip: 'Play from chapter start',
+                  ),
+                  const SizedBox(width: 6),
+
+                  // Download Chapter Button
+                  ElevatedButton.icon(
+                    onPressed: _isExtractingChapter
+                        ? null
+                        : () => _downloadChapterFromWeb(
+                            file,
+                            ch.start,
+                            endMs,
+                            title: ch.title,
+                          ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryButton,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    icon: const Icon(Icons.download_rounded, size: 15),
+                    label: Text(
+                      _isExtractingChapter ? 'Preparing...' : 'Download',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ],
+    );
+  }
+
+  // ==========================================
+  // Custom Range Download Box
+  // ==========================================
+  Widget _buildCustomRangeDownloadBox(AnalyzedFile file, Format format) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.playerBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.playerBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.content_cut_rounded,
+                size: 16,
+                color: AppTheme.primaryPurple,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Custom Range Slicing & Download',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const Spacer(),
+              const Text(
+                'Supports ms, s, MM:SS, HH:MM:SS',
+                style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _customStartController,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textDark,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Start (ms / s / MM:SS)',
+                    hintText: '0 or 00:00',
+                    isDense: true,
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(color: AppTheme.cardBorder),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _customEndController,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textDark,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'End (ms / s / MM:SS)',
+                    hintText: '5000 or 00:05',
+                    isDense: true,
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(color: AppTheme.cardBorder),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: _isExtractingChapter
+                    ? null
+                    : () {
+                        final start = parseCustomRangeMs(
+                          _customStartController.text,
+                        );
+                        final end = parseCustomRangeMs(
+                          _customEndController.text,
+                        );
+                        if (start == null || end == null) {
+                          _showSnackbar(
+                            'Invalid range. Enter ms (15000), seconds (15.5s), or HH:MM:SS.mmm.',
+                            isError: true,
+                          );
+                          return;
+                        }
+                        if (end <= start) {
+                          _showSnackbar(
+                            'End time must be greater than Start time.',
+                            isError: true,
+                          );
+                          return;
+                        }
+                        _downloadChapterFromWeb(file, start, end);
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryButton,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                icon: const Icon(Icons.download_rounded, size: 15),
+                label: Text(
+                  _isExtractingChapter ? 'Preparing...' : 'Download Range',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Extracts a standalone playable audio file with preserved cover art & metadata.',
+            style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1800,7 +2594,6 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
     final format = metadata.format;
     final chapters = format.chapters ?? [];
     final tracks = format.trackInfo;
-    final supportsExtract = _supportsChapterDownload(file, metadata);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1905,135 +2698,9 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
           }),
         ],
 
-        // Custom Range Download (MP4/M4B/M4A/MOV & MP3)
-        if (supportsExtract) ...[
-          const SizedBox(height: 24),
-          const Text(
-            'Custom Range Download',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textDark,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppTheme.playerBg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.playerBorder),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _customStartController,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textDark,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Start (ms / s / MM:SS)',
-                          hintText: '0 or 00:00',
-                          isDense: true,
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
-                            borderSide: const BorderSide(
-                              color: AppTheme.cardBorder,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: _customEndController,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textDark,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'End (ms / s / MM:SS)',
-                          hintText: '5000 or 00:05',
-                          isDense: true,
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
-                            borderSide: const BorderSide(
-                              color: AppTheme.cardBorder,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: _isExtractingChapter
-                          ? null
-                          : () {
-                              final start = parseCustomRangeMs(
-                                _customStartController.text,
-                              );
-                              final end = parseCustomRangeMs(
-                                _customEndController.text,
-                              );
-                              if (start == null || end == null) {
-                                _showSnackbar(
-                                  'Invalid range. Enter ms (15000), seconds (15.5s), or HH:MM:SS.mmm.',
-                                  isError: true,
-                                );
-                                return;
-                              }
-                              if (end <= start) {
-                                _showSnackbar(
-                                  'End time must be greater than Start time.',
-                                  isError: true,
-                                );
-                                return;
-                              }
-                              _downloadChapterFromWeb(file, start, end);
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryButton,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      icon: const Icon(Icons.download_rounded, size: 15),
-                      label: Text(
-                        _isExtractingChapter
-                            ? 'Preparing...'
-                            : 'Download Range',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Extracts a standalone playable chapter with preserved cover art & metadata.',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
-                ),
-              ],
-            ),
-          ),
-        ],
+        // Custom Range Slicing & Download
+        const SizedBox(height: 24),
+        _buildCustomRangeDownloadBox(file, format),
 
         // Chapters
         if (chapters.isNotEmpty) ...[
@@ -2100,40 +2767,38 @@ class _WebAnalyzerScreenState extends State<WebAnalyzerScreen>
                       ),
                     ),
                   ],
-                  if (supportsExtract) ...[
-                    const SizedBox(width: 10),
-                    OutlinedButton.icon(
-                      onPressed: _isExtractingChapter
-                          ? null
-                          : () => _downloadChapterFromWeb(
+                  const SizedBox(width: 10),
+                  OutlinedButton.icon(
+                    onPressed: _isExtractingChapter
+                        ? null
+                        : () => _downloadChapterFromWeb(
                               file,
                               ch.start,
                               endMs,
                               title: ch.title,
                             ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primaryPurple,
-                        side: const BorderSide(color: AppTheme.purpleBorder),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primaryPurple,
+                      side: const BorderSide(color: AppTheme.purpleBorder),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                      icon: const Icon(Icons.download_rounded, size: 13),
-                      label: const Text(
-                        'Download',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                  ],
+                    icon: const Icon(Icons.download_rounded, size: 13),
+                    label: Text(
+                      _isExtractingChapter ? 'Preparing...' : 'Download',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
