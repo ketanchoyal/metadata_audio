@@ -241,15 +241,6 @@ angle
 dart
 skia
 
-Copyright (c) 2013 The Chromium Authors. All rights reserved.
-Use of this source code is governed by a BSD-style license that can be
-found in the LICENSE file.
---------------------------------------------------------------------------------
-accessibility
-angle
-dart
-skia
-
 Copyright 2014 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
@@ -306,6 +297,14 @@ tonic
 web_test_fonts
 
 Copyright 2013 The Flutter Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+--------------------------------------------------------------------------------
+accessibility
+dart
+skia
+
+Copyright (c) 2013 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 --------------------------------------------------------------------------------
@@ -808,9 +807,28 @@ Use of this source code is governed by a BSD-style license that can be found in 
 --------------------------------------------------------------------------------
 angle
 
+Copyright 2025 The ANGLE Project Authors
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+--------------------------------------------------------------------------------
+angle
+
 Copyright 2025 The ANGLE Project Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
+--------------------------------------------------------------------------------
+angle
+
+Copyright 2026 The ANGLE Project Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+--------------------------------------------------------------------------------
+angle
+
+Copyright 2026 The ANGLE project authors. All Rights Reserved.
+
+Use of this source code is governed by a BSD-style license
+that can be found in the LICENSE file 
 --------------------------------------------------------------------------------
 angle
 
@@ -831,6 +849,153 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 --------------------------------------------------------------------------------
 angle
+dart
+perfetto
+
+Copyright (C) 2018 The Android Open Source Project
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+angle
+glfw
+
+Copyright (c) 2008-2018 The Khronos Group Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and/or associated documentation files (the
+"Materials"), to deal in the Materials without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Materials, and to
+permit persons to whom the Materials are furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Materials.
+
+THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
+--------------------------------------------------------------------------------
+angle
+xxhash
+
+Copyright 2019 The ANGLE Project Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+--------------------------------------------------------------------------------
+args
+logging
+
+Copyright 2013, the Dart project authors. 
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+    * Neither the name of Google LLC nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
+async
+collection
+stream_channel
+typed_data
+
+Copyright 2015, the Dart project authors. 
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+    * Neither the name of Google LLC nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
+benchmark
+
+Copyright 2016 Ismael Jimenez Martinez. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+benchmark
+
+Copyright 2016 Ismael Jimenez Martinez. All rights reserved.
+Copyright 2017 Roman Lebedev. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
 benchmark
 boringssl
 cpu_features
@@ -1026,154 +1191,6 @@ yapf
    END OF TERMS AND CONDITIONS
 
    
---------------------------------------------------------------------------------
-angle
-dart
-perfetto
-
-Copyright (C) 2018 The Android Open Source Project
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-angle
-glfw
-
-Copyright (c) 2008-2018 The Khronos Group Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and/or associated documentation files (the
-"Materials"), to deal in the Materials without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Materials, and to
-permit persons to whom the Materials are furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Materials.
-
-THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
---------------------------------------------------------------------------------
-angle
-xxhash
-
-Copyright 2019 The ANGLE Project Authors. All rights reserved.
-Use of this source code is governed by a BSD-style license that can be
-found in the LICENSE file.
---------------------------------------------------------------------------------
-args
-logging
-
-Copyright 2013, the Dart project authors. 
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials provided
-      with the distribution.
-    * Neither the name of Google LLC nor the names of its
-      contributors may be used to endorse or promote products derived
-      from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
---------------------------------------------------------------------------------
-async
-collection
-stream_channel
-typed_data
-
-Copyright 2015, the Dart project authors. 
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials provided
-      with the distribution.
-    * Neither the name of Google LLC nor the names of its
-      contributors may be used to endorse or promote products derived
-      from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
---------------------------------------------------------------------------------
-benchmark
-
-Copyright 2016 Ismael Jimenez Martinez. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-benchmark
-
-Copyright 2016 Ismael Jimenez Martinez. All rights reserved.
-Copyright 2017 Roman Lebedev. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 --------------------------------------------------------------------------------
 benchmark
 flatbuffers
@@ -1751,6 +1768,7 @@ limitations under the License.
 --------------------------------------------------------------------------------
 cross_file
 flutter_plugin_android_lifecycle
+listen
 path_provider
 path_provider_android
 path_provider_foundation
@@ -7695,6 +7713,180 @@ SOFTWARE.
 --------------------------------------------------------------------------------
 glslang
 
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship made available under
+      the License, as indicated by a copyright notice that is included in
+      or attached to the work (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean, as submitted to the Licensor for inclusion
+      in the Work by the copyright owner or by an individual or Legal Entity
+      authorized to submit on behalf of the copyright owner. For the purposes
+      of this definition, "submitted" means any form of electronic, verbal,
+      or written communication sent to the Licensor or its representatives,
+      including but not limited to communication on electronic mailing lists,
+      source code control systems, and issue tracking systems that are managed
+      by, or on behalf of, the Licensor for the purpose of discussing and
+      improving the Work, but excluding communication that is conspicuously
+      marked or designated in writing by the copyright owner as "Not a
+      Contribution."
+
+      "Contributor" shall mean Licensor and any Legal Entity on behalf of
+      whom a Contribution has been received by the Licensor and included
+      within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or Derivative
+          Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, You must include a readable copy of the
+          attribution notices contained within such NOTICE file, in
+          at least one of the following places: within a NOTICE text
+          file distributed as part of the Derivative Works; within
+          the Source form or documentation, if provided along with the
+          Derivative Works; or, within a display generated by the
+          Derivative Works, if and wherever such third-party notices
+          normally appear. The contents of the NOTICE file are for
+          informational purposes only and do not modify the License.
+          You may add Your own attribution notices within Derivative
+          Works that You distribute, alongside or in addition to the
+          NOTICE text from the Work, provided that such additional
+          attribution notices cannot be construed as modifying the
+          License.
+
+      You may add Your own license statement for Your modifications and
+      may provide additional grant of rights to use, reproduce, modify,
+      and distribute those modifications and derivative works.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or reproducing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or exemplary damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or all other
+      commercial damages or losses), even if such Contributor has been
+      advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   
+--------------------------------------------------------------------------------
+glslang
+
 Copyright (C) 2002-2004  3Dlabs Inc. Ltd.
 All rights reserved.
 
@@ -10263,6 +10455,76 @@ POSSIBILITY OF SUCH DAMAGE.
 --------------------------------------------------------------------------------
 glslang
 
+Copyright (C) 2026 NVIDIA Corporation.
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+   Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+   Redistributions in binary form must reproduce the above
+   copyright notice, this list of conditions and the following
+   disclaimer in the documentation and/or other materials provided
+   with the distribution.
+
+   Neither the name of 3Dlabs Inc. Ltd. nor the names of its
+   contributors may be used to endorse or promote products derived
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+--------------------------------------------------------------------------------
+glslang
+
+Copyright (C) 2026 The Khronos Group Inc.
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+   Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+   Redistributions in binary form must reproduce the above
+   copyright notice, this list of conditions and the following
+   disclaimer in the documentation and/or other materials provided
+   with the distribution.
+
+   Neither the name of The Khronos Group Inc. nor the names of its
+   contributors may be used to endorse or promote products derived
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+--------------------------------------------------------------------------------
+glslang
+
 Copyright (c) 2002, NVIDIA Corporation.
 
 NVIDIA Corporation("NVIDIA") supplies this software to you in
@@ -10618,6 +10880,76 @@ limitations under the License.
 --------------------------------------------------------------------------------
 glslang
 
+Copyright 2026 Google LLC
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+   Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+   Redistributions in binary form must reproduce the above
+   copyright notice, this list of conditions and the following
+   disclaimer in the documentation and/or other materials provided
+   with the distribution.
+
+   Neither the name of 3Dlabs Inc. Ltd. nor the names of its
+   contributors may be used to endorse or promote products derived
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+--------------------------------------------------------------------------------
+glslang
+
+Copyright 2026 Google LLC.
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+   Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+   Redistributions in binary form must reproduce the above
+   copyright notice, this list of conditions and the following
+   disclaimer in the documentation and/or other materials provided
+   with the distribution.
+
+   Neither the name of Google Inc. nor the names of its
+   contributors may be used to endorse or promote products derived
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+--------------------------------------------------------------------------------
+glslang
+
 Copyright(C) 2021 Advanced Micro Devices, Inc.
 
 All rights reserved.
@@ -10653,9 +10985,35 @@ POSSIBILITY OF SUCH DAMAGE.
 --------------------------------------------------------------------------------
 glslang
 skia
-spirv-tools
 
 Copyright (c) 2014-2016 The Khronos Group Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and/or associated documentation files (the "Materials"),
+to deal in the Materials without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Materials, and to permit persons to whom the
+Materials are furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Materials.
+
+MODIFICATIONS TO THIS FILE MAY MEAN IT NO LONGER ACCURATELY REFLECTS KHRONOS
+STANDARDS. THE UNMODIFIED, NORMATIVE VERSIONS OF KHRONOS SPECIFICATIONS AND
+HEADER INFORMATION ARE LOCATED AT https://www.khronos.org/registry/
+
+THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM,OUT OF OR IN CONNECTION WITH THE MATERIALS OR THE USE OR OTHER DEALINGS
+IN THE MATERIALS.
+--------------------------------------------------------------------------------
+glslang
+spirv-cross
+
+Copyright (c) 2014-2020 The Khronos Group Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and/or associated documentation files (the "Materials"),
@@ -10729,6 +11087,28 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+--------------------------------------------------------------------------------
+glslang
+vulkan-validation-layers
+
+
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
+following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial
+portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+USE OR OTHER DEALINGS IN THE SOFTWARE.
 --------------------------------------------------------------------------------
 gtest-parallel
 
@@ -21355,6 +21735,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 json
+vulkan-tools
+vulkan-validation-layers
 
 Apache License
 Version 2.0, January 2004
@@ -23363,6 +23745,13 @@ Please send bug reports, offers of help, etc. to jpeg-info@jpegclub.org.
 
 --------------------------------------------------------------------------------
 libjxl
+
+Copyright (c) the JPEG XL Project Authors. All rights reserved.
+
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+--------------------------------------------------------------------------------
+libjxl
 skia
 vulkan-deps
 
@@ -24202,8 +24591,27 @@ limitations under the License.
 --------------------------------------------------------------------------------
 lunarg-vulkantools
 
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2016 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+lunarg-vulkantools
+
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (c) 2015-2017, 2019, 2021 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -24255,23 +24663,6 @@ limitations under the License.
 --------------------------------------------------------------------------------
 lunarg-vulkantools
 
-Copyright (c) 2020-2021 Valve Corporation
-Copyright (c) 2020-2021 LunarG, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-lunarg-vulkantools
-
 Copyright (c) 2020-2022 Valve Corporation
 Copyright (c) 2020-2022 LunarG, Inc.
 
@@ -24289,8 +24680,8 @@ limitations under the License.
 --------------------------------------------------------------------------------
 lunarg-vulkantools
 
-Copyright (c) 2020-2025 Valve Corporation
-Copyright (c) 2020-2025 LunarG, Inc.
+Copyright (c) 2020-2026 Valve Corporation
+Copyright (c) 2020-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24306,8 +24697,8 @@ limitations under the License.
 --------------------------------------------------------------------------------
 lunarg-vulkantools
 
-Copyright (c) 2022-2025 Valve Corporation
-Copyright (c) 2022-2025 LunarG, Inc.
+Copyright (c) 2022-2026 Valve Corporation
+Copyright (c) 2022-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24322,9 +24713,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 --------------------------------------------------------------------------------
 lunarg-vulkantools
-vulkan-headers
 
-Copyright 2023-2025 The Khronos Group Inc.
+Copyright 2023-2024 The Khronos Group Inc.
+Copyright 2023-2024 Valve Corporation
+Copyright 2023-2024 LunarG, Inc.
 
 SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
@@ -24347,15 +24739,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
---------------------------------------------------------------------------------
-lunarg-vulkantools
-vulkan-validation-layers
-
-Copyright 2023-2024 The Khronos Group Inc.
-Copyright 2023-2024 Valve Corporation
-Copyright 2023-2024 LunarG, Inc.
-
-SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
 material_color_utilities
 
@@ -25872,6 +26255,13 @@ found in the LICENSE file
 --------------------------------------------------------------------------------
 skia
 
+Copyright 2016 Google LLC
+
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+--------------------------------------------------------------------------------
+skia
+
 Copyright 2016 Mozilla Foundation
 
 Use of this source code is governed by a BSD-style license that can be
@@ -26163,7 +26553,21 @@ found in the LICENSE file.
 --------------------------------------------------------------------------------
 skia
 
+Copyright 2025 Google LLC.
+
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+--------------------------------------------------------------------------------
+skia
+
 Copyright 2025 Google, LLC
+
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+--------------------------------------------------------------------------------
+skia
+
+Copyright 2026 Apple Inc.
 
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
@@ -26177,10 +26581,41 @@ found in the LICENSE file.
 --------------------------------------------------------------------------------
 skia
 
-Copyright 2026 The Android Open Source Project
+Copyright 2026 Google LLC.
 
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
+--------------------------------------------------------------------------------
+skia
+vulkan
+
+// Copyright (c) 2018 Google Inc. All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//    * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//    * Neither the name of Google Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --------------------------------------------------------------------------------
 spirv-cross
 
@@ -26410,32 +26845,6 @@ all copies or substantial portions of the Materials.
 
 MODIFICATIONS TO THIS FILE MAY MEAN IT NO LONGER ACCURATELY REFLECTS KHRONOS
 STANDARDS. THE UNMODIFIED, NORMATIVE VERSIONS OF KHRONOS SPECIFICATIONS AND
-HEADER INFORMATION ARE LOCATED AT https://www.khronos.org/registry/
-
-THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM,OUT OF OR IN CONNECTION WITH THE MATERIALS OR THE USE OR OTHER DEALINGS
-IN THE MATERIALS.
---------------------------------------------------------------------------------
-spirv-cross
-
-Copyright (c) 2014-2020 The Khronos Group Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and/or associated documentation files (the "Materials"),
-to deal in the Materials without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Materials, and to permit persons to whom the
-Materials are furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Materials.
-
-MODIFICATIONS TO THIS FILE MAY MEAN IT NO LONGER ACCURATELY REFLECTS KHRONOS
-STANDARDS. THE UNMODIFIED, NORMATIVE VERSIONS OF KHRONOS SPECIFICATIONS AND
 HEADER INFORMATION ARE LOCATED AT https://www.khronos.org/registry/ 
 
 THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
@@ -26504,6 +26913,7 @@ spirv-tools
 Copyright (c) 2015-2016 The Khronos Group Inc.
 Modifications Copyright (C) 2024 Advanced Micro Devices, Inc. All rights
 reserved.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26834,6 +27244,23 @@ limitations under the License.
 spirv-tools
 
 Copyright (c) 2018 Google LLC.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+spirv-tools
+
+Copyright (c) 2018 Google LLC.
 Copyright (c) 2019 NVIDIA Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -26853,6 +27280,7 @@ spirv-tools
 Copyright (c) 2018 Google LLC.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights
 reserved.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26871,6 +27299,7 @@ spirv-tools
 Copyright (c) 2018 Google LLC.
 Modifications Copyright (C) 2020-2024 Advanced Micro Devices, Inc. All
 rights reserved.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26889,6 +27318,25 @@ spirv-tools
 Copyright (c) 2018 Google LLC.
 Modifications Copyright (C) 2024 Advanced Micro Devices, Inc. All rights
 reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+spirv-tools
+
+Copyright (c) 2018 Google LLC.
+Modifications Copyright (C) 2024 Advanced Micro Devices, Inc. All rights
+reserved.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27351,6 +27799,22 @@ limitations under the License.
 --------------------------------------------------------------------------------
 spirv-tools
 
+Copyright (c) 2022-2025 Arm Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+spirv-tools
+
 Copyright (c) 2023 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27511,6 +27975,22 @@ limitations under the License.
 --------------------------------------------------------------------------------
 spirv-tools
 
+Copyright (c) 2025 Google LLC.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+spirv-tools
+
 Copyright (c) 2025 LunarG Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27544,7 +28024,7 @@ limitations under the License.
 --------------------------------------------------------------------------------
 spirv-tools
 
-Copyright 2018 The Go Authors.
+Copyright (c) 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27560,7 +28040,23 @@ limitations under the License.
 --------------------------------------------------------------------------------
 spirv-tools
 
-Copyright 2019 Google LLC
+Copyright (c) 2026 LunarG Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+spirv-tools
+
+Copyright 2018 The Go Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27800,6 +28296,12 @@ limitations under the License.
 --------------------------------------------------------------------------------
 swiftshader
 
+Copyright 2015-2025 The Khronos Group Inc.
+
+SPDX-License-Identifier: Apache-2.0
+--------------------------------------------------------------------------------
+swiftshader
+
 Copyright 2016 The SwiftShader Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -28019,20 +28521,6 @@ Copyright 2015-2023 LunarG, Inc.
 SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
 swiftshader
-vulkan-headers
-
-Copyright 2014-2025 The Khronos Group Inc.
-
-SPDX-License-Identifier: Apache-2.0
---------------------------------------------------------------------------------
-swiftshader
-vulkan-headers
-
-Copyright 2015-2025 The Khronos Group Inc.
-
-SPDX-License-Identifier: Apache-2.0
---------------------------------------------------------------------------------
-swiftshader
 vulkan-utility-libraries
 
 Copyright 2023-2025 The Khronos Group Inc.
@@ -28149,7 +28637,7 @@ SOFTWARE.
 --------------------------------------------------------------------------------
 volk
 
-Copyright (c) 2018-2024 Arseny Kapoulkine
+Copyright (c) 2018-2025 Arseny Kapoulkine
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28170,42 +28658,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --------------------------------------------------------------------------------
 vulkan
-
-// Copyright (c) 2018 Google Inc. All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//    * Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//    * Redistributions in binary form must reproduce the above
-// copyright notice, this list of conditions and the following disclaimer
-// in the documentation and/or other materials provided with the
-// distribution.
-//    * Neither the name of Google Inc. nor the names of its
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
---------------------------------------------------------------------------------
-vulkan
+vulkan-headers
 
 Copyright 2014-2026 The Khronos Group Inc.
 
 SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
 vulkan
+vulkan-headers
 
 Copyright 2015-2026 The Khronos Group Inc.
 
@@ -28214,24 +28674,35 @@ SPDX-License-Identifier: Apache-2.0
 vulkan-headers
 
 Copyright (c) 2018-2019 Collabora, Ltd.
-Copyright 2013-2025 The Khronos Group Inc.
+Copyright 2013-2026 The Khronos Group Inc.
 
 SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
 vulkan-headers
 
-Copyright 2013-2025 The Khronos Group Inc.
+Copyright 2013-2026 The Khronos Group Inc.
 
 SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
 vulkan-headers
 
-Copyright 2021-2025 The Khronos Group Inc.
+Copyright 2013-2026 The Khronos Group Inc.
 SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
 vulkan-headers
 
-Copyright 2023-2025 The Khronos Group Inc.
+Copyright 2021-2026 The Khronos Group Inc.
+SPDX-License-Identifier: Apache-2.0
+--------------------------------------------------------------------------------
+vulkan-headers
+
+Copyright 2023-2026 The Khronos Group Inc.
+
+SPDX-License-Identifier: Apache-2.0
+--------------------------------------------------------------------------------
+vulkan-headers
+
+Copyright 2023-2026 The Khronos Group Inc.
 SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
 vulkan-tools
@@ -28363,10 +28834,7 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-tools
 
-Copyright (c) 2015-2021 The Khronos Group Inc.
-Copyright (c) 2015-2021 Valve Corporation
-Copyright (c) 2015-2021 LunarG, Inc.
-Copyright (c) 2023-2024 RasterGrid Kft.
+Copyright (c) 2015-2025 The Khronos Group Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28382,7 +28850,10 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-tools
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (c) 2023-2024 RasterGrid Kft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28469,9 +28940,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-tools
 
-Copyright (c) 2019-2022 The Khronos Group Inc.
-Copyright (c) 2019-2022 Valve Corporation
-Copyright (c) 2019-2022 LunarG, Inc.
+Copyright (c) 2019-2026 The Khronos Group Inc.
+Copyright (c) 2019-2026 Valve Corporation
+Copyright (c) 2019-2026 LunarG, Inc.
 Copyright (c) 2023-2024 RasterGrid Kft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -28567,6 +29038,25 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 --------------------------------------------------------------------------------
+vulkan-tools
+vulkan-validation-layers
+
+Copyright (c) 2025-2026 The Khronos Group Inc.
+Copyright (c) 2025-2026 Valve Corporation
+Copyright (c) 2025-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
 vulkan-utility-libraries
 
 Copyright (c) 2015-2017, 2019-2024 The Khronos Group Inc.
@@ -28639,68 +29129,7 @@ vulkan-validation-layers
 Copyright (c) 2015-2025 The Khronos Group Inc.
 Copyright (c) 2015-2025 Valve Corporation
 Copyright (c) 2015-2025 LunarG, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (c) 2015-2024 Google Inc.
-Copyright (c) 2023-2024 RasterGrid Kft.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
 Copyright (c) 2015-2025 Google Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (c) 2015-2025 Google Inc.
-Copyright (c) 2015-2025 RasterGrid Kft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28738,8 +29167,9 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28756,8 +29186,132 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2016-2025 Google Inc.
-Copyright (c) 2016-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (c) 2015-2024 Google Inc.
+Copyright (c) 2023-2024 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (c) 2015-2026 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (c) 2015-2026 Google Inc.
+Copyright (c) 2015-2025 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (c) 2015-2026 Google Inc.
+Copyright (c) 2023-2024 RasterGrid Kft.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+
+Copyright (c) 2016-2026 Google Inc.
+Copyright (c) 2016-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28831,9 +29385,9 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2021-2025 The Khronos Group Inc.
-Copyright (c) 2021-2025 Valve Corporation
-Copyright (c) 2021-2025 LunarG, Inc.
+Copyright (c) 2021-2026 The Khronos Group Inc.
+Copyright (c) 2021-2026 Valve Corporation
+Copyright (c) 2021-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28850,8 +29404,8 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2021-2025 Valve Corporation
-Copyright (c) 2021-2025 LunarG, Inc.
+Copyright (c) 2021-2026 Valve Corporation
+Copyright (c) 2021-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28868,8 +29422,8 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2023-2025 Google Inc.
-Copyright (c) 2023-2025 LunarG, Inc.
+Copyright (c) 2023-2026 Google Inc.
+Copyright (c) 2023-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28886,8 +29440,8 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2023-2025 The Khronos Group Inc.
-Copyright (c) 2023-2025 Valve Corporation
+Copyright (c) 2023-2026 The Khronos Group Inc.
+Copyright (c) 2023-2026 Valve Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28904,9 +29458,9 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2023-2025 The Khronos Group Inc.
-Copyright (c) 2023-2025 Valve Corporation
-Copyright (c) 2023-2025 LunarG, Inc.
+Copyright (c) 2023-2026 The Khronos Group Inc.
+Copyright (c) 2023-2026 Valve Corporation
+Copyright (c) 2023-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28923,8 +29477,8 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2023-2025 Valve Corporation
-Copyright (c) 2023-2025 LunarG, Inc.
+Copyright (c) 2023-2026 Valve Corporation
+Copyright (c) 2023-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28941,7 +29495,7 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2024-2025 LunarG, Inc.
+Copyright (c) 2024-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28977,8 +29531,9 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright (c) 2025 Valve Corporation
-Copyright (c) 2025 LunarG, Inc.
+Copyright (c) 2025-2026 The Khronos Group Inc.
+Copyright (c) 2025-2026 Valve Corporation
+Copyright (c) 2025-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28995,9 +29550,45 @@ limitations under the License.
 vulkan-validation-layers
 
 
-Copyright 2014-2024 Valve Software
-Copyright 2015-2024 Google Inc.
-Copyright 2019-2024 LunarG, Inc.
+Copyright (c) 2025-2026 Valve Corporation
+Copyright (c) 2025-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+
+Copyright (c) 2026 Valve Corporation
+Copyright (c) 2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+
+Copyright 2014-2026 Valve Software
+Copyright 2015-2026 Google Inc.
+Copyright 2019-2026 LunarG, Inc.
 All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29011,35 +29602,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (C) 2012-2021 Yann Collet
-
-BSD 2-Clause License (https://www.opensource.org/licenses/bsd-license.php)
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-     copyright notice, this list of conditions and the following disclaimer
-     in the documentation and/or other materials provided with the
-     distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
@@ -29061,9 +29623,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2016, 2020-2025 The Khronos Group Inc.
-Copyright (c) 2015-2016, 2020-2025 Valve Corporation
-Copyright (c) 2015-2016, 2020-2025 LunarG, Inc.
+Copyright (c) 2015-2016, 2020-2026 The Khronos Group Inc.
+Copyright (c) 2015-2016, 2020-2026 Valve Corporation
+Copyright (c) 2015-2016, 2020-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29097,10 +29659,29 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2017, 2019-2025 The Khronos Group Inc.
-Copyright (c) 2015-2017, 2019-2025 Valve Corporation
-Copyright (c) 2015-2017, 2019-2025 LunarG, Inc.
+Copyright (c) 2015-2017, 2019-2026 The Khronos Group Inc.
+Copyright (c) 2015-2017, 2019-2026 Valve Corporation
+Copyright (c) 2015-2017, 2019-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2017, 2019-2026 The Khronos Group Inc.
+Copyright (c) 2015-2017, 2019-2026 Valve Corporation
+Copyright (c) 2015-2017, 2019-2026 LunarG, Inc.
 Modifications Copyright (C) 2022 RasterGrid Kft.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29117,8 +29698,8 @@ limitations under the License.
 vulkan-validation-layers
 
 Copyright (c) 2015-2020 The Khronos Group Inc.
-Copyright (c) 2015-2023 Valve Corporation
-Copyright (c) 2015-2023 LunarG, Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29154,25 +29735,6 @@ vulkan-validation-layers
 Copyright (c) 2015-2024 The Khronos Group Inc.
 Copyright (c) 2015-2024 Valve Corporation
 Copyright (c) 2015-2024 LunarG, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2015-2024 The Khronos Group Inc.
-Copyright (c) 2015-2024 Valve Corporation
-Copyright (c) 2015-2024 LunarG, Inc.
-Copyright (C) 2015-2023 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29228,11 +29790,29 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2024 The Khronos Group Inc.
+Copyright (c) 2015-2025 The Khronos Group Inc.
+Copyright (c) 2015-2025 Valve Corporation
+Copyright (c) 2015-2025 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2025 The Khronos Group Inc.
 Copyright (c) 2015-2025 Valve Corporation
 Copyright (c) 2015-2025 LunarG, Inc.
 Copyright (C) 2015-2024 Google Inc.
-Modifications Copyright (C) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29251,6 +29831,7 @@ vulkan-validation-layers
 Copyright (c) 2015-2025 The Khronos Group Inc.
 Copyright (c) 2015-2025 Valve Corporation
 Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (C) 2015-2025 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29269,6 +29850,44 @@ vulkan-validation-layers
 Copyright (c) 2015-2025 The Khronos Group Inc.
 Copyright (c) 2015-2025 Valve Corporation
 Copyright (c) 2015-2025 LunarG, Inc.
+Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
+Modifications Copyright (C) 2022 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2023 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29285,9 +29904,29 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2023 Google Inc.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2023 Google Inc.
 Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022 RasterGrid Kft.
@@ -29306,9 +29945,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2024 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29325,30 +29964,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2024 Google Inc.
-Copyright (c) 2025 Arm Limited.
-Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2024 Google Inc.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -29366,9 +29984,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2024 Google Inc.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022 RasterGrid Kft.
@@ -29387,9 +30005,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2024 Google Inc.
 Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -29407,11 +30025,11 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2024 Google Inc.
-Modifications Copyright (C) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+Modifications Copyright (C) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29427,30 +30045,14 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2025 Google Inc.
 Copyright (C) 2025 Arm Limited.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+Modifications Copyright (C) 2020,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+Modifications Copyright (C) 2022 RasterGrid Kft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29466,11 +30068,52 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2025 Google Inc.
 Copyright (C) 2025 Arm Limited.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2025 Google Inc.
+Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2025 Google Inc.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022 RasterGrid Kft.
 
@@ -29488,11 +30131,115 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (C) 2015-2025 Google Inc.
+Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2025 Google Inc.
+Modifications Copyright (C) 2020-2022,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+Modifications Copyright (C) 2022 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2025 Google Inc.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Copyright (C) 2025 Arm Limited.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+Modifications Copyright (C) 2020,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+Modifications Copyright (C) 2022 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (C) 2025 Arm Limited.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
 Modifications Copyright (C) 2020-2025 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022-2025 RasterGrid Kft.
 
@@ -29510,11 +30257,11 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
-Copyright (c) 2025 Arm Limited.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29530,11 +30277,31 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
-Copyright (c) 2025 Arm Limited.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29551,12 +30318,54 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Copyright (c) 2025 Arm Limited.
-Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (c) 2025 Arm Limited.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+Modifications Copyright (C) 2020,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022 RasterGrid Kft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29573,10 +30382,52 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (c) 2025 Arm Limited.
+Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (c) 2025 Arm Limited.
+Modifications Copyright (C) 2020,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Copyright (c) 2025 Arm Limited.
 Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -29594,10 +30445,31 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (c) 2025 Arm Limited.
+Modifications Copyright (C) 2020-2022,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Copyright (c) 2025 Arm Limited.
 Modifications Copyright (C) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -29615,10 +30487,52 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (c) 2025 Arm Limited.
+Modifications Copyright (C) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Copyright (c) 2025 Arm Limited.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29635,10 +30549,10 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022 RasterGrid Kft.
 
@@ -29656,10 +30570,30 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Modifications Copyright (C) 2020,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29676,10 +30610,10 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 Copyright (c) 2025 RasterGrid Kft.
 
@@ -29697,10 +30631,10 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
 Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022 RasterGrid Kft.
 
@@ -29718,11 +30652,93 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
-Copyright (C) 2015-2025 Google Inc.
-Modifications Copyright (C) 2020-2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Modifications Copyright (C) 2020-2022,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Modifications Copyright (C) 2020-2022,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Modifications Copyright (C) 2020-2022,2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+Modifications Copyright (C) 2022 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Modifications Copyright (C) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Modifications Copyright (C) 2020-2026 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022-2024 RasterGrid Kft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29739,9 +30755,48 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2015-2026 Google Inc.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Copyright (c) 2015-2024 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29758,9 +30813,28 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
+Copyright (c) 2026 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022 RasterGrid Kft.
 
@@ -29778,9 +30852,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2015-2025 The Khronos Group Inc.
-Copyright (c) 2015-2025 Valve Corporation
-Copyright (c) 2015-2025 LunarG, Inc.
+Copyright (c) 2015-2026 The Khronos Group Inc.
+Copyright (c) 2015-2026 Valve Corporation
+Copyright (c) 2015-2026 LunarG, Inc.
 Modifications Copyright (C) 2020-2022 Advanced Micro Devices, Inc. All rights reserved.
 Modifications Copyright (C) 2022 RasterGrid Kft.
 
@@ -29817,24 +30891,6 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2018-2024 The Khronos Group Inc.
-Copyright (c) 2018-2024 Valve Corporation
-Copyright (c) 2018-2024 LunarG, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
 Copyright (c) 2018-2025 The Khronos Group Inc.
 Copyright (c) 2018-2025 Valve Corporation
 Copyright (c) 2018-2025 LunarG, Inc.
@@ -29853,10 +30909,47 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2018-2025 The Khronos Group Inc.
-Copyright (c) 2018-2025 Valve Corporation
-Copyright (c) 2018-2025 LunarG, Inc.
+Copyright (c) 2018-2026 The Khronos Group Inc.
+Copyright (c) 2018-2026 Valve Corporation
+Copyright (c) 2018-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2018-2026 The Khronos Group Inc.
+Copyright (c) 2018-2026 Valve Corporation
+Copyright (c) 2018-2026 LunarG, Inc.
 Copyright (c) 2025 Arm Limited.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2018-2026 The Khronos Group Inc.
+Copyright (c) 2018-2026 Valve Corporation
+Copyright (c) 2018-2026 LunarG, Inc.
+Copyright (c) 2026 Arm Limited.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29911,62 +31004,6 @@ vulkan-validation-layers
 Copyright (c) 2019-2025 The Khronos Group Inc.
 Copyright (c) 2019-2025 Valve Corporation
 Copyright (c) 2019-2025 LunarG, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2019-2025 The Khronos Group Inc.
-Copyright (c) 2019-2025 Valve Corporation
-Copyright (c) 2019-2025 LunarG, Inc.
-Copyright (C) 2019-2025 Google Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2019-2025 The Khronos Group Inc.
-Copyright (c) 2019-2025 Valve Corporation
-Copyright (c) 2019-2025 LunarG, Inc.
-Copyright (C) 2025 Arm Limited.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2019-2025 The Khronos Group Inc.
-Copyright (c) 2019-2025 Valve Corporation
-Copyright (c) 2019-2025 LunarG, Inc.
 Modifications Copyright (C) 2022 RasterGrid Kft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29983,8 +31020,122 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2019-2025 Valve Corporation
-Copyright (c) 2019-2025 LunarG, Inc.
+Copyright (c) 2019-2026 The Khronos Group Inc.
+Copyright (c) 2019-2026 Valve Corporation
+Copyright (c) 2019-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2019-2026 The Khronos Group Inc.
+Copyright (c) 2019-2026 Valve Corporation
+Copyright (c) 2019-2026 LunarG, Inc.
+Copyright (C) 2019-2025 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2019-2026 The Khronos Group Inc.
+Copyright (c) 2019-2026 Valve Corporation
+Copyright (c) 2019-2026 LunarG, Inc.
+Copyright (C) 2019-2026 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2019-2026 The Khronos Group Inc.
+Copyright (c) 2019-2026 Valve Corporation
+Copyright (c) 2019-2026 LunarG, Inc.
+Copyright (C) 2025 Arm Limited.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2019-2026 The Khronos Group Inc.
+Copyright (c) 2019-2026 Valve Corporation
+Copyright (c) 2019-2026 LunarG, Inc.
+Modifications Copyright (C) 2022 RasterGrid Kft.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2019-2026 The Khronos Group Inc.
+Copyright (c) 2019-2026 Valve Corporation
+Copyright (c) 2019-2026 LunarG, Inc.
+Modifications Copyright (C) 2022 RasterGrid Kft.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2019-2026 Valve Corporation
+Copyright (c) 2019-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30018,9 +31169,28 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2020-2025 The Khronos Group Inc.
-Copyright (c) 2020-2025 Valve Corporation
-Copyright (c) 2020-2025 LunarG, Inc.
+Copyright (c) 2020-2026 The Khronos Group Inc.
+Copyright (c) 2020-2026 Valve Corporation
+Copyright (c) 2020-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2020-2026 The Khronos Group Inc.
+Copyright (c) 2020-2026 Valve Corporation
+Copyright (c) 2020-2026 LunarG, Inc.
+Copyright (c) 2026 RasterGrid Kft.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30040,6 +31210,7 @@ vulkan-validation-layers
 Copyright (c) 2021-2025 The Khronos Group Inc.
 Copyright (c) 2021-2025 Valve Corporation
 Copyright (c) 2021-2025 LunarG, Inc.
+Copyright (C) 2021-2025 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30055,9 +31226,27 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2021-2025 The Khronos Group Inc.
-Copyright (c) 2021-2025 Valve Corporation
-Copyright (c) 2021-2025 LunarG, Inc.
+Copyright (c) 2021-2026 The Khronos Group Inc.
+Copyright (c) 2021-2026 Valve Corporation
+Copyright (c) 2021-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2021-2026 The Khronos Group Inc.
+Copyright (c) 2021-2026 Valve Corporation
+Copyright (c) 2021-2026 LunarG, Inc.
 Copyright (C) 2021-2022 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30074,10 +31263,10 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2021-2025 The Khronos Group Inc.
-Copyright (c) 2021-2025 Valve Corporation
-Copyright (c) 2021-2025 LunarG, Inc.
-Copyright (C) 2021-2025 Google Inc.
+Copyright (c) 2021-2026 The Khronos Group Inc.
+Copyright (c) 2021-2026 Valve Corporation
+Copyright (c) 2021-2026 LunarG, Inc.
+Copyright (C) 2021-2026 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30093,11 +31282,11 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2021-2025 The Khronos Group Inc.
-Copyright (c) 2021-2025 Valve Corporation
-Copyright (c) 2021-2025 LunarG, Inc.
-Copyright (C) 2021-2025 Google Inc.
-Modifications Copyright (C) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021-2026 The Khronos Group Inc.
+Copyright (c) 2021-2026 Valve Corporation
+Copyright (c) 2021-2026 LunarG, Inc.
+Copyright (C) 2021-2026 Google Inc.
+Modifications Copyright (C) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30113,9 +31302,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2021-2025 The Khronos Group Inc.
-Copyright (c) 2021-2025 Valve Corporation
-Copyright (c) 2021-2025 LunarG, Inc.
+Copyright (c) 2021-2026 The Khronos Group Inc.
+Copyright (c) 2021-2026 Valve Corporation
+Copyright (c) 2021-2026 LunarG, Inc.
 Copyright (c) 2025 Arm Limited.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30132,8 +31321,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2021-2025 The Khronos Group Inc.
+Copyright (c) 2021-2026 The Khronos Group Inc.
 Copyright (c) 2025 Arm Limited.
+Copyright (C) 2026 Qualcomm Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30183,9 +31373,27 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2022-2025 The Khronos Group Inc.
-Copyright (c) 2022-2025 Valve Corporation
-Copyright (c) 2022-2025 LunarG, Inc.
+Copyright (c) 2022-2026 The Khronos Group Inc.
+Copyright (c) 2022-2026 RasterGrid Kft.
+Modifications Copyright (C) 2024 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2022-2026 The Khronos Group Inc.
+Copyright (c) 2022-2026 Valve Corporation
+Copyright (c) 2022-2026 LunarG, Inc.
 Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30238,25 +31446,8 @@ limitations under the License.
 vulkan-validation-layers
 
 Copyright (c) 2023-2024 Nintendo
-Copyright (c) 2023-2025 LunarG, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2023-2025 LunarG, Inc.
-Copyright (c) 2023-2025 Valve Corporation
-Copyright (c) 2025 Arm Limited.
+Copyright (c) 2023-2026 LunarG, Inc.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30273,7 +31464,25 @@ limitations under the License.
 vulkan-validation-layers
 
 Copyright (c) 2023-2025 Nintendo
-Copyright (c) 2023-2025 LunarG, Inc.
+Copyright (c) 2023-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2023-2025 Nintendo
+Copyright (c) 2023-2026 LunarG, Inc.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30307,9 +31516,25 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2023-2025 The Khronos Group Inc.
 Copyright (c) 2023-2025 Valve Corporation
 Copyright (c) 2023-2025 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2023-2026 LunarG, Inc.
+Copyright (c) 2023-2026 Valve Corporation
 Copyright (c) 2025 Arm Limited.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30326,8 +31551,9 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2023-2025 Valve Corporation
-Copyright (c) 2023-2025 LunarG, Inc.
+Copyright (c) 2023-2026 The Khronos Group Inc.
+Copyright (c) 2023-2026 Valve Corporation
+Copyright (c) 2023-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30343,44 +31569,10 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2024 The Khronos Group Inc.
-Copyright (c) 2024 LunarG, Inc.
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2024 The Khronos Group Inc.
-Copyright (c) 2025 Valve Corporation
-Copyright (c) 2025 LunarG, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
---------------------------------------------------------------------------------
-vulkan-validation-layers
-
-Copyright (c) 2024 Valve Corporation
-Copyright (c) 2024 LunarG, Inc.
+Copyright (c) 2023-2026 The Khronos Group Inc.
+Copyright (c) 2023-2026 Valve Corporation
+Copyright (c) 2023-2026 LunarG, Inc.
+Copyright (c) 2025 Arm Limited.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30430,10 +31622,117 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2024-2025 The Khronos Group Inc.
-Copyright (c) 2024-2025 Valve Corporation
-Copyright (c) 2024-2025 LunarG, Inc.
+Copyright (c) 2024-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2024-2026 LunarG, Inc.
+Copyright (c) 2020-2026 Valve Corporation
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2024-2026 The Khronos Group Inc.
+Copyright (c) 2024-2026 LunarG, Inc.
+Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2024-2026 The Khronos Group Inc.
+Copyright (c) 2024-2026 Valve Corporation
+Copyright (c) 2024-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2024-2026 The Khronos Group Inc.
+Copyright (c) 2024-2026 Valve Corporation
+Copyright (c) 2024-2026 LunarG, Inc.
 Copyright (c) 2025 Arm Limited.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2024-2026 The Khronos Group Inc.
+Copyright (c) 2024-2026 Valve Corporation
+Copyright (c) 2024-2026 LunarG, Inc.
+Modifications Copyright (C) 2025-2026 Advanced Micro Devices, Inc. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2024-2026 The Khronos Group Inc.
+Copyright (c) 2025-2026 Valve Corporation
+Copyright (c) 2025-2026 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30482,7 +31781,7 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
-Copyright (c) 2025 Valve Corporation
+Copyright (c) 2025 The Khronos Group Inc.
 Copyright (c) 2025 LunarG, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30499,9 +31798,143 @@ limitations under the License.
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
+Copyright (c) 2025-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2025-2026 The Khronos Group Inc.
+Copyright (c) 2025-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2025-2026 Valve Corporation
+Copyright (c) 2025-2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2026 LunarG, Inc.
+Copyright (C) 2026 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2026 The Khronos Group Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2026 The Khronos Group Inc.
+Copyright (c) 2026 Valve Corporation
+Copyright (c) 2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright (c) 2026 Valve Corporation
+Copyright (c) 2026 LunarG, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
 Copyright 2017 The Glslang Authors. All rights reserved.
-Copyright (c) 2018-2025 Valve Corporation
-Copyright (c) 2018-2025 LunarG, Inc.
+Copyright (c) 2018-2026 Valve Corporation
+Copyright (c) 2018-2026 LunarG, Inc.
 Copyright (c) 2023-2023 RasterGrid Kft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30515,6 +31948,14 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+--------------------------------------------------------------------------------
+vulkan-validation-layers
+
+Copyright 2023-2026 The Khronos Group Inc.
+Copyright 2023-2026 Valve Corporation
+Copyright 2023-2026 LunarG, Inc.
+
+SPDX-License-Identifier: Apache-2.0
 --------------------------------------------------------------------------------
 vulkan-validation-layers
 
@@ -30756,6 +32197,36 @@ Any file without a license in it's source defaults to the repository Apache 2.0 
    See the License for the specific language governing permissions and
    limitations under the License.
 --------------------------------------------------------------------------------
+vulkan-validation-layers
+xxhash
+
+Copyright (C) 2012-2023 Yann Collet
+
+BSD 2-Clause License (https://www.opensource.org/licenses/bsd-license.php)
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+     copyright notice, this list of conditions and the following disclaimer
+     in the documentation and/or other materials provided with the
+     distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+--------------------------------------------------------------------------------
 vulkan_memory_allocator
 
 
@@ -30957,67 +32428,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --------------------------------------------------------------------------------
 xxhash
 
-Copyright (C) 2012-2016, Yann Collet
-
- BSD 2-Clause License (http://www.opensource.org/licenses/bsd-license.php)
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are
- met:
-
- * Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above
- copyright notice, this list of conditions and the following disclaimer
- in the documentation and/or other materials provided with the
- distribution.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
---------------------------------------------------------------------------------
-xxhash
-
-Copyright (C) 2012-2016, Yann Collet.
-
-BSD 2-Clause License (http://www.opensource.org/licenses/bsd-license.php)
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
---------------------------------------------------------------------------------
-xxhash
-
-xxHash Library
-Copyright (c) 2012-2014, Yann Collet
+Copyright (c) 2012-2021 Yann Collet
 All rights reserved.
+
+BSD 2-Clause License (https://www.opensource.org/licenses/bsd-license.php)
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
