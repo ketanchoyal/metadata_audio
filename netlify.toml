@@ -1,6 +1,6 @@
 [build]
   publish = "example/build/web"
-  command = "git clone --depth 1 -b stable https://github.com/flutter/flutter.git _flutter && export PATH=\"$PATH:$(pwd)/_flutter/bin\" && cd example && flutter pub get && flutter build web --release --base-href /"
+  command = "rm -rf _flutter && git clone --depth 1 -b stable https://github.com/flutter/flutter.git _flutter && export PATH=\"$PATH:$(pwd)/_flutter/bin\" && cd example && flutter pub get && flutter build web --release --base-href /"
 
 [[redirects]]
   from = "/metadata_audio/*"

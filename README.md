@@ -7,6 +7,7 @@
 <p align="center">
   <a href="https://pub.dev/packages/metadata_audio"><img src="https://img.shields.io/pub/v/metadata_audio.svg?style=flat-square" alt="Pub Version" /></a>
   <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.10+-0175C2.svg?style=flat-square&logo=dart" alt="Dart SDK" /></a>
+  <a href="https://ketanchoyal.dev/metadata_audio/"><img src="https://img.shields.io/badge/Live_Demo-GitHub_Pages-222222?style=flat-square&logo=github" alt="Live Demo" /></a>
   <a href="https://audio-tag-analyzer-web.netlify.app/"><img src="https://img.shields.io/badge/Live_Demo-Netlify-00C7B7?style=flat-square&logo=netlify" alt="Live Demo" /></a>
   <a href="https://github.com/ketanchoyal/metadata_audio/actions"><img src="https://img.shields.io/badge/tests-868%20passing-brightgreen.svg?style=flat-square" alt="Tests" /></a>
   <a href="https://codecov.io/gh/ketanchoyal/metadata_audio"><img src="https://img.shields.io/codecov/c/github/ketanchoyal/metadata_audio?branch=main&style=flat-square" alt="Coverage" /></a>
@@ -18,7 +19,7 @@
 
 A high-performance, pure Dart audio metadata library that provides comprehensive metadata extraction, chapter parsing, smart HTTP streaming, audiobook chapter slicing, live parsing observers, and robust resource safety guards across all major platforms (Flutter, Dart standalone, and Web).
 
-> 🌐 **Try the Live Web Demo**: Inspect audio tags, stream properties, and embedded artwork directly in your browser with our client-side **[Audio Tag Analyzer on Netlify](https://audio-tag-analyzer-web.netlify.app/)**. 100% private — audio files never leave your computer.
+> 🌐 **Try the Live Web Demo**: Inspect audio tags, stream properties, embedded artwork, and slice chapters directly in your browser with our client-side **[Audio Tag Analyzer on GitHub Pages](https://ketanchoyal.dev/metadata_audio/)** (or on **[Netlify](https://audio-tag-analyzer-web.netlify.app/)**). 100% private — audio files never leave your computer.
 
 ## Key Highlights
 
@@ -37,7 +38,7 @@ A high-performance, pure Dart audio metadata library that provides comprehensive
 ## Interactive Web Demo
 
 Test the capabilities of `metadata_audio` live in your browser:
-👉 **[audio-tag-analyzer-web.netlify.app](https://audio-tag-analyzer-web.netlify.app/)**
+👉 **[ketanchoyal.dev/metadata_audio](https://ketanchoyal.dev/metadata_audio/)** (or **[audio-tag-analyzer-web.netlify.app](https://audio-tag-analyzer-web.netlify.app/)**)
 
 - **100% Client-Side & Private**: Files are parsed locally in your browser — zero audio data is ever transmitted to a server.
 - **Drag & Drop Studio**: Drop your audio tracks to inspect ID3v1, ID3v2, Vorbis comments, MP4 atoms, BWF loudness info, and cuesheets.
