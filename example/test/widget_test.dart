@@ -4,11 +4,14 @@
 // tabs, the parser configuration switches, plus the Streams & Tracks card
 // and the common-tag chips builders.
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:example/desktop_screen.dart';
 import 'package:example/main.dart';
+import 'package:example/web_analyzer_screen.dart';
 import 'package:metadata_audio/metadata_audio.dart';
 
 /// Synthetic metadata with two streams (Vorbis audio + Theora video),
@@ -302,6 +305,87 @@ void main() {
         find.text('End time must be greater than Start time.'),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets(
+    'WebAnalyzerScreen renders Chapters tab, header action, and Download Chapter buttons',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1920, 1080);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      const metadataWithChapters = AudioMetadata(
+        format: Format(
+          container: 'mp4',
+          codec: 'aac',
+          duration: 60.0,
+          chapters: [
+            Chapter(title: 'Intro', start: 0, end: 15000),
+            Chapter(
+              title: 'Chapter 1: The Beginning',
+              start: 15000,
+              end: 45000,
+            ),
+            Chapter(title: 'Outro', start: 45000, end: 60000),
+          ],
+        ),
+        native: {},
+        common: CommonTags(
+          title: 'Test Audiobook',
+          artist: 'Author Name',
+          album: 'Epic Story',
+          track: TrackNo(),
+          disk: TrackNo(),
+          movementIndex: TrackNo(),
+        ),
+        quality: QualityInformation(),
+      );
+
+      final testFile = AnalyzedFile(
+        name: 'audiobook.m4b',
+        size: 1024 * 1024,
+        bytes: Uint8List.fromList(List.filled(64, 0)),
+      )..metadata = metadataWithChapters;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: WebAnalyzerScreen(
+              initialFiles: [testFile],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Header should show Download Chapters button and 3 Chapters chip
+      expect(find.text('Download Chapters (3)'), findsOneWidget);
+      expect(find.text('3 Chapters'), findsOneWidget);
+
+      // 2. Tab Bar should show Chapters (3) tab
+      expect(find.text('Chapters (3)'), findsOneWidget);
+
+      // 3. Overview Tab should show CHAPTERS & SLICING (3) card
+      expect(find.text('CHAPTERS & SLICING (3)'), findsOneWidget);
+      expect(find.text('Intro'), findsOneWidget);
+      expect(find.text('Chapter 1: The Beginning'), findsOneWidget);
+
+      // 4. Download buttons on overview
+      expect(find.text('Download'), findsWidgets);
+
+      // 5. Tap Chapters (3) Tab
+      await tester.tap(find.text('Chapters (3)'));
+      await tester.pumpAndSettle();
+
+      // 6. Dedicated Chapters Tab view content
+      expect(find.text('Audiobook Chapters & Slicing'), findsOneWidget);
+      expect(find.text('Download Range'), findsOneWidget);
+      expect(find.text('Outro'), findsOneWidget);
+      expect(find.text('Download'), findsWidgets);
     },
   );
 }
