@@ -5,6 +5,8 @@ import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
 import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
 import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
 import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_tag_map.dart';
+import 'package:metadata_audio/src/matroska/matroska_tag_mapper.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mp4/mp4_loader.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
@@ -49,6 +51,36 @@ void main() {
       expect(commonEvent.tag?.value, 'Observed Title');
       expect(commonEvent.metadata?.common.title, 'Observed Title');
       expect(commonEvent.metadata?.native['test']?.first.id, 'title');
+    });
+
+    test('collector emits observer events for ReplayGain, flat tags, and numberOfChannels', () {
+      final mapper = CombinedTagMapper()
+        ..registerMapper('matroska', MatroskaTagMapper())
+        ..registerMapper('ID3v2.3', Id3v2TagMapper());
+
+      final events = <MetadataEvent>[];
+      MetadataCollector(mapper, ParseOptions(observer: events.add))
+        ..setFormat(numberOfChannels: 1)
+        ..addNativeTag('matroska', 'track:ALBUM', 'Observed Album')
+        ..addNativeTag('matroska', 'track:COMPOSER', 'Observed Composer')
+        ..addNativeTag('ID3v2.3', 'TXXX:REPLAYGAIN_TRACK_GAIN', '-7.03 dB');
+
+      final channelEvents = events.where((e) => e.tag?.id == MetadataFormatId.numberOfChannels);
+      expect(channelEvents, hasLength(1));
+      expect(channelEvents.first.tag?.value, 1);
+
+      final albumEvents = events.where((e) => e.tag?.id == MetadataCommonId.album);
+      expect(albumEvents, hasLength(1));
+      expect(albumEvents.first.tag?.value, 'Observed Album');
+
+      final composerEvents = events.where((e) => e.tag?.id == MetadataCommonId.composer);
+      expect(composerEvents, hasLength(1));
+      expect(composerEvents.first.tag?.value, equals(['Observed Composer']));
+
+      final rgEvents = events.where((e) => e.tag?.id == MetadataCommonId.replaygainTrackGain);
+      expect(rgEvents, hasLength(1));
+      final ratio = rgEvents.first.tag!.value! as Ratio;
+      expect(ratio.dB, closeTo(-7.03, 0.001));
     });
 
     test('loader parsing emits observer events from ParseOptions', () async {

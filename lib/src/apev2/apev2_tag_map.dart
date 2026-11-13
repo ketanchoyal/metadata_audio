@@ -3,6 +3,7 @@ library;
 import 'package:metadata_audio/src/apev2/apev2_token.dart';
 import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
 import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
+import 'package:metadata_audio/src/common/util.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
 final _apev2TagMap = <String, String>{
@@ -67,6 +68,12 @@ final _apev2TagMap = <String, String>{
   'ACOUSTID_FINGERPRINT': 'acoustid_fingerprint',
   'MUSICIP_PUID': 'musicip_puid',
   'Weblink': 'website',
+  'REPLAYGAIN_TRACK_GAIN': 'replaygain_track_gain',
+  'REPLAYGAIN_TRACK_PEAK': 'replaygain_track_peak',
+  'REPLAYGAIN_ALBUM_GAIN': 'replaygain_album_gain',
+  'REPLAYGAIN_ALBUM_PEAK': 'replaygain_album_peak',
+  'MP3GAIN_MINMAX': 'replaygain_track_minmax',
+  'MP3GAIN_UNDO': 'replaygain_undo',
 };
 
 class Apev2TagMapper extends GenericTagMapper {
@@ -130,6 +137,13 @@ class Apev2TagMapper extends GenericTagMapper {
       case 'musicip_puid':
       case 'website':
         return _singleString(value);
+
+      case 'replaygain_track_gain':
+      case 'replaygain_track_peak':
+      case 'replaygain_album_gain':
+      case 'replaygain_album_peak':
+        final text = _singleString(value);
+        return text == null ? null : toRatio(text);
 
       case 'year':
       case 'originalyear':

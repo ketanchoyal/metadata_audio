@@ -16,6 +16,18 @@ extension type const MetadataCommonId<T>(String rawValue) {
   static const year = MetadataCommonId<int?>('year');
   static const title = MetadataCommonId<String?>('title');
   static const artist = MetadataCommonId<String?>('artist');
+  static const album = MetadataCommonId<String?>('album');
+  static const albumartist = MetadataCommonId<String?>('albumartist');
+  static const composer = MetadataCommonId<List<String>?>('composer');
+  static const date = MetadataCommonId<String?>('date');
+  static const replaygainTrackGain =
+      MetadataCommonId<Ratio?>('replaygain_track_gain');
+  static const replaygainTrackPeak =
+      MetadataCommonId<Ratio?>('replaygain_track_peak');
+  static const replaygainAlbumGain =
+      MetadataCommonId<Ratio?>('replaygain_album_gain');
+  static const replaygainAlbumPeak =
+      MetadataCommonId<Ratio?>('replaygain_album_peak');
 
   String get path => rawValue;
 }

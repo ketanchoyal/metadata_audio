@@ -2,6 +2,7 @@ library;
 
 import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
 import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
+import 'package:metadata_audio/src/common/util.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
 final _id3v2TagMap = {
@@ -68,6 +69,13 @@ final _id3v2TagMap = {
   'WFED': 'podcasturl',
   'TLAN': 'language',
   'TCOP': 'copyright',
+  'TXXX:REPLAYGAIN_TRACK_PEAK': 'replaygain_track_peak',
+  'TXXX:REPLAYGAIN_TRACK_GAIN': 'replaygain_track_gain',
+  'TXXX:REPLAYGAIN_ALBUM_PEAK': 'replaygain_album_peak',
+  'TXXX:REPLAYGAIN_ALBUM_GAIN': 'replaygain_album_gain',
+  'TXXX:MP3GAIN_MINMAX': 'replaygain_track_minmax',
+  'TXXX:MP3GAIN_ALBUM_MINMAX': 'replaygain_album_minmax',
+  'TXXX:MP3GAIN_UNDO': 'replaygain_undo',
 };
 
 class Id3v2TagMapper extends GenericTagMapper {
@@ -239,6 +247,12 @@ class Id3v2TagMapper extends GenericTagMapper {
       case 'podcasturl':
       case 'podcastId':
         return _singleString(value);
+      case 'replaygain_track_gain':
+      case 'replaygain_track_peak':
+      case 'replaygain_album_gain':
+      case 'replaygain_album_peak':
+        final text = _singleString(value);
+        return text == null ? null : toRatio(text);
       // Extended ID3v2 mappings - string lists (creator roles)
       case 'composer':
       case 'lyricist':

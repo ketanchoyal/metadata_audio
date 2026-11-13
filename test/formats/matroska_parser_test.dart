@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:metadata_audio/src/matroska/matroska_loader.dart';
 import 'package:metadata_audio/src/matroska/matroska_parser.dart';
+import 'package:metadata_audio/src/matroska/matroska_tag_mapper.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/tokenizer/io_tokenizers.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
@@ -52,6 +53,23 @@ void main() {
         expect(metadata.format.chapters!.first.end, 5000);
       },
     );
+
+    test('maps conventional flat tags from ffmpeg and yt-dlp', () {
+      final mapper = MatroskaTagMapper();
+      final mapped = mapper.mapTags({
+        'track:ALBUM': 'Flat Album',
+        'track:ALBUM_ARTIST': 'Various Artists',
+        'track:COMPOSER': 'Hans Zimmer',
+        'track:DATE': '2021-03-04',
+        'track:DISC': '2/3',
+      });
+
+      expect(mapped['album'], 'Flat Album');
+      expect(mapped['albumartist'], 'Various Artists');
+      expect(mapped['composer'], equals(['Hans Zimmer']));
+      expect(mapped['date'], '2021-03-04');
+      expect(mapped['disk'], 2);
+    });
 
     test('accepts webm docType', () async {
       final bytes = _buildMatroskaFile(docType: 'webm');

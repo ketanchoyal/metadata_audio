@@ -2,6 +2,7 @@ library;
 
 import 'package:metadata_audio/src/common/case_insensitive_tag_map.dart';
 import 'package:metadata_audio/src/common/generic_tag_mapper.dart';
+import 'package:metadata_audio/src/common/util.dart';
 import 'package:metadata_audio/src/flac/flac_token.dart';
 import 'package:metadata_audio/src/model/types.dart';
 
@@ -27,6 +28,13 @@ final _vorbisTagMap = {
   'LABEL': 'label',
   'ORGANIZATION': 'label',
   'PUBLISHER': 'label',
+  'REPLAYGAIN_TRACK_GAIN': 'replaygain_track_gain',
+  'REPLAYGAIN_TRACK_PEAK': 'replaygain_track_peak',
+  'REPLAYGAIN_ALBUM_GAIN': 'replaygain_album_gain',
+  'REPLAYGAIN_ALBUM_PEAK': 'replaygain_album_peak',
+  'REPLAYGAIN_MINMAX': 'replaygain_track_minmax',
+  'REPLAYGAIN_ALBUM_MINMAX': 'replaygain_album_minmax',
+  'REPLAYGAIN_UNDO': 'replaygain_undo',
 };
 
 class FlacVorbisTagMapper extends GenericTagMapper {
@@ -89,6 +97,12 @@ class FlacVorbisTagMapper extends GenericTagMapper {
         return text == null ? null : <Comment>[Comment(text: text)];
       case 'label':
         return _stringList(value);
+      case 'replaygain_track_gain':
+      case 'replaygain_track_peak':
+      case 'replaygain_album_gain':
+      case 'replaygain_album_peak':
+        final text = _singleString(value);
+        return text == null ? null : toRatio(text);
       default:
         return null;
     }

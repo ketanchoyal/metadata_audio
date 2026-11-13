@@ -99,6 +99,10 @@ class CombinedTagMapper {
     return mapper.mapTags(nativeTags);
   }
 
+  /// Maps a single tag identifier to a common tag name using the format-specific mapper.
+  String? mapTag(String formatId, String tagId, dynamic value) =>
+      _mappers[formatId]?.mapTag(tagId, value);
+
   /// Checks if a mapper is registered for the given format.
   ///
   /// Returns `true` if a [GenericTagMapper] has been registered for [formatId],

@@ -30,6 +30,12 @@ const Map<String, String> _matroskaTagMap = <String, String>{
   'track:ENCODER_OPTIONS': 'encodersettings',
   'edition:TOTAL_PARTS': 'totaldiscs',
   'picture': 'picture',
+  // Flat names written by ffmpeg, and tools built on it such as yt-dlp
+  'track:ALBUM': 'album',
+  'track:ALBUM_ARTIST': 'albumartist',
+  'track:COMPOSER': 'composer',
+  'track:DATE': 'date',
+  'track:DISC': 'disk',
 };
 
 class MatroskaTagMapper extends GenericTagMapper {
@@ -71,6 +77,7 @@ class MatroskaTagMapper extends GenericTagMapper {
       case 'album':
       case 'albumartist':
       case 'albumartistsort':
+      case 'date':
       case 'originaldate':
       case 'releasedate':
       case 'musicbrainz_recordingid':
@@ -85,6 +92,7 @@ class MatroskaTagMapper extends GenericTagMapper {
         return _parseLeadingInt(_singleString(value));
       case 'genre':
       case 'label':
+      case 'composer':
       case 'musicbrainz_artistid':
         final text = _singleString(value);
         return text == null ? null : <String>[text];

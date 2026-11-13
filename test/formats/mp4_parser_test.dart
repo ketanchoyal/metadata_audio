@@ -56,6 +56,31 @@ void main() {
       expect(iTunesTags.where((tag) => tag.id == 'trkn').single.value, '1/12');
     });
 
+    test('overrides container channels with AudioSpecificConfig (mono and 7.1)', () async {
+      // Test mono (channelConfig = 1) even when sampleEntry claims 2 channels
+      final monoBytes = _buildSyntheticMp4WithEsdsChannelConfig(1);
+      final loader = Mp4Loader();
+      final monoMeta = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(monoBytes),
+          fileInfo: FileInfo(size: monoBytes.length),
+        ),
+        const ParseOptions(duration: true),
+      );
+      expect(monoMeta.format.numberOfChannels, 1);
+
+      // Test 7.1 surround (channelConfig = 7 mapped to 8 channels)
+      final surroundBytes = _buildSyntheticMp4WithEsdsChannelConfig(7);
+      final surroundMeta = await loader.parse(
+        BytesTokenizer(
+          Uint8List.fromList(surroundBytes),
+          fileInfo: FileInfo(size: surroundBytes.length),
+        ),
+        const ParseOptions(duration: true),
+      );
+      expect(surroundMeta.format.numberOfChannels, 8);
+    });
+
     test('respects skipCovers parse option', () async {
       final bytes = _buildSyntheticMp4();
 
@@ -1670,6 +1695,69 @@ List<int> _stsdPayloadMp4a() {
     0,
     0,
     ..._u32(44100 << 16),
+  ];
+
+  return <int>[0, 0, 0, 0, ..._u32(1), ...sampleEntry];
+}
+
+List<int> _buildSyntheticMp4WithEsdsChannelConfig(int channelConfig) {
+  final ftyp = _atom('ftyp', <int>[
+    ...latin1.encode('M4A '),
+    ...latin1.encode('isom'),
+    ...latin1.encode('mp42'),
+  ]);
+
+  final mvhd = _atom('mvhd', _mvhdPayload(timeScale: 1000, duration: 2000));
+  final tkhd = _atom('tkhd', _tkhdPayload(trackId: 1));
+  final mdhd = _atom('mdhd', _mdhdPayload(timeScale: 44100, duration: 88200));
+  final hdlr = _atom('hdlr', _hdlrPayload('soun'));
+  final stsd = _atom('stsd', _stsdPayloadMp4aWithEsds(channelConfig));
+  final stbl = _atom('stbl', stsd);
+  final minf = _atom('minf', stbl);
+  final mdia = _atom('mdia', <int>[...mdhd, ...hdlr, ...minf]);
+  final trak = _atom('trak', <int>[...tkhd, ...mdia]);
+  final moov = _atom('moov', <int>[...mvhd, ...trak]);
+
+  return <int>[...ftyp, ...moov];
+}
+
+List<int> _stsdPayloadMp4aWithEsds(int channelConfig) {
+  const ascByte0 = 0x12;
+  final ascByte1 = ((4 & 1) << 7) | ((channelConfig & 0x0F) << 3);
+  final ascPayload = <int>[ascByte0, ascByte1];
+
+  final desc5 = <int>[0x05, ascPayload.length, ...ascPayload];
+
+  final decConfigPayload = <int>[
+    0x40,
+    0x15,
+    0x00, 0x00, 0x00,
+    0x00, 0x01, 0xF4, 0x00,
+    0x00, 0x01, 0xF4, 0x00,
+    ...desc5,
+  ];
+  final desc4 = <int>[0x04, decConfigPayload.length, ...decConfigPayload];
+
+  final esDescPayload = <int>[
+    0x00, 0x01,
+    0x00,
+    ...desc4,
+  ];
+  final desc3 = <int>[0x03, esDescPayload.length, ...esDescPayload];
+
+  final esdsAtom = _atom('esds', <int>[0, 0, 0, 0, ...desc3]);
+
+  final sampleEntry = <int>[
+    ..._u32(28 + 8 + esdsAtom.length),
+    ...latin1.encode('mp4a'),
+    ...List<int>.filled(6, 0),
+    0, 1,
+    ...List<int>.filled(8, 0),
+    0, 2,
+    0, 16,
+    0, 0, 0, 0,
+    ..._u32(44100 << 16),
+    ...esdsAtom,
   ];
 
   return <int>[0, 0, 0, 0, ..._u32(1), ...sampleEntry];

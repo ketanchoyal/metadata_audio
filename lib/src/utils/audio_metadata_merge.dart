@@ -186,6 +186,17 @@ void emitCachedMetadataEvents(
       ),
     );
   }
+  if (metadata.format.numberOfChannels != null) {
+    observer(
+      MetadataEvent(
+        tag: FormatMetadataEventTag<int?>(
+          id: MetadataFormatId.numberOfChannels,
+          value: metadata.format.numberOfChannels,
+        ),
+        metadata: metadata,
+      ),
+    );
+  }
   if (metadata.format.duration != null) {
     observer(
       MetadataEvent(
@@ -225,6 +236,17 @@ void emitCachedMetadataEvents(
         tag: CommonMetadataEventTag<String?>(
           id: MetadataCommonId.artist,
           value: metadata.common.artist,
+        ),
+        metadata: metadata,
+      ),
+    );
+  }
+  if (metadata.common.album != null) {
+    observer(
+      MetadataEvent(
+        tag: CommonMetadataEventTag<String?>(
+          id: MetadataCommonId.album,
+          value: metadata.common.album,
         ),
         metadata: metadata,
       ),

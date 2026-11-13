@@ -213,6 +213,12 @@ class MetadataCollector {
     if (_tagMapper.hasMapper(formatId)) {
       try {
         final genericTags = _tagMapper.mapTags(formatId, {tagId: value});
+        if (genericTags.isEmpty) {
+          final mappedKey = _tagMapper.mapTag(formatId, tagId, value);
+          if (mappedKey != null && mappedKey.startsWith('replaygain_')) {
+            addWarning('Invalid ReplayGain value for $formatId.$tagId');
+          }
+        }
         for (final entry in genericTags.entries) {
           _mergeCommonTag(formatId, entry.key, entry.value);
         }

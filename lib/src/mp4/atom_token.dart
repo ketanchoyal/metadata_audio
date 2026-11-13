@@ -261,8 +261,8 @@ class AtomToken {
           if (subName == 'esds') {
             final asc = _parseEsds(bytes, subOffset, subOffset + subSize);
             if (asc != null) {
-              if (asc.channelConfig > 0 && asc.channelConfig < 8) {
-                channels = asc.channelConfig;
+              if (asc.channels > 0 && asc.channels <= 8) {
+                channels = asc.channels;
               }
               if (asc.sampleRate > 0) {
                 sampleRate = asc.sampleRate;
@@ -387,11 +387,16 @@ class AtomToken {
     }
 
     final channelConfig = readBits(4);
+    var channels = channelConfig;
+    if (channelConfig >= 1 && channelConfig <= 7) {
+      channels = channelConfig == 7 ? 8 : channelConfig;
+    }
 
     return _AudioSpecificConfig(
       audioObjectType: audioObjectType,
       sampleRate: sampleRate,
       channelConfig: channelConfig,
+      channels: channels,
     );
   }
 
@@ -659,8 +664,10 @@ class _AudioSpecificConfig {
     required this.audioObjectType,
     required this.sampleRate,
     required this.channelConfig,
+    required this.channels,
   });
   final int audioObjectType;
   final int sampleRate;
   final int channelConfig;
+  final int channels;
 }

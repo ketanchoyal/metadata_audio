@@ -1,5 +1,10 @@
 import 'dart:typed_data';
 
+import 'package:metadata_audio/src/apev2/apev2_tag_map.dart';
+import 'package:metadata_audio/src/common/combined_tag_mapper.dart';
+import 'package:metadata_audio/src/common/metadata_collector.dart';
+import 'package:metadata_audio/src/common/util.dart';
+import 'package:metadata_audio/src/id3v2/id3v2_tag_map.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mpeg/mpeg_loader.dart';
 import 'package:metadata_audio/src/mpeg/replay_gain_data_format.dart';
@@ -41,6 +46,73 @@ void main() {
     test('returns null when gain type is not set', () {
       final gain = ReplayGainDataFormat.parse(const <int>[0x00, 0x00]);
       expect(gain, isNull);
+    });
+  });
+
+  group('toRatio string validation', () {
+    test('parses valid ReplayGain expressions', () {
+      final r1 = toRatio('0 dB');
+      expect(r1, isNotNull);
+      expect(r1!.dB, 0.0);
+      expect(r1.ratio, 1.0);
+
+      final r2 = toRatio('0');
+      expect(r2, isNotNull);
+      expect(r2!.ratio, 0.0);
+      expect(r2.dB, isNull);
+
+      final r3 = toRatio('-7.03 dB');
+      expect(r3, isNotNull);
+      expect(r3!.dB, closeTo(-7.03, 0.001));
+
+      final r4 = toRatio(' \t-3.00\tDB\n');
+      expect(r4, isNotNull);
+      expect(r4!.dB, -3.0);
+
+      final r5 = toRatio('+1.e-1');
+      expect(r5, isNotNull);
+      expect(r5!.ratio, closeTo(0.1, 0.0001));
+    });
+
+    for (final invalid in [
+      '',
+      ' ',
+      'NaN',
+      'Infinity',
+      '-Infinity',
+      '1e309',
+      '1e309 dB',
+      '-1',
+      '1garbage',
+      '1 dB garbage',
+    ]) {
+      test('rejects invalid ReplayGain "$invalid"', () {
+        expect(toRatio(invalid), isNull);
+      });
+    }
+  });
+
+  group('ReplayGain tag fallback and priority', () {
+    test('ignores invalid ReplayGain without claiming priority', () {
+      final mapper = CombinedTagMapper()
+        ..registerMapper('APEv2', Apev2TagMapper())
+        ..registerMapper('ID3v2.3', Id3v2TagMapper());
+
+      final collector = MetadataCollector(mapper);
+
+      // Higher priority APEv2 provides invalid value
+      collector.addNativeTag('APEv2', 'REPLAYGAIN_TRACK_GAIN', 'not-a-number');
+      // ID3v2.3 provides valid value
+      collector.addNativeTag('ID3v2.3', 'TXXX:REPLAYGAIN_TRACK_GAIN', '0 dB');
+
+      final meta = collector.toAudioMetadata();
+      expect(meta.common.replaygain_track_gain, isNotNull);
+      expect(meta.common.replaygain_track_gain!.dB, 0.0);
+      expect(meta.common.replaygain_track_gain!.ratio, 1.0);
+      expect(
+        meta.quality.warnings.any((w) => w.message.contains('Invalid ReplayGain value')),
+        isTrue,
+      );
     });
   });
 

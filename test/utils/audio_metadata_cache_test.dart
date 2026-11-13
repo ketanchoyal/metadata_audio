@@ -54,6 +54,74 @@ void main() {
       expect(second.quality.warnings.length, first.quality.warnings.length);
     });
 
+    test('round-trips ReplayGain, flat tags, and accurate channel counts through cache', () async {
+      AudioMetadataCache.overrideHasIoForTesting = true;
+
+      const original = AudioMetadata(
+        format: Format(
+          container: 'EBML/matroska',
+          codec: 'MPEG-4/AAC',
+          numberOfChannels: 1, // mono from AudioSpecificConfig
+          sampleRate: 44100,
+        ),
+        common: CommonTags(
+          track: TrackNo(no: 1, of: 10),
+          disk: TrackNo(no: 2, of: 3),
+          movementIndex: TrackNo(),
+          title: 'Cached Title',
+          album: 'Flat Album',
+          albumartist: 'Flat Album Artist',
+          composer: ['Hans Zimmer'],
+          date: '2021-03-04',
+          year: 2021,
+          replaygain_track_gain: Ratio(dB: -7.03, ratio: 0.198),
+          replaygain_track_peak: Ratio(ratio: 0.95),
+          replaygain_album_gain: Ratio(dB: -8, ratio: 0.158),
+          replaygain_album_peak: Ratio(ratio: 0.98),
+        ),
+        quality: QualityInformation(warnings: [
+          ParserWarning(message: 'Invalid ReplayGain value for APEv2.REPLAYGAIN_TRACK_GAIN'),
+        ]),
+        native: {
+          'matroska': [
+            Tag(id: 'track:ALBUM', value: 'Flat Album'),
+            Tag(id: 'track:COMPOSER', value: 'Hans Zimmer'),
+          ],
+        },
+      );
+
+      await AudioMetadataCache.putMetadata('test-new-tags-key', original);
+      final cached = await AudioMetadataCache.getMetadata('test-new-tags-key');
+
+      expect(cached, isNotNull);
+      // Format checks
+      expect(cached!.format.numberOfChannels, equals(1));
+      expect(cached.format.container, equals('EBML/matroska'));
+
+      // Common tags checks
+      expect(cached.common.album, equals('Flat Album'));
+      expect(cached.common.albumartist, equals('Flat Album Artist'));
+      expect(cached.common.composer, equals(['Hans Zimmer']));
+      expect(cached.common.date, equals('2021-03-04'));
+      expect(cached.common.year, equals(2021));
+      expect(cached.common.disk.no, equals(2));
+      expect(cached.common.disk.of, equals(3));
+
+      // ReplayGain checks
+      expect(cached.common.replaygain_track_gain, isNotNull);
+      expect(cached.common.replaygain_track_gain!.dB, closeTo(-7.03, 0.001));
+      expect(cached.common.replaygain_track_gain!.ratio, closeTo(0.198, 0.001));
+      expect(cached.common.replaygain_track_peak!.ratio, closeTo(0.95, 0.001));
+      expect(cached.common.replaygain_track_peak!.dB, isNull);
+      expect(cached.common.replaygain_album_gain!.dB, closeTo(-8.0, 0.001));
+
+      // Warnings and native tags checks
+      expect(cached.quality.warnings, hasLength(1));
+      expect(cached.quality.warnings.first.message, contains('Invalid ReplayGain value'));
+      expect(cached.native['matroska'], hasLength(2));
+      expect(cached.native['matroska']!.first.id, equals('track:ALBUM'));
+    });
+
     test('IO mode does not store items in memory', () async {
       AudioMetadataCache.overrideHasIoForTesting = true;
       const path = 'test/samples/mp3/id3v2.3.mp3';
