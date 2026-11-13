@@ -136,7 +136,6 @@ class WaveParser {
         return;
       case 'fact':
         validateAllocation(chunkSize, options, WaveContentError.new);
-        metadata.setFormat(lossless: false);
         _fact = FactChunk.fromBytes(tokenizer.readBytes(chunkSize));
         return;
       case 'fmt ':
@@ -431,7 +430,8 @@ class WaveParser {
 
     metadata.setFormat(
       codec: codec,
-      bitsPerSample: fmt.bitsPerSample,
+      lossless: isLosslessWaveFormat(fmt.formatTag),
+      bitsPerSample: getBitsPerSample(fmt),
       sampleRate: fmt.samplesPerSec,
       numberOfChannels: fmt.channels,
       bitrate: fmt.blockAlign * fmt.samplesPerSec * 8,
@@ -453,10 +453,6 @@ class WaveParser {
   }
 
   void _parseDataChunk(int chunkSize) {
-    if (metadata.format.lossless ?? true) {
-      metadata.setFormat(lossless: true);
-    }
-
     if (_blockAlign <= 0) {
       return;
     }

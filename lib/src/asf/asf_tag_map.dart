@@ -202,7 +202,7 @@ class AsfTagMapper extends GenericTagMapper {
         ];
 
       case 'compilation':
-        return _parseBool(_singleString(value));
+        return _parseBool(value);
 
       case 'rating':
         return nativeKey == 'POPULARIMETER'
@@ -336,17 +336,30 @@ class AsfTagMapper extends GenericTagMapper {
     return int.tryParse(number);
   }
 
-  static bool? _parseBool(String? value) {
-    if (value == null) {
+  static bool? _parseBool(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value == 1;
+    }
+    if (value is List) {
+      for (final item in value) {
+        final parsed = _parseBool(item);
+        if (parsed != null) {
+          return parsed;
+        }
+      }
       return null;
     }
-
-    final normalized = value.trim().toLowerCase();
-    if (normalized == '1' || normalized == 'true' || normalized == 'yes') {
-      return true;
-    }
-    if (normalized == '0' || normalized == 'false' || normalized == 'no') {
-      return false;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == '1' || normalized == 'true' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == '0' || normalized == 'false' || normalized == 'no') {
+        return false;
+      }
     }
     return null;
   }

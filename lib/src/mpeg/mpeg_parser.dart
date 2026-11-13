@@ -38,6 +38,7 @@ class MpegParser {
   final List<int> _bitrates = <int>[];
   bool _hasId3v1 = false;
   int _adtsTotalDataLength = 0;
+  int? _audioEnd;
 
   /// Byte offset immediately following any leading ID3v2 tags (`0` if none).
   int get id3v2EndOffset => _id3v2EndOffset;
@@ -52,6 +53,25 @@ class MpegParser {
     );
     await id3v2.parse();
     _id3v2EndOffset = tokenizer.position;
+
+    final fileSize = tokenizer.fileInfo?.size;
+    if (options.duration && tokenizer.canSeek && fileSize != null && fileSize >= 128) {
+      final savedPos = tokenizer.position;
+      try {
+        tokenizer.seek(fileSize - 128);
+        final tagBytes = tokenizer.readBytes(3);
+        if (tagBytes.length == 3 &&
+            tagBytes[0] == 0x54 &&
+            tagBytes[1] == 0x41 &&
+            tagBytes[2] == 0x47) {
+          _audioEnd = fileSize - 128;
+        }
+      } catch (_) {
+        // Ignored
+      } finally {
+        tokenizer.seek(savedPos);
+      }
+    }
 
     while (true) {
       final syncResult = await _syncToFrame();
@@ -264,6 +284,9 @@ class MpegParser {
 
   bool _parseMpegAudioFrame() {
     final frameStart = tokenizer.position;
+    if (_audioEnd != null && frameStart >= _audioEnd!) {
+      return true;
+    }
     final headerBytes = _safePeekBytes(4);
     if (headerBytes == null || headerBytes.length < 4) {
       return true;
@@ -273,6 +296,9 @@ class MpegParser {
     if (header == null) {
       _safeSkip(1);
       return false;
+    }
+    if (_audioEnd != null && frameStart + header.frameLength > _audioEnd!) {
+      return true;
     }
     if (_safeReadBytes(4) == null) {
       return true;
@@ -338,6 +364,9 @@ class MpegParser {
 
   bool _parseAdtsFrame() {
     final frameStart = tokenizer.position;
+    if (_audioEnd != null && frameStart >= _audioEnd!) {
+      return true;
+    }
     final firstSevenBytes = _safePeekBytes(7);
     if (firstSevenBytes == null || firstSevenBytes.length < 7) {
       return true;
@@ -347,6 +376,9 @@ class MpegParser {
     if (header == null) {
       _safeSkip(1);
       return false;
+    }
+    if (_audioEnd != null && frameStart + header.frameLength > _audioEnd!) {
+      return true;
     }
 
     if (_safeReadBytes(header.headerLength) == null) {
@@ -393,6 +425,9 @@ class MpegParser {
 
   Future<_FrameSyncResult?> _syncToFrame() async {
     while (true) {
+      if (_audioEnd != null && tokenizer.position >= _audioEnd!) {
+        return null;
+      }
       final sync = _safePeekBytes(2);
       if (sync == null || sync.length < 2) {
         return null;

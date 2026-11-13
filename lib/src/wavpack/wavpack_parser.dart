@@ -46,12 +46,18 @@ class WavPackParser {
   ];
 
   int _audioDataSize = 0;
+  int _sampleRate = 0;
+  int _dsdMultiplier = 1;
+  bool _physicalEof = false;
 
   Future<void> parse() async {
     metadata.setFormat(hasAudio: true, hasVideo: false);
     _audioDataSize = 0;
 
     await parseWavPackBlocks();
+    if (_physicalEof) {
+      return;
+    }
 
     final apev2 = Apev2Parser(
       metadata: metadata,
@@ -62,10 +68,17 @@ class WavPackParser {
   }
 
   Future<void> parseWavPackBlocks() async {
+    int? totalSamples;
+    var sampleExtent = 0;
+    int? groupIndex;
+    var groupSamples = 0;
+    var complete = true;
+    var isDsd = false;
+
     while (await _isNextBlockWavPack()) {
       final header = _parseBlockHeader(tokenizer.readBytes(_blockHeaderLength));
       if (header.blockId != 'wvpk') {
-        throw WavPackContentError('Invalid WavPack Block-ID');
+        break;
       }
 
       if (header.blockIndex == 0 && metadata.format.container == null) {
@@ -74,23 +87,18 @@ class WavPackParser {
           lossless: !header.flags.isHybrid,
           bitsPerSample: header.flags.bitsPerSample,
           numberOfChannels: header.flags.isMono ? 1 : 2,
-          numberOfSamples: header.totalSamples,
           codec: header.flags.isDsd ? 'DSD' : 'PCM',
         );
-
-        if (!header.flags.isDsd && header.flags.samplingRate > 0) {
-          metadata.setFormat(
-            sampleRate: header.flags.samplingRate,
-            duration: header.totalSamples / header.flags.samplingRate,
-          );
-        }
+        _sampleRate = header.flags.samplingRate;
+        isDsd = header.flags.isDsd;
+        totalSamples = header.totalSamples > 0 ? header.totalSamples : null;
       }
 
       final ignoreBytes = header.blockSize - (_blockHeaderLength - 8);
-      if (ignoreBytes < 0) {
-        throw WavPackContentError(
-          'Invalid WavPack block size: ${header.blockSize}',
-        );
+      final fileSize = tokenizer.fileInfo?.size;
+      if (ignoreBytes < 0 ||
+          (fileSize != null && ignoreBytes > fileSize - tokenizer.position)) {
+        throw WavPackContentError('WavPack block exceeds available input');
       }
 
       if (header.blockIndex == 0) {
@@ -100,7 +108,47 @@ class WavPackParser {
       }
 
       if (header.blockSamples > 0) {
+        // Channel blocks share an index and sample count; advance only when the group is complete.
+        if (header.flags.isInitialBlock) {
+          complete = complete &&
+              groupIndex == null &&
+              header.blockIndex == sampleExtent;
+          groupIndex = header.blockIndex;
+          groupSamples = header.blockSamples;
+        }
+        complete = complete &&
+            groupIndex == header.blockIndex &&
+            groupSamples == header.blockSamples &&
+            isDsd == header.flags.isDsd;
+        if (header.flags.isFinalBlock) {
+          sampleExtent = header.blockIndex + header.blockSamples;
+          groupIndex = null;
+        }
         _audioDataSize += header.blockSize;
+      }
+    }
+
+    if (totalSamples == null &&
+        complete &&
+        groupIndex == null &&
+        sampleExtent > 0) {
+      totalSamples = sampleExtent * (isDsd ? 8 : 1);
+    } else if (totalSamples == null && (!complete || groupIndex != null)) {
+      metadata.addWarning(
+        'Cannot determine WavPack duration from incomplete or non-contiguous blocks',
+      );
+    }
+
+    final samplingRate = _sampleRate * _dsdMultiplier;
+    if (samplingRate > 0) {
+      metadata.setFormat(sampleRate: samplingRate);
+    }
+
+    if (totalSamples != null) {
+      metadata.setFormat(numberOfSamples: totalSamples);
+      final rate = metadata.format.sampleRate;
+      if (rate != null && rate > 0) {
+        metadata.setFormat(duration: totalSamples / rate);
       }
     }
 
@@ -112,9 +160,15 @@ class WavPackParser {
 
   Future<bool> _isNextBlockWavPack() async {
     try {
-      final blockId = ascii.decode(tokenizer.peekBytes(4), allowInvalid: true);
+      final peek = tokenizer.peekBytes(4);
+      if (peek.length < 4) {
+        _physicalEof = true;
+        return false;
+      }
+      final blockId = ascii.decode(peek, allowInvalid: true);
       return blockId == 'wvpk';
     } on TokenizerException {
+      _physicalEof = true;
       return false;
     }
   }
@@ -149,17 +203,18 @@ class WavPackParser {
           }
 
           if (data.isEmpty) {
-            throw WavPackContentError('Invalid ID_DSD_BLOCK data');
+            throw WavPackContentError('Truncated WavPack DSD metadata');
           }
 
           final multiplier = 1 << data[0];
-          final sampleRate = header.flags.samplingRate * multiplier * 8;
-          if (sampleRate > 0) {
-            metadata.setFormat(
-              sampleRate: sampleRate,
-              duration: header.totalSamples / sampleRate,
-            );
+          _dsdMultiplier = multiplier * 8;
+          break;
+
+        case 0x27:
+          if (data.length < 3) {
+            throw WavPackContentError('Truncated WavPack sample rate');
           }
+          _sampleRate = _readUint24Le(data, 0);
           break;
 
         case 0x24:
@@ -196,7 +251,12 @@ class WavPackParser {
     }
 
     final flags = _readUint32Le(bytes, 24);
-    var totalSamples = _readUint32Le(bytes, 12);
+    final rawTotalSamples = _readUint32Le(bytes, 12);
+    // The low-word sentinel is unknown regardless of the high byte; the total uses radix 0xffffffff.
+    var totalSamples = rawTotalSamples == 0xFFFFFFFF
+        ? -1
+        : rawTotalSamples + bytes[11] * 0xFFFFFFFF;
+    final blockIndex = _readUint32Le(bytes, 16) + bytes[10] * 0x100000000;
 
     final parsedFlags = _WavPackFlags(
       bitsPerSample: (1 + _getBitAlignedNumber(flags, 0, 2)) * 8,
@@ -204,16 +264,18 @@ class WavPackParser {
       isHybrid: _isBitSet(flags, 3),
       samplingRate: _sampleRates[_getBitAlignedNumber(flags, 23, 4)],
       isDsd: _isBitSet(flags, 31),
+      isInitialBlock: _isBitSet(flags, 11),
+      isFinalBlock: _isBitSet(flags, 12),
     );
 
-    if (parsedFlags.isDsd) {
+    if (parsedFlags.isDsd && totalSamples >= 0) {
       totalSamples *= 8;
     }
 
     return _WavPackBlockHeader(
       blockId: ascii.decode(bytes.sublist(0, 4), allowInvalid: true),
       blockSize: _readUint32Le(bytes, 4),
-      blockIndex: _readUint32Le(bytes, 16),
+      blockIndex: blockIndex,
       totalSamples: totalSamples,
       blockSamples: _readUint32Le(bytes, 20),
       flags: parsedFlags,
@@ -278,6 +340,8 @@ class _WavPackFlags {
     required this.isHybrid,
     required this.samplingRate,
     required this.isDsd,
+    required this.isInitialBlock,
+    required this.isFinalBlock,
   });
 
   final int bitsPerSample;
@@ -285,6 +349,8 @@ class _WavPackFlags {
   final bool isHybrid;
   final int samplingRate;
   final bool isDsd;
+  final bool isInitialBlock;
+  final bool isFinalBlock;
 }
 
 class _WavPackMetadataId {

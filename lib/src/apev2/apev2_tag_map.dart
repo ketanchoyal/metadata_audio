@@ -179,7 +179,7 @@ class Apev2TagMapper extends GenericTagMapper {
         return comment == null ? null : <Comment>[Comment(text: comment)];
 
       case 'compilation':
-        return _parseBool(_singleString(value));
+        return _parseBool(value);
 
       case 'picture':
         if (value is! ApePicture) {
@@ -249,23 +249,34 @@ class Apev2TagMapper extends GenericTagMapper {
     return int.tryParse(numberPart);
   }
 
-  static bool? _parseBool(String? value) {
-    if (value == null) {
+  static bool? _parseBool(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value == 1;
+    }
+    if (value is List) {
+      for (final item in value) {
+        final parsed = _parseBool(item);
+        if (parsed != null) {
+          return parsed;
+        }
+      }
       return null;
     }
-
-    final normalized = value.trim().toLowerCase();
-    if (normalized.isEmpty) {
-      return null;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized.isEmpty) {
+        return null;
+      }
+      if (normalized == '1' || normalized == 'true' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == '0' || normalized == 'false' || normalized == 'no') {
+        return false;
+      }
     }
-
-    if (normalized == '1' || normalized == 'true' || normalized == 'yes') {
-      return true;
-    }
-    if (normalized == '0' || normalized == 'false' || normalized == 'no') {
-      return false;
-    }
-
     return null;
   }
 

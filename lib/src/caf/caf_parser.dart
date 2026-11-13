@@ -191,13 +191,24 @@ class CafParser {
       // Audio Data runs to the end of the file, nothing can follow.
       _reachedEndOfFile = true;
       final size = tokenizer.fileInfo?.size;
-      if (size == null) {
-        // Cannot derive the number of audio bytes without the file size.
+      if (size != null) {
+        final dataBytes = size - tokenizer.position;
+        tokenizer.skip(dataBytes);
+        _dataBytes = dataBytes;
         return;
       }
-      final dataBytes = size - tokenizer.position;
-      tokenizer.skip(dataBytes);
-      _dataBytes = dataBytes;
+      if (!options.duration) {
+        return;
+      }
+      final desc = _desc;
+      if (desc == null ||
+          desc.sampleRate <= 0 ||
+          _deriveFrameCount(desc) != null ||
+          desc.bytesPerPacket <= 0 ||
+          desc.framesPerPacket <= 0) {
+        return;
+      }
+      _dataBytes = await _readToPhysicalEof();
       return;
     }
 
@@ -322,6 +333,20 @@ class CafParser {
     }
   }
 
+  Future<int> _readToPhysicalEof() async {
+    var bytes = 0;
+    var chunkSize = 64 * 1024;
+    while (chunkSize > 0) {
+      try {
+        tokenizer.readBytes(chunkSize);
+        bytes += chunkSize;
+      } on TokenizerException {
+        chunkSize ~/= 2;
+      }
+    }
+    return bytes;
+  }
+
   int? _deriveFrameCount(AudioDescription desc) {
     final packetTable = _packetTable;
     if (packetTable != null) {
@@ -334,9 +359,9 @@ class CafParser {
     if (desc.bytesPerPacket > 0 &&
         desc.framesPerPacket > 0 &&
         _dataBytes != null) {
-      final frames = (_dataBytes! * desc.framesPerPacket) / desc.bytesPerPacket;
+      final frames = (_dataBytes! ~/ desc.bytesPerPacket) * desc.framesPerPacket;
       if (frames > 0) {
-        return frames.floor();
+        return frames;
       }
     }
     return null;

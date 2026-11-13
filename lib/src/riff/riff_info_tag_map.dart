@@ -27,6 +27,7 @@ final Map<String, String> _riffInfoTagMap = <String, String>{
   'IENG': 'engineer',
   'ITCH': 'technician',
   'IMED': 'media',
+  'ICOP': 'copyright',
 };
 
 class RiffInfoTagMapper extends GenericTagMapper {
@@ -66,6 +67,7 @@ class RiffInfoTagMapper extends GenericTagMapper {
       case 'encodedby':
       case 'website':
       case 'media':
+      case 'copyright':
         return _singleString(value);
       case 'track':
       case 'year':

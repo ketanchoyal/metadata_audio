@@ -95,10 +95,11 @@ class MetadataCollector {
     bool? hasAudio,
     bool? hasVideo,
     List<TrackInfo>? trackInfo,
+    List<String>? tagTypes,
   }) {
     _format = Format(
       container: container ?? _format.container,
-      tagTypes: _format.tagTypes,
+      tagTypes: tagTypes ?? _format.tagTypes,
       duration: duration ?? _format.duration,
       bitrate: bitrate ?? _format.bitrate,
       sampleRate: sampleRate ?? _format.sampleRate,
@@ -248,6 +249,22 @@ class MetadataCollector {
       }
     }
 
+    if (tagKey == 'year') {
+      if (value is String) {
+        value = int.tryParse(value);
+      }
+      if (value == null) {
+        return;
+      }
+    }
+
+    if (tagKey == 'lyrics') {
+      value = _normalizeLyrics(value);
+      if (value == null || (value is List && value.isEmpty)) {
+        return;
+      }
+    }
+
     final semantics = GenericTagTypes.getSemantics(tagKey);
     final currentSource = _commonTagSource[tagKey];
     final currentPriority = currentSource == null
@@ -352,6 +369,53 @@ class MetadataCollector {
     return deduped;
   }
 
+  static dynamic _normalizeLyrics(dynamic value) {
+    if (value is List) {
+      final list = value
+          .map(_normalizeSingleLyrics)
+          .whereType<LyricsTag>()
+          .toList();
+      return list.isEmpty ? null : list;
+    }
+    return _normalizeSingleLyrics(value);
+  }
+
+  static LyricsTag? _normalizeSingleLyrics(dynamic value) {
+    if (value is LyricsTag) {
+      return value;
+    }
+    if (value is Comment) {
+      return LyricsTag(
+        contentType: 'lyrics',
+        timeStampFormat: 'none',
+        syncText: const [],
+        language: value.language,
+        descriptor: value.descriptor,
+        text: value.text,
+      );
+    }
+    if (value is Map) {
+      return LyricsTag(
+        contentType: value['contentType'] as String? ?? 'lyrics',
+        timeStampFormat: value['timeStampFormat'] as String? ?? 'none',
+        syncText: const [],
+        language: value['language'] as String?,
+        descriptor: value['descriptor'] as String? ??
+            value['description'] as String?,
+        text: value['text'] as String?,
+      );
+    }
+    if (value is String && value.isNotEmpty) {
+      return LyricsTag(
+        contentType: 'lyrics',
+        timeStampFormat: 'none',
+        syncText: const [],
+        text: value,
+      );
+    }
+    return null;
+  }
+
   static int? _deriveYear(dynamic value) {
     if (value is! String) {
       return null;
@@ -425,8 +489,12 @@ class MetadataCollector {
       warnings: _warnings.map((msg) => ParserWarning(message: msg)).toList(),
     );
 
+    final tagTypes = _format.tagTypes.isNotEmpty
+        ? _format.tagTypes
+        : _nativeTagsByFormat.keys.toList();
+
     return AudioMetadata(
-      format: _format,
+      format: _format.copyWith(tagTypes: tagTypes),
       native: nativeTags,
       common: commonTags,
       quality: quality,

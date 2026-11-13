@@ -69,6 +69,9 @@ final _id3v2TagMap = {
   'WFED': 'podcasturl',
   'TLAN': 'language',
   'TCOP': 'copyright',
+  'TCP': 'compilation',
+  'TCMP': 'compilation',
+  'TXXX:COMPILATION': 'compilation',
   'TXXX:REPLAYGAIN_TRACK_PEAK': 'replaygain_track_peak',
   'TXXX:REPLAYGAIN_TRACK_GAIN': 'replaygain_track_gain',
   'TXXX:REPLAYGAIN_ALBUM_PEAK': 'replaygain_album_peak',
@@ -225,6 +228,42 @@ class Id3v2TagMapper extends GenericTagMapper {
         if (value is LyricsTag) {
           return [value];
         }
+        if (value is Comment) {
+          return [
+            LyricsTag(
+              contentType: 'lyrics',
+              timeStampFormat: 'none',
+              syncText: const [],
+              language: value.language,
+              descriptor: value.descriptor,
+              text: value.text,
+            ),
+          ];
+        }
+        if (value is Map) {
+          return [
+            LyricsTag(
+              contentType: value['contentType'] as String? ?? 'lyrics',
+              timeStampFormat: value['timeStampFormat'] as String? ?? 'none',
+              syncText: const [],
+              language: value['language'] as String?,
+              descriptor: value['descriptor'] as String? ??
+                  value['description'] as String?,
+              text: value['text'] as String?,
+            ),
+          ];
+        }
+        final text = _singleString(value);
+        if (text != null && text.isNotEmpty) {
+          return [
+            LyricsTag(
+              contentType: 'lyrics',
+              timeStampFormat: 'none',
+              syncText: const [],
+              text: text,
+            ),
+          ];
+        }
         return null;
       // Involved-person credits (expanded from TMCL/TIPL/IPL/IPLS role maps)
       case 'arranger':
@@ -270,12 +309,42 @@ class Id3v2TagMapper extends GenericTagMapper {
       case 'averageLevel':
       case 'peakLevel':
         return value is num ? value.toDouble() : null;
+      case 'compilation':
       case 'podcast':
-        final intVal = _parseLeadingInt(_singleString(value));
-        return intVal != null ? intVal != 0 : null;
+        return _toBool(value);
       default:
         return null;
     }
+  }
+
+  static bool? _toBool(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value > 0;
+    }
+    if (value is List) {
+      for (final item in value) {
+        final parsed = _toBool(item);
+        if (parsed != null) {
+          return parsed;
+        }
+      }
+      return null;
+    }
+    final text = _singleString(value);
+    if (text == null) {
+      return null;
+    }
+    final normalized = text.trim().toLowerCase();
+    if (normalized == '1' || normalized == 'true' || normalized == 'yes') {
+      return true;
+    }
+    if (normalized == '0' || normalized == 'false' || normalized == 'no') {
+      return false;
+    }
+    return null;
   }
 
   int? _parseCounter(dynamic value) {

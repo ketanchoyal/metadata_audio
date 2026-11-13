@@ -11,6 +11,8 @@ class WaveFormat {
   static const int pcm = 0x0001;
   static const int adpcm = 0x0002;
   static const int ieeeFloat = 0x0003;
+  static const int alaw = 0x0006;
+  static const int mulaw = 0x0007;
   static const int drm = 0x0009;
   static const int mpeg = 0x0050;
   static const int dolbyAc3Spdif = 0x0092;
@@ -21,12 +23,16 @@ class WaveFormat {
   static const int esstAc3 = 0x0241;
   static const int dvm = 0x2000;
   static const int dts2 = 0x2001;
+  static const int flac = 0xF1AC;
+  static const int extensible = 0xFFFE;
 }
 
 const Map<int, String> waveFormatNameMap = <int, String>{
   WaveFormat.pcm: 'PCM',
   WaveFormat.adpcm: 'ADPCM',
   WaveFormat.ieeeFloat: 'IEEE_FLOAT',
+  WaveFormat.alaw: 'ALAW',
+  WaveFormat.mulaw: 'MULAW',
   WaveFormat.drm: 'DRM',
   WaveFormat.mpeg: 'MPEG',
   WaveFormat.dolbyAc3Spdif: 'DOLBY_AC3_SPDIF',
@@ -37,7 +43,44 @@ const Map<int, String> waveFormatNameMap = <int, String>{
   WaveFormat.esstAc3: 'ESST_AC3',
   WaveFormat.dvm: 'DVM',
   WaveFormat.dts2: 'DTS2',
+  WaveFormat.flac: 'FLAC',
 };
+
+/// Common suffix of the KSDATAFORMAT_SUBTYPE_* GUIDs used by WAVE_FORMAT_EXTENSIBLE.
+/// The first two bytes at offset +24 contain the WAVE format tag.
+const List<int> waveFormatExtensibleSubFormatSuffix = <int>[
+  0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71
+];
+
+bool hasStandardSubFormatGuid(List<int> bytes, int offset) {
+  if (offset + waveFormatExtensibleSubFormatSuffix.length > bytes.length) {
+    return false;
+  }
+  for (var i = 0; i < waveFormatExtensibleSubFormatSuffix.length; i++) {
+    if (bytes[offset + i] != waveFormatExtensibleSubFormatSuffix[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// Returns true for uncompressed or lossless WAVE formats.
+bool isLosslessWaveFormat(int wFormatTag) =>
+    wFormatTag == WaveFormat.pcm ||
+    wFormatTag == WaveFormat.ieeeFloat ||
+    wFormatTag == WaveFormat.flac;
+
+/// PCM in a WAVEFORMATEXTENSIBLE container may use fewer valid bits than the
+/// container size, for example 20-bit samples stored in 24-bit words.
+int getBitsPerSample(WaveFormatChunk format) {
+  if (format.formatTag == WaveFormat.pcm &&
+      format.validBitsPerSample != null &&
+      format.validBitsPerSample! > 0 &&
+      format.validBitsPerSample! <= format.bitsPerSample) {
+    return format.validBitsPerSample!;
+  }
+  return format.bitsPerSample;
+}
 
 class WaveFormatChunk {
   const WaveFormatChunk({
@@ -47,6 +90,7 @@ class WaveFormatChunk {
     required this.avgBytesPerSec,
     required this.blockAlign,
     required this.bitsPerSample,
+    this.validBitsPerSample,
   });
 
   final int formatTag;
@@ -55,19 +99,34 @@ class WaveFormatChunk {
   final int avgBytesPerSec;
   final int blockAlign;
   final int bitsPerSample;
+  final int? validBitsPerSample;
 
   static WaveFormatChunk fromBytes(List<int> bytes) {
     if (bytes.length < 16) {
       throw WaveContentError('Invalid fmt chunk size');
     }
 
+    var formatTag = RiffChunk.readUint16Le(bytes, 0);
+    int? validBitsPerSample;
+
+    if (formatTag == WaveFormat.extensible && bytes.length >= 40) {
+      final cbSize = RiffChunk.readUint16Le(bytes, 16);
+      if (cbSize >= 22) {
+        validBitsPerSample = RiffChunk.readUint16Le(bytes, 18);
+        if (hasStandardSubFormatGuid(bytes, 26)) {
+          formatTag = RiffChunk.readUint16Le(bytes, 24);
+        }
+      }
+    }
+
     return WaveFormatChunk(
-      formatTag: RiffChunk.readUint16Le(bytes, 0),
+      formatTag: formatTag,
       channels: RiffChunk.readUint16Le(bytes, 2),
       samplesPerSec: RiffChunk.readUint32Le(bytes, 4),
       avgBytesPerSec: RiffChunk.readUint32Le(bytes, 8),
       blockAlign: RiffChunk.readUint16Le(bytes, 12),
       bitsPerSample: RiffChunk.readUint16Le(bytes, 14),
+      validBitsPerSample: validBitsPerSample,
     );
   }
 }

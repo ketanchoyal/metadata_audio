@@ -204,6 +204,18 @@ class Mp4TagMapper extends GenericTagMapper {
       case 'comment':
         final text = _singleString(value);
         return text == null ? null : <Comment>[Comment(text: text)];
+      case 'lyrics':
+        final text = _singleString(value);
+        return text == null
+            ? null
+            : <LyricsTag>[
+                LyricsTag(
+                  contentType: 'lyrics',
+                  timeStampFormat: 'none',
+                  syncText: const [],
+                  text: text,
+                ),
+              ];
       case 'compilation':
       case 'podcast':
       case 'gapless':
