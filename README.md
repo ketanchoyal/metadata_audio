@@ -50,28 +50,28 @@ Test the capabilities of `metadata_audio` live in your browser:
 
 | Audio Format | Description | Icon / Logo |
 | :--- | :--- | :---: |
-| [AIFF / AIFF-C](https://en.wikipedia.org/wiki/Audio_Interchange_File_Format) | Audio Interchange File Format (Apple) | <img src="image/logo-Apple_Computer_Logo_rainbow.svg" height="28" alt="Apple logo" /> |
-| [AAC](https://en.wikipedia.org/wiki/Advanced_Audio_Coding) | Advanced Audio Coding / ADTS | <img src="image/logo-AAC_original.svg" height="28" alt="AAC logo" /> |
-| [APE](https://en.wikipedia.org/wiki/Monkey%27s_Audio) | Monkey's Audio | <img src="image/logo-APE-AI.svg" height="28" alt="Monkey's Audio logo" /> |
-| [ASF](https://en.wikipedia.org/wiki/Advanced_Systems_Format) | Advanced Systems Format / WMA | <img src="image/logo-Windows_Media_Player_simplified.svg" height="28" alt="Windows Media logo" /> |
-| [BWF](https://en.wikipedia.org/wiki/Broadcast_Wave_Format) | Broadcast Wave Format (EBU R128 Loudness) | <img src="image/logo-BWF.svg" height="24" alt="BWF logo" /> |
-| [CAF](https://en.wikipedia.org/wiki/Core_Audio_File_Format) | Apple Core Audio Format | <img src="image/logo-Apple_Computer_Logo_rainbow.svg" height="28" alt="Apple logo" /> |
-| [DSDIFF](https://en.wikipedia.org/wiki/Direct_Stream_Digital) | Philips Direct Stream Digital (DSD) | <img src="image/logo-DSD.svg" height="28" alt="DSD logo" /> |
-| [DSF](https://en.wikipedia.org/wiki/Direct_Stream_Digital) | Sony DSD Stream File | <img src="image/logo-DSD.svg" height="28" alt="DSD logo" /> |
-| [FLAC](https://en.wikipedia.org/wiki/FLAC) | Free Lossless Audio Codec | <img src="image/logo-FLAC.svg" height="28" alt="FLAC logo" /> |
-| [MP2](https://en.wikipedia.org/wiki/MPEG-1_Audio_Layer_II) | MPEG-1 Audio Layer II | <img src="image/logo-Mp3.svg" height="28" alt="MPEG logo" /> |
-| [MP3](https://en.wikipedia.org/wiki/MP3) | MPEG-1 / MPEG-2 Audio Layer III | <img src="image/logo-Mp3.svg" height="28" alt="MP3 logo" /> |
-| [MPC](https://en.wikipedia.org/wiki/Musepack) | Musepack SV7 / SV8 | <img src="image/logo-Musepack.svg" height="28" alt="Musepack logo" /> |
-| [MPEG-4](https://en.wikipedia.org/wiki/MPEG-4_Part_14) | MP4, M4A, M4B, M4V, MOV | <img src="image/logo-MPEG4-350581.svg" height="28" alt="MPEG-4 logo" /> |
-| [Ogg](https://en.wikipedia.org/wiki/Ogg) | Open container format (Xiph.Org) | <img src="image/logo-Ogg.svg" height="28" alt="Ogg logo" /> |
-| [Opus](https://en.wikipedia.org/wiki/Opus_(audio_format)) | Interactive audio & speech codec (in Ogg) | <img src="image/logo-Opus.svg" height="28" alt="Opus logo" /> |
-| [Speex](https://en.wikipedia.org/wiki/Speex) | Speech codec (in Ogg) | <img src="image/logo-Speex_2006.svg" height="28" alt="Speex logo" /> |
-| [Theora](https://en.wikipedia.org/wiki/Theora) | Video compression (in Ogg) | <img src="image/logo-Theora_2007.svg" height="28" alt="Theora logo" /> |
-| [Vorbis](https://en.wikipedia.org/wiki/Vorbis) | Vorbis compression (in Ogg) | <img src="image/logo-Vorbis_many_fish_2005.svg" height="28" alt="Vorbis logo" /> |
-| [WAV](https://en.wikipedia.org/wiki/WAV) | Waveform Audio File Format (RIFF) | <img src="image/logo-WAV.svg" height="24" alt="WAV logo" /> |
-| [Matroska / WebM](https://en.wikipedia.org/wiki/Matroska) | Matroska (MKV, MKA), WebM (EBML) | <img src="image/logo-Matroska_2010.svg" height="28" alt="Matroska logo" /> <img src="image/logo-WebM.svg" height="28" alt="WebM logo" /> |
-| [WavPack](https://en.wikipedia.org/wiki/WavPack) | WavPack lossless / hybrid | <img src="image/logo-wavpack.svg" height="28" alt="WavPack logo" /> |
-| [WMA](https://en.wikipedia.org/wiki/Windows_Media_Audio) | Windows Media Audio (ASF) | <img src="image/logo-Windows_Media_Player_simplified.svg" height="28" alt="Windows Media logo" /> |
+| [AIFF / AIFF-C](https://en.wikipedia.org/wiki/Audio_Interchange_File_Format) | Audio Interchange File Format (Apple) | <img src="image/logo-Apple_Computer_Logo_rainbow.svg" width="40" alt="Apple logo" /> |
+| [AAC](https://en.wikipedia.org/wiki/Advanced_Audio_Coding) | Advanced Audio Coding / ADTS | <img src="image/logo-AAC_original.svg" width="40" alt="AAC logo" /> |
+| [APE](https://en.wikipedia.org/wiki/Monkey%27s_Audio) | Monkey's Audio | <img src="image/logo-APE-AI.svg" width="40" alt="Monkey's Audio logo" /> |
+| [ASF](https://en.wikipedia.org/wiki/Advanced_Systems_Format) | Advanced Systems Format / WMA | <img src="image/logo-Windows_Media_Player_simplified.svg" width="40" alt="Windows Media logo" /> |
+| [BWF](https://en.wikipedia.org/wiki/Broadcast_Wave_Format) | Broadcast Wave Format (EBU R128 Loudness) | <img src="image/logo-BWF.svg" width="60" alt="BWF logo" /> |
+| [CAF](https://en.wikipedia.org/wiki/Core_Audio_File_Format) | Apple Core Audio Format | <img src="image/logo-Apple_Computer_Logo_rainbow.svg" width="40" alt="Apple logo" /> |
+| [DSDIFF](https://en.wikipedia.org/wiki/Direct_Stream_Digital) | Philips Direct Stream Digital (DSD) | <img src="image/logo-DSD.svg" width="80" alt="DSD logo" /> |
+| [DSF](https://en.wikipedia.org/wiki/Direct_Stream_Digital) | Sony DSD Stream File | <img src="image/logo-DSD.svg" width="80" alt="DSD logo" /> |
+| [FLAC](https://en.wikipedia.org/wiki/FLAC) | Free Lossless Audio Codec | <img src="image/logo-FLAC.svg" width="80" alt="FLAC logo" /> |
+| [MP2](https://en.wikipedia.org/wiki/MPEG-1_Audio_Layer_II) | MPEG-1 Audio Layer II | <img src="image/logo-Mp3.svg" width="80" alt="MPEG logo" /> |
+| [MP3](https://en.wikipedia.org/wiki/MP3) | MPEG-1 / MPEG-2 Audio Layer III | <img src="image/logo-Mp3.svg" width="80" alt="MP3 logo" /> |
+| [MPC](https://en.wikipedia.org/wiki/Musepack) | Musepack SV7 / SV8 | <img src="image/logo-Musepack.svg" width="80" alt="Musepack logo" /> |
+| [MPEG-4](https://en.wikipedia.org/wiki/MPEG-4_Part_14) | MP4, M4A, M4B, M4V, MOV | <img src="image/logo-MPEG4-350581.svg" width="80" alt="MPEG-4 logo" /> |
+| [Ogg](https://en.wikipedia.org/wiki/Ogg) | Open container format (Xiph.Org) | <img src="image/logo-Ogg.svg" width="80" alt="Ogg logo" /> |
+| [Opus](https://en.wikipedia.org/wiki/Opus_(audio_format)) | Interactive audio & speech codec (in Ogg) | <img src="image/logo-Opus.svg" width="80" alt="Opus logo" /> |
+| [Speex](https://en.wikipedia.org/wiki/Speex) | Speech codec (in Ogg) | <img src="image/logo-Speex_2006.svg" width="80" alt="Speex logo" /> |
+| [Theora](https://en.wikipedia.org/wiki/Theora) | Video compression (in Ogg) | <img src="image/logo-Theora_2007.svg" width="70" alt="Theora logo" /> |
+| [Vorbis](https://en.wikipedia.org/wiki/Vorbis) | Vorbis compression (in Ogg) | <img src="image/logo-Vorbis_many_fish_2005.svg" width="70" alt="Vorbis logo" /> |
+| [WAV](https://en.wikipedia.org/wiki/WAV) | Waveform Audio File Format (RIFF) | <img src="image/logo-WAV.svg" width="60" alt="WAV logo" /> |
+| [Matroska / WebM](https://en.wikipedia.org/wiki/Matroska) | Matroska (MKV, MKA), WebM (EBML) | <img src="image/logo-Matroska_2010.svg" width="60" alt="Matroska logo" /> <img src="image/logo-WebM.svg" width="60" alt="WebM logo" /> |
+| [WavPack](https://en.wikipedia.org/wiki/WavPack) | WavPack lossless / hybrid | <img src="image/logo-wavpack.svg" width="80" alt="WavPack logo" /> |
+| [WMA](https://en.wikipedia.org/wiki/Windows_Media_Audio) | Windows Media Audio (ASF) | <img src="image/logo-Windows_Media_Player_simplified.svg" width="40" alt="Windows Media logo" /> |
 
 ---
 
