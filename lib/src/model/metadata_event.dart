@@ -1,4 +1,4 @@
-part of 'types.dart';
+part of 'package:metadata_audio/src/model/types.dart';
 
 /// Category of incremental metadata updates emitted during parsing.
 enum MetadataEventTagType {

@@ -81,7 +81,7 @@ class WavPackParser {
         break;
       }
 
-      if (header.blockIndex == 0 && metadata.format.container == null) {
+      if (metadata.format.container == null) {
         metadata.setFormat(
           container: 'WavPack',
           lossless: !header.flags.isHybrid,

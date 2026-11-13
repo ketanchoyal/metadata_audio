@@ -301,16 +301,25 @@ class Mp4TagMapper extends GenericTagMapper {
     if (value is bool) {
       return value;
     }
+    if (value is List) {
+      for (final item in value) {
+        final parsed = _toBool(item);
+        if (parsed != null) {
+          return parsed;
+        }
+      }
+      return null;
+    }
     final asInt = _toInt(value);
     if (asInt != null) {
       return asInt > 0;
     }
     if (value is String) {
       final normalized = value.trim().toLowerCase();
-      if (normalized == 'true') {
+      if (normalized == 'true' || normalized == 'yes') {
         return true;
       }
-      if (normalized == 'false') {
+      if (normalized == 'false' || normalized == 'no') {
         return false;
       }
     }
