@@ -12,9 +12,13 @@ environment:
   sdk: ^3.10.7
 
 dependencies:
+  args: ^2.5.0
   collection: ^1.19.1
   http: ^1.2.0
   meta: ^1.16.0
+
+executables:
+  metadata_audio: metadata_audio
 
 dev_dependencies:
   lints: ^6.0.0
