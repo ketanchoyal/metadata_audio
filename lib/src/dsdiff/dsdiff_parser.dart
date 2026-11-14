@@ -22,6 +22,7 @@ class DsdiffParser {
   final MetadataCollector metadata;
   final Tokenizer tokenizer;
   final ParseOptions options;
+  List<int>? _channelPositions;
 
   Future<void> parse() async {
     final header = DsdiffToken.parseChunkHeader64(
@@ -38,6 +39,25 @@ class DsdiffParser {
       case 'DSD':
         metadata.setFormat(container: 'DSDIFF/$type', lossless: true);
         await _readFrm8Chunks(header.chunkSize - BigInt.from(4));
+        final format = metadata.format;
+        if (format.sampleRate != null && format.numberOfChannels != null) {
+          metadata.addStreamInfo(
+            TrackInfo(
+              type: 'audio',
+              codecName: format.codec ?? 'DSD',
+              duration: format.duration,
+              bitrate: format.bitrate?.toDouble(),
+              lossless: format.lossless,
+              audio: AudioTrack(
+                samplingFrequency: format.sampleRate,
+                channels: format.numberOfChannels,
+                channelPositions: _channelPositions,
+                bitDepth: format.bitsPerSample,
+                numberOfSamples: format.numberOfSamples,
+              ),
+            ),
+          );
+        }
         return;
       default:
         throw DsdiffContentError('Unsupported DSDIFF type: $type');
@@ -152,7 +172,10 @@ class DsdiffParser {
             0,
           );
           metadata.setFormat(numberOfChannels: numChannels);
-          _handleChannelChunks(sndPropHeader.chunkSize - BigInt.from(2));
+          final channelIds = _handleChannelChunks(
+            sndPropHeader.chunkSize - BigInt.from(2),
+          );
+          _channelPositions = _mapDsdiffChannelPositions(channelIds);
           break;
 
         case 'CMPR':
@@ -259,6 +282,72 @@ class DsdiffParser {
     if (comments.isNotEmpty) {
       metadata.addNativeTag('DSDIFF', 'COMT', comments);
     }
+  }
+
+  static List<int>? _mapDsdiffChannelPositions(List<String> channelIds) {
+    if (channelIds.isEmpty) return null;
+    final positions = <int>[];
+    for (final id in channelIds) {
+      final pos = _mapDsdiffChannelId(id);
+      if (pos != null) positions.add(pos);
+    }
+    return positions.isEmpty ? null : positions;
+  }
+
+  static int? _mapDsdiffChannelId(String fourCc) {
+    switch (fourCc.trim().toUpperCase()) {
+      case 'SLFT':
+      case 'MLFT':
+        return 0x01; // Front Left
+      case 'SRGT':
+      case 'MRGT':
+        return 0x02; // Front Right
+      case 'C':
+        return 0x04; // Front Center
+      case 'LFE':
+        return 0x08; // LFE
+      case 'LS':
+      case 'SBL':
+        return 0x10; // Surround/Back Left
+      case 'RS':
+      case 'SBR':
+        return 0x20; // Surround/Back Right
+      default:
+        return null;
+    }
+  }
+
+  /// Maps DSDIFF 4CC channel IDs to human-readable speaker layout names.
+  static List<String>? channelNames(List<String> channelIds) {
+    if (channelIds.isEmpty) return null;
+    final names = <String>[];
+    for (final id in channelIds) {
+      switch (id.trim().toUpperCase()) {
+        case 'SLFT':
+        case 'MLFT':
+          names.add('front-left');
+          break;
+        case 'SRGT':
+        case 'MRGT':
+          names.add('front-right');
+          break;
+        case 'C':
+          names.add('front-center');
+          break;
+        case 'LFE':
+          names.add('lfe');
+          break;
+        case 'LS':
+        case 'SBL':
+          names.add('rear-left');
+          break;
+        case 'RS':
+        case 'SBR':
+          names.add('rear-right');
+          break;
+      }
+    }
+    return names.isEmpty ? null : names;
   }
 
   int _safeToInt(BigInt value) {

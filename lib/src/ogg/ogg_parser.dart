@@ -192,6 +192,10 @@ class OggParser {
         ? header.inputSampleRate
         : 48000;
     stream.numberOfChannels = header.channelCount;
+    stream.channelPositions = header.channelMappingTable;
+    if (header.outputGain != 0) {
+      metadata.setFormat(trackGain: header.outputGainDb);
+    }
     metadata.setFormat(
       codec: 'Opus',
       sampleRate: stream.sampleRate,
@@ -804,6 +808,7 @@ class OggParser {
                 ? 48000
                 : null,
             channels: stream.numberOfChannels,
+            channelPositions: stream.channelPositions,
             bitDepth: codec == 'FLAC' ? stream.bitsPerSample : null,
             numberOfSamples: samples,
           ),
@@ -945,6 +950,7 @@ class _OggStreamState {
   String? codec;
   int? sampleRate;
   int? numberOfChannels;
+  List<int>? channelPositions;
 
   /// Sum of payload bytes carried by this stream's pages (tracks
   /// per-stream payload to compute an independent track bitrate)

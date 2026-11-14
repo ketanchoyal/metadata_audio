@@ -340,6 +340,12 @@ class WaveParser {
         return 'latin1';
       case 1252:
         return 'windows-1252';
+      case 1250:
+        return 'windows-1250';
+      case 1200:
+        return 'utf-16le';
+      case 1201:
+        return 'utf-16be';
       case 65001:
         return 'utf-8';
       default:
