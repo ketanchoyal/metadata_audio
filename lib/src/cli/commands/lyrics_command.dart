@@ -38,6 +38,9 @@ class LyricsCommand extends Command<int> {
   String get invocation => 'metadata_audio lyrics <path-or-url> [options]';
 
   @override
+  void printUsage() => runner.out.writeln(usage);
+
+  @override
   Future<int> run() async {
     final rest = argResults?.rest ?? [];
     if (rest.isEmpty) {

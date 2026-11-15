@@ -22,6 +22,9 @@ class ChaptersCommand extends Command<int> {
   @override
   String get description =>
       'List or extract embedded chapters from an audio file or stream.';
+
+  @override
+  void printUsage() => runner.out.writeln(usage);
 }
 
 /// Subcommand to list embedded chapters.
@@ -47,6 +50,9 @@ class ChaptersListCommand extends Command<int> {
 
   @override
   String get invocation => 'metadata_audio chapters list <path-or-url> [options]';
+
+  @override
+  void printUsage() => runner.out.writeln(usage);
 
   @override
   Future<int> run() async {
@@ -119,6 +125,9 @@ class ChaptersExtractCommand extends Command<int> {
   @override
   String get invocation =>
       'metadata_audio chapters extract <path-or-url> [options]';
+
+  @override
+  void printUsage() => runner.out.writeln(usage);
 
   @override
   Future<int> run() async {

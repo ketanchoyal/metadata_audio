@@ -1,3 +1,21 @@
+## 1.0.0-beta.4
+
+- **Feat (CLI Tool)**: Introduced the official `metadata_audio` command-line executable (`bin/metadata_audio.dart`) with `inspect`, `chapters`, and `lyrics` commands:
+  - `inspect`: Inspect audio metadata, stream specifications, and container properties for local files and remote HTTP URLs. Supports formatted terminal tables, JSON output (`--json`), duration calculation toggles (`-d, --[no-]duration`), cover extraction toggles (`-c, --[no-]covers`), and full native tag display (`--full`).
+  - `chapters list`: Pretty-prints embedded chapter start times, end times, durations, and titles in a tabular terminal layout.
+  - `chapters extract`: Slices embedded chapters directly into playable, standalone `.m4a` / `.mp3` audio files via `ChapterDownloader` (`--output-dir`, `--index`).
+  - `lyrics`: Inspects and exports embedded synchronized lyrics into standard RFC `.lrc` format (`[mm:ss.xx]`) or plain text (`--format=txt`), with stdout streaming or direct file writing (`--output`).
+  - Added `TableFormatter` with automatic ANSI color detection and `NO_COLOR` support, and `LrcFormatter`.
+- **Feat (Codec & Stream Extensions)**:
+  - **Opus**: Added channel mapping family decoding (Family 0 for mono/stereo, Family 1+ for multichannel audio with mapping tables), output gain dB calculation (`outputGain / 256.0`), and channel position injection into `AudioTrack.channelPositions`.
+  - **WAV & RIFF**: Added `WAVE_FORMAT_EXTENSIBLE` (tag `0xFFFE`) parsing via the 16-byte `SubFormat` GUID to detect true underlying PCM and IEEE Float codecs, extracted `wValidBitsPerSample` for non-standard bit depth packing, fixed lossless detection for uncompressed files with `fact` chunks, mapped RIFF INFO `ICOP` chunk to `common.copyright`, and added extended RIFF CSET text decoding for code pages `1200` (UTF-16LE), `1201` (UTF-16BE), and `1250` (Windows-1250).
+  - **DSF & DSDIFF**: Mapped DSF `channelType` (Mono, Stereo, 3-Channel, Quad, 4-Channel, 5-Channel, 5.1 Surround) and DSDIFF 4CC channel IDs (`SLFT`, `SRGT`, `MLFT`, `MRGT`, `C`, `LFE`, `LS`, `RS`) to channel layout masks and emitted track stream metadata.
+- **Fixed & Improved**:
+  - Accepted native boolean `true` values for ASF/WMA and container flags (`WM/IsCompilation`, `gapless`, `podcast`, `showMovement`).
+  - Preserved trailing 128-byte ID3v1 tags during ADTS AAC duration scans.
+  - Normalized unsynchronized lyrics across ID3v2.2 (`ULT`), ID3v2.3, and ID3v2.4 (`USLT`) into structured `LyricsTag` entries.
+  - Restored duration calculation for fixed-packet Apple Core Audio (`.caf`) streams running to EOF (chunk size `-1`), and handled 40-bit WavPack headers with `0xFFFFFFFF` unknown sample counts.
+
 ## 1.0.0-beta.3
 
 - **Fixed**: Eliminated `OutOfMemoryError` (`List._grow`) in `FileTokenizer.readBytes` by returning compact `Uint8List` buffers directly from `RandomAccessFile.readSync` (and `Uint8List.setRange` when a peeked byte is buffered) instead of copying into a growable `<int>[]` list.

@@ -118,7 +118,7 @@ Add `metadata_audio` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  metadata_audio: ^1.0.0-beta.3
+  metadata_audio: ^1.0.0-beta.4
 ```
 
 Or run:
@@ -442,6 +442,65 @@ try {
 } catch (e) {
   print('General failure: $e');
 }
+```
+
+---
+
+## Command-Line Interface (CLI)
+
+`metadata_audio` includes a fast, native command-line tool for inspecting audio files and streams, listing and extracting chapters, and exporting synchronized lyrics directly in your terminal.
+
+### Installation
+
+Activate globally via `pub`:
+```bash
+dart pub global activate metadata_audio
+```
+Or run directly from any Dart project:
+```bash
+dart run metadata_audio <command> [options]
+```
+
+### 1. Inspect Audio Files & Streams
+Inspect container formats, audio codecs, sample rates, bit depths, and common metadata tags:
+```bash
+# Pretty-printed terminal table
+metadata_audio inspect music.mp3
+
+# Formatted JSON output
+metadata_audio inspect audio.m4a --json
+
+# Inspect remote HTTP audio streams directly without full download
+metadata_audio inspect https://example.com/audiobook.m4b
+
+# Display all native container and codec tags
+metadata_audio inspect track.flac --full
+```
+
+### 2. List & Extract Chapters
+Manage embedded chapters in audiobooks and podcasts:
+```bash
+# List all chapters with timestamps and durations
+metadata_audio chapters list audiobook.m4b
+
+# Extract all chapters to standalone playable .m4a / .mp3 files
+metadata_audio chapters extract audiobook.m4b --output-dir ./chapters
+
+# Extract only a specific chapter by 1-based index
+metadata_audio chapters extract audiobook.m4b --index 1 --output-dir ./output
+```
+
+### 3. Inspect & Export Lyrics
+Export embedded lyrics to synchronized `.lrc` or plain text:
+```bash
+# Display synchronized RFC-compliant LRC lyrics in terminal
+metadata_audio lyrics song.mp3
+
+# Export to an .lrc file
+metadata_audio lyrics song.mp3 --output lyrics.lrc
+
+# Export as plain text
+metadata_audio lyrics song.mp3 --format txt --output lyrics.txt
 ```
 
 ---
