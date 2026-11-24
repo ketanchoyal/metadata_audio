@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:metadata_audio/src/model/types.dart';
+import 'package:metadata_audio/metadata_audio.dart';
 
 /// Formats audio metadata into human-readable terminal output.
 class TableFormatter {
@@ -43,6 +43,9 @@ class TableFormatter {
     buffer.writeln(_bold('\nAudio Format & Stream:'));
     _writeRow(buffer, 'Container', metadata.format.container ?? 'Unknown');
     _writeRow(buffer, 'Codec', metadata.format.codec ?? 'Unknown');
+    if (metadata.format.codecProfile != null) {
+      _writeRow(buffer, 'Profile', metadata.format.codecProfile!);
+    }
     if (metadata.format.duration != null) {
       _writeRow(buffer, 'Duration', _formatDuration(metadata.format.duration!));
     }
@@ -111,6 +114,18 @@ class TableFormatter {
     }
     if (common.compilation != null) {
       _writeRow(buffer, 'Compilation', common.compilation.toString());
+    }
+    if (common.rating != null && common.rating!.isNotEmpty) {
+      final ratingStr = common.rating!.map((r) {
+        final stars = ratingToStars(r.rating);
+        final starStr = stars != null ? '$stars/5 ★' : 'unrated';
+        final src = r.source != null ? ' (${r.source})' : '';
+        return '$starStr$src';
+      }).join(', ');
+      _writeRow(buffer, 'Rating', ratingStr);
+    }
+    if (common.playCounter != null) {
+      _writeRow(buffer, 'Play Count', common.playCounter.toString());
     }
 
     // ReplayGain section

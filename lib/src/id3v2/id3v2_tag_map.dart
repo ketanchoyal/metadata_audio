@@ -28,6 +28,10 @@ final _id3v2TagMap = {
   'COMM': 'comment',
   'USLT': 'lyrics', // Unsynchronized lyrics
   'ULT': 'lyrics', // v2.2: Unsynchronized lyrics
+  'SYLT': 'lyrics', // Synchronized lyrics
+  'SLT': 'lyrics', // v2.2: Synchronized lyrics
+  'POPM': 'rating', // Popularimeter
+  'POP': 'rating', // v2.2: Popularimeter
   'IPL:arranger': 'arranger',
   'IPL:engineer': 'engineer',
   'IPL:producer': 'producer',
@@ -178,6 +182,20 @@ class Id3v2TagMapper extends GenericTagMapper {
         continue;
       }
 
+      // Handle POPM / POP (popularimeter) to extract play counter
+      if ((tagId == 'POPM' || tagId == 'POP') && rawValue != null) {
+        if (rawValue is PopularimeterTag && rawValue.counter > 0) {
+          result['playCounter'] = rawValue.counter;
+        } else if (rawValue is List) {
+          for (final item in rawValue) {
+            if (item is PopularimeterTag && item.counter > 0) {
+              result['playCounter'] = item.counter;
+              break;
+            }
+          }
+        }
+      }
+
       final value = _normalizeValue(mappedTag, rawValue);
       if (value != null) {
         result[mappedTag] = value;
@@ -228,41 +246,39 @@ class Id3v2TagMapper extends GenericTagMapper {
         if (value is LyricsTag) {
           return [value];
         }
-        if (value is Comment) {
-          return [
-            LyricsTag(
-              contentType: 'lyrics',
-              timeStampFormat: 'none',
-              syncText: const [],
-              language: value.language,
-              descriptor: value.descriptor,
-              text: value.text,
-            ),
-          ];
+        if (value is List) {
+          final list = <LyricsTag>[];
+          for (final item in value) {
+            final normalized = _normalizeLyricsItem(item);
+            if (normalized != null) {
+              list.add(normalized);
+            }
+          }
+          return list.isEmpty ? null : list;
         }
-        if (value is Map) {
-          return [
-            LyricsTag(
-              contentType: value['contentType'] as String? ?? 'lyrics',
-              timeStampFormat: value['timeStampFormat'] as String? ?? 'none',
-              syncText: const [],
-              language: value['language'] as String?,
-              descriptor: value['descriptor'] as String? ??
-                  value['description'] as String?,
-              text: value['text'] as String?,
-            ),
-          ];
+        final single = _normalizeLyricsItem(value);
+        return single != null ? [single] : null;
+      case 'rating':
+        if (value is PopularimeterTag) {
+          final normalized =
+              value.rating == 0 ? 0.0 : (value.rating - 1) / 254.0;
+          return [Rating(source: value.email, rating: normalized)];
         }
-        final text = _singleString(value);
-        if (text != null && text.isNotEmpty) {
-          return [
-            LyricsTag(
-              contentType: 'lyrics',
-              timeStampFormat: 'none',
-              syncText: const [],
-              text: text,
-            ),
-          ];
+        if (value is Rating) {
+          return [value];
+        }
+        if (value is List) {
+          final list = <Rating>[];
+          for (final item in value) {
+            if (item is PopularimeterTag) {
+              final normalized =
+                  item.rating == 0 ? 0.0 : (item.rating - 1) / 254.0;
+              list.add(Rating(source: item.email, rating: normalized));
+            } else if (item is Rating) {
+              list.add(item);
+            }
+          }
+          return list.isEmpty ? null : list;
         }
         return null;
       // Involved-person credits (expanded from TMCL/TIPL/IPL/IPLS role maps)
@@ -364,6 +380,43 @@ class Id3v2TagMapper extends GenericTagMapper {
           return item;
         }
       }
+    }
+    return null;
+  }
+
+  static LyricsTag? _normalizeLyricsItem(dynamic value) {
+    if (value is LyricsTag) {
+      return value;
+    }
+    if (value is Comment) {
+      return LyricsTag(
+        contentType: 'lyrics',
+        timeStampFormat: 'none',
+        syncText: const [],
+        language: value.language,
+        descriptor: value.descriptor,
+        text: value.text,
+      );
+    }
+    if (value is Map) {
+      return LyricsTag(
+        contentType: value['contentType'] as String? ?? 'lyrics',
+        timeStampFormat: value['timeStampFormat'] as String? ?? 'none',
+        syncText: const [],
+        language: value['language'] as String?,
+        descriptor: value['descriptor'] as String? ??
+            value['description'] as String?,
+        text: value['text'] as String?,
+      );
+    }
+    final text = _singleString(value);
+    if (text != null && text.isNotEmpty) {
+      return LyricsTag(
+        contentType: 'lyrics',
+        timeStampFormat: 'none',
+        syncText: const [],
+        text: text,
+      );
     }
     return null;
   }

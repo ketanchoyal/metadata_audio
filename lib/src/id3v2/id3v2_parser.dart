@@ -119,7 +119,7 @@ class Id3v2Parser {
     }
 
     final parsed = _parseFrames(data, header.version.major);
-    for (final tag in parsed.tags.entries) {
+    for (final tag in parsed.tags) {
       metadata.addNativeTag(tagType, tag.key, tag.value);
     }
 
@@ -185,7 +185,7 @@ class Id3v2Parser {
       majorVersion,
       warningCollector: metadata.addWarning,
     );
-    final tags = <String, dynamic>{};
+    final tags = <MapEntry<String, dynamic>>[];
     final chapters = <Id3v2ChapterFrame>[];
     final tocs = <Id3v2TocFrame>[];
     int? recoveryOffset;
@@ -264,7 +264,7 @@ class Id3v2Parser {
               ? owner.substring(0, 128)
               : owner;
           metadata.addWarning('Unknown PRIV owner-identifier: $truncatedOwner');
-          tags['PRIV:${priv.owner}'] = priv.data;
+          tags.add(MapEntry('PRIV:${priv.owner}', priv.data));
           continue;
         }
         if (priv.data.length != 4) {
@@ -275,7 +275,7 @@ class Id3v2Parser {
         for (var i = 0; i < 4; i++) {
           level |= priv.data[i] << (8 * i);
         }
-        tags['PRIV:${priv.owner}'] = level;
+        tags.add(MapEntry('PRIV:${priv.owner}', level));
       } else if (frameHeader.id.startsWith('W')) {
         value = latin1
             .decode(frameData, allowInvalid: true)
@@ -301,13 +301,13 @@ class Id3v2Parser {
         if (text is List) {
           final first = text.whereType<String>().firstOrNull;
           if (first != null) {
-            tags['TXXX:$description'] = first;
+            tags.add(MapEntry('TXXX:$description', first));
           }
         }
         continue;
       }
 
-      tags[frameHeader.id] = value;
+      tags.add(MapEntry(frameHeader.id, value));
     }
 
     return _ParsedFrames(
@@ -683,7 +683,7 @@ class _ParsedFrames {
     required this.tocs,
     required this.recoveryOffset,
   });
-  final Map<String, dynamic> tags;
+  final List<MapEntry<String, dynamic>> tags;
   final List<Id3v2ChapterFrame> chapters;
   final List<Id3v2TocFrame> tocs;
   final int? recoveryOffset;

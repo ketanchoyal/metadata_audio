@@ -66,7 +66,13 @@ class LyricsCommand extends Command<int> {
       return 1;
     }
 
-    final lyrics = lyricsList.first;
+    final lyrics = lyricsList.firstWhere(
+      (l) => l.syncText.isNotEmpty,
+      orElse: () => lyricsList.firstWhere(
+        (l) => l.text != null && l.text!.isNotEmpty,
+        orElse: () => lyricsList.first,
+      ),
+    );
     final format = argResults!['format'] as String;
 
     String content;

@@ -49,12 +49,14 @@ class SampleDescription {
     required this.numberOfChannels,
     required this.bitsPerSample,
     required this.sampleRate,
+    this.audioObjectType,
   });
 
   final String dataFormat;
   final int? numberOfChannels;
   final int? bitsPerSample;
   final int? sampleRate;
+  final int? audioObjectType;
 }
 
 class SttsEntry {
@@ -238,6 +240,7 @@ class AtomToken {
       int? channels;
       int? bitsPerSample;
       int? sampleRate;
+      int? audioObjectType;
 
       final sampleEntryOffset = offset + 8;
       final sampleEntryLength = entrySize - 8;
@@ -261,6 +264,7 @@ class AtomToken {
           if (subName == 'esds') {
             final asc = _parseEsds(bytes, subOffset, subOffset + subSize);
             if (asc != null) {
+              audioObjectType = asc.audioObjectType;
               if (asc.channels > 0 && asc.channels <= 8) {
                 channels = asc.channels;
               }
@@ -279,6 +283,7 @@ class AtomToken {
           numberOfChannels: channels,
           bitsPerSample: bitsPerSample,
           sampleRate: sampleRate,
+          audioObjectType: audioObjectType,
         ),
       );
 

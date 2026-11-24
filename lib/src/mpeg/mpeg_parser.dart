@@ -8,6 +8,7 @@ import 'package:metadata_audio/src/id3v2/id3v2_parser.dart';
 import 'package:metadata_audio/src/model/types.dart';
 import 'package:metadata_audio/src/mpeg/adts_frame_header.dart';
 import 'package:metadata_audio/src/mpeg/replay_gain_data_format.dart';
+import 'package:metadata_audio/src/mpeg/vbri_tag.dart';
 import 'package:metadata_audio/src/mpeg/xing_tag.dart';
 import 'package:metadata_audio/src/parse_error.dart';
 import 'package:metadata_audio/src/tokenizer/tokenizer.dart';
@@ -117,6 +118,22 @@ class MpegParser {
     offset += sideInfoLength;
 
     if (offset + 4 > frameData.length) {
+      return;
+    }
+
+    // Check for Fraunhofer VBRI header (standard offset is 32 in MPEG audio payload)
+    final vbri = parseVbriHeader(frameData, 32) ??
+        (offset != 32 ? parseVbriHeader(frameData, offset) : null);
+    if (vbri != null) {
+      metadata.setFormat(codecProfile: 'VBR');
+      if (header.sampleRate > 0 && vbri.numFrames > 0) {
+        final duration =
+            (vbri.numFrames * header.samplesPerFrame) / header.sampleRate;
+        metadata.setFormat(duration: duration);
+        if (vbri.streamBytes > 0 && duration > 0) {
+          metadata.setFormat(bitrate: 8 * vbri.streamBytes / duration);
+        }
+      }
       return;
     }
 

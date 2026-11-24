@@ -31,6 +31,9 @@ class MatroskaParser {
 
   EbmlTree? _seekHead;
   int _seekHeadOffset = 0;
+  int? _lastClusterTimecode;
+  int _maxBlockTimecode = 0;
+  int _timecodeScale = 1000000;
 
   Future<void> parse() async {
     final containerSize = tokenizer.fileInfo?.size ?? maxSafeJsInt;
@@ -50,6 +53,9 @@ class MatroskaParser {
               }
               return ParseAction.readNext;
             case 0x1F43B675:
+              if (options.duration && metadata.format.duration == null) {
+                return ParseAction.readNext;
+              }
               if (options.mkvUseIndex && _seekHead != null) {
                 final seekEntries = _asTreeList(_seekHead!['seek']);
                 final nextSeek = seekEntries
@@ -72,12 +78,51 @@ class MatroskaParser {
                 }
               }
               return ParseAction.ignoreElement;
+            case 0xE7:
+              return ParseAction.readNext;
+            case 0xA3: // SimpleBlock
+              if (options.duration && metadata.format.duration == null) {
+                try {
+                  final peek = tokenizer.peekBytes(4);
+                  if (peek.length >= 3) {
+                    final msb = peek[0];
+                    var mask = 0x80;
+                    var octets = 1;
+                    while ((msb & mask) == 0 && octets <= 4) {
+                      octets++;
+                      mask >>= 1;
+                    }
+                    if (peek.length >= octets + 2) {
+                      final relTime = (peek[octets] << 8) | peek[octets + 1];
+                      final signedRelTime =
+                          relTime >= 0x8000 ? relTime - 0x10000 : relTime;
+                      final total =
+                          (_lastClusterTimecode ?? 0) + signedRelTime;
+                      if (total > _maxBlockTimecode) {
+                        _maxBlockTimecode = total;
+                      }
+                    }
+                  }
+                } catch (_) {
+                  // Fall back
+                }
+              }
+              return ParseAction.ignoreElement;
             default:
               return ParseAction.readNext;
           }
         },
         elementValue: (element, value, offset) async {
           switch (element.id) {
+            case 0xE7:
+              final timecode = _asInt(value);
+              if (timecode != null) {
+                _lastClusterTimecode = timecode;
+                if (timecode > _maxBlockTimecode) {
+                  _maxBlockTimecode = timecode;
+                }
+              }
+              break;
             case 0x4282:
               _parseDocType(value);
               break;
@@ -116,6 +161,15 @@ class MatroskaParser {
         },
       ),
     );
+
+    if (metadata.format.duration == null && _maxBlockTimecode > 0) {
+      final seconds = _maxBlockTimecode * _timecodeScale / 1000000000.0;
+      metadata.setFormat(duration: seconds);
+      final fileSize = tokenizer.fileInfo?.size;
+      if (fileSize != null && seconds > 0) {
+        metadata.setFormat(bitrate: (8 * fileSize / seconds).round());
+      }
+    }
   }
 
   void _parseDocType(Object? value) {
@@ -133,6 +187,7 @@ class MatroskaParser {
 
   void _parseInfo(EbmlTree info) {
     final timecodeScale = _asInt(info['timecodeScale']) ?? 1000000;
+    _timecodeScale = timecodeScale;
     final duration = _asDouble(info['duration']);
     if (duration != null) {
       final seconds = duration * timecodeScale / 1000000000.0;

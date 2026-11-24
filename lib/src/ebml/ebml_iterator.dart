@@ -74,7 +74,9 @@ class EbmlIterator {
         case ParseAction.skipElement:
           break;
         case ParseAction.ignoreElement:
-          _tokenizer.skip(element.len);
+          if (element.len >= 0) {
+            _tokenizer.skip(element.len);
+          }
           break;
         case ParseAction.skipSiblings:
           if (posDone >= 0) {
@@ -145,12 +147,8 @@ class EbmlIterator {
   }
 
   void _skipUnknownElement(EbmlHeader element) {
-    switch (element.id) {
-      case 0xec:
-        _tokenizer.skip(element.len);
-        return;
-      default:
-        _tokenizer.skip(element.len);
+    if (element.len >= 0) {
+      _tokenizer.skip(element.len);
     }
   }
 
@@ -173,11 +171,17 @@ class EbmlIterator {
   EbmlHeader _readElement() {
     final id = _readVintData(_ebmlMaxIDLength);
     final lenField = _readVintData(_ebmlMaxSizeLength);
-    lenField[0] ^= 0x80 >> (lenField.length - 1);
+    final octets = lenField.length;
+    final markerMask = 0x80 >> (octets - 1);
+    final isUnknownSize = (lenField[0] & ~markerMask) == (markerMask - 1) &&
+        lenField.skip(1).every((b) => b == 0xFF);
+    lenField[0] ^= markerMask;
+
+    final len = isUnknownSize ? -1 : _readUIntBE(lenField, lenField.length);
 
     return EbmlHeader(
       id: _readUIntBE(id, id.length),
-      len: _readUIntBE(lenField, lenField.length),
+      len: len,
     );
   }
 

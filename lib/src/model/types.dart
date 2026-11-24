@@ -115,6 +115,28 @@ class PrivFrame {
   String toString() => 'PrivFrame(owner: $owner, bytes: ${data.length})';
 }
 
+/// ID3v2 POPM (popularimeter) frame content: email, rating (0-255), and play counter.
+class PopularimeterTag {
+  const PopularimeterTag({
+    required this.email,
+    required this.rating,
+    required this.counter,
+  });
+
+  /// User or software identifier email
+  final String email;
+
+  /// Raw rating value [0..255]
+  final int rating;
+
+  /// Play count counter
+  final int counter;
+
+  @override
+  String toString() =>
+      'PopularimeterTag(email: $email, rating: $rating, counter: $counter)';
+}
+
 /// Lyrics text with optional timestamp
 class LyricsText {
   /// Create LyricsText

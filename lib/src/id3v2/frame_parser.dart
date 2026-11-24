@@ -41,6 +41,14 @@ class FrameParser {
       case 'ULT': // v2.2: Unsynchronized lyrics
         return _parseUnsyncedLyricsFrame(bytes);
 
+      case 'SYLT': // Synchronized lyrics
+      case 'SLT': // v2.2: Synchronized lyrics
+        return _parseSyncedLyricsFrame(bytes);
+
+      case 'POPM': // Popularimeter
+      case 'POP': // v2.2: Popularimeter
+        return _parsePopmFrame(bytes);
+
       case 'PCNT':
       case 'CNT':
         return _parsePlayCounterFrame(bytes);
@@ -162,6 +170,105 @@ class FrameParser {
       language: header.language,
       descriptor: descriptorValue.text,
       text: textValue.text,
+    );
+  }
+
+  /// Parses a synchronized lyrics frame (`SYLT` / v2.2 `SLT`).
+  LyricsTag? _parseSyncedLyricsFrame(List<int> bytes) {
+    if (bytes.length < 6) {
+      warningCollector?.call('SYLT frame too short');
+      return null;
+    }
+
+    final encoding = ID3v2Token.textEncodingFromByte(bytes[0]);
+    final language = ascii
+        .decode(bytes.sublist(1, 4), allowInvalid: true)
+        .replaceAll('\x00', '');
+    final timeStampFormatCode = bytes[4];
+    final contentTypeCode = bytes[5];
+
+    final timeStampFormat = timeStampFormatCode == 1
+        ? 'mpeg_frames'
+        : (timeStampFormatCode == 2 ? 'milliseconds' : 'unknown');
+
+    const contentTypes = <int, String>{
+      0: 'other',
+      1: 'lyrics',
+      2: 'text_transcription',
+      3: 'movement_name',
+      4: 'events',
+      5: 'chord',
+      6: 'trivia',
+      7: 'webpage_urls',
+      8: 'image_urls',
+    };
+    final contentType = contentTypes[contentTypeCode] ?? 'other';
+
+    var offset = 6;
+    final descriptorValue =
+        _readNullTerminatedString(bytes.sublist(offset), encoding);
+    offset += descriptorValue.len;
+
+    final syncTextList = <LyricsText>[];
+    final fullTextLines = <String>[];
+
+    while (offset < bytes.length) {
+      final textEntry =
+          _readNullTerminatedString(bytes.sublist(offset), encoding);
+      offset += textEntry.len;
+
+      if (offset + 4 <= bytes.length) {
+        final timestamp = (bytes[offset] << 24) |
+            (bytes[offset + 1] << 16) |
+            (bytes[offset + 2] << 8) |
+            bytes[offset + 3];
+        offset += 4;
+
+        syncTextList.add(LyricsText(
+          text: textEntry.text,
+          timestamp: timestamp,
+        ));
+        if (textEntry.text.isNotEmpty) {
+          fullTextLines.add(textEntry.text);
+        }
+      } else {
+        break;
+      }
+    }
+
+    return LyricsTag(
+      contentType: contentType,
+      timeStampFormat: timeStampFormat,
+      syncText: syncTextList,
+      descriptor: descriptorValue.text,
+      language: language,
+      text: fullTextLines.join('\n'),
+    );
+  }
+
+  /// Parses a Popularimeter frame (`POPM` / v2.2 `POP`).
+  PopularimeterTag? _parsePopmFrame(List<int> bytes) {
+    final zeroIndex = bytes.indexOf(0);
+    if (zeroIndex < 0 || zeroIndex + 1 >= bytes.length) {
+      warningCollector?.call('Failed to parse POPM frame');
+      return null;
+    }
+
+    final email = latin1.decode(
+      bytes.sublist(0, zeroIndex),
+      allowInvalid: true,
+    );
+    final rating = bytes[zeroIndex + 1];
+
+    var counter = 0;
+    for (var i = zeroIndex + 2; i < bytes.length; i++) {
+      counter = (counter << 8) | (bytes[i] & 0xFF);
+    }
+
+    return PopularimeterTag(
+      email: email,
+      rating: rating,
+      counter: counter,
     );
   }
 
@@ -311,7 +418,12 @@ class FrameParser {
     List<int> bytes,
     TextEncodingInfo encoding,
   ) {
-    final bomSize = encoding.bom ? 2 : 0;
+    final isUtf16 = encoding.encoding.startsWith('utf16');
+    final hasBom = isUtf16 &&
+        bytes.length >= 2 &&
+        ((bytes[0] == 0xFF && bytes[1] == 0xFE) ||
+            (bytes[0] == 0xFE && bytes[1] == 0xFF));
+    final bomSize = hasBom ? 2 : 0;
     final valueBytes = bomSize > 0 && bytes.length >= bomSize
         ? bytes.sublist(bomSize)
         : bytes;

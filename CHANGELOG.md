@@ -1,3 +1,19 @@
+## 1.0.0-beta.5
+
+- **Feat (MPEG & VBRI Duration Recovery)**:
+  - Added Fraunhofer VBRI header parser (`parseVbriHeader` and `VbriInfoTag`) to recover duration, VBR codec profile, stream frame counts, and bitrate from MP3 files encoded with Fraunhofer encoders.
+  - Added protection against false audio synchronization inside MPEG Info/Xing frames by strictly respecting parsed frame boundaries.
+- **Feat (MP4 & xHE-AAC Codec Detection)**:
+  - Extracted `audioObjectType` from MP4 `esds` Decoder Specific Info descriptors in `SampleDescription`.
+  - Mapped MP4 Audio Object Type 42 (USAC) to `xHE-AAC` codec.
+- **Feat (Matroska & WebM Streamed Cluster Duration Recovery)**:
+  - Added support for EBML unknown data size VINTs (`-1`) across containers and clusters.
+  - Implemented dynamic duration and bitrate recovery for streamed Matroska and WebM files lacking `Segment.Info.Duration` by scanning cluster and simple block timestamps when `duration: true` is requested.
+- **Feat (ID3v2 SYLT & POPM Frames)**:
+  - Added native synchronized lyrics parsing for ID3v2.2 (`SLT`), ID3v2.3, and ID3v2.4 (`SYLT`), extracting text lines with timestamps into `LyricsTag.syncText` (`LyricsText`), language, content type, and descriptor.
+  - Added popularimeter frame parsing for ID3v2.2 (`POP`), ID3v2.3, and ID3v2.4 (`POPM`), mapping ratings (0–255) to normalized [0..1] `Rating(source: email, rating: ...)` in `CommonTags.rating`, extracting play counts into `CommonTags.playCounter`, and adding JSON serialization support for `PopularimeterTag`.
+  - Added support for accumulating multiple ID3v2 frames with identical frame IDs.
+
 ## 1.0.0-beta.4
 
 - **Feat (CLI Tool)**: Introduced the official `metadata_audio` command-line executable (`bin/metadata_audio.dart`) with `inspect`, `chapters`, and `lyrics` commands:

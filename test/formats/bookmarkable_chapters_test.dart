@@ -7,6 +7,7 @@
 ///
 /// This test validates that our parser correctly extracts chapters from
 /// M4B files using the bookmarkable atom structure with afpk derivatives.
+@Tags(['network'])
 library;
 
 import 'dart:async';

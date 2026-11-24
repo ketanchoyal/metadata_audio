@@ -1012,7 +1012,10 @@ class Mp4Parser {
 
       if (firstSample != null) {
         metadata.setFormat(
-          codec: _formatCodec(firstSample.dataFormat),
+          codec: _formatCodec(
+            firstSample.dataFormat,
+            audioObjectType: firstSample.audioObjectType,
+          ),
           sampleRate: firstSample.sampleRate,
           bitsPerSample: firstSample.bitsPerSample,
           numberOfChannels: firstSample.numberOfChannels,
@@ -1769,9 +1772,12 @@ class Mp4Parser {
     return samples;
   }
 
-  String _formatCodec(String dataFormat) {
+  String _formatCodec(String dataFormat, {int? audioObjectType}) {
     switch (dataFormat) {
       case 'mp4a':
+        if (audioObjectType == 42) {
+          return 'xHE-AAC';
+        }
         return 'MPEG-4/AAC';
       case 'alac':
         return 'ALAC';

@@ -158,6 +158,19 @@ PrivFrame _privFromJson(Map<String, dynamic> m) {
   return PrivFrame(owner: m['owner'] as String, data: bytes);
 }
 
+Map<String, dynamic> _popularimeterToJson(PopularimeterTag p) => {
+  'email': p.email,
+  'rating': p.rating,
+  'counter': p.counter,
+};
+
+PopularimeterTag _popularimeterFromJson(Map<String, dynamic> m) =>
+    PopularimeterTag(
+      email: m['email'] as String,
+      rating: m['rating'] as int,
+      counter: m['counter'] as int,
+    );
+
 Map<String, dynamic> _tagToJson(Tag t) {
   final v = t.value;
   return {'id': t.id, 'value': _encodeValue(v)};
@@ -292,6 +305,9 @@ dynamic _encodeValue(dynamic v) {
     return {'__t': 'ChannelDescription', ..._channelDescriptionToJson(v)};
   }
   if (v is PrivFrame) return {'__t': 'PrivFrame', ..._privToJson(v)};
+  if (v is PopularimeterTag) {
+    return {'__t': 'PopularimeterTag', ..._popularimeterToJson(v)};
+  }
   if (v is Rating) return {'__t': 'Rating', ..._ratingToJson(v)};
   if (v is Url) return {'__t': 'Url', ..._urlToJson(v)};
   if (v is Comment) return {'__t': 'Comment', ..._commentToJson(v)};
@@ -337,6 +353,7 @@ dynamic _decodeValue(dynamic v) {
     if (t == 'FlacPicture') return _flacPictureFromJson(m);
     if (t == 'ChannelDescription') return _channelDescriptionFromJson(m);
     if (t == 'PrivFrame') return _privFromJson(m);
+    if (t == 'PopularimeterTag') return _popularimeterFromJson(m);
     if (t == 'Rating') return _ratingFromJson(m);
     if (t == 'Url') return _urlFromJson(m);
     if (t == 'Comment') return _commentFromJson(m);
